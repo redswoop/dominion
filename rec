@@ -1,0 +1,197 @@
+/* SECLEV DATA FOR 1 SL */
+typedef struct {
+	unsigned short	time_per_day,		/* time allowed on per day */
+			time_per_logon,		/* time allowed on per logon */
+			messages_read,		/* messages allowed to read */
+			emails,			/* number emails allowed */
+			posts;			/* number posts allowed */
+	unsigned long	ability;		/* bit mapped abilities */
+} slrec;
+
+
+/* AUTO-VALIDATION DATA */
+typedef struct {
+	unsigned char	sl,			/* SL */
+			dsl;			/* DSL */
+	unsigned short	ar,			/* AR */
+			dar,			/* DAR */
+			restrict;		/* restrictions */
+} valrec;
+
+typedef struct {
+        char            extension[4],           /* extension for archive */
+                        arca[32],
+                        arce[32],
+                        arcl[32];
+} arcrec;
+
+
+
+/* STATIC SYSTEM INFORMATION */
+typedef struct {
+	char		newuserpw[21],		/* new user password */
+			systempw[21],		/* system password */
+			msgsdir[81],		/* path for msgs directory */
+			gfilesdir[81],		/* path for gfiles dir */
+			datadir[81],		/* path for data directory */
+			dloadsdir[81],		/* path for dloads dir */
+			ramdrive,		/* drive for ramdisk */
+			tempdir[81],		/* path for temporary directory */
+                        resx[84],               /* reserved for never */
+			bbs_init_modem[51],	/* modem initialization cmd */
+			answer[21],		/* modem answer cmd */
+                        menudir[105],
+ /*                       connect_300[21],
+                        connect_1200[21],
+                        connect_2400[21],
+			connect_9600[21],
+                        connect_19200[21],*/
+                        no_carrier[21],         /* modem disconnect */
+			ring[21],		/* modem ring */
+			terminal[21],		/* DOS cmd for run term prg */
+			systemname[51],		/* BBS system name */
+			systemphone[13],	/* BBS system phone number */
+			sysopname[51],		/* sysop's name */
+			executestr[51];		/* mail route path name */
+	unsigned char	newusersl,		/* new user SL */
+			newuserdsl,		/* new user DSL */
+			maxwaiting,		/* max mail waiting */
+			comport[5],		/* what connected to comm */
+			com_ISR[5],		/* Com Interrupts */
+			primaryport,		/* primary comm port */
+			newuploads,		/* file dir new uploads go */
+			closedsystem;		/* if system is closed */
+	unsigned short	systemnumber,		/* BBS system number */
+			baudrate[5],		/* Baud rate for com ports */
+			com_base[5],		/* Com base addresses */
+			maxusers,		/* max users on system */
+			newuser_restrict,	/* new user restrictions */
+			sysconfig,		/* System configuration */
+			sysoplowtime,		/* Chat time on */
+			sysophightime,		/* Chat time off */
+			executetime;		/* time to run mail router */
+	float		req_ratio,		/* required up/down ratio */
+			newusergold;		/* new user gold */
+	slrec		sl[256];		/* security level data */
+	valrec		autoval[10];		/* sysop quik-validation data*/
+	char		hangupphone[21],	/* string to hang up phone */
+			pickupphone[21];	/* string to pick up phone */
+	unsigned int    netlowtime,		/* net time on */
+			nethightime;		/* net time off */
+        char            connect_300_a[105];      /* alternate connect str's */
+        arcrec          arcs[4];
+        char            beginday_c[51],
+                        logon_c[51];
+        int             userreclen,
+                        waitingoffset,
+                        inactoffset;
+        char            newuser_c[51];
+        unsigned long   wwiv_reg_number;
+        char            dial_prefix[21];
+        float           post_call_ratio;
+        char            upload_c[51];
+        char            dszbatchdl[81];
+        char            modem_type[9];
+        char            batchdir[81];
+        int             sysstatusoffset;
+        char            network_type;
+        char            res[36];               /* RESERVED */
+} configrec;
+
+
+
+/* DYNAMIC SYSTEM STATUS */
+typedef struct {
+	char		date1[9],		/* last date active */
+			date2[9],		/* date before now */
+			date3[9],		/* two days ago */
+			log1[13],		/* yesterday's log */
+			log2[13],		/* two days ago log */
+                        dltoday,                // DLed today
+                        log5[13],               // Log of 5 days ago
+                        resx[4];                /* reserved for nothing */
+	unsigned short	users,			/* Current number of users */
+			callernum,		/* Current caller number */
+			callstoday,		/* Number of calls today */
+			msgposttoday,		/* Messages posted today*/
+			emailtoday,		/* Email sent today */
+			fbacktoday,		/* Feedback sent today */
+			uptoday,		/* files uploaded today */
+			activetoday;		/* Minutes active today */
+	unsigned long	qscanptr;		/* Q-scan pointer value */
+	char		amsganon;		/* auto-message anony stat */
+	unsigned short	amsguser;		/* user who wrote a-msg */
+	unsigned long	callernum1;		/* caller number */
+        unsigned int    net_edit_stuff;         /* word for net editor */
+        unsigned int    wwiv_version;           /* tell what version it is */
+        unsigned int    net_version;            /* tell what version of net */
+        float           net_bias;               /* network bias factor */
+        long            last_connect,           /* date last connect.net */
+                        last_bbslist;           /* date last bbslist.net */
+        float           net_req_free;           /* net free factor def 3 */
+        char            log3[18],               // Log of 3 days ago
+                        log4[13],               // Log of 4 Days ago
+                        lastuser[31];           // Last Caller
+} statusrec;
+
+
+// File Directory Record
+typedef struct {
+	char		name[41],		/* directory name */
+			filename[9],		/* direct database filename */
+                        dpath[81],               /* filename path */
+                        upath[81],
+                        acs[21];
+	unsigned short	dar,			/* DAR for directory */
+			maxfiles,		/* max files for directory */
+			mask,			/* file type mask */
+                        type,                   /* 4 digit directory type */
+                        confnum;
+} directoryrec;
+		
+
+// Directory Entry Record
+typedef struct {
+    char            filename[13],       /* filename */
+                    description[39],    /* file description */
+                    date[9],            /* date u/l'ed */
+                    upby[46];           /* name of upload user */
+    unsigned char   filetype;           /* file type for apples */
+    unsigned short  numdloads,          /* number times d/l'ed */
+                    ownersys,ownerusr;  /* who uploaded it */
+int                    points,
+                    mask;               /* file type mask */
+    int             ats[5];
+    unsigned long   daten,              /* date uploaded */
+                    numbytes;           /* number bytes long file is */
+}  uploadsrec;
+
+
+
+/* directoryrec.mask */
+#define mask_PD 0x0001
+#define mask_no_uploads 0x0004
+#define mask_archive 0x0008
+#define mask_pending_batch 0x0010
+#define mask_no_ratio 0x0020
+#define mask_autocredit 0x0040
+#define mask_extended 0x8000
+
+/* configrec.sysconfig */
+#define sysconfig_no_local 0x0001
+#define sysconfig_no_beep 0x0002
+#define sysconfig_high_speed 0x0004
+#define sysconfig_off_hook 0x0008
+#define sysconfig_two_color 0x0010
+#define sysconfig_flow_control 0x0020
+#define sysconfig_printer 0x0040
+#define sysconfig_list 0x0080
+#define sysconfig_no_xfer 0x0100
+#define sysconfig_2_way 0x0200
+#define sysconfig_no_alias 0x0400
+#define sysconfig_all_sysop 0x0800
+#define sysconfig_shrink_term 0x1000
+#define sysconfig_free_phone 0x2000
+#define sysconfig_log_dl 0x4000
+
+

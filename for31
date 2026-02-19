@@ -1,0 +1,126 @@
+Dominion 3.1 Projections List
+
+Legend:
+    û - Completed
+    ö - Work has atleast started
+
+
+Class 1 - Freakishly hard
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Having file information, like graphics, sound, etc displayed on filelist,
+with possible system for the archive to tell the BBS itself, something
+like File_id.diz
+
+û QWK, need I say more
+
+Scroll Back
+
+û FrontDoor interface hopefully?
+
+Revamp of Video routines to use direct writes
+
+True multinode operation: Source already exists, Not implemented
+
+Class 2 - More tedious than difficult
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+û Pull down menus?  Source already exists, in fact can be implemented in 2
+  seconds, but will not be part of 3.0 for some reason or another
+
+û Message Status Editor, like file editor, to replace all commands in Message
+  scanner pertaining to editing messages.
+
+û Complete archive manipluator intergration into the file listing functions,
+  will be simular to PCBoards, its the best, need I say more?
+
+û Mouse Support
+
+û Rewrite of log functions, clean up of log entries
+
+û Unified Search commands
+
+û Rewrite the way menu commands are stored in memory, having them all there,
+  and only rereading the list when menus are changed.
+
+û Fix NUV, was present in beta 3.0, but then removed due to problems, and
+  was not ready by release time, so it was left out.
+
+û Rewrite of Message structures for better quick access.
+
+û Menuformats!  Just in general formats for internally generated menus
+  format for Area Lists
+
+û Logon functions will be mnu based, having everything about logon sysop
+  configurable.  Will save space in configuration by removing all the Logon
+  toggles
+
+Logon Script Char System
+
+û Format file for lists of stuff
+
+Better ansi viewing
+
+û Configurable sysop window?
+
+Fullscreen message editor - LSD Style, not true type ya know
+
+Configurable 2way chat?  Tho its stupid, people like it.
+
+Screen Snap Shot, which ofcourse will not take the top screen with it
+
+û make matrix .mnu file
+
+add support to display avatar files
+
+** More or less acomplished by the Menu Batches
+û Configurable Logon/Logoff functions: Ie disable questions asked at logoff
+  according to users account, etc
+
+Adlib/SB Support (like chat calls)
+
+Class 3 - Piece of cake
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+û Name MCi that contains user's comment
+
+û Time out on pause that aborts it
+
+û Ability to specify Comment file by filebase
+
+û Set Ratios specific to a user, or by SL's
+
+û Expansion of menu sl field
+
+û Add Pipe color system tomake forum fags happy
+
+û Max calls per day limit by SL
+
+û Remove E from the WFC screen
+
+û Force Real Names on Message Subs
+
+û Better chat logging
+
+û Add free disk space to sysop window
+
+û Revamp of online user editor, possibly making it so the user isn't stopped
+  by it(which would then make it a class 2 modification)
+
+û Forced Voting Questions/possible removal of voting section
+
+û Rewrite of Message bases to use ACS system
+
+û Generate file list by dates
+
+û Help System by menu names
+
+Daily DL Limits
+
+default sort order for a particular file area
+
+û Redefinable SysOp keys
+
+û File Formats increase line counter by their true line length
+
+Gorbachev sings tractor: Turnip, buttocks
+
+Directory data storing on external media
+
