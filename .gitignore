@@ -1,0 +1,7 @@
+build/
+*.o
+*.dSYM/
+.!*
+__pycache__/
+*.pyc
+tests/.venv/

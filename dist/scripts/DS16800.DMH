@@ -1,0 +1,34 @@
+NAME: USR Dual Standard 16,800 HST|
+SETU: ATC1E0F1H0M0Q0V1X6&A3&B2&C1&D2S38=1{~~AT&H1&I0&K1&N0&R2&S0S0=0S2=1S95=3{|
+INIT: ATB0H0M0{|
+ANSR: ATA{|
+PICK: ATH1{|
+HANG: ATH0{|
+SEPR: /|
+SPD: 19200|
+END:
+OK               |Normal         |NORM
+RING             |Ring           |RING
+NO CARRIER       |No Carrier     |DIS
+ERROR            |Error          |ERR
+NO DIAL TONE     |No Dial Tone   |NDT
+BUSY             |Busy           |DIS
+NO ANSWER        |No Answer      |DIS
+VOICE            |Voice          |DIS
+CONNECT          |300            |MS=300 CS=19200 EC=Y CON
+CONNECT 1200     |1200           |MS=1200 CS=19200 CON
+CONNECT 2400     |2400           |MS=2400 CS=19200 CON
+CONNECT 4800     |4800           |MS=4800 CS=19200 CON
+CONNECT 7200     |7200           |MS=7200 CS=19200 CON
+CONNECT 9600     |9600           |MS=9600 CS=19200 CON
+CONNECT 12000    |12000          |MS=12000 CS=19200 CON
+CONNECT 14400    |14400          |MS=14400 CS=19200 CON
+CONNECT 16800    |16800          |MS=16800 CS=19200 CON
+ARQ              |-              |EC=Y CS=19200
+HST              |+/HST          |AS=Y
+V32              |+/V.32         |AS=N
+MNP              |+/MNP          |EC=Y
+LAPM             |+/LAPM         |EC=Y
+MNP5             |+/MNP5         |DC=Y
+V42BIS           |+/V.42bis      |DC=Y
+NONE             |-              |EC=N

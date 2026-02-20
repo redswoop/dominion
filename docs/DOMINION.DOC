@@ -1,0 +1,3962 @@
+
+
+           ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+           ³ Dominion Bulletin Board System -- Version 3.0 Standard  ³
+           ³ Copyright 1991,92,93 by Fallen Angel and Particle Man   ³
+           ³ All Rights Reserved                                     ³
+           ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 1
+
+
+
+
+                     ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+                     ³ T A B L E   O F   C O N T E N T S ³
+                     ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+     Introduction ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 2
+        Installing a New System ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 2
+        Updated Releases ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 3
+        Additional Information and Help ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 3
+
+     The Actual Running of a BBS ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 4
+        System Startup and the WFC Screen ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 4
+        SysOp Function Keys ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 7
+        New Users And Security Profiles ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 10
+        File Area Maintence ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 11
+                Uploads ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 11
+                Downloads ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 12
+                File Maintence ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 13
+
+     System Configuration ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 14
+        Names and Paths ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 15
+        Flagged Info ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 17
+        Variable System Data ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 20
+        Event Manager ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 22
+        Modem Info ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 23
+        Security Profiles ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 23
+        Archive Configuration ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 24
+        New User Data ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 24
+        Security Data ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 25
+        NetWork Configuration ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 25
+        Default Colors ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 26
+
+     Modem Configuration Scripts ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 26
+       High Speed Primer ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 26
+       Fossil Driver ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 26
+       MM Modem Information Compiler ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 27
+       Modem Script Language ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 27
+       Sample Modem Script ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 29
+
+     The ACS System ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 29
+     The MCI Code System ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 33
+        MCI Codes ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 33
+        MCI Color Codes ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 34
+                Direct Access Colors ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 34
+     String Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 35
+        String Extraction/Reading ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 36
+     Format Files ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 36
+     System Files ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 38
+     Networking Dominion ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 42
+        How It WorksÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 42
+        Dominion with FidoNet ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 43
+     The User Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 44
+     The File Base Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 48
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 2
+
+
+     The Message Base Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 52
+     The Voting Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 55
+     The Conference Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 57
+        An Explanation of Conferencing ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 57
+     The Protocol Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 60
+     The Menu Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 63
+        Menu Selection ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 64
+        Command Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 65
+        Effects with Menus ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 72
+        Menu Commands Available ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 74
+
+     Mailing Lists ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 74
+     Global User Editor ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 74
+     The InfoForm Questionnaire System ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 76
+        How InfoForm Questionnaires Are Constructed ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 76
+        Asking and Reading InfoForm Questionnaires ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 76
+        InfoForm Questionnaire Commands ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 77
+        A Sample InfoForm Questionnaire ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 77
+
+
+
+
+                             ÕÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                             ³Introduction³
+                             ÔÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion BBS was designed to be Morphic.  That is, the BBS has very
+     little definate shape or form.  Most of it is up to the SysOp to decide.
+     With time and effort, Any Dominion can be unique.  But since this ofcourse
+     is difficult, a sample setup is included for the SysOp to become
+     familiar with how things work. We feel that Dominion represents the
+     BBS community as a nice, user friendly software package that is
+     easy to set up, yet powerful enough to set it apart from other
+     software in its class.
+
+     Dominion  was  written and compiled using the Turbo C++ v3.0
+     compiler.
+
+
+                       ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                       ³Installing a New System³
+                       ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion  was  designed to be used with the following  minimum  system
+     configuration:
+
+          ş    IBM PC/XT/AT (or true compatible) or PS/2
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 3
+
+
+          ş    Hard disk drive (10 megabytes minimum)
+          ş    512K RAM (more is preferable)
+          ş    80 column monochrome or color monitor
+          ş    Modem (1200 baud or greater; Hayes compatible is preferred)
+          ş    MS-DOS version 5.0 or later
+
+     A  start-up package is distributed under the name Domxxx.ZIP,  where
+     "xxx"  indicates  the  version  number  in  question.   This  archive
+     contains complete documentation concerning the setup of a new system.
+     Read the File Domxxx.nfo for more information.
+
+
+                           ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                           ³Updated Releases³
+                           ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Alpha  and Beta sites (as well as most Standard sites) will  have  the
+     latest  Standard release, and will distribute them at no  cost  (other
+     than  the  phone call to download the program!).   Hopefully,  updates
+     will  be  released on a regular basis, but we are unable to  give  any
+     kind of schedule.
+
+     Since  Alpha  and  Beta sites perform testing  of  newer  versions  of
+     Dominion before it is released Standard, you might want to call  those
+     boards  to keep up with the latest features.  We are adding  them  all
+     the time!
+
+
+
+
+
+
+
+
+
+
+                    ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                    ³Addition Help and Information³
+                    ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Experiment; it's a big system, and you're not going to learn it all in
+     one sitting.  If you need help and/or information concerning the setup
+     and  operation  of  a  Dominion system, you may  contact  one  of  the
+     Dominion  Alpha or Beta sites.  Since the installed base  of  Dominion
+     systems  is growing by leaps and bounds, you should check the list  of
+     Dominion  systems  (included with every Standard release) for  a  site
+     near you.
+
+
+     There are currently 2 official Dominion Alpha Sites:
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 4
+
+
+
+        The Innocents  : 908-739-2416
+                SysOp  : Fallen Angel
+
+        The Impact Zone: 908-566-1216
+                SysOp  : Particle Man
+
+     Please feel free to call these two systems if you are looking for help
+     with your Dominion System.  They will generally have the newest
+     version of Dominion available for download.
+
+
+
+
+
+
+                      ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                      ³System Startup And The WFC Screen³
+                      ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Starting up Dominion is rather simple.  Once it is properly installed,
+     simply type 'dom' from any directory on your harddrive.  Assuming that
+     Dominion's directory is in the System Path, and the DOM enviromental
+     variable is set, the BBS will Clear the screen, and load up with a
+     Updating Status Bar indicating how much is left.
+
+
+     There  are also several command line options you can use to alter  the
+     functioning  of  the system.  These options can be entered  in  either
+     upper or lower case:
+
+          /Bxxxxx   Answer the phone and force the baud rate to "xxxxx".
+                    Note that the "answer phone" string is NOT sent to the
+                    modem.  This option will find the most use when
+                    executing the system from a front-end mailer (refer to
+                    "Using Dominion With FidoNet" for more information).
+          /I        Load Dominion in Quiet Mode.
+          /M        Operate the BBS in local mode only (don't send anything
+                    out to the modem, and don't respond to incoming calls).
+          /Q        Quit to DOS after the next user logs off.
+          /Px       ComPort to use with System.  This Overrides what is set
+                        in the config program.
+          /Nx       Node Number. If not specified, Multinode Mode will
+                        be off.
+          /H        Leave Carrier up when user logs off
+          /C        Enable Flow Control
+          /Ax       FidoNet Scanner/Tosser Command (S>can, P>urge, T>oss)
+
+
+
+
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 5
+
+
+     When Loading is completed, Dominion enters Wait For Caller
+     (WFC) mode.  The WFC screen is where the  BBS  sits while waiting
+     for the next caller.  The commands available from  this screen  are
+     displayed, as well as  the  following constantly-updated
+     information:
+
+          Time        - The current time and date.
+          Feedback    - The number of Email messages the SysOp has waiting.
+          DLs         - The number of files downloaded for the day.
+          ULs         - The number of files uploaded for the day.
+          % Activity  - The percentage of activity for the day.
+          Disk Space  - The total amount of remaining disk space.
+          SysOp       - SysOp Availabilty
+          Calls Today - The Number of Calls Today
+          Posts Today - The Number of Posts Today
+          Last Caller - Last User to Logon to Board
+
+
+     The  commands  available from the WFC screen are explained  in  detail
+     below.   In most cases, there is a chapter in this manual  devoted  to
+     the  command in question (such as the message and file  base  editors,
+     and the system configuration command).
+
+          A         Sends the "answer phone" command to the modem.  It is
+                    used mainly for situations where you have your system
+                    "hard-wired" to another system for testing purposes.
+                    In most cases, the BBS will automatically answer the
+                    phone by itself.
+
+          B         Enters the message base editor, where you can enter and
+                    modify the bases used to store public messages.
+
+          C         Conference Editor.  Edit Conferences used to store
+                    Message areas in.
+
+          S         Run the String Editor.  This allows you to customize
+                    the 'Strings' that the BBS displays to the user.
+                    
+          D         Shells to DOS, allowing you to perform maintenance and
+                    other functions that aren't available through Mini-DOS.
+                    To return to the WFC menu, use the DOS "EXIT" command.
+
+          F         Enters the file base editor, where you can enter and
+                    modify the bases used to store files for uploading and
+                    downloading by users.
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 6
+
+
+
+          H         Toggles Phone Off Hook/Phone On Hook.
+
+          V         Enters the voting editor, where you can enter and
+                    modify the voting booth questions.
+
+          L         Displays the SysOp logs. Up to Five Days.
+
+          M         Allows viewing of ALL Email messages that have been
+                    posted.  It does not allow for the viewing of a
+                    specific individual's Email (use the "R" command for
+                    that).
+
+
+
+
+
+
+
+
+          O         Enters the system configuration, where you can perform
+                    most of the major changes and modifications to the BBS.
+
+          Q         Exits the BBS and returns to DOS.
+
+          R         Read Feedback.  Acutally, it allows you to read
+                    any mail waiting for the sysop.
+
+          T         If a batch file named "TERM.BAT" exists, Dominion will
+                    execute it.  This is mainly used to call an external
+                    terminal program.
+
+          U         Enters the user editor, where you can modify the
+                    modify the information for each user of the BBS.
+
+          W         Allows you to send Email messages to other users,
+                    either individually or via various mass mail criteria.
+
+          X         Enters the protocol editor, where you can enter and
+                    modify the definitions of the file transfer protocols
+                    used to upload and download files.
+
+          Z         Displays the usage log information contained in the
+                    HISTORY.DAT file, which contains a record of all general
+                    system activity (number of posts, number of uploads
+                    and downloads, etc.).
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 7
+
+
+          #         Enters the menu editor, where you can create and modify
+                    the BBS online menus.
+
+          +         Sends the "initialization" command to the modem, used
+                    to initialize the modem.
+
+
+
+
+
+
+          |         Prompts you to enter any Command Type and Parameter to
+                    be executed.
+
+          =         Refresh Screen.
+
+          (         Scans FidoNet Subs for Outgoing Messages.
+
+          )         Scans FidoNet Subs for Incoming Messages.
+
+          *         Deletes Files in Outgoing/Incoming FidoNet Directories.
+
+          [ENTER]   Unblank Screen (when screen saver kicks-in).
+
+          [SPACE]   Allows  you  to  log on to the BBS  locally.   You  can
+                    choose to log on normally (by pressing "Y") or log on
+                    quickly  (by  pressing "F").  Logging on  quickly  will
+                    bypass the shuttle logon menu, all the text and ANSI
+                    files, the auto-message, and the bulletin menu (some or
+                    all of which may already be disabled by you via the
+                    system configuration).
+
+          0 to 9    Executes batch files called "WFCBATx.BAT", where "x" is
+                    the digit that you pressed (0 to 9).
+
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³SysOp Function Keys³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     There  are  many functions available to you via  function  keys,  both
+     while  a  user is online (or while you are online locally)  and  while
+     you're performing local maintenance.  These function keys are used  to
+     perform  maintenance, change a user's security information, and  other
+     operations.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 8
+
+
+
+     The following function keys are available only when a user is online:
+
+          [Alt-Fxx]      Change Users Security Profile to Profile xx.
+                         The Security Profiles can be edited via
+                         the Configuration Section of Dominion
+                         
+
+          <F1>           Allows modification of the user's security
+                         information (SL, DSL, AR & DAR flags, etc).
+                         Prints the "SysOp working" message while this
+                         window is displayed.
+
+
+          <Shift-F1>     Activates 'Global Trapping'.  This will save
+                         everything outputted to the screen to disk,
+                         in the file GLOBAL.TXT in your AFILES directory
+
+          <F2>           Switches the SysOp information windows between the
+                         normal 5-line window and the extended 11-line
+                         window.  If the window is not on, [F2] will turn
+                         it on.
+
+          <F3>           Toggles the user's keyboard on and off.  This
+                         doesn't actually disable the user's keyboard, it
+                         only tells the system to ignore any keystrokes
+                         coming from the user (which has the EFFECT of
+                         disabling the user's keyboard).  Ever been in chat
+                         mode and couldn't get a word in edgewise?  This is
+                         the function key for you!
+
+
+          <Shift-F3>     Toggles the user's screen on and off.  Again, this
+                         doesn't actually disable the user's screen, it
+                         only tells the system not to send any output to
+                         the user (which has the EFFECT of disabling the
+                         user's screen).
+
+
+          <F4>           Turns off the "user attempted to chat" note.
+                         Which will make your PC stop screeching (if
+                         you have a screeching chat call), and beeping
+                         (if you have a beeping chat call).  It also
+                         removes the chat reason message from your
+                         SysOp Window.
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 9
+
+
+
+          <F5>           Hangs up on a user immediately and returns to the
+                         WFC menu.
+
+
+          <Control-F5>   Hangs up on a user by faking a time out.  That is
+                         the BBS will displays its 3 minute inactivity notice,
+                         then drop carrier.
+
+
+          <Shift-F5>     Prints fake "line noise" (random ASCII characters)
+                         before hanging up on the user and returning to
+                         the WFC menu.
+
+
+          <F6>           Toggles "beep-after-end" on and off.  This feature
+                         will, when activated, take the phone offhook and
+                         sound an alarm when the user logs off, thus
+                         letting you know that the system is available.
+
+
+          <F7>           Subtracts five minutes from a user's total time
+                         left.
+
+
+          <F8>           Adds five minutes to a user's total time left.
+
+
+          <F9>           Toggles temporary SysOp access for a user.  If
+                         temporary SysOp access is still active when the
+                         user logs off, the user's statistics are returned
+                         to normal.  USE ONLY WITH TRUSTED USERS!!!
+
+
+          <F10>          Take the User into your Default Chat Mode
+
+
+          <Shift F10>    Drop To Dos, With Swap Shell
+
+
+          <Ctrl  F10>    Take the User into your NON Default Chat Mode
+
+
+          <Home>         Toggles the chat capture buffer on and off (used
+                         while in one line chat mode.)
+
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 10
+
+
+          <Alt-Z>        Quick BBS Exit.  This will exit the BBS, and
+                         save the posistion of the user.  When you rerun the
+                         BBS, it will load up to that exact spot.
+
+
+          <Alt-X>        Exit BBS with Optional Save.  The same as above,
+                         but the SysOp is prompted if they want to exit,
+                         And the posistion save can be not used.
+
+
+          <Alt+0-9>      If the file(s) WFCBATx.bat exists (X is a number from
+                         0-9), then the corresponding batch file will be
+                         executed. Crafty for doing things like running
+                         external chat programs, and the like.
+
+
+          <Scroll Lock>  Toggles the "SysOp available for chat" flag on and
+                         off.  When the [Scroll Lock] light on the keyboard
+                         is off, the SysOp is available; when the light is
+                         on, the SysOp is unavailable.  SysOp chat hours
+                         (defined in the System Configuration) will over-
+                         ride this.
+
+     The following commands are available during a 'BEEP' Type Chat Page
+     (defineable in the config) :
+
+          <CR>           During the Chat Beep Chat Call, pressing [Enter]
+                         will stop the system from beeping for the rest of
+                         the user online's call. Very useful for a user that
+                         KNOWS you are there, but you do not wish to chat
+                         with. This makes him think that you are being paged,
+                         but your speaker will not beep.
+
+          <Space Bar>    During the Chat Beep Chat Call, this will cause the
+                         system to enter your default chat type (defined in
+                         the config).
+
+
+
+
+                   ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                   ³New Users and Security Profiles³
+                   ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Once a NewUser has loged onto the system for the first time and
+     made their account, the System will set their security to the
+     Profile selected in the New User Data section of the main
+     Configuration.  While the users security remains the same as the
+     New User Profile, the system will consider them as "Unvalidated".
+     Unvalidated may not recieve the system password from the Matrix
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 11
+
+
+     Logon.  This is a good means by which to screen your users before
+     you decide whether to allow them on the system or not.  Once their
+     security changes, they are considered validated, and can get the
+     system password.
+
+     Security Profiles as a quick, convienent way of organizing your System's
+     features by the users access levels.  By giving one set of users one
+     profile, another set another one, etc, when assigning Access Levels to your
+     message areas, file areas, conferences, or menu commands, you won't have
+     much trouble figuring out who can do what or who can see what.
+
+     The quickest way to Validate a user is by assigning him/her a profile
+     either while online via the Quick Profile keys (Alt-F1 - F10), or by
+     using the '|' command from the User Editor.
+
+
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³File Area Maintence³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     File Transfers have become very important in modern BBS softwares.
+     Dominion's File System is among the best available.  It contains
+     just about every feature that any competiting software offers.
+     Its Downloading/Uploading system in particular is especially advanced,
+     being oriented completely around Mulitple Batch Transfers.
+     It uses File Point Ratio, File Byte Ratio, Post Call Ratio to keep the
+     number of uploads to downloads decent.  File Validation ensures that
+     a user cannot upload trash and download a valuable file with the ratio
+     they recieve from it, as well as protecting other users from a possible
+     bad upload.  Archive Manipulation allows commenting of files, addition of
+     data to them, integrity checks, etc.  Configurable fileformats also allow
+     the utmost in customization of the look and feel.
+
+                               ÕÍÍÍÍÍÍÍ¸
+                               ³Uploads³
+                               ÔÍÍÍÍÍÍÍ¾
+
+     When a file is uploaded to the system, it arrives in the System
+     Batch Directory.  The first thing done to it is a Archive Integrity
+     check.  This will ensure that there are no problems with the file.
+     Since the command line for this is configurable, you can specify a
+     virus scanner to run along with the integrity checker.
+
+     Once the BBS is statisfied that the file is good, it will proceed
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 12
+
+
+     to comment the file, again with a configurable command line, so any
+     advertising the SysOp wishes can be added to it.  It will also
+     check for a FILE ID, a file called FILE_ID.DIZ added by the uploads
+     creator, which may contain a precise description of what exactly
+     the file is.  If this file is not found in the archive, an extended
+     description by the uploader may be entered.
+
+     If it passes all steps, it will then be moved to the the current file
+     directory's true path, and added to the file lists.
+
+     If the system uses File Validation, then the file will be marked as
+     UnValidated.  The uploader will recieve no credit for the file until
+     the SysOp validates it, using the File Validation CmdType(FV),
+     or '/V' from the file area menu of a default system.
+
+                              ÕÍÍÍÍÍÍÍÍÍ¸
+                              ³Downloads³
+                              ÔÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion has several ways of ensuring that a user is going to
+     download a file fairly.  Before any file is added to the download
+     batch, several things are checked.
+
+        1.  Does the User have enough time to download this file?
+        2.  Does the user have enough file points for this file?
+        3.  Does the user's file byte ratio meet the system required ratio?
+        4.  Does the user's post call ratio meet the system required ratio ?
+        5.  Is the File actually present on the disk?
+        6.  Is the file Validated?
+
+     If even one of these criteria is not met, the user may not download.
+     Before the actual download is started, a second time check will
+     happen, checking to see if the total batch time is more than the users
+     time left.
+
+     Certain Users may be exempt from the above criteria through the use of
+     exemptions (given to the user either through <F1> while he is online or
+     in the User Editor) :
+      1. Time Limit Check [Exemption: T]
+      2. File Ratio Check (Includes any/all active ratios) [Exemption: R]
+      3. Post Call Ratio Check [Exemption: P]
+      4. User will not be shown in User List (call logs, etc) [Exemption: U]
+
+
+              ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+              ³File Maintance: Keeping clean directories ³
+              ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 13
+
+
+
+     File areas do not organize themselves, the SysOp must partake in the
+     not so dirty deed.  Dominion provides several functions for making this
+     easier.
+
+        File Information Editor: This allows editing of specific file
+                                 information, such as its description,
+                                 name, file points, etc. (CmdType: F2)
+                                 
+        Sorting Files          : You may sort your files alphabetically, or
+                                 by upload date.  Makes things pretty.
+                                 (CmdType: F6)
+
+        Validating Files       : Makes files downloadable (CmdType: F4)
+        
+        Commenting Files       : Adds a Archive Comment to files where
+                                 applicable (CmdType: F9)
+
+        Gif Descriptions       : Dominion can scan gifs, and add their
+                                 resolution to the description of the file
+                                 (CmdType: F0)
+
+        FILE ID Adder          : Dominion supports the FILE_ID.DIZ format
+                                 for extended file info from its maker
+                                 (CmdType: F!)
+
+        Removing Files         : This deletes files from the file lists,
+                                 and optionally the disk. (CmdType: FR)
+
+        Killing Offline        : This will allow you to remove files which
+                                 no longer exist on the disk from your file
+                                 lists. (CmdType: F4)
+
+        Moving Offline Files   : This allows you to move files that no longer
+                                 exist on the disk to another directory.
+                                 Good for 'Offline' file areas (CmdType: F5)
+
+        Moving Files           : Good for taking care of files that are
+                                 in the wrong place.  Useful if you have
+                                 idiots uploading. (CmdType: F7)
+
+        Local Upload           : Add files that exist on the disk but not
+                                 the file lists to the File lists.
+                                 (CmdType: F1)
+                                 
+     Some of these functions are also available from the File Listing
+     prompt, so you can edit files while viewing the entire list.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 14
+
+
+
+
+
+
+                             ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                             ³System Configuration³
+                             ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+
+     At  the heart of Dominion is the system configuration feature.  It  is
+     here  that  the entire operation of the system is set up,  from  modem
+     configuration to file archiving options to time allowances and  upload
+     and  download  restrictions.   This section is  selected  by  the
+     "O" command in WFC mode, or executing CmdType: SO.  The Configuration
+     is divived into 11 sub sections.
+
+    1. Names and Paths :       This section allows you to change the
+                               directories and passwords that the system
+                               uses.
+
+    2. Flagged Information :   This sections allows you to enable and disable
+                               system options, such as File Ratio, 2Way Chat
+                               etc..
+
+    3. Variable System Data :  This allows you to change values and
+                               amounts.  Such as the actual PCR,
+                               menu file names, etc.
+
+    4. Event Manager :         This allows you to setup certain events for
+                               the system to run at a specified time.
+
+    5. Modem Information :     You can change your ComPort info from here.
+                               To change your Result info and such, You'll
+                               need to use the Dominion Modem Script Compiler,
+                               which is detailed in another section.
+
+    6. Security Profiles :     The BBS can store 10 sets of generic user data,
+                               which you can automatically set the users
+                               account to with Profile sets by seleting
+                               a set.
+
+    7. Archive Configuration : Use this to setup how the BBS handles
+                               archives (.ZIPs, .LZHs, etc)
+
+    8. New User Data :         This allows you to configure how the BBS treats
+                               a new user.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 15
+
+
+
+    9. Security Level Data :   This is used to configure Time per day,
+                               calls per day, abilities, etc for each
+                               security level.
+
+    0. NetWork Configuration : Your Network node information is configured
+                               here.
+
+    A. Default Colors :        The Systems colors can be changed here.
+
+
+
+
+
+
+                           ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                           ³Names and Paths³
+                           ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+        This Section of the Configuration is used to define where the BBS
+        finds its files, System Passwords, and Specific system information,
+        such as Telephone numbers and SysOp name.  To edit an item, enter
+        its number.
+
+
+    1. System Name :           The Name of your Bulletin Board System.
+
+    2. System Phone :          Your BBS's 10 Digit Telephone Number.
+
+    3. System Password :       This is also known as the SysOp Password.
+                               A User attempting to logon remotely with
+                               a SysOp's Account (SL=255), they will be
+                               prompted for this Password.  A remote user
+                               attempting certain "SysOp-only" commands
+                               will also be prompted for this password.
+
+    4. SysOp Name :            The Name of the System Operator (SysOp).
+    
+    5. Matrix Password :       If you have activated the Matrix Logon Menu,
+                               this will be the password required to logon
+                               to the system.  If the user's SL is higher
+                               than that of a NewUser (defined in a different
+                               part of the Config), then the system will show
+                               the user this password when he (C)hecks for
+                               Validation.
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 16
+
+
+   6.  New User Password :     If defined, a user attempting to create a new
+                               account will need to enter this password in
+                               order to do so.
+
+   7. Lockout Password :       If a user calls at a locked out baudrate
+                               (defined in a different part of the config),
+                               he will be prompted to enter this password
+                               or the system will automatically drop carrier
+                               on him.
+
+   8. Data Directory :         Important System files (such as data files, and
+                               your User List) are stored in this directory.
+                               (Most Commonly DATA\ )
+
+   9. Graphics Directory :     Text Screens and Format Files are stored here.
+                               Text Screens may have 2 extensions: .ANS (for
+                               ANSi Users), and .MSG (for non-ANSi Users).
+                               Files with the .MSG extension may contain
+                               Dominion Color Codes (explained elsewhere)
+                               which will be shown to ANSi Users, but
+                               stripped from the file when displayed to
+                               non-ANSi users. (These Color Codes, aka - MCI
+                               Color Codes, are explained in detail later in
+                               the docs).  Format Files have the extension
+                               .FMT and will be explained in detail in
+                               another section. (Most Commonly AFILES\ )
+
+   0. Msgs Directory :         Message Bases are stored here.  This is also
+                               the Base Directory for any FidoNet Subs you
+                               may be carrying.
+                               (Most Commonly MSGS\ )
+
+   A. Menus Directory :        Menu Files are stored here.  These files
+                               may be edited with Dominion's Internal
+                               Menu Editor (# from the WFC Menu).  Usage
+                               of this Menu Editor will be explained in
+                               a later section.
+                               (Most Commonly MENUS\ )
+
+   B. Batch Directory :        Batch Uploads will be manipulated here
+                               (Archive Testing, Commenting, etc.)
+                               before the File is moved to the correct
+                               Storage Directory.
+                               (Most Commonly BATCH\ )
+                               
+   C. Temp Directory :         Dominion Uses this to perform various things
+                               (for example, Archive Manipulation), it will
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 17
+
+
+                               delete any files in this directory when it
+                               is finished with them, and therefore should
+                               be of little interest to you.
+                               (Most Commonly TEMP\ )
+
+   D. Default DLs Directory :  When you create a new File Base, this is the
+                               default directory that will contain its files.
+                               (obviously, it should be changed for each
+                               file area).
+                               (Most Commonly \DLS\ )
+
+
+
+
+
+                             ÕÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                             ³Flagged Info³
+                             ÔÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+    This section of the configuration is used to Toggle the systems
+    features on and off.  Simply enter the number to the left of the
+    field to toggle it on ('yes') or off ('no').
+    
+   1. File Ratio :        Yes: System will not allow user to Download
+                          unless their Ratio is good (defined elsewhere
+                          in the config.)
+                          No: System will not check Upload/Download Ratio.
+
+   2. File Point System : Yes: Requires the User to have sufficient File
+                          Points to Download a File. (FP Ratio is set
+                          elswhere in the Config).
+                          No: File Points are not required in order to DL
+
+   3. Post Call Ratio :   Yes: The User's Post to Call Ratio must meet the
+                          System's Required PCR (defined elsewhere in the
+                          Config) in order to Download, or perform a command
+                          with a Security of 'C'.
+                          No: The System will not check the User's PCR when
+                          Downloading, but it WILL check the User's PCR for
+                          anything with a Security of 'C'.
+
+   4. Auto UL Credit :    Yes: Uploads will automatically be Validated, and
+                          The User will be given credit.
+                          No: Uploads will need SysOp Validation before the
+                          User is granted credit for the upload.
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 19
+
+
+   !. All Uploads to      Yes: All uploaded files will be placed in the
+      SysOp :             SysOp Directory (File Area #0 is the SysOp dir).
+                          No: The user will be able to decide which file
+                          directory (amongst the ones he has access to) he
+                          wishes to upload the file to (He will still be
+                          able to upload to the SysOp directory, even tho he
+                          may not have access to it).
+
+   5. 2Way Chat Default : Yes: Pressing <F10> with a User online will enter
+                          2WayChat. <Control+F10> will enter Single Line Chat.
+                          No: Pressing <F10> with a user online will enter
+                          Single Line Chat. <Control+F10> will enter 2WayChat.
+                          
+   6. Chat Call Type :    Beep: The Chat Call String will be displayed as the
+                          the System beeps you for your attention.
+                          Screech: The User will be told that the chat call is
+                          on, and there will be an annoying screeching noise
+                          for each charector that is displayed.
+
+   7. Log to Printer :    Yes: The day's logs will be printed on your printer
+                          as well as saved as a file on your drive.
+                          No: The day's logs will only be saved as a file on
+                          your drive, and not printed on the printer.
+
+   8. No Handles :        Yes: NewUsers will be forced to use their real name
+                          and will not be allowed to choose a handle
+                          No: The System will allow the user to choose a handle
+                          (but will still be required to leave his real name
+                          for you.
+
+   9. Ask Phone Number :  Yes: When a user is logging on, after he enters in
+                          his password, he will be required to enter in the
+                          last 4 digits of his phone number in order to logon.
+                          No: Entering the last 4 digits of his phone number
+                          will not be required for users to logon.
+
+   0. AutoMessage in      Yes: The AutoMessage will be displayed as users
+      Logon :             logon to the system.
+                          No: The AutoMessage will not be displayed when a
+                          user logs on.
+
+   A. Last Few Callers    Yes: The System's last few callers will be displayed
+      in Logon :          to the user when he logs on.
+                          No: The Last few users will not be displayed.
+
+   B. Your Info in        Yes: The User's Information will be displayed to him
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 20
+
+
+      Logon :             when he logs on.
+                          No: The User's Information will not be displayed when
+                          he logs on.
+
+   C. Automatic Chat      Yes: The Chat Buffer will automatically open when
+      Buffer Open :       you enter Single Line Chat (the chat will be saved
+                          to the file chat.txt in your afiles directory).
+                          No: Your chat buffer will be closed when you enter
+                          Single Line Chat, but may be opened by pressing the
+                          <Home> key.
+
+   D.  Local Security :   Yes: This will protect your system from unautorized
+                          local usage. All WFC commands will be locked, and
+                          you will have to logon to the BBS in order to do
+                          anything.  Logging on <F>ast also will not work, so
+                          you will be forced to enter in your password.
+                          No: There will be no local protection on your system.
+
+   E.  Phone Off Hook :   Yes: Your Phone will automatically be taken offhook
+                          when you logon to the board.  Useful for busy systems
+                          when you have trouble logging onto your on board.
+                          No: The Phone will stay onhook when you logon to the
+                          board.
+
+   F. Fast Logons for     Yes: Non-SysOps will have the option to Logon Fast
+      Users :             (Bypasses all logon screens, and oneliners).
+                          No: Only SysOps will have the ability to Logon Fast.
+
+   G. Strip Color From    Yes: All Color will be stripped from the SysOp
+      Logs :              Logs.
+                          No: The SysOp logs will be displayed in color and
+                          we all shall be joyous.
+
+
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³Variable System Data³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+        This section of the configuration is used to set values that the
+        BBS will use in certain functions.  Not much to it.
+
+   1. Startout Menu :     When a User logs on, this is the first menu he
+                          will enter.
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 21
+
+
+   2. NewUser Menu :      A User whose SL matches that of a 'New User' (as
+                          defined in the New User Data) will enter this menu
+                          first, rather then the start out menu.
+
+   3. Echo Charecter :    Remote Users will see this charector instead of the
+                          actual typed charecter when entering in passwords.
+
+   4. Maximum Users :     This is the Maximum number of users allowed on the
+                          system.
+
+   5. Maximum Waiting     This is the maximum number of mail that a user may
+      Mail :              have waiting (if this is set to 0, no Email will be
+                          allowed on the system).
+
+   6. KiloByte Ratio :    The Decimal value of the ratio that must be
+                          maintained by user to download.  It is stored as
+                          a decimal of 1:1, to 3 digits (ie: a ratio of 1:3
+                          would be .333, and a ratio of 3:1 would be 3.000).
+
+
+   7. File Point Ratio :  The Number of File Points the User has will be
+                          multiplied by this number when he attempts to down-
+                          load a file.  
+
+   8. Post to Call        The Decimal value of the ratio that must be maintained
+      Ratio :             by a user to pass his PCR check.  It is stored as a
+                          decimal of 1:1, to 3 digits (ie: a ratio of 1:3 would
+                          be .333, and a ratio of 3:1 would be 3.000).
+
+   9. Input Prompt Type : This toggles the input bar between a blue bar and
+                          a bar of dots.  Try them both to see what you like
+                          best (this bar will be used for most of the input
+                          in the system, ie: chat reason, Title for Posts,
+                          and about a zillion other things).
+
+   0. Matrix Active :     Yes: The System will use a Matrix Menu. In order to
+                          Access the System, users will need the Matrix Pass-
+                          word (it will be shown to users in the Matrix Menu if
+                          their SL is higher then that of a New User).
+
+   A. Lockout Baud Rate : This is the minimum baud rate allowed on the system.
+
+   B. Chat Time Start :   Beginning at this time (in military time) the SysOp
+                          will be available for chat.
+
+   C. Chat Time End :     Beginning at this time (in military time) the SysOp
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 22
+
+
+                          will be unavailable for chat. (These chat times will
+                          override the <Scroll Lock> Key for chat availability.
+                          Setting both times to 00:00:00 will make the SysOp
+                          always available if <Scoll Lock> is off, and always
+                          Unavailable if <Scroll Lock> is on.
+
+   D. Rotating Colors :   These are the Colors the System will Use if Rotating
+                          Chat is Active (see next field).
+
+   E. Chat Type :         This toggles the Chat Type between Regular, Rotating
+                          or Filtered. Rotating Chat colors are defined in the
+                          above field. The SysOp Chat Filter is Sysop.flt and
+                          the user's Filter is User.flt.  You must use the
+                          editor Coconfig.exe to edit these filters.
+
+   F. New Uploads Area :  The Number of the File Area you wish all uploads to
+                          be forced to. You can turn this off by choosing the
+                          option and pressing [CR].
+
+
+                            ÕÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                            ³Event Manager³
+                            ÔÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+        The Event Manager is used to set programs to execute when certain
+        things happen, such as a logon, a new user, or at a certain time.
+
+   1. Logon Event :       The Event executed when a User Logs On to the
+                          System.
+
+   2. Logoff Event :      This Event is executed each time a User Logs off
+                          of the system.
+
+   3. Begin Day Event :   This event is executed when the first caller of the
+                          day logs on.
+
+   4. New User Event :    This Event is executed when a New User logs on to
+                          the System.
+
+   5. Timed Event         This is the time (in military time) when your
+      Execution Time :    Timed Event is Executed.
+
+   6. Timed Event File    This is the Filename of your Timed Event. If this
+      Name :              is blank, but an event time is chosen, the BBS will
+                          exit with an Error Level of 10.
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 23
+
+
+
+
+                              ÕÍÍÍÍÍÍÍÍÍÍ¸
+                              ³Modem Info³
+                              ÔÍÍÍÍÍÍÍÍÍÍ¾
+
+        Dominion has quite a complex system to address the modem with.
+        It uses a script system of responses and the sort for messages from
+        the modem.  There is a whole section of the docs devoted to this,
+        please look there for SPECIFIC modem strings.  The general port
+        addresses and the sort are set from here.
+
+   1. Comport Number :    The Comport that your BBS's Modem is Using.
+
+   2. Interrupt :         The Interrupt that your modem is on.
+
+   3. Base Address :      The Base Address of your modem, in Hex.
+
+
+
+
+                          ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                          ³Security Profiles³
+                          ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+        This section allows you to edit the values for the AutoValidation
+        Keys (Alt-F1-10 while the user is online).  This is section is group
+        based.  You use the brackets ( [,] ) to go up and down between the
+        choices.  Then you hit a key and edit the particular member of the
+        particular group.
+
+
+   [,] :                  Go Up/Down a Security Profile.
+
+   S :                    Set the SL for the Highlighted Profile.
+
+   D :                    Set the DSL for the Highlighted Profile.
+
+   A :                    Set the AR's for the Hightlighted Profile.
+
+   I :                    Set the DAR's for the Highlighted Profile.
+
+   R :                    Set the Restrictions for the Hightlighted Profile.
+
+
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 24
+
+
+
+                        ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                        ³Archive Configuration³
+                        ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+        Dominion can handle up to 4 archive formats, only if it knows how
+        of course. This sections allows the SysOp to define the command
+        lines for a particular archive.
+
+   [,] :                  Goto the Previous/Next Archive.
+
+   1. :                   Change the Archive's Extension.
+
+   2. :                   Change the Add Files to Archive Command Line.
+                             %1 - The filename to be added to.
+                             %2 - Filename to be Added to the archive.
+
+   3. :                   Change the Extract from Archive Command Line.
+                             %1 - The Archive to be extracted from.
+                             %2 - Filename to be extracted from the Archive.
+        
+   4. :                   Change the View Archive Command Line.
+                             %1 - The Archive to be viewed.
+
+   5. :                   Change the Command Line to Perform an Integrity
+                          Test on the Archive.
+                             %1 - Archive to be tested.
+
+   6. :                   Change the add Comment to Archive Command Line.
+                             %1 - Archive to be Commented.
+                             %5 - Full Pathname of AFILES\COMMENT
+
+
+
+
+                            ÕÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                            ³New User Data³
+                            ÔÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+        This is the data used to handle new users with, and to handle
+        New User Voting specifics.
+
+   1. :                   The Number of the Security Profile to give to
+                          New Users.
+
+   2. :                   Filename of the Infoform (without the .inf
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 25
+
+
+                          extension) that the New User will be forced to fill
+                          out.
+
+   3. :                   The Number of File Points a New User will recieve.
+
+   4. :                   =-=-=-=-=InActive in Version 3.0=-=-=-=-=
+
+   5. :                   =-=-=-=-=InActive in Version 3.0=-=-=-=-=
+
+   6. :                   =-=-=-=-=InActive in Version 3.0=-=-=-=-=
+   
+   7. :                   =-=-=-=-=InActive in Version 3.0=-=-=-=-=
+
+   8. :                   =-=-=-=-=InActive in Version 3.0=-=-=-=-=
+
+
+
+
+
+                        ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                        ³Network Configuration³
+                        ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+
+        Dominion Internally supports FidoNet style networking.  This is
+        by far the most common format, and as such its the one Dominion uses.
+        There is not much to this portion of the configuration.
+
+   1.                     Main FidoNet 4D Address, in ZONE:NET:NODE:POIT
+                          notation
+
+   2.                     The Name of the Network you are in.
+
+   3.                     Your BBS's Origin Line.
+
+   4.                     =-=-=-=-=InActive in Version 3.0=-=-=-=-=
+
+
+
+
+
+                            ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                            ³Default Colors³
+                            ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+        These are the default colors given to new users, or a user
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 26
+
+
+        when they change their emulation.  Edit these as you would
+        the regular colors of an account.
+
+
+
+
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³Modem Configuration³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+Due to the irregularities in today's high speed modems, it is impossible to
+create a set of init strigns and responses that will work for every modem.
+To circumvent this problem, Dominion uses a special script language for dealing
+with different modems.  It is quite simple, the BBS looks for something in the
+script, and responds with what the script tells it to.  Quite flexible.  You
+can have up to 255 different responses.
+
+
+                       ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                       ³High Speed Modem Primer³
+                       ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+When modems first were built, the modem and the computer talked to each other
+at the same speed as the modem was talking to the other modem at.  That is,
+if the modem called another modem that ran at 2400 baud, then the computer
+would talk to the modem at 2400 baud.  But as faster modems came out, and
+compression methods were created, the modem had to send the data that would be
+transfered at a much higher rate, to allow for time to compress the data.
+Thats where we get speeds like 19,200, 38,400, 56,700, etc.  There is no such
+thing as a modem that communicates at 19,200, or 38,400, or etc.  The fastest
+available modems are either 14,400 v32bis modems, or 16,800 HST Modems (actually
+the HST is not truly 16,800, but it will attempt to raise its throughput
+from 14,400 to somewhere near 16,800, if phone line conditions permit).
+The computer simply sends the modem the data to be sent at 19,200.  The
+modem is still sending only at 14,400, and is compressing the data to
+be sent at the same time. So next time someone tells you that his modem
+is really fast cause its a 19200, tell him he has his head up his ass.
+
+
+                            ÕÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                            ³Fossil Driver³
+                            ÔÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+Fossil Drivers are device drivers or TSR's that handle communications from
+a program to the modem, relieving the programmer of that task.  What a break
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 27
+
+
+this is to us.  The word Fossil stands for 'F'IDO 'O'pus 'S'EADog 'S'tandard
+'I'nterface 'L'ayer.  They were originally developed to allow non-standard
+IBM style motherboards to communicate with modems by tricking things, but this
+is generally no longer the case.  Fossil's provide great multitasking
+communications, and that sort of thing, for programmers who have better things
+to do than writting com routines (Its a waste of time).
+
+So where does Dominion come in with all this.  Simple, Dominion REQUIRES
+a Fossil Driver to actually boot up.  X00 and BNU are by far the 2 best
+and popular Fossil drivers used today.  They support high speed communications
+well, and are easy to use.  Refer to their documentation for specific info,
+but to simply install them for quick usage, put this in your config.sys :
+
+        device=x00.sys E
+              or
+        Device=Bnu.sys
+
+A nice trick with X00 is that you can rename it to X00.exe, and run it as a
+TSR, and uninstall it by running it again.
+
+
+                     ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                     ³Modem Configuration Scripts³
+                     ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+Dominion's Modem Information Scripts must be compiled to be used, by CM.EXE.
+It will take the file name you give it, and produce the file MODEM.DAT, which
+you must put in your Dominion Data Directory.
+
+Usage:
+        MC.EXE  <Filename to Compile>
+
+The script must contain all of the following information.
+A ; at the begining of a line signifies a Comment or Remark.
+Each piece of data is preceeded with a 4 letter marker, and a :, with
+a | after the data.
+
+        NAME:           The name of this configuration script
+
+        SETU:           The string to be sent to the modem when the BBS
+                                first enters WFC Mode.
+
+        INIT:           This is the Quick Init string sent to the modem
+                                after a user hangs up and the sort
+
+        ANSR:           This is sent when a incoming call is detected.
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 28
+
+
+        PICK:           This takes the phone off hook
+
+        HANG:           This is used to hang up the phone
+
+        DIAL:           String used to dial a number
+
+        SEPR:           This is used by the BBS to Parse a response for data.
+
+        SPD:            This is your default COM RATE.  This should be
+                        the rate such as 19200, 38400, etc, not 14400 or
+                        16800
+
+        END:            End of the Modem Configuration data, Results Begin
+                        after this point.
+
+
+        Results:  Results are the text recieved from the modem, such
+                  as "CONNECT 19200", or "PROTOCOL: NONE", which modems
+                  return while connecting.
+
+                  The format is:
+
+                  Result        | Description   | Modifiers.
+
+                  For the description, if the 1st letter is +, then this
+                  desription will be appended to the current description,
+                  if it is a -, then nothing is added to the description,
+                  and if it is any other character, the description is over
+                  written.
+
+                  The modifiers are explained here.
+
+                        NORM            The Modem is Fine
+
+                        RING            There is an incoming call
+
+                        DIS             The Modem Disconnected
+
+                        NDT             There is no Dial tone
+
+                        ERR             There was an Error
+
+                        RINGING         The Phone is Ringing
+
+                        CON             Connection Established.
+
+                        MS=xxxxx        Modemspeed is xxxxx.  Used for Transfer
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 29
+
+
+                                        times and the sort, TRUE connect rate,
+                                        not computer to modem rate.
+
+                        CS=xxxxx        Computer to Modem Rate.  Used for
+                                        protocols, doors, etc.
+
+                        X is Y or N
+
+                        FC=x            Determines Flow Control
+
+                        EC=x            Determines Error Correction
+                         
+                        DC=x            Determines Data Compression
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³Sample Configuration³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Here a sample commented configuration for a Dual Standard 16,800
+
+NAME: USR Dual Standard 16,800 HST|
+# Name of Script
+SETU: ATC1E0F1H0M0Q0V1X6&A3&B2&C1&D2S38=1{~~AT&H1&I0&K1&N0&R2&S0S0=0S2=1S95=3{|
+# Initial setup string, given when BBS is loaded
+INIT: ATB0H0M0{|
+# Init String, given periodically to see if modem is okay
+ANSR: ATA{|
+# Answer Command
+PICK: ATH1{|
+# Take Fone offhook
+HANG: ATH0{|
+# hang up the fone
+SEPR: /|
+# Seperator.  Used to parse multiple responses from one string
+SPD: 19200|
+# Comport speed, Computer to modem
+END:
+# Signifies end of Init section, start of results
+OK               |Normal         |NORM
+RING             |Ring           |RING
+NO CARRIER       |No Carrier     |DIS
+ERROR            |Error          |ERR
+NO DIAL TONE     |No Dial Tone   |NDT
+BUSY             |Busy           |DIS
+NO ANSWER        |No Answer      |DIS
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 30
+
+
+VOICE            |Voice          |DIS
+# Status signifiers.  Given in response to init strings or things of the sort
+CONNECT          |300            |MS=300 CS=19200 EC=Y CON
+CONNECT 1200     |1200           |MS=1200 CS=19200 CON
+CONNECT 2400     |2400           |MS=2400 CS=19200 CON
+CONNECT 4800     |4800           |MS=4800 CS=19200 CON
+CONNECT 7200     |7200           |MS=7200 CS=19200 CON
+CONNECT 9600     |9600           |MS=9600 CS=19200 CON
+CONNECT 12000    |12000          |MS=12000 CS=19200 CON
+CONNECT 14400    |14400          |MS=14400 CS=19200 CON
+CONNECT 16800    |16800          |MS=16800 CS=19200 CON
+# Connection established, Comspeed of 19200, Modemspeed of xxxxx
+ARQ              |-              |EC=Y CS=19200
+HST              |+/HST          |AS=Y
+V32              |+/V.32         |AS=N
+MNP              |+/MNP          |EC=Y
+LAPM             |+/LAPM         |EC=Y
+MNP5             |+/MNP5         |DC=Y
+V42BIS           |+/V.42bis      |DC=Y
+NONE             |-              |EC=N
+# Modifiers, HST to tell connection is with another HST, MNP5 to show
+# other modem is using MNP5, etc.  Descriptions are Appended.
+
+
+
+                                ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                                ³The ACS System³
+                                ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     ACS  stands for Access Condition String, and is a powerful new  method
+     of  stating  the requirements and conditions under which  a  user  has
+     access to something -- whether it be a file area, or a menu command.
+
+     The ACS system combines security levels (SL and DSL), AR and several
+     other unique features into a string. This string will be used to see
+     if the user should or should not have access to the file area, area,
+     menu, command, etc.
+
+     There  are 12 different functions in the ACS system, and all  of  them
+     have the same basic syntax:  A letter followed by the parameter of the
+     function,  all of which can be specified in upper or lower case.   The
+     following is a list of all possible functions.
+
+  ACS Command: Gn       Description: User must be at least n years old.
+
+  ACS Command: Bnnn     Description: User must be calling at nnn Baud.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 31
+
+
+                        *IMPORTANT NOTE* : Divide the Baud Rate you wish
+                        to use for this field by 100 (ie - for 2400 baud
+                        use B24, for 14400 baud use B140, etc).
+
+  ACS Command: C        Description: User must pass a PCR check to have
+                                     access.
+
+  ACS Command: Dnnn     Description: User's DSL must be nnn.
+
+  ACS Command: In       Description: User must have a DAR of n.
+
+  ACS Command: Snnn     Description: User must have an SL of nnn.
+
+  ACS Command: Unnn     Description: Must be User Number n.
+
+  ACS Command: V        Description: DESQview must be running.
+
+  ACS Command: @n       Description: User's Current Conference must have
+                                     n in its flag string.
+
+  ACS Command: #        Description: SysOp Must be Available.
+
+
+
+
+
+
+
+     The following are a few examples:
+
+         "S50"  ş User must have SL of 50
+         "#"    ş SysOp Must be available
+         "AB"   ş User must have AR B
+
+     There  are five logical operators that can be used in ACS, only  three
+     of which (the first three) are used frequently:
+
+          "&" - Logical AND
+          "!" - Logical NOT
+
+     The AND operator is easy to use. Just place an "&" charecter between
+     two ACS Commands. This will cause the system to check for both ACS
+     conditions. If the user lacks access to even one of the conditions, he
+     will not have access to the particular command, file base, etc. For
+     example: FA&C means that the user must have AR Flag A and his Post to
+     Call Ratio must be in check.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 32
+
+
+
+     The  NOT  operator is also easy to use.  Just place  a  "!"  character
+     before any function to reverse it's meaning.  For example: "!FA" means
+     the  user  must NOT have AR flag "A" to have access.   IMPORTANT:   Be
+     sure  to  remember  that,  in  numeric  functions,  the  NOT  operator
+     COMPLETELY  REVERSES THE MEANING of the function.  Thus,  "!S30"  does
+     NOT  mean "SL less than or equal to 30"; it means "SL less  than  30",
+     *without* the "equal to".
+
+
+
+
+
+     Here are some more examples:
+
+          S50            User must have SL 50 to 255.
+          !S50           User must have SL 0 to 49.
+          !G21&!IA&!S50  User has access SO LONG AS they have NONE of the
+                         three.
+
+
+
+     I will also take this opportunity to explain Access Restrictions at
+     this time. Access Restrictions may be set in various places througout
+     the BBS (ie - User Editor, <F1> Window, etc). These do exactly what
+     they say, Restrict the User's Access. Here is a list of the charector
+     for each restriction, and what its function is :
+          L - User may only Logon Once Per Day.
+          C - User can not page the SysOp for chat.
+          M - User's Posts will not be seen by other users until validated
+              by a SysOp.
+          A - User can not write new AutoMessages.
+          * - User can not post annonymously (even if his SL allows it).
+          P - User can not post messages.
+          U - User can not see User List (CmdType: OU)
+          E - User can not write Email.
+          V - User can not vote.
+          N - User can not access networked message areas.
+          ! - User's Uploads all go to SysOp directory.
+          R - User can not write Rumors/Oneliners.
+          B - User can not add to the BBS List.
+          T - User can not withdraw time from the TimeBank.
+
+
+
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 33
+
+
+
+
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³The MCI Code System³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+      Dominion provides a powerful system for displaying and handling
+      system and  user  information, in prompts, command lines and  text
+      messages. This  is  done  using  a set of  codes  called  MCI
+      (Message  Command Interpreter).  These codes are entered with the
+      character "`" followed by  a specific ASCII character.  Changing
+      colors in text  messages  is accomplished through a special system
+      that is described later.
+
+                              ÕÍÍÍÍÍÍÍÍÍ¸
+                              ³MCI Codes³
+                              ÔÍÍÍÍÍÍÍÍÍ¾
+
+      If you are inside of Dominion and you wish to use an MCI code (ie -
+      writing a message, etc.) you must proceed the MCI Code with a "`".
+
+      The following is a list of the MCI Commands available from Dominion
+      (remember to execute each MCI Code in the manner mentioned above):
+
+     `` - Displays one `
+     `! - Displays the System's File Ratio
+     `# - Displays the User's File Ratio.
+     `$ - Displays the User's Post Call Ratio
+     `% - Displays the System's Post Call Ratio
+     `^ - Displays File Ratio Status
+     `& - Displays Post Call Ratio Status
+     `* - Displays User's Number of Posts
+     `( - Displays User's Number of Calls
+     `( - Displays User's Number of Calls Today
+     `+ - Displays the last User to call
+     `A - Displays the Current Message Base number of the user online
+     `B - Displays the Current Message Base of the user online
+     `C - Displays the Current File Base number of the user online
+     `D - Displays the Current File Base name  of the user online
+     `E - Displays Users Last Logon Date
+     `F - Displays the number of File Points the Current user Online has Left
+     `G - Displays the Current Conference Name
+     `H - Displays User's Handle WITHOUT user number
+     `I - Clear's the Current User Online's Screen of all text
+     `J - Displays User's Download Security Level
+     `K - User's Number of Uploads in Kilobytes
+     `L - Displays the Current User Online's User Number
+     `M - Creates an Enter (use to continue string on next line, etc)
+     `N - Displays the Current User Online's Name w/ User Number
+     `O - Displays How many files the user has Downloaded
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 34
+
+
+     `P - Pauses the Current User Online's Screen
+     `Q - Displays the number of files in the current file area
+     `R - Displays the Current User Online's Real Name
+     `S - Displays the Current User Online's Security Level
+     `T - Displays the amount of time the Current User has left
+     `U - Displays the amount files the user has Uploaded
+     `V - Displays the Number of the Current Message you are Reading.
+     `W - Displays the Number of total Messages in the Current Message Area
+     `X - Displays the number of Kilobytes the user has downloaded
+     `Y - Provides a Few Seconds Delay
+     `Z - Randomly Displays a Rumour
+     `@ - Displays either the SysOp Available or Unavailable string
+     `[ - Displays the Current Time
+
+
+
+
+
+
+                           ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                           ³MCI Color Codes³
+                           ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion has 2 Color Systems.  The First is a set of predefined Standard
+     Colors which are determined by the users account configuration.
+     This method is outlined below:
+
+     The  ability  to display any of the Twenty MCI colors in  messages,
+     text files,  prompt strings, etc., is Provided Via Control
+     Sequences. The first method  is usable almost everywhere in
+     Dominion:  At the point  where you wish to change to another MCI
+     color, press either [Ctrl-P] or [Ctrl-E] depending on the Color Set
+     you Wish to use, the first 10 or the second 10. (hold down the
+     [Ctrl] key and press the "P" or "E" key, then release both) and
+     then press  a number key  ("0" through "9"). From then on, the
+     current  MCI  color will be  the one corresponding to the number
+     you pressed,  until  the color  is changed again either by the
+     system or by another  MCI color code sequence.
+
+     (Technical  note:   The color code is stored as a  two-byte  sequence,
+     for the 1st set 0  (alt-3) or  (alt-14) for the second, and "0"
+     through "9" ,  depending on  the number  you selected.  This is why
+     you  sometimes  see  funny characters  when  you TYPE a Dominion
+     .MSG file from  DOS;  more than likely, that file contains MCI
+     color codes. If you wish to enter these color codes in an external
+     text file, merely precede the charector(s) you wish to change the color
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 35
+
+
+     of with a  or , followed by the corresponding color's number (0-9).
+     These codes will be stripped for non-ANSi Users, so therefore will not
+     "mess up" your file.)
+
+
+
+
+     Dominion's second color method is based off of the IBM ASCII color
+     set, 1-256, where 1-128 are normal colors, and 129-256 are blinking.
+     To use these colors, give a Alt-5, and a Alt-Color to use.  This
+     is only possible from external text files, or strings.
+
+
+
+
+
+                            ÕÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                            ³String Editor³
+                            ÔÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     In addition to its Menu System, Dominion hightens its Morphability
+     by allowing customization of MOST of it's system strings.  That is,
+     the messages displayed to the user at certain moments.  Dominion
+     has quite a few more strings available to change then most Morphic
+     BBSes, such as Telegard (which only has about 30 or so), with over
+     70 strings available to edit.  The String editor is also quite
+     friendly and easy to use, but NOT NECCESARY. Dominion can read in
+     and extract strings for quick editing via your favorite text
+     editor.
+
+
+     There are a few string editor commands, here is a summary:
+             Q - Quit
+             ] - Next set of 10 strings
+             [ - Last set of 10 strings
+             E - Extract strings to Strings.txt (more on this later)
+             R - Read in from Strings.txt (Again, more later)
+             1-9 - Edit string 1-9
+
+     The String editor tells you what string is what, via a small
+     description before each string. These strings are displayed throughout
+     the software, and by editting them you can TOTALLY change the way the
+     system looks (remeber Hex editting your old softwares to make them
+     look original?, well this is a zillion times easier!). The String
+     Editor can use Dominion Color Codes and Dominion MCI Codes (both
+     explained elsewhere in the docs).
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 36
+
+
+
+
+                      ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                      ³String Extraction/Reading³
+                      ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Once you (E)xtract the strings from the Dominion String editor, simply
+     shell to DOS, and use a regular text editor to edit the file
+     STRINGS.TXT. You can use all Dominion Color Codes and MCI Codes (refer
+     to those sections for more information). This makes string editting
+     significantly easier.
+
+     When you have finished editting your STRINGS.TXT, simply return to the
+     BBS, re-enter the string editor and type (R). This will (R)ead in your
+     new strings.
+
+     IMPORTANT NOTE: BE CAREFUL NOT TO SCREW UP.  DO NOT ADD ANY LINES OR
+     DELETE ANY LINES FROM STRINGS.TXT WHILE IN YOUR TEXT EDITOR. The
+     posistion of each string must remain constant. If you move them around
+     from line to line, when they are reread in, things will be fucked to
+     hell. BE CAREFUL.
+
+
+
+
+
+
+                             ÕÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                             ³Format Files³
+                             ÔÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Format Files give Dominion a great deal more Morphism than most
+     other BBSes. A Format file is a small text file, a few lines long,
+     that the BBS Uses to create certain screens or strings with.  Each
+     format has it's own special codes, so it is important to be
+     careful, and to READ THIS SECTION!!!
+
+     Format Files can have MCI's and color Codes in them.  Each line
+     though, is treated seperatly.  Here is a list of the format files
+     Dominion Uses, and its codes.  The codes follow the same format,
+     %1-9, each defined by the formater.
+
+      BBSLIST.FMT : This is the Format used to create the BBS List with.
+                    %1 - BBS Phone Number
+                    %2 - BBS Name
+                    %3 - BBS Speed
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 37
+
+
+                    %4 - Software
+
+      BOX.FMT : This format is special.  It is used to box certain system
+                messages.  Since its contents are variable in length, they must
+                be specially entered :
+
+                    The 1st line of the file should contain the character
+                    that will be the upper border of the box, and the
+                    character to be used as the lower border of the box. The
+                    rest is the actual format.
+
+                    %1 - Message to be displayed
+                    %2 - Upper Border
+                    %3 - Lower Border
+
+      DSTAT.FMT : Download Batch Status.
+                    %1 - Number of Files
+                    %2 - Size of Queue
+                    %3 - Time of Queue
+                    %4 - FilePoints Required
+
+      FILExx.FMT : File Formats are used in the file listings.  You can have
+                   up to 255, and users can add them also.  These are also
+                   special.  Each line is one particular display mode.
+                   The 1st line is for regular online files, the 2nd for
+                   offline files, and the 3rd for unvalidated files.
+                    %1 - File Name
+                    %2 - File Description
+                    %3 - File Size (in K)
+                    %4 - File Points
+                    %5 - File Number
+                    %6 - Uploader
+                    %7 - Date Uploaded
+                    %8 - Popularity (times downloaded)
+
+      MSGLOCAL.FMT : Message Base Header Format for Local Posts.
+                    %1 - Title of Message
+                    %2 - Author's Name
+                    %3 - Date
+                    %4 - Addressee of post
+                    %5 - Net Origin
+                    %6 - Author's Comment
+                    %7 - Total Number of Messages
+                    %8 - Current Message Area Name
+
+      MSGNET.FMT : Message Base Header Format for Net Posts.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 38
+
+
+                    %1 - Title of Message
+                    %2 - Author's Name
+                    %3 - Date
+                    %4 - Addressee of post
+                    %5 - Net Origin
+                    %6 - Author's Comment
+                    %7 - Total Number of Messages
+                    %8 - Current Message Area Name
+
+      USTAT.FMT : Displayed for Upload Batch Queue
+                    %1 - Total number of files.
+
+      FSTAT.FMT : Used to display File Information
+                    %1 - File Name
+                    %2 - Description
+                    %3 - Size
+                    %4 - File Points
+                    %5 - Est. Time for DL
+                    %6 - Uploader
+                    %7 - Status (Offline, Unvalidated)
+
+      LOGON.FMT : Displays the Last Few Callers, and Call Log
+                    %1 - User's Name
+                    %2 - Baud Rate w/Full Result String
+                    %3 - Caller Number
+                    %4 - User's Call Number for the day
+                    %5 - User's City
+                    %6 - User's Comment
+                    %7 - Date of Call
+                    %8 - Time of Call
+                    %9 - Baud Rate without Full Result String
+
+
+
+
+
+
+                             ÕÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                             ³System Files³
+                             ÔÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Stored in what is often called the Graphics, or Afiles directory are
+     certain system files.  These files may have either of two extensions:
+     .ANS or .MSG. If both exist, .ANS will be shown to ANSi Users, and
+     .MSG will be shown to non-Ansi Users. If only one exists it has the
+     .MSG extension. This will be shown to ALL users, and should not
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 39
+
+
+     contain ANSi Codes. Color *MAY* be shown in a .MSG file through the
+     use of Dominion Color Codes (or MCI Color Codes), explained earlier
+     in this doc. These codes (and their corresponding colors) will be
+     shown to ANSi users, but stripped for Non-ANSi Users, so you should
+     not be worried about these codes "messing up" your textfiles.
+
+     Here is a list of the System Files Dominion displays, and their function.
+     NOTE: All of this files are found in the AFILES directory.
+     If the File is listed as 'FILENAME.MSG/ANS' it is one of the "special"
+     files described in the above paragraph.
+
+
+        File            Usage
+     ÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+        AUTO.MSG         The Current System AutoMessage.
+
+        BBSLIST.MSG      The System's BBS List.
+
+        BDAY.MSG/ANS     Displayed at Logon if it is the user's Birthday.
+
+        COLLIST.MSG/ANS  The screen displayed in the color adjustment editor
+                         to list the colors and give an example.
+
+        COMMENT          The comment file given to Archive Comment Commandline
+                         as %5.
+
+        FEEDBACK.MSG/ANS Displayed before NewUsers send their validation
+                         feedback to the SysOp on their first call.
+
+        LASTON.TXT       This is a list of the last 8 callers of the day.
+
+        LOCKOUT.MSG/ANS  Displayed to a locked out user at an attempted logon.
+
+        LOGON.MSG/ANS    Displayed right after the user has succesfully
+                         logged on (entered his name, password, etc).
+
+        LOGINF.MSG/ANS   If this file is present, and Your Info in Logon is
+                         enabled, then this will be displayed. If the file
+                         is not present, then the Your Info (CmdType OY) is
+                         executed.
+
+        LOGOFF.MSG/ANS   Displayed by the Hangup Command Types during logout.
+
+        MATRIX.MSG/ANS   Displayed as the Matrix Logon Menu (If not present,
+                         then a default Matrix Menu will be shown.)
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 40
+
+
+        NEWANS.ANS       The New User Logon Screen. This should be edited
+                         with EXTREME care, as you must not mess up its
+                         positioning.
+
+        NEWUSER.MSG/ANS  Displayed to a user who chooses to Logon as 'NEW'.
+                         This is displayed before any account data is taken,
+                         so it is an excellent place to let people know if
+                         the system may not be for them.
+
+        NOSYSOP.MSG/ANS  Displayed when a chat call attempt is made and the
+                         SysOp does not answer, or is unavailable.
+
+        ONELINE.LST      The file containing system Oneliners.
+
+        OUTTIME.MSG/ANS  Displayed before the system drops carrier on a user
+                         who has used up all of his time for the day.
+
+        SYSTEM.MSG/ANS   A short note about the System on which the BBS
+                         is run.  This is shown to New Users, as well as
+                         when executing CmdType OI.
+
+        TIMEOUT.MSG/ANS  Displayed just before the system drops carrier on
+                         a User who has not touched his keyboard in 3 minutes.
+                         (a warning tone will sound after 1.5 minutes).
+
+        TRASHCAN.LST     Contains a list of Handles that are not allowed
+                         on the system, for various reason. It should just
+                         consist of one handle per line of plain text.
+
+        TRASHCAN.MSG/ANS File displayed to a user attempting to create a
+                         new account with a handle found in Trashcan.lst.
+
+        USER.LOG         Contains a list of ALL of today's callers.
+
+        WELCOME.MSG/ANS  Displayed DIRECTLY after a connection is made.
+                         (Or if Matrix Logon is active, directly after the
+                         Matrix Password has successfully been entered).
+
+        SYSOP.FLT        The Color Filter used for the SysOp's chat colors
+                         if Filtered Chat has been activated in the Config.
+
+        USER.FLT         The Color Filter used for the User's chat colors
+                         if Filtered Chat has been activated in the Config.
+
+        CHAT.TXT         Logs of any captured Single Line Chats. (NOTE: IF
+                         YOU USE GLOBAL TRAPPING, OR TRAP MANY OF YOUR
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 41
+
+
+                         CHATS, THIS FILE MAY GET QUITE LARGE. YOU MAY WANT
+                         TO DELETE IT PERIODICALLY, OR IF YOU WISH TO SAVE
+                         YOUR OLD CHATS, ZIP IT UP AND THEN DELETE IT. SINCE
+                         IT IS STRAIGHT ASCII TEXT, IT WILL ZIP UP INTO A
+                         VERY SMALL FILE).
+
+        GLOBAL.TXT       Text Captured using the <Shift+F1> key while a user
+                         is online.
+
+        VOTING.TXT       User's Voting responses, compiled to be printed out.
+
+        MNUDATA.DAT      Stores many of Dominion's Internal Menus (ie - MSG
+                         Editor, User Editor, Etc). This file may be edited
+                         with a text editor, but should be done so with
+                         EXTREME care.
+
+        SYSHELP.DAT      SysOp's ALT-H (while online) list of commands.
+                         (Stored in TheDraw's .TD format).
+
+        WFC.DAT          Wait For Call Menu (Stored in TheDraw's .TD format).
+
+        TOP.TD           The Short SysOp Top Screen (Displayed with a user
+                         online, and toggled with the <F2> key. (Stored in
+                         TheDraw's .TD format). (WARNING: THIS FILE SHOULD
+                         BE EDITTED WITH EXTREME CARE).
+
+       TOP2.TD           The Long SysOp Top Screen (Displayed with a user
+                         online and toggled with the <F2> key. (Stored in
+                         TheDraw's .TD format). (WARNING: THIS FILE SHOULD
+                         BE EDITTED WITH EXTREME CARE).
+
+        *.INF            Infoforms for users to fill out are stored here,
+                         they should have the extension of .INF.
+
+        *.SER            Answers to Infoforms are stored with the extension
+                         of .SER (the main filename will be the same as the
+                         filename of the .INF infoform). (NOTE: WITH MANY
+                         USERS FILLING OUT YOUR INFOFORM, THESE ANSWER FILES
+                         MAY GET VERY LARGE. YOU MAY WISH TO DELETE YOUR .SER
+                         FILES PERIODICALLY, OR IF YOU WISH TO SAVE YOUR USER'S
+                         RESPONSES, ZIP IT UP BEFORE DELETING THE .SER FILES.
+                         SINCE THE ANSWER FILES ARE STRAIGHT ASCII, THEY WILL
+                         ZIP UP INTO A VERY SMALL FILE).
+
+        *.FMT            Each of the Format Files described above should be
+                         stored in this directory.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 42
+
+
+
+        *.LOG            The System's Logs (displayed with 'L' in the WFC
+                         menu) will have the extension of .LOG. The filename
+                         is stored in the form: YYMMDD.LOG.
+
+
+
+
+
+                       ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                       ³Networking With Dominion³
+                       ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion is capable of FidoNet style networking, through the use of
+     message packers and mailers, such as FrontDoor and Squish.  Dominion
+     can internally prepare its messages to be handled by Packers such as
+     Squish, TossScan, or Confmail.  The Dominion Development Team suggests
+     the use of Squish, as it is simple to use, and up to date with today's
+     standards, as your Message Packer, and FrontDoor as your Mailer,
+     for the same reasons.  This internal packing/tossing of messages
+     simplfies the running of the BBS, as opposed to other systems, such as
+     LSD, OPUS, RemoteAccess, etc, which require that the BBS exit and run
+     a seperate utility to Toss and Scan messages, then return to the BBS.
+     This requires complicated batch files which dwell much around error
+     levels and sub functions.  Future versions of Dominion will also
+     have the ability to control FrontDoor themselves, rather than have
+     FrontDoor run, get a call, run the BBS, then return to itself.  But for
+     now, the standard method will have to suffice.
+
+
+
+                        ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                        ³FidoNet: How it Works³
+                        ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     The basic idea of FidoNet is quite simple, one BBS shares its messages
+     with a variety of other BBSes.  Due to the 1000's of different BBS systems
+     out there, a standard format has emerged to facilitate the simple
+     trade of messages across different platforms.  This format is basically
+     quite simple, straight text with a little bit of data about the message.
+     G00ting your messages into this format requires a little bit of work
+     though.  There is a four step (or three for systems such as Dominion
+     or OPUS) path for the transmission of messages that most systems follow.
+
+        User Posts Message on BBS
+                |
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 43
+
+
+        BBS (or its Mail Scanner) converts the Post into the FidoBBS Format
+                |
+        An EchoMail Scanner such as Squish Converts the Post into Echomail
+                Packet Format, which contains some extra stuff, and
+                combines many posts into one packet for transmission.
+                |
+        EchoMail Mailer actually sends this packet to the other BBS, and
+                recieves Packets from it.
+                |
+        The Echomail Tosser converts the packets into induvidual FidoBBS
+                message files, and places them into their approiate
+                directories (explained later)
+                |
+        The BBS (or it's Tosser) converts the Fido messages into its own
+                format.
+                |
+        The User reads the messages on the BBS, and is happy.
+
+
+     Not a complicated process, but a bit lenghty.  It does ultimatly
+     pay off, as being the definative standard in message networking.
+
+     Messages for each sub are scanned into EchoMail packets(or Tossed to the
+     BBS) from a specific directory dedicated to EACH SINGLE MESSAGE AREA.
+     IE: if you have 10 networked areas, you have 10 directories, one for each.
+     The messages in each area will be scanned into files who's names are
+     numbers, signifing which message they are.
+     IE: the first message scanned is 1.msg, the next is 2.msg, etc.
+     The same is true for messages tossed into the directory.
+
+     Between each toss and scan, a PURGE must occur.  A Purge removes any
+     existing Fido message files from the directory, so that incoming messages
+     won't be mixing with outgoing messages.  Don't be confused, its a simple
+     thing (Alot of people lose it around here).
+
+                  ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                  ³Specifics on Dominion and FidoNet³
+                  ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion is a little more tightly knit in its mail directory scheme
+     than most other systems.  The system will scan to and toss from a
+     directory off the Messages Directory, with the same name as the Message
+     Area's filename.  This gives a bit of oneness in the way it all works, and
+     gives some organization to everything.
+
+     There are two ways to Scan, Toss, and Purge messages.  The first is from
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 44
+
+
+     the commandline, by running the BBS:
+
+        Dom /AS         Scan Messages
+
+        Dom /AT         Toss Messages
+
+        Dom /AP         Purge Messages
+
+
+      The second method is to call the Scanner, Tosser, and Packer inside
+      of the BBS using the following Command Types.
+
+        !S              Scan Messages
+
+        !T              Toss Messages
+
+        !P              Purge Messages
+
+
+     Follow these simple rules, and read the manual to your Mailer and
+     EchoMail Processor, and networking will be a snap.
+
+
+
+
+
+                           ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                           ³The User Editor³
+                           ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion's  user editor is a feature you will use in conjunction  with
+     others  to determine who has access to various parts of  your  system.
+     In addition, all sorts of information about each user is kept here for
+     you.
+
+     Upon  entry  to  the user editor, you will see  the  following  screen:
+
+        [User #1]
+
+        1. Name    : Fallen Angel #1            2. Realname: Scott Bernard
+        3. Password: SYSOP                      4. Computer: 386/486
+        5. Address : Somewhere in Holmdel       6. City    : Holmdel, Nj
+        7. Fpts    : 23                         8. Phone   : 908-739-2416
+        9. SL      : 255                        0. DSL     : 255
+        A. Exempt  : RTP
+        C. Note    : Seen only is User Editor.  D. Comment : Enjoy the Silence
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 45
+
+
+        E. AR      : abcdefghijklmnop           F. DARs    : abcdefghijklmnop
+        G. Restrict: ----------------
+        H. Age     : 17                         I. Sex     : M
+        Logon Rate : 14400
+
+        Message Stats : Posts=2  Emails=4  FeedBack=1  Waiting=0
+        File Stats    : Uled=80   Dled=0    UpK=16093K     DownK=0K
+        Login Stats   : Calls=1  Today=0   Last On=   First On=08/25/92
+
+
+        User Editor (?=Help):
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     Each command available in the user editor is detailed below.
+
+   [ :                    Moves Down One Account in the User Editor.
+
+   ] :                    Moves Up One Account in the User Editor.
+
+
+
+
+
+
+   |. Security Profile :  Automatically validates a new user with the SL,
+                          DSL, AR flags, and restrictions as defined in the
+                          system configuration.
+
+   !. Lock/Unlock User :  This option allows you to lock a particular user
+                          out of the System. When the user attempts to
+                          Logon to the System (or <C>heck for Access with
+                          an Active Matrix Logon) the System will display
+                          LOCKOUT.MSG/ANS and then drop carrier.
+
+   . Toggle Full Info :   Toggles the User Editor Display Screen between
+                          the full info screen (pictured above) and a
+                          condensed screen.
+
+   , Temp Full Info :     This Temporarily shows the Full Info Screen
+                          (pictured above), then returns to the condensed
+                          screen.
+
+   1. Name :              Allows you to change the User's Handle (or
+                          Alias).
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 46
+
+
+   2. Real Name :         Allows you to change the User's Real Name.
+
+   3. Password :          Allows you to change the User's Password (this
+                          field will be hidden by echo charectors for a
+                          remote user, but the password may be seen on a
+                          local screen w/Local Security off).
+
+   4. Computer Type :     Allows you to change the type of computer that
+                          the user uses.
+
+
+
+
+
+
+   5. Address :           Allows you to change the User's Street Address.
+
+   6. City/State :        Allows you to change the User's City and State.
+
+   7. File Points :       Allows you to change the number of file points
+                          the user has (this will do nothing if file points
+                          are inactive.
+
+   8. Phone :             Allows you to change the User's Telephone Number.
+
+   9. SL :                Allows you to change the User's Security Level
+                          (SL).
+
+   0. DSL :               Allows you to change the User's Download Security
+                          Level (DSL).
+
+   A. Exempt :            Allows you to give the User Certain Exemptions
+                          (discussed in detail elsewhere in the docs).
+                          Press '?' to view the exemptions.
+
+   B. Inactive :          This option is InActive in Version 3.0.
+
+   C. Note :              This is a little note you can write to yourself
+                          and other SysOps about the User. It is only seen
+                          in the User Editor and SysOp Window.
+
+   D. Comment :           Allows you to change the User's Comment, mainly
+                          used for Message Read Headers and User Lists.
+
+   E. AR :                Allows you to give/take away ARs to and from the
+                          User. ARs are used for the Dominion ACS System
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 47
+
+
+                          and are explained in detail elsewhere in the
+                          docs.
+
+   F. DAR :               Allows you to give/take away DARs to and from the
+                          User. DARs are used for the Dominion ACS System
+                          and are explained in detail elsewhere in the
+                          docs.
+
+   G. Restriction :       Allows you to give/take away certain Restrictions
+                          to and from the User. Pressing '?' will give you
+                          a list of all the restrictions and their letter.
+
+   H. Age :               Allows you to change the User's Date of Birth, it
+                          will display their age, but choosing it will prompt
+                          you for a Date of Birth.
+
+   I. Sex :               This is the User's Sex (or lack therof).
+
+   U. Goto User :         This will prompt you to enter a name/user number.
+                          The editor will then jump to that user's account.
+                          (You may enter a partial string, and the system
+                          will prompt you to edit each user's account
+                          containing that string).
+
+   ^. Delete/UnDelete :   Pressing this will delete the User's Account. The
+                          account's data, however, will be preserved until
+                          you recieve a New User, whose data will take over
+                          the deleted account's place in the User List. If
+                          you accidently delete a User's account, you may
+                          press '^' again to undelete the account (this will
+                          only work if its place has not been taken over by
+                          a New User's account.
+
+
+
+
+
+
+   _. Read NewUser Info : This will display the answers to the NewUser
+                          InfoForm (as defined in the config).
+
+   -. Read Any Infoform : If your system uses other Infoforms, this will
+                          display their answers. Pressing - will prompt you
+                          for the filename of the infoform. Simply respond
+                          with the filename of the correspoding infoform's
+                          filename (without extension).
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 48
+
+
+
+   :. Reset Info. :       Pressing this, will cause the System to Reset the
+                          Current User's Info, causing them to re-enter it
+                          upon their next logon. (ie - Birthday, Address,
+                          computer type, etc).
+
+   Q. Quit :              Exits the User Editor and returns to the board
+                          or WFC Menu (depending upon where you entered
+                          the User Editor from).
+
+
+
+
+
+
+
+
+
+
+                            ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                            ³ The File Base Editor ³
+                            ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+
+     The file base editor serves a valuable purpose in that it sets up your
+     file  bases, which are ESSENTIAL for the uploading and downloading  of
+     files on the BBS.
+
+     Dominion can have up to 64 file areas, across all conferences.  That
+     does not mean it has 64 areas per conference, but the 64 are divided
+     amongst the conferences.
+
+     Upon  entering the file base editor, a screen similar to  the  example
+     shown below will be displayed:
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+    NNÄDarÄNameÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄFilenameÄDslÄAGEÄMaxÄPathÄÄÄÄÄ
+     0     SysOp Area                         SYSOP    D255    100 C:\Dls\Sy
+     1     New Uploads                        NEW      D20     100 C:\Dls\Ne
+     2     System Utilities                   UTIL     D30     100 C:\Dls\Ut
+
+     ş [D]elete, [I]nsert, [M]odify, [Q]uit:
+
+
+    ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 49
+
+
+
+     The following commands are available from this screen:
+
+          (D)elete base (I)nsert base
+          (M)odify base (?)Relist Areas
+          (Q)uit
+
+     Here is an explanation of each and its usage :
+
+   ?. ReList Areas :      Will Redisplay the File Areas (If an Area has
+                          been added or deleted, it will now be shown on
+                          your screen).
+
+   D. Delete Base :       Deletes a File Area. You will be prompted for
+                          the number of the base to delete (0-97). When
+                          you delete a File Base, Dominion will automa-
+                          tically move all the bases up one position.
+                          This will not delete the files in the directory
+                          but it WILL delete their descriptions, so make
+                          sure this is what you want to do.
+
+   I. Insert Base :       Inserts a new File Base. You will be prompted for
+                          the file base to insert it before. Inserting this
+                          File Base will move all of the bases up one place.
+
+                          NOTE: Dominion uses "<<Not Used>>" as the default
+                          description, NEWDIR as the default filename. The
+                          default download path is set in the system config.
+
+
+
+
+
+
+
+   M. Modifty Base :      Allows you to edit each individual File Area, and
+                          will be discussed in detail shortly.
+
+   Q. Quit Editor :       Will exit the file base editor and return you to
+                          the board or the WFC Menu (depending upon where
+                          you entered it from).
+
+
+     From the screen shown above, you should (M)odify a File Base in order
+     to set it up the way you desire. The Following is a sample screen of
+     what you will see when choosing the Modify File Base option :
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 50
+
+
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     1. Name       : SysOp Area
+     2. Filename   : SYSOP
+     3. Path       : 'C:\DLS\SYSOP'
+     4. ACS        : D255
+     5. Confernce  : @
+     6. Max Files  : 100
+     7. DAR        : None
+     Flags         : ÄÄÄÄÄ
+
+     File Base Edit (?=Help)
+
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     The commands available from this screen are:
+
+          1-9:Modify item number
+          (])Next Area         ([)Last Area
+          (J)ump to Area       (Q)Quit
+
+          (U)Toggle Uploads
+          (C)Toggle Auto Upload Crediting
+          (A)Toggle Archives Only
+          (R)Toggle Ratio Checking
+
+
+     Here is an explanation of each and its usage :
+
+   1. Name :              Allows you to change the File Area's Name.
+
+
+
+
+
+
+
+
+   2. Filename :          Allows you to change the File Area's Filename
+                          (which is stored in 'DATA\DIR' with an the
+                          extension of .DIR).
+
+   3. Path :              Allows you to choose the Pathname where the
+                          Files will be stored (it makes lots of sense
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 51
+
+
+                          to have a different directory for each file
+                          area).
+
+   4. ACS :               This defines the ACS required for the User to
+                          Access the File Area (The ACS System is described
+                          elsewhere in the docs).
+
+   5. Conference :        This defines the conference that the File Area
+                          will be accessable from (If you enter @ then the
+                          file area will be accessable to ALL conferences).
+
+   6. Max Files :         The defines the Maximum amount of files the file
+                          base may contain. Once this number is reached, a
+                          User may not upload to this File Area, and files
+                          may not be moved into it.
+
+   7. DAR :               Defines the DAR required to access the file area.
+                          Even if the user passes the ACS check, if he
+                          doesn't have this DAR, he can't access the area.
+
+
+
+
+
+   [. Last Area :         Allows you to edit the previous File Area.
+
+   ]. Next Area :         Allows you to edit the next File Area.
+
+   Q. Quit :              Quits back to the previous File Base Editor
+                          Screen (that displays all your file areas and
+                          allows you to modify, delete, and insert other
+                          areas. From here you may quit to the BBS or
+                          WFC Menu).
+
+   R. Ratio Checking :    Even if ratios are active in your config, if
+                          given this flag, the file area will not check
+                          for File Points or UL/DL Ratio.
+
+   A. Archives Only :     If given this flag, only archived files may
+                          be uploaded to this area (via the Archive
+                          Editor in the Config).
+
+   C. AutoUpload Credit : If given this flag, the User will be given
+                          credit for an upload upon uploading it (even
+                          if UL Credit is off) without requiring SysOp
+                          validation.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 52
+
+
+
+   U. No Uploads :        If given this flag, users will not be permitted
+                          to upload to that file area.
+
+
+
+
+
+
+                           ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                           ³The Message Base Editor³
+                           ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     The message base editor is used to structure the message system in all
+     features  such as data file name, maximum number of messages,  message
+     base  security  levels  for viewing and posting,  and  other  security
+     features.
+
+     Dominion currently can have upto 64 message areas, all of which can
+     be FidoNetworked.  The message bases are spread out accross the
+     confereces.  This is not to say that it has 64 bases per conference,
+     but that the 64 are devided amongst the conferences.
+
+
+     Upon  entry  to  the  message base editor, a  screen  similar  to  the
+     example below will appear :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     NNÄARÄNameÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄFileNameÄRslÄPslÄMaxÄConfÄÄÄ
+      1    System News                           SYSTEM   20  255 50  @
+      2    General Discussion                    GENERAL  20  20  50  @
+      3 D  Area SysOps                           SYSOP    30  30  100 @
+
+     ş [D]elete, [I]nsert, [M]odify, [Q]uit:
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     The available commands from this screen are:
+
+          (?) Redisplay screen
+          (D)elete base (I)nsert base
+          (M)odify base (Q)uit Editor
+
+     Here is an explanation of each and its usage:
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 53
+
+
+   ?. Relist Areas :      Will Redisplay the Message Bases, if a base has
+                          been added or deleted, your updated screen will
+                          reflect the change.
+
+   D. Delete Base :       This command will delete the specified base (you
+                          will be prompted for the base's number you wish
+                          to delete). Make sure you wish to do this, as all
+                          Messages in the choosen area will also be deleted.
+
+   I. Insert Base :       This will insert a new Message Base into the editor.
+                          You will be prompted for the number of the base you
+                          wish to place it before.
+
+   M. Modify Base :       You will be prompted for the number of the base you
+                          wish to modify. This will allow you to edit all of
+                          that particular bases features (it is explained in
+                          detail in the next section).
+
+
+
+
+   Q. Quit Editor :       Exits the Message Base Editor and returns you to the
+                          board or WFC Menu (depending upon where you entered
+                          the editor from).
+
+
+
+     When  you  select the (M)odify command, you are asked which  base  you
+     wish  to modify. After entering your selection, a screen  similar  to
+     the following example is displayed:
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+    1. Name         : System News
+    2. Filename     : SYSTEM
+    3. Conference   : @
+    4. Read SL      : 20
+    5. Post SL      : 255
+    6. Min. Age     : 0
+    7. Max Msgs     : 50
+    8. AR           : None
+    Flags           : ÄÄAÄÄ
+
+    Message Base Edit (?=Help) ?
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 54
+
+
+
+     Each field and command is described in detail below.
+
+   [. Last Area :         Edit Previous Message Base.
+
+   ]. Previous Area :     Edit Previous Message Base.
+
+   Q. Quit :              Quits to the previous Message Base Editor screen
+                          (that displays all of your Message Bases and
+                          allows you Insert, Modify, and Delete them. From
+                          here you may exit to the board or WFC Menu).
+
+   1. Name :              Allows you to edit name of the current Message
+                          Base.
+
+   2. Filename :          Allows you to change the Filename of the Message
+                          Base. It will be stored in 'DATA\MSGS\' and will
+                          have an extension of .DAT. (FidoNet Subs are
+                          handled differently are are explained elsewhere).
+
+   3. Conference :        Defines the Conference that the Message Base will
+                          be accessable from (If you enter @ it will be
+                          accessable from all conferences).
+
+   4. Read SL :           Sets the Security Level required to Read Messages
+                          in the Current Message Base.
+
+   5. Post SL :           Sets the Security Level required to Post Messages
+                          in the Current Message Base.
+
+   6. Minimum Age :       Defines the age a User must be in order to access
+                          the Current Message Base.
+
+   7. Maximum Messages :  Sets the Maximum amount of Messages held in the
+                          Message Sub (after this number is reached, when
+                          a new message is posted, the first message in the
+                          sub will automatically be deleted).
+
+   8. Set AR :            Sets the AR Required to access the Message Base.
+
+   U. Toggle Annonymous : Allows all users to post annonymously in the
+                          current Message Base (Unless the user has a
+                          restriction of *).
+
+   F. Toggle FidoNet :    Makes the Sub a FidoNet Sub (Please see the
+                          section on NetWorking for complete FidoNet
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 55
+
+
+                          details).
+
+   A. Toggle AutoScan :   Makes the user automatically newscan the sub
+                          upon logging on to the system. Excelent for
+                          System News and Information, as the user has
+                          no choice other then to see the messages.
+
+   N. Net Validation :    If the sub is a Networked sub, then all posts
+                          must be validated by a SysOp before being sent
+                          over the net.
+
+   G. Graphics Required : Only users with ANSI emulation active may
+                          access the Message Sub. Excellent for ANSI
+                          artwork subs.
+
+
+
+
+
+
+                          ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                          ³The Voting Editor³
+                          ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Sometimes you may have a question that you would like to get your
+     users' opinions on. It may be a yes/no question of some sort, or
+     somthing similar to that. If this situation arises, you may create
+     a voting question for it.
+
+     When you enter Dominion's Voting Editor, a screen similar to the
+     following will be displayed :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     NNÄQuestionÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄAnswersÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+      1 Could this be a voting Question?               2
+      2 Empty                                          0
+      3 Empty                                          0
+      4 Empty                                          0
+      5 Empty                                          0
+      6 Empty                                          0
+      7 Empty                                          0
+      8 Empty                                          0
+      9 Empty                                          0
+     10 Empty                                          0
+     11 Empty                                          0
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 56
+
+
+     12 Empty                                          0
+     13 Empty                                          0
+     14 Empty                                          0
+     15 Empty                                          0
+     16 Empty                                          0
+     17 Empty                                          0
+     18 Empty                                          0
+     19 Empty                                          0
+     20 Empty                                          0
+
+     ş [D]elete, [I]nsert, [M]odify, [Q]uit:
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     The Following Commands are available from this screen :
+
+   ?. Redraw Screen :     This will redraw your screen, adding any changes
+                          to the updated screen.
+
+   D. Delete Question :   You will be prompted for the number of the voting
+                          question you wish to delete.
+
+   M. Modify Question :   You will be prompted for the number of the question
+                          you wish to edit. (Editting one of the questions
+                          labeled "Empty" will allow you to create a new
+                          question. You may only have 20 voting questions).
+
+   Q. Quit :              Returns you to the BBS or WFC Menu (depending on
+                          where you entered the voting editor from).
+
+
+     When you choose (M)odify Question, you will be presented with a screen
+     similar to the following :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     1. Question: Could this be a voting Question?
+     2. Responses: 4 Responses
+
+     Voting Editor:
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     The following commands are available from this menu:
+
+   1. Question :          This allows you to change the Voting Question.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 57
+
+
+
+   2. Responses :         This allows you to change the answers to the
+                          voting question, as well as add new answers.
+
+
+     When you choose (2)Responses, a screen similar to the following will
+     be displayed :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+     Editing Question #0: Could this be a voting Question?
+      0 Yes, This most likely is a voting question
+      1 No, I would venture to say this is not a voting question.
+
+     ş [D]elete, [I]nsert, [M]odify, [Q]uit:
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     The following commands are available from this screen :
+
+   D. Delete Answer :     You will be prompted for the number of the
+                          answer you wish to delete.
+
+
+   I. Insert Answer :     You will be prompted for the number you wish to
+                          insert the new answer before. You will then be
+                          prompted to type in the answer.
+
+   M. Modify Answer :     You will be prompted for the number of the answer
+                          you wish to modify. You may use this to edit
+                          existing answers.
+
+   Q. Quit :              This returns you to the previous screen.
+
+
+
+
+                        ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                        ³The Conference Editor³
+                        ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion's Conferencing System is very similar to that of Telegard
+     and Renegade. That is, a Flag (any number or capital letter) is
+     assigned to each conference, when you wish to place a message or
+     file base in that particular conference, change the Conference
+     Option (in the message and file base editors) to the letter or
+     number of the conference you want that particular message or file
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 58
+
+
+     base in. If you place an @ in the Conference Option of your Message
+     or File Base editor, then that Message/File Base will be accessable
+     from all conferences.
+
+     Upon entry to the conference base editor, a screen similar to the
+     example below will appear :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     NNÄÄNameÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄSLÄÄÄÄÄÄÄFlagsÄÄÄÄÄÄÄÄÄÄÄ
+      1  Local Messages                           S20      L
+      2  Network Messages                         S20      N
+      3  Everything                               S20      @
+
+     ş [D]elete, [I]nsert, [M]odify, [Q]uit:
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     The Commands available from this screen are :
+
+
+   ?. Redisplay Screen :  This will redisplay the conferences. If a
+                          conference has been added or deleted, your
+                          updated screen will reflect that change.
+
+   D. Delete Conference : This will prompt you for the number of the
+                          Conference to delete. Make sure you really want
+                          to delete the conference before doing so.
+
+   I. Insert Conference : This will create a new confernce, you will be
+                          prompted for the number of the conference you
+                          wish to insert it before.
+
+   M. Modify Conference : This will prompt you for the number of the
+                          conference you wish to edit. Explained in
+                          detail below.
+
+
+
+
+
+   Q. Quit Editor :       Quits the Conference Editor and returns to the
+                          board or WFC Menu (depending upon where you
+                          entered the conference editor from).
+
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 59
+
+
+     When you choose (M)odify Conference you will be prompted for the
+     number of the conference you wish to edit. A screen similar to the
+     one below will be displayed :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+    1. Name         : Local Messages
+    2. SL           : S20
+    3. Flags        : L
+
+    Which (1-3,Q,[,],J) ?
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     Here is a list of each option and a brief description of what it
+     does :
+
+   [. Previous Conf. :    Allows you to edit the previous conference.
+
+   [. Next Conference :   Allows you to edit the next conference.
+
+   Q. Quit :              Returns you to the previous conference editor
+                          screen (which displays and allows editing of
+                          each conference), from there you can quit
+                          to the board or WFC Menu.
+
+   J. Jump to Conf. :     Will prompt you for the number of the conference
+                          you wish to jump to.
+
+   1. Name :              Allows you to change the name of the conference.
+
+   2. SL :                Allows you to change the ACS String for the
+                          Conference. This may use all Security Level
+                          functions described in ACS System part of the
+                          docs.
+
+   3. Flag :              This is the capital letter or number that will
+                          be used to assign message and file bases to the
+                          conference. Simply enter this letter/number into
+                          the conference field of the file and message bases.
+                          If you enter an @ here, then all message and file
+                          bases will be accessable from this conference.
+
+
+
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 60
+
+
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³The Protocol Editor³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     The protocol editor allows you to set up different protocols for
+     transferring files. The most common protocols are Xmodem, Ymodem and
+     Zmodem; they have already been set up for you in the protocol editor.
+     All you need to do is place the appropriate program into any directory
+     that is part of your DOS PATH statement. Dominion may have up to 255
+     different protocols.
+
+     In order for your default protocols to work you will need copies of
+     DSZ and HSLink. Look for both programs on local PD boards throughout
+     your area (Altho, a registered copy of DSZ is HIGHLY recommended as
+     you may use certain protocols, such as Ymodem-G, without a registered
+     copy. Simply extract both files to a directory contained in your path.
+
+     Dominion's transfer system is COMPLETELY batch oriented. All
+     transfering REQUIRES batch compatible protocols. The files to be sent
+     will almost always be sent in using a Batch List, and the files
+     recieved will be read out of the DSZLOG. This ensures perfect
+     transfers everytime, with a minimum of work. Also, BiDierctional
+     transfers are internaly supported, as long as the protocol writes to
+     DSZLOG. HSLink is HIGHLY recommended for your BiDirectional Transfers
+     as it is proven to work perfectly with Dominion. All transfers are
+     recieved and processed in the BATCH directory, before being moved to
+     their appropriate Download Directory, in order to keep everything
+     neat.
+
+     In certain instances, the BBS may desire to send a Single File, so
+     certain protocols should be defined as a single protocol (such as
+     Zmodem and Ymodem). These protocols would be available when doing
+     things such as uploading files as messages, downloading file lists
+     and other things. For the protocol to be active for these functions,
+     you must activate Single Protocol and give it a command line (this
+     process is explained in detail later in this section).
+
+     When you enter the protocol editor, you will see a screen similar to
+     the one shown below :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     NNÄÄSingleÄÄDescriptionÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+      0    Y     Zmodem MobyTurbo
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 61
+
+
+      1    Y     Ymodem Batch
+      2    Y     Ymodem-G Batch
+      3    N     HSLink
+
+      ş [D]elete, [I]nsert, [M]odify, [Q]uit:
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     The Following Commands are available :
+
+   ?. Redisplay Screen :  Redisplays all protocols. If you have inserted
+                          or deleted any protocols, the new display will
+                          reflect those changes.
+
+   D. Delete Protocol :   You will be prompted for the number of the protocol
+                          you wish to delete. This will erase the protocol.
+
+
+
+
+
+
+   I. Insert Protocol :   You will be prompted for the number of the protocol
+                          you wish to insert the new one before. This will
+                          create a new protocol.
+
+   M. Modify Protocol :   You will be prompted for the number of the protocol
+                          you wish to edit. This will give you the ability to
+                          edit all of the protocol's information. It is
+                          explained in detail below.
+
+   Q. Quit :              Quits the protocol editor and returns to the board
+                          or WFC Menu (depending on where you entered it
+                          from).
+
+
+     When you choose (M)odify Protocol, you will be given a screen similar
+     to the one below :
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     1. Description       : Zmodem MobyTurbo
+     2. Key               : Z
+     3. Batch Receive     : dsz port %2 rz -rm
+     4. Batch Send        : dsz port %2 sz -rm @%5
+     5. File Sent         : S
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 62
+
+
+     6. File Received     : R
+     7. Error in Transfer : E
+     8. Single            : Ok
+     9. Single Receieve   : dsz port %2 rz -rm %3
+     0. Single Send       : dsz port %2 sz -rm %3
+
+     %1 = Com Port and Speed
+     %2 = Com Port
+     %3 = File Name
+     %4 = Port Speed
+     %5 = Batch List File (Without @)
+ 
+     Protocol Editor (0-9,J,Q,[,]):
+
+     ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+
+     Notice the %1-5 Variable List displayed above, here is a brief
+     explaination of each variable and its usage :
+
+          %1        Specifies both the comport and the speed.
+
+          %2        Specifies the ComPort being used, "2", "1", etc.
+
+          %3        Specifies the filename to be transferred (this should
+                    only be used on the single transfer command line).
+
+
+          %4        Specifies the current baud rate, as a string of ASCII
+                    digits ("300", "1200", "2400", etc).
+
+          %5        Specifies the name of the file that contains a list of
+                    filenames to be batch downloaded, without the @ that
+                    most protocols use to signify this file.
+
+
+     The following commands may be used from the above menu :
+
+   ?. ReDisplay Screen :  This will redisplay the screen, if you make any
+                          changes have been made, the new screen will
+                          reflect these changes.
+
+   [. Previous Protocol : Allows you to edit the previous protocol in the
+                          protocol editor.
+
+   ]. Next Protocol :      Allows you to edit the next protocol in the
+                           protocol editor.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 63
+
+
+
+   J. Jump to Protocol :   You will be prompted for the number of the
+                           protocol you wish to edit.
+
+   Q. Quit :               Quits this screen and returns you to the previous
+                           screen (which displayed the list of all protocols).
+                           From that screen, you may return to the BBS or WFC
+                           Menu.
+
+   1. Description :        Allows you to change the description of the
+                           protocol.
+
+   2. Key :                Selects the key used to choose this protocol.
+
+   3. Batch Receive :      The command line used for the protocol to recieve
+                           files from the remote user.
+
+   4. Batch Send :         The command line used for the protocol to send
+                           files to the remote user.
+
+   5. File Sent :          This is the result code sent by the protocol for a
+                           successful send.
+
+   6. File Received :      This is the result code sent by the protocol for a
+                           successfully recieved file.
+
+   7. Error in Transfer :  This is the result code sent by the protocol for an
+                           unsuccessful transfer.
+
+   8. Single :             This activates the protocol as a Single protocol.
+
+   9. Single Receive :     If the protocol is active as a Single protocol,
+                           this is the receive file command line.
+
+   0. Single Send :        If the protocol is active as a Single protocol,
+                           this is the send file command line.
+
+
+
+
+
+                             ÕÍÍÍÍÍÍÍÍÍÍÍ¸
+                             ³Menu Editor³
+                             ÔÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion's menu system is the base of the entire system's structure;
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 64
+
+
+     almost every command that a user will ever enter can be modified,
+     added to, and deleted from your BBS with the use of the menu editor.
+     Dominion's Menu Editor is based heavily upon that of Telegard, mainly
+     to give a bit of "standardness" to menu editing, but also because
+     Telegard's Menu Editor is by far the best.
+
+     The menu system is broken up into individual menu FILES, each of which
+     define the different menus of your system. The menu files all exist
+     in your MENUS directory, and all have the file extension of "MNU".
+     One advantage of having a multiple menu-file system, over a single
+     menu-file system, is that other people who write Telegard add-on
+     utilities, such as online doors, can include the menu file with their
+     programs, minimizing the total amount of work necessary on the SysOp's
+     part.
+
+
+     --------------------
+     THE MAIN EDITOR MENU
+     --------------------
+
+     Upon  entry  to the Menu Editor, you will be presented with  a  screen
+     similar to the following (compressed slightly to fit onto the page):
+     ______________________________________________________________________
+
+     Menu File Available to Edit
+
+     ARCHIVE.MNU     FILE.MNU        GLOBAL.MNU     PERSONAL.MNU
+     MESSAGE.MNU     NEWUSER.MNU     ONLINE.MNU
+     RUMOUR.MNU      SYSOP.MNU       EMAIL.MNU
+     AUTO.MNU        BBSLIST.MNU     MAIN.MNU
+
+     ş [D]elete, [I]nsert, [M]odify, [Q]uit:
+     ______________________________________________________________________
+
+     The commands available at this screen are:
+
+   D. Delete Menu File :   This will delete the choosen .MNU file from your
+                           MENUS directory. Make SURE you want to delete that
+                           menu, as you will be unable to retrieve it after it
+                           has been deleted.
+
+   I. Insert Menu File :   You will be prompted for the filename of the menu
+                           file you wish to create, it can be found in the
+                           MENUS directory with an extension of .MNU.
+
+   M. Modify Menu File :   You will be prompted for the filename of the menu
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 65
+
+
+                           you wish to edit (do not include the .MNU
+                           extension). Further details may be found later in
+                           this section.
+
+   Q. Quit Menu Editor :   Allows you to exit the menu editor and returns you
+                           to the BBS or WFC Menu (depending on where you
+                           entered the menu editor from).
+
+     When you choose to (M)odify a menu, you will be presented with a
+     screen similar to the following :
+    _______________________________________________________________________
+
+    Current Menu: MAIN
+
+     0. =^ message.mnu                       1. =^ file.mnu
+     2. =^ auto.mnu                          3. MN G
+     4. FNH  G                               5. =^ personal.mnu
+     6. OC What is your chat reason?         7. OO
+     8. OF user.log                          9. OU
+    10. OV                                  11. OY
+    12. OI                                  13. =^ bbslist.mnu
+    14. =^ online.mnu                       15. =/ email.mnu
+    16. OT 60                               17. OP C
+    18. =^ Rumour.mnu                       19. ME 1
+    20. IC Do you wish to logoff now?       21. IH
+
+    Menu Editor (?=Help):
+     ______________________________________________________________________
+
+     In this display, the command number, command Type, attribute, and
+     Parameter are all displayed (found in that order).
+
+     The following are descriptions of the commands available here:
+
+   ?. Help :               Displays a list of the commands available.
+
+   Q. Quit :               Exits to the previous Screen of the Menu Editor
+                           (the one that displayed all the menu files) and
+                           from there you may return to the BBS or WFC
+                           Menu.
+
+   P. Position Commands :  This will allow you to change the position of
+                           the commands in the menu.
+
+   D. Delete Commands :    You will be prompted for the number of the
+                           command you wish to delete. It will then be
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 66
+
+
+                           perminently removed from the menu.
+
+   V. View Menu :          This will show how the menu will actually look
+                           to the users.
+
+   X. Toggle Display Mode :There are two types of Menu data that may be
+                           edited, this takes you to the second screen
+                           (the menu information editor). This will be
+                           explained in further detail later in this
+                           section.
+
+   M. Modify Commands :    You will be prompted for the number of the
+                           command you wish to edit. This will allow you
+                           to edit that commands information, and is
+                           explained in detail below.
+
+     -------------------------
+     MENU COMMAND MODIFICATION
+     -------------------------
+
+     When you choose to (M)odify a Command, you will be prompted for the
+     number of the command you wish to modify, when choosing this, you
+     will see a screen similar to the one shown below :
+     ______________________________________________________________________
+
+     Edititing Command #0
+
+     1. Desc     : <M>essage Menu
+     2. Key      : M
+     3. Type     : =^
+     4. Attribute:
+     5. Security : S20
+     6. Line     : (Message Menu)
+     7. Parameter: message.mnu
+
+     Command Editor (Q=Quit, V=View, J=Jump, [,])
+     ______________________________________________________________________
+
+     This is probably starting to get confusing right about now! If you
+     ARE getting confused, don't worry; you'll understand it soon enough,
+     after a little usage. From here, the following modification and
+     movement commands are available:
+
+   1. Description :        Allows you to change the description of the
+                           the command, this is what the user will see
+                           when he displays the menu.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 67
+
+
+
+   2. Key :                This defines the key used to activate the
+                           command. You may precede the command with a
+                           '/', in which case, the system will await a
+                           second charector to be entered (this is useful
+                           if you want two commands with a similar key. IE
+                           - <A>rea List and </A>rchive Menu in the File
+                           Menu). The command activation key may be up to
+                           eight charecters long. If a user with hot keys
+                           active wishes to use one of these commands, he
+                           must precede it with '//', which will allow the
+                           entering of an "Extended" Command.
+
+   3. Type :               This is the two charector Command Type string
+                           This string tells the system what the command
+                           should do. A list of ALL possible Command Types
+                           may be found in the file MENUS.DOC. (NOTE: A
+                           user will SysOp access may execute any command
+                           type, even if the current menu does not have a
+                           command to execute the Command Type. The SysOp
+                           simply needs to enter in the "Any CmdType"
+                           String <defineable in the string editor>. This
+                           two charector string is ** in your default
+                           Dominion Configuration, but may be changed to
+                           whatever you please to add to system security.
+
+
+   4. Attribute :          This is a special "flag" that may be assigned to
+                           a command. There are 5 different attributes that
+                           a command may have: (H)idden - If given this
+                           attribute, the command will not be displayed on
+                           the menu, even if the user has access to it.
+                           (F)orced - If given this flag, the command will
+                           automatically be executed upon entering the menu.
+                           (U)nhidden - If given this flag, the command will
+                           be displayed to ALL users (even if they do not
+                           have access to it). (D)efault - If given this
+                           flag, whenever the user presses [CR] in the menu,
+                           this command will be executed. (T)itle - If given
+                           this flag, the Command will not execute anything,
+                           but rather serve as a header to seperate commands
+                           from one another inside of the menu (see the
+                           default File Menu's "SysOp Commands" Header).
+
+   5. Security :           This defines the ACS required for a user to
+                           execute the command. You may use any of the
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 68
+
+
+                           different ACS Strings, explained in the ACS
+                           System section of the docs.
+
+   6. Line :               When the user executes the command, this string
+                           will be displayed on the Command Line. It
+                           normally just tells the user what the command
+                           they executed is doing. It is only cosmetic,
+                           and is not essential to the execution of the
+                           command.
+
+   7. Parameter :          This is used in conjunction with the Command
+                           Command Types, it allows one command type to
+                           perform a variety of different actions. All of
+                           the Command Type Parameters may be found in the
+                           file MENUS.DOC.
+
+   Q. Quit :               This will return you to the previous screen of
+                           the menu editor (where all of the menus
+                           commands are displayed).
+
+
+     -----------------------
+     MENU INFORMATION EDITOR
+     -----------------------
+
+     I will be careful not to lose you at this part. After you (Q)uit from
+     the screen displayed above (the menu command modification screen),
+     you will return to the previous screen (the screen that showed ALL of
+     the commands available in the menu, along with their command type,
+     parameter and attribute). From this screen (the one that shows ALL of
+     the commands available for the menu), if you press (X) a screen
+     similar to the following will be displayed :
+     ______________________________________________________________________
+
+     Menu File Name: MAIN
+
+     1. Prompt       : (`Z)`M[`T Left] (Main Menu) [?/Menu] :
+     2. Titles       : –Dominion Bulletin Board System
+                     : –Main Menu
+     3. Ansi Menu    :
+     4. Security     : S40
+     5. Change Style : 5,4,3 - 4 Columns
+     6. 3D Effects   : Yes
+
+     Menu Editor (?=Help):
+     ______________________________________________________________________
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 69
+
+
+
+     The following commands are available from this menu:
+
+   1. Prompt :             This allows you to change the Menu Prompt. This
+                           Prompt may include any of the system's MCI
+                           Codes (explained in a different section of the
+                           docs).
+
+   2. Titles :             This allows you to change the two line header
+                           that is displayed at the top of the menu. It
+                           makes sense for one of these lines to contain
+                           the name of the menu.
+
+   3. ANSI Menu            This defines the filename of an external file
+                           you wish to display in place of the menu
+                           (obviously, it should simply be an external
+                           file that displays the commands available from
+                           the menu). This/these ANSI menus should be found
+                           in your AFILES directory. If it has an
+                           extension of .ANS it will be displayed to ANSI
+                           users, if it has an extension of .MSG, it will
+                           be displayed to non-ANSI users. If either of
+                           these files does not exist, the internal menu
+                           will be shown. (NOTE: When entering in the
+                           filename in the menu editor, you should not
+                           include a description. The system will
+                           automatically look for the files FILENAME.ANS
+                           and FILENAME.MSG in the AFILES directory).
+
+   4. Security :           This defines the ACS requirement that the user
+                           must satisfy in order to access the menu. This
+                           may use any of the ACS Strings found in the ACS
+                           System section of the docs. If the user does
+                           not meet the ACS requirement, then the system
+                           will tell him that he does not meet the ACS
+                           requirement, and he will be returned to the
+                           previous menu.
+
+   5. Change Style :       This allows you to change the style of your menu.
+                           When you choose this option, a screen resembling
+                           the following will be displayed :
+
+                         Menu Style Editor
+
+                         1. Brackets    : 5
+                         2. Commands    : 4
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 70
+
+
+                         3. Description : 3
+                         4. Columns     : 4
+                         5. Border Char : Ä
+                         6. Border Attr : 5
+
+                         Select:
+
+                           When you enter in the Description for a new
+                           command, Dominion breaks that description up
+                           into 3 parts: the brackets, command, and the
+                           description. The brackets are the ()'s or []'s
+                           or ®¯'s or <>'s or whatever else you have choosen
+                           to seperate the command letter from the rest of
+                           the description. Choice 1 is the color that you
+                           wish to make those brackets (You must enter a
+                           number in this field, it will display the number's
+                           corresponding color, as defined by the system or
+                           user, extended colors are entered as 10-19). The
+                           Command is the key you have choosen to execute
+                           the Command. Choice 2 is the color that you wish
+                           to display the key to execute the command in, this
+                           again wants you to input a number to correspond
+                           with the desired color. The description is every-
+                           thing that comes after the trailing bracket, and
+                           should describe what the command does. Enter the
+                           number of the color you wish the menu's descriptions
+                           to be displayed in. The Fourth option changes the
+                           number of columns you want the menu displayed in.
+                           Dominion will auotmatically distribute the commands
+                           throughout the columns. The 5th option is only for
+                           3D Menus, this is the charecter that will form
+                           lines above and below the menu. Option 6 is the
+                           color's number you wish that charector to be.
+                           To make sure you understand the coloring scheme,
+                           in default Dominion, this setup would make all
+                           brackets appear blue, the letter of the command
+                           would be yellow, and the description of the
+                           command would be Cyan. The border char (for 3D
+                           menus) would be blue.
+
+   6. 3D Effects :         Pressing 6 will toggle 3D effects on and off. If
+                           3D effects are active, then the command letters
+                           will be displayed on a grey bar that gives the
+                           menu a 3-Dimensional look. (NOTE: If 3D effects
+                           are on, then the menu will not display the menu
+                           colors defined in the above field.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 71
+
+
+
+   ?. Help :               This displays the commands available from the
+                           current screen.
+
+   Q. Quit :               Returns you to the previous menu editor screen
+                           (where you see all of the menu files present in
+                           your MENUS directory and have the option of
+                           Modifying them).
+
+   V. View Menu :          This shows you what the menu will look like when
+                           someone online displays it, this saves you the
+                           hassle of exiting and entering the menu everytime
+                           you wish to see how a change you have made will
+                           look.
+
+   X. Toggle Display Mode :This toggles between the Command Modification
+                           screen and the Menu Information Editor.
+
+     ----------------------------
+     SPECIAL GLOBAL MENU COMMANDS
+     ----------------------------
+
+     There are several internal commands that may be used from ANY menu on
+     the BBS (except the Matrix). Therefore, do not use any of these commands
+     as the key(s) for your commands, unless you like it when you system
+     throws up. These Commands are :
+
+   ?. Help :               ? will display the current menu. This is useful
+                           for a user in expert or regular mode, but makes
+                           little sense for someone that is in Idiot Mode.
+                           This command is available to all users.
+
+   //HELP :                Displays a list of all the available extended
+                           commands.
+                           This command is available to all users.
+
+   //GRAFIX :              Allows the user to toggle his graphics (ANSI or
+                           non-ANSI, color or non-color, Avatar or non-avatar).
+                           This command is available to all users.
+
+   //HANGUP :              Causes the system to immediatly drop carrier on
+                           the user.
+                           This command is available to all users.
+
+   //CLS :                 Clears the Screen.
+                           This command is available to all users.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 72
+
+
+
+   //RELOAD :              If the system gets fucked up somehow (for
+                           example, a user getting into a menu that he does
+                           not have access to quit, or somthing equally
+                           crazy) this will reload the menu stack and return
+                           the user to the startout menu.
+                           This command is available to all users.
+
+   //SPEED :               This will display to the user the current Comport
+                           speed, as well as the current baud rate.
+                           This command is available to all users.
+
+   //VER :                 This command will give the version information,
+                           such as the version number, date and time compiled,
+                           etc.
+                           This command is available to all users.
+
+   //**                    When you type in these two charectors, you will
+                           be prompted for the Command Type and Parameter
+                           you wish to execute. This allows you to execute
+                           any command on any menu at any time. (NOTE: **
+                           is the default charectors for this command, but
+                           for extra system security, this has been made
+                           into a redefineable string. You may change this
+                           to anything you want in the String editor.
+                           This command is available to users with an SL of
+                           255.
+
+   //,                     You can string together a bunch of commands, and
+                           seperate them with a comma. The comma will act as
+                           a [CR] between the commands. This enables you to
+                           link many commands together on one command line.
+                           For Example, if you entered the charectors :
+                           '//Q,C,I desire to page you,' on the command
+                           line (using default Dom setup), it would Quit to
+                           the Main Menu and page the SysOp for chat with the
+                           Chat reason "I desire to page you".
+                           This command is available to all users.
+
+                      ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                      ³Effects with Menu Commands³
+                      ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+      There are many possibilities to the "effects" you can cause by using
+      Dominion's Morphic Menu System. A small list of these possibilities
+      is shown below, but they are endless :
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 73
+
+
+
+        Linking: When you call a command, the BBS will look through the ENTIRE
+                 menu for commands with the Key used.  It will then execute
+                 ALL commands with the same key (as long as the user has access
+                 to them).
+                 For Example:
+                     To do a NewScan of BOTH the File Areas and the Message
+                     Bases, Link the FN (File NewScan) and MN (Message NewScan)
+                     commands together. This is achieved by giving both
+                     commands the same key, and placing them in the same menu
+                     (obviously, it would make sense to give one of the
+                     commands a Hidden Attribute, so that the menu doesn't
+                     display the same command twice.
+
+        Forcing: ALOT is possible with Forced Command Items.
+                 For Example:
+                        To Simulate LSD's Transfer Area Entrance Routine:
+
+                        At the Top of your File.Mnu:
+                        Have 3 commands, one of type OF (Display File), with
+                        an Parameter of File.  The BBS will display
+                        File.ans or File.msg (ANSI/Non-ANSI).
+                        Make the second command, CmdType OF and parameter
+                        rules, and make the files rules.ans/msg.
+                        Have a third, of Type FN (File Area NewScan), with
+                        a Parameter of G? (Global Maybe), which will ask
+                        if the user wants to Newscan all areas.
+                        Give all commands Attributes of 'F'orced.
+                        Now when the user enters the File Menu, the system
+                        will display file.ans/msg (File Stats), then display
+                        rules.ans/msg (file area rules), then ask the user
+                        if he wants to NewScan the File Areas.
+
+        Defaults: You can create Y/N question prompts with these.
+                For Example:
+                         If you want to make a prompt ask you if you wish to
+                         newscan the message area when you enter the message
+                         menu, make a menu file with 3 commands in it. The
+                         first command should be CmdType MN, the second
+                         should be CmdType =^ (with a param of message.mnu).
+                         The third command should be CmdType =^ (with a param
+                         of message.mnu). Make the prompt look somthing like
+                         this: 'Would you like to NewScan Messages? [Y/N] '.
+                         Make the key for the first *2* commands 'Y' (using
+                         the command linking that we discussed earlier) and
+                         make the third command have a key of 'N'.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 74
+
+
+
+      Many many more things are possible.  Its basically piecing the
+      Command Types together for it to do whatever you want.  OL (Print
+      Line) and OF (Print File) are VERY useful, if used correctly.
+
+                 ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                 ³Menu Commands Available In Dominion³
+                 ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Due  to the fact that there are so many available commands,  and  that
+     thorough  descriptions  of  each command take up so  much  space,  the
+     available  commands  are described in a separate  documentation  file,
+     MENUS.DOC.  Consult MENUS.DOC for descriptions of  all  menu  commands
+     and parameters available in Dominion.
+
+
+
+
+
+
+
+                           ÕÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                           ³Mailing Lists³
+                           ÔÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Dominion's Mailing List Function is quite useful. If a file with an
+     extension of .MML, in your AFILES directory, then it may be used as
+     a mailing list.  In this file, you should enter the name or number
+     of several users (one on each line). When you use the mailing list
+     command (@ from the WFC Menu, or Command Type MA) you will be prompted
+     for the filename (without extension) of the mailing list to use. Each
+     user whose name or user number is contained in this mailing list will
+     receive the Email that you write.
+
+
+                         ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                         ³Global User Editor³
+                         ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     The Global User Editor allows you to edit each user's account very
+     quickly. A Command Type of S- is used to activate this command. When
+     the Global User Editor is activated, the following series of questions
+     will be asked (A brief description of what each will do is shown in
+     brackets following the question here in the docs, this description will
+     NOT be displayed when executing this command from the BBS). :
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 75
+
+
+  Global SL :               [This will give EVERY user on your BBS the
+                             specified SL. Leave this field blank if you do
+                             not wish to touch any SLs during the GloUser
+                             process.]
+
+  Global DSL :              [This will give EVERY user on your BBS the
+                             specified DSL. Leave this field blank if you
+                             do not wish to touch any DSLs during the
+                             GloUser process.]
+
+  Do Colors? Yes/NO         [Yes: Restores all user's account colors to that
+                                  of your default Dominion Setup.
+                             No : Does not touch any user's colors.]
+
+  Global Protocol Yes/NO    [Yes: This will cause the system to prompt each
+                             User to choose a new default protocol upon
+                             logging on to the system.
+                             No : Protocols will not be touched.]
+
+  Reset File Format Yes/NO  [Yes: This will cause the system to prompt each
+                             User to choose a new file format upon logging
+                             on to the system.
+                             No : File Formats will not be touched.]
+
+  Reset Address? Yes/NO     [Yes: This will cause the system to prompt each
+                             user to re-enter his address upon logging on
+                             to the system.
+                             No : Addresses will not be touched.]
+
+  Reset PC Types? Yes/NO    [Yes: This will cause the system to prompt each
+                             user to re-enter his Computer Type upon
+                             logging on to the system.
+                             No : Computer Types will not be touched.]
+
+  Reset Msg Pointers Yes/NO [Yes: Each user's last message read pointer
+                             will be returned to 0 upon logging on to the
+                             system (all messages will be new).
+                             No : Message Pointers will not be touched.]
+
+   Continue? Yes/NO         [Yes: The Global User Editor will execute the
+                             choosen account settings (anything left blank,
+                             or given an answer of NO will not be executed
+                             at this time.
+                             No : The Global User Editor will not change
+                             any account settings.]
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 76
+
+
+
+
+                    ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                    ³InfoForm Questionnaire System³
+                    ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     The  InfoForm system is one of Dominion's most powerful
+     information-gathering   features.   Using  just  a  few commands
+     -- scattered in an ordinary text file -- the SysOp can gather
+     volumes  of information  about  users:  Who they are, what they
+     want,  what  they DON'T  want.   The  uses for the  InfoForm
+     system  are virtually endless.
+
+
+             ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+             ³How InfoForm Questionnaires Are Constructed³
+             ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     InfoForms are really nothing more than plain text files with
+     an input command, meaningful only to the InfoForm system,  placed
+     throughout.
+
+     The InfoForm is stored in the AFILES directory,  in  a file  with
+     the extension ".INF".  When users  answer  the  questions, their
+     answers are also stored in the AFILES directory, in a file  with
+     the  same  name as the InfoForm  but with  the  extension ".SER"
+     (for "anSwERs").  Answers from different users are appended  to the
+     end of the *.SER file; thus, you have a complete record  of  each
+     user's responses (until you delete the *.SER file). NOTE: The size
+     of your .SER files will grow to be QUITE large after a period of time.
+     For this reason, it is suggested that you delete it periodically <or,
+     since the .SER file is pure text, you may want to zip it up before
+     deleting it. It will shrink ALOT and you can keep a perminent record
+     of your user's responses, while saving disk space>).
+
+                     ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                     ³Asking And Reading InfoForms³
+                     ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Constructing  a command to ask an InfoForm  is  simply  a matter
+     of  adding a new command to a menu.  The  command  should  use
+     CmdType "OR", with the InfoForm  filename in the  MString field.
+     For example:
+
+        1. Desc     : <Q>uestionnaire
+        2. Key      : Q
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 77
+
+
+        3. Type     : OR
+        4. Attribute:
+        5. Security : s20
+        6. Line     : Ask some questions!
+        7. Parameter: infoform
+
+     Reading an InfoForm answer file is just as easy.  Construct a  command
+     using  CmdType "OG", with the InfoForm  filename  in  the
+     MString field:
+
+        1. Desc     : <R>ead Answers
+        2. Key      : R
+        3. Type     : OG
+        4. Attribute:
+        5. Security : s100
+        6. Line     : Read those answers!
+        7. Parameter: infoform
+
+
+                          ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                          ³Infoform Commands³
+                          ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+
+     Making a Dominion Infoform is extremely simple. All you have to do
+     is make a text file that contains questions in it, then place an '*'
+     wherever you want the system to prompt the user for input. No questions
+     may be left blank, and the user must enter SOMTHING for every *.
+
+
+                          ÕÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¸
+                          ³A Sample Infoform³
+                          ÔÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¾
+
+     Below  is listed a small InfoForm questionnaire as an example of
+     what the InfoForm system can do.  This questionnaire is suitable
+     for use as a new user questionnaire (NEWUSER.INF); with a little
+     modification, it can be enhanced to ask whatever questions you
+     wish.
+
+
+
+
+
+     _____________________________________________________________________
+
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 78
+
+
+          Okay... just one more series of questions to answer, and then
+          you'll be on your way!  It is essential for validation purposes
+          and security measures that you answer the following questions
+          as completely and accurately as possible.  There are no trick
+          questions, so don't worry... it's not a test!
+
+          About how long have you been BBSing? *
+          Are you a SysOp of any BBS? (Y/N) : *
+          If Yes, what is the Name/Number of your BBS? : *
+
+
+          Do you know any of the current users on this BBS, or any other
+          good users that could recommend you?  (2 lines)
+
+           1: *
+           2: *
+
+          Well, that completes our little survey.  Hope it wasn't too
+          painful!
+     _____________________________________________________________________
+
+     And thats all there is to creating a Dominion Infoform. It is very
+     simple now, but there are plans for modifications to this sytem for
+     future versions. As for now, this should be sufficient enough to get
+     what you need to know out of your users.
+
+
+     ù Dominion Bulletin Board System Version 3.0 Standard ù Page 79
+
+
+-----------------------------------------------------------------------------
+
+
+     This is the end of the docs, go smoke a fat bone to make yourself
+     sane again.
+
+
+

@@ -1,0 +1,317 @@
+
+                     郞袴袴袴袴袴袴袴袴袴袴袴袴袴�
+                     쿏ominion Menu Command Types�
+                     突袴袴袴袴袴袴袴袴袴袴袴袴袴�
+
+  Here is a listing of all the Available Dominion Command types.  The Dominion
+  Command Type should be entered in all Capitals (as Shown Below), and on the
+  Line directly under the Command Description in your Dominion Menu File (see
+  the file "menuhelp.dom" for more help on this).
+
+  Any Command Type that requires an Parameter will have the Parameter listed
+  directly below the command type line.
+
+  Any Command with <SysOp> Following the description is a command that the
+  writers of Dominion Recomend only SysOps on your System should have access
+  to.
+
+
+--Auto Message Commands:
+
+ JW: Write Auto Message
+
+ JR: Read Auto Message
+
+ JA: Email Author of Auto Message.
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--Archive Commands:
+
+ AD: Download Temporary Arc
+
+ AV: List Arc
+
+ AR: Delete Temp Archive
+
+ AL: List Archive
+
+ AT: List Extracted File
+
+ AE: Extract File
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--Door Commands
+
+ D1: Run without Swapping
+
+ D2: Run with Swapping
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--Message Base Commands
+
+ MP: Post a message
+
+ M!: Read Next Message in sub.  Useful as an Default Command
+
+ MA: User Mailing List.  Mailling lists are stored in the Afiles Directory.
+        They are straight text files, each line being one user who you want to
+        be part of the group.
+
+ ME: Email a User
+    Parameter: User Number to send EMail to (if no Parameter, user is prompted)
+
+ MR: Remove a Post
+
+ MS: Read Messages in current Area
+
+ MM: Read Email
+
+ MF: Find Subject (scan Titles)
+
+ MK: Kill old Email
+
+ MU: Upload a Post
+
+ MZ: Continueous Message Listing (does not pause between Messages)
+
+ MN: Scans all Message Areas for New Messages
+    Parameter: C - Scans Current Message Base for New Messages
+             G - Scans all Message Bases for New Messages
+               - if Parameter is blank, it prompts the user to scan all areas
+
+ MY: Message Status.  Displays a short list of information regarding
+        the users message history.
+
+ MQ: Reset Message Base Pointers.  This will make all messages OLD.
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--File Base Commands
+
+ FL: List FIles
+
+ FY: Show User's File Area Information
+
+ FG: Create List of All Files for Download
+
+ FD: Download a File
+
+ FM: Mark Files
+
+ FV: View Arc
+
+ FS: Search All Directories for a File Mask
+
+ FR: Remove a File <SysOp>
+
+ FF: Find Description of a File
+
+ FB: Edit Batch Queue
+
+ FU: Upload Files
+
+ FN: NewScan Files
+    Parameter: C - Scans Current File Area for new files
+    Parameter: G - Scans All File Areas for new files
+        Paramter: ? - Ask if you want to Scan the areas.
+    Parameter: None: if Parameter is blank, it will prompt the user the newscan all
+
+ F1: Local File Upload <SysOp>
+
+ F2: Edit Files Info <SysOp>
+
+ F3: Validate Files <SysOp>
+
+ F4: Kill Offline Files <SysOp>
+
+ F5: Move Offline Files <SysOp>
+
+ F6: Sort Directories <SysOp>
+
+ F7: Move Files <SysOp>
+
+ F8: Download Unlisted File <SysOp>
+
+ F9: Comment Files <SysOp>
+
+ F0: Add Gif Specs to Files <SysOp>
+
+ FZ: Create Temporary Direcytory <SysOp>
+
+ F!: Adds File_id.Diz as the Extended Description <SysOp>
+
+
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--SysOp Commands
+
+ SP: Configureation Editor <SysOp>
+
+ SL: Run Conference Editor <SysOp>
+
+ S#: Menu Editor <SysOp>
+     Parameter: !=Edit current menu
+
+ SO: View Logs <SysOp>
+
+ SE: String Editor <SysOp>
+
+ SB: Edit Message Bases <SysOp>
+
+ S-: Global User Editor <SysOp>
+
+ SF: Edit File Bases <SysOp>
+
+ SM: Read All User's Email <SysOp>
+
+ SH: Change to Another User <SysOp>
+
+ SC: Change SysOp Chat Availiblity (Remotely turn scroll lock on/off) <SysOp>
+
+ SI: Print Out Results to Voting Questions <SysOp>
+
+ SU: User Account Editor <SysOp>
+
+ SV: Voting Editor <SysOp>
+
+ SZ: System Activity Log <SysOp>
+
+ SR: Rebuild User Index <SysOp>
+
+ SX: Protocol Editor <SysOp>
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--Misccellaneous Commands
+
+ OG: Take an InfoForm
+    Parameter: FileName (will be saved under filename.inf, do not include ext)
+
+ OR: Reads InfoForm Answers
+    Parameter: FileName (Answers saved under filename.ser, do not include ext)
+
+ OC: Chat with SysOp
+    Parameter: Displays Text Displayed before Asking Chat Reason (ie - Why Chat?)
+
+ OU: List Users on the BBS
+
+ OL: Display a line of text
+    Parameter: The Line of Text that is Displayed
+
+ OF: Display a Text or Ansi file
+    Parameter: FileName of the File to be displayed (MUST BE IN GFILES DIR)
+
+ OI: System Information
+
+ OO: Show's SysOp's Chat Status
+
+ OV: Voting Booth
+
+ TT: Time Bank
+    Parameter: Maximum Number of Minutes a user may put into the bank
+
+ OY: Your Info
+
+ O|: Add a rumour
+
+ OS: List Rumours
+
+ O1: Oneliners
+
+ O;: Execute a macro.  The Parameter will stuffed into the keyboard buffer.
+        This can be used for a variety of effects, IE Sending mail to someone
+        that says something.
+
+ O\: Search Rumours
+
+ OP: User Info Commands.
+    Parameter:
+    1: Input ScreenSize
+    2: Determine Graphics Mode
+    3: Detirmine Screen Pausing
+    4: Close Mail Box/Foward Mail
+    5: Config Newscan
+    6: Change Password
+    7: Make Macros
+    A: Default Prototol
+    C: Select Help Level
+    D: Select File List Format
+    E: Configure File Bases to NewScan
+    F: Display Current Configuration
+    G: Change Colors
+    H: Change User Comment
+    J: Change HotKey mode
+
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--Hang Up Commands
+
+ IH: Hang up imediatly
+
+ IA: HangUp Carefully (display Logoff.XXX if user chooses to Logoff)
+
+ IC: HangUp Carefully - prompt User to send SysOp Email then display Logoff.XXX
+
+ IL: HangUp Carefully - Prompt user to Send SysOp Email, and Change AutoMessage
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--BBSList Comamnds
+
+ QA: Add to BBSList
+        Parameter: BBSList file name.  If none is given, BBSList.Msg is default
+        This is useful to create many BBSlists, based on different Access Levels
+
+ QR: Read BBSLIst
+        Parameter: BBSlist to read, BBSList.msg is default
+
+ QS: Search BBSList
+        Parameter: BBSList to search, default BBSlist.msg
+
+
+컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+--Area Comamnds
+
+ =/: Change Menus, Add current menu to Stack
+
+ =\: Return to Last Menu (Saved in Menu Stack)
+
+ =^: Load a New Menu and Clear Menu Stack
+    Parameter: Menu File to Change to
+
+ =*: List Areas.
+    Parameter: M - will show Message Bases available to current user
+    Parameter: F - will show File Bases availible to the current user
+
+ =+: Advance Area.
+    Parameter: M - will advance one Message Area
+    Parameter: F - will advance one File Area
+
+ =-: Fall Back Area.
+    Parameter: M - will decrease one Message Area
+    Parameter: F - will decrease one File Area
+
+ =#: Prompts users to enter Area Number they wish to go to
+    Parameter: M - for Message Area
+    Parameter: F - for File Area
+
+ =J: Jump Confereces with Menu
+
+ =]: Goto Next Conference
+
+ =[: Goto Previous Conference
+
+
+
+
+NOTE: You may execute any of the above commands from any menu in Dominion,
+      even if the menu does not contain that command. In order to do this,
+      you must have SysOp access. At the menu prompt, enter a //** (using
+      the default Dom setup), or whatever you have defined the "Enter any
+      Cmdtype" String. You will be prompted first for the Cmdtype, and then
+      for the Parameter. This is very useful for testing new commands.

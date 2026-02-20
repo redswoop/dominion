@@ -1,0 +1,764 @@
+#include "vars.h"
+
+#pragma hdrstop
+#include "swap.h"
+
+#include <math.h>
+#define modem_time 3.5
+
+double thing=0.00,reinit=0.00;
+
+void pr1(unsigned char *s)
+{
+    int i;
+
+    if(!ok_modem_stuff) return;
+    for (i = 0; s[i] > 0; i++)
+        if (s[i]=='{')
+            outcomch(13);
+        else if (s[i] =='~')
+            wait1(9);
+        else
+            outcomch(s[i]);
+}
+
+
+void get_modem_line(char *s, double d, int allowa)
+{
+    int i=0;
+    char ch=0, ch1;
+    double t;
+
+
+    if(!ok_modem_stuff) return;
+    t = timer();
+    do {
+        ch = get1c();
+        if (kbhitb() && allowa) {
+            ch1 = getchd();
+            if (toupper(ch1) == 'H') {
+                ch = 13;
+                s[0] = i = 1;
+            }
+        }
+        if (ch >= 32)
+            s[i++] = toupper(ch);
+    } 
+    while ((ch != 13) && (fabs(timer() - t) < d) && (i<=40));
+    s[i] = 0;
+}
+
+
+void holdphone(int d,int force)
+{
+
+    if (!ok_modem_stuff)
+        return;
+
+    if (no_hangup)
+        return;
+    if ((!(syscfg.pickupphone)) || (!(syscfg.hangupphone)))
+        return;
+
+    if (d) {
+        if (!global_xx) {
+            if ((syscfg.sysconfig & sysconfig_off_hook)||force) {
+                pr1(syscfg.pickupphone);
+                xtime=timer();
+                global_xx=1;
+            }
+        }
+    } 
+    else {
+        if ((syscfg.sysconfig & sysconfig_off_hook)||force) {
+            if (global_xx) {
+                dtr(1);
+                if (fabs(xtime-timer())<modem_time) {
+                    topit();
+                    movecsr(38,2);
+                    outs("Waiting for modem");
+                }
+                while (fabs(xtime-timer())<modem_time);
+                pr1(syscfg.hangupphone);
+                imodem(0);
+                global_xx=0;
+            }
+        }
+    }
+}
+
+
+void proresult(resultrec *ri)
+{
+    if(ri->curspeed[0]) {
+        if(ri->attr & flag_append)
+            strcat(curspeed,ri->curspeed);
+        else
+            strcpy(curspeed,ri->curspeed);
+    }
+
+    if(ri->attr & flag_fc)
+        flow_control=1;
+
+    if(ri->modem_speed)
+        modem_speed=ri->modem_speed;
+
+    if(ri->com_speed) {
+        com_speed=ri->com_speed;
+        set_baud(com_speed);
+    }
+}
+
+
+int switchresult(char *s)
+{
+    char *ss;
+    int i,mode=-1;
+
+    ss=strtok(s,"/");
+
+    while (ss) {
+        for (i=0; (i<num_result_codes); i++) {
+            if (stricmp(s,result_codes[i].return_code)==0) {
+                proresult(&result_codes[i]);
+                mode=result_codes[i].mode;
+                if(mode==mode_con) {
+                    incom=1; 
+                    outcom=1;
+                }
+                break;
+            }
+        }
+        ss=strtok(NULL,modem_i->sepr);
+    }
+    return(mode);
+}
+
+void imodem(int x)
+{
+    int i,done;
+    char ch,s[161],*is;
+    double d;
+
+    if (!ok_modem_stuff)
+        return;
+
+
+
+    if (x)
+        is=modem_i->setu;
+    else
+        is=modem_i->init;
+
+    if (!(*is))
+        return;
+
+
+    topit();
+    movecsr(38,1);
+    outs("Sending Modem Init String");
+    start_dv_crit();
+
+    dtr(1);
+    set_baud(syscfg.baudrate[syscfg.primaryport]);
+    i=0;
+    done=0;
+    wait1(9);
+
+
+    while (!done&&!kbhit()) {
+        initport(syscfg.primaryport);
+        pr1(is);
+        dump();
+
+        if (fabs(timer()-d)>45.0) {
+            pr1("AT{");
+            wait1(9);
+            dump();
+            topit();
+            topit2();
+            end_dv_crit();
+            return;
+        }
+        get_modem_line(s,(double)45.0,1);
+        if(s[0]==1) done=1;
+
+        if(switchresult(s)==mode_norm) {
+            done=1;
+        } 
+        else {
+            movecsr(38,4);
+            sprintf(s,"Error: (%d)  ",++i);
+            outs(s);
+        }
+
+        if (i>5)
+            done=1;
+    }
+
+    end_dv_crit();
+    wait1(2);
+    topit();
+    topit2();
+}
+
+void answer_phone()
+{
+    char ch,s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
+    int i,i1,done;
+    double d;
+
+    if(!ok_modem_stuff)
+        return;
+
+    topit();
+    movecsr(38,1);
+    outs("Answering phone, 'H' to abort.");
+    topit2();
+    movecsr(38,2);
+    com_speed=modem_speed=syscfg.baudrate[syscfg.primaryport];
+    outs(modem_i->ansr);
+    pr1(syscfg.answer);
+    d=timer();
+    done=0;
+
+    do {
+        if (fabs(timer()-d)>45.0) {
+            pr1("AT{");
+            wait1(9);
+            dump();
+            topit();
+            topit2();
+            return;
+        }
+        get_modem_line(s,(double)45.0,1);
+        if(s[0]==1) {
+            pr1("AT{");
+            wait1(9);
+            dump();
+            topit();
+            topit2();
+            return;
+        }        
+
+        switch(switchresult(s)) {
+        case mode_err:
+        case mode_dis:
+        case mode_norm:
+        case mode_con:
+        case mode_ndt: 
+            done=1; 
+            break;
+        }
+
+    } 
+    while (!done);
+
+    if (incom)
+        wait1(15);
+    else {
+        topit();
+        topit2();
+    }
+}
+
+
+int getcaller(void)
+{
+    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],ch,done,lokb;
+    int i,i1,i2,i3,x,y,r,c,hold,numhit=0;
+    double d,d1,tt;
+    long l,l1;
+
+
+    frequent_init();
+    sl1(1,"");
+    usernum=0;
+    wfc=0;
+    hold=0;
+    read_user(1,&thisuser);
+    usernum=1;
+    reset_act_sl();
+    cursub=0;
+    fwaiting=numwaiting(&thisuser);
+    if (thisuser.inact & inact_deleted) {
+        thisuser.screenchars=80;
+        thisuser.screenlines=25;
+    }
+    screenlinest=defscreenbottom+1;
+    d=(1.0+timer()) / 102.723;
+    d-=floor(d);
+    d*=10000.0;
+    srand((unsigned int)d);
+    wfcs();
+    if (tcp_port > 0 && ok_modem_stuff) {
+        /* TCP mode: start listener directly, skip modem init strings */
+        initport(0);
+    } else {
+        imodem(1);
+        imodem(0);
+    }
+    topit();
+    strcpy(curspeed,"KB");
+    do {
+        wfc=1;
+        wfct();
+        if(hold) {
+            gotoxy(60,24);
+            textcolor(8);
+            cprintf("  ");
+            textcolor(12);
+            cprintf("Phone Off Hook");
+            textcolor(8);
+            cprintf(" c");
+        }
+        check_event();
+        if (do_event) {
+            run_event();
+            wfcs();
+        }
+        lokb=0;
+        okskey=0;
+        ch=toupper(inkey());
+        if (ch) {
+            _setcursortype(2);
+            switch(ch) {
+            case   1: 
+                input(s,3); 
+                status.activetoday=atoi(s); 
+                break;
+            case ' ':
+                if(!ok_local()) {
+                    clrscr();
+                    if(!checkpw()) break;
+                }
+                topit();
+                movecsr(38,1);
+                outs("Log on? ");
+                d=timer();
+                while ((!kbhitb()) && (fabs(timer()-d)<60.0));
+                if (kbhitb()) {
+                    ch=toupper(getchd1());
+                    if (ch=='Y') {
+                        outs("Yes\r\n");
+                        lokb=1;
+                        com_speed=modem_speed=syscfg.baudrate[syscfg.primaryport];
+                        if ((syscfg.sysconfig & sysconfig_off_hook)==0)
+                            dtr(0);
+                    }
+                    if ((ch=='F') && (ok_local())) {
+                        outs("Fast\r\n");
+                        read_user(1,&thisuser);
+                        reset_act_sl();
+                        com_speed=modem_speed=syscfg.baudrate[syscfg.primaryport];
+                        if (thisuser.inact & inact_deleted) {
+                            out1ch(12);
+                            break;
+                        }
+                        lokb=2;
+                        if ((syscfg.sysconfig & sysconfig_off_hook)==0)
+                            dtr(0);
+                    }
+                    if (ch==0)
+                        getchd1();
+                }
+                topit();
+                break;
+            case 'A':
+                if (!ok_modem_stuff)
+                    break;
+                answer_phone();
+                break;
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case '0':
+                sprintf(s,"wfcbat%c.bat",ch);
+                runprog(s,1);
+                wfcs();
+                break;
+            case '(':
+            case '*':
+            case ')':
+            case 'O':
+            case 'X':
+            case '@':
+            case 'S':
+            case 'E':
+            case '#':
+            case 'F':
+            case 'B':
+            case 'V':
+            case 'M':
+            case 'C':
+            case 'U':
+                okskey=1;
+                if (ok_local()) {
+                    holdphone(1,0);
+                    outchr(12);
+                    if(ch=='B') boardedit();
+                    else if(ch=='F') diredit();
+                    else if(ch=='X') protedit();
+                    else if(ch=='E') text_edit();
+                    /*                    else if(ch=='(') mailsys('S');
+                                        else if(ch=='*') mailsys('P');
+                                        else if(ch==')') mailsys('T');*/
+                        //            else if(ch=='V') ivotes();
+                    else if(ch=='#') menu("");
+                    else if(ch=='M') readmailj(0,0);
+                    else if(ch=='U') uedit(1);
+                    else if(ch=='S') edstring(0);
+                    else if(ch=='C') confedit();
+                    else if(ch=='O') config();
+                    holdphone(0,0);
+                }
+                okskey=0;
+                wfcs();
+                break;
+            case 'D':
+                if (ok_local()) {
+                    holdphone(1,0);
+                    clrscrb();
+                    nl();
+                    pl("Type \"EXIT\" to return to the BBS");
+                    nl();
+                    runprog(getenv("COMSPEC"),1);
+                    holdphone(0,0);
+                    wfcs();
+                }
+                break;
+            case 'H': 
+                hold=opp(hold); 
+                holdphone(hold,1); 
+                wfcs(); 
+                break;
+            case 'L': 
+                if(!ok_local()) break; 
+                clrscr(); 
+                viewlog(); 
+                wfcs(); 
+                break;
+            case 'Q': 
+                if(!ok_local()) if(!checkpw()); 
+                end_bbs(oklevel); 
+                break;
+            case 'R':
+                if (ok_local()) {
+                    clrscrb();
+                    usernum=1;
+                    if (thisuser.waiting) {
+                        holdphone(1,0);
+                        okskey=1;
+                        readmailj(0,0);
+                        okskey=0;
+                        write_user(1,&thisuser);
+                        close_user();
+                        holdphone(0,0);
+                    }
+                }
+                wfcs();
+                break;
+            case 'T':
+                if ((ok_local())) {
+                    runprog("term.bat",1);
+                    imodem(1);
+                    imodem(0);
+                }
+                wfcs();
+                break;
+            case 'W':
+                if (ok_local()) {
+                    clrscrb();
+                    usernum=1;
+                    useron=1;
+                    holdphone(1,0);
+                    okskey=1;
+                    post(cursub=0);
+                    okskey=0;
+                    useron=0;
+                    write_user(1,&thisuser);
+                    close_user();
+                    holdphone(0,0);
+                }
+                wfcs();
+                break;
+            case 'Z': 
+                clrscr(); 
+                zlog(); 
+                wfcs();  
+                break;
+            case '+': 
+                imodem(0); 
+                break;
+            case '|': 
+                if(!ok_local()) break;
+                clrscr();
+                usernum=1;
+                read_user(1,&thisuser);
+                changedsl();
+                getcmdtype();
+                pausescr();
+                wfcs();
+                break;
+            case '=': 
+                wfcs(); 
+                break;
+            case '-': 
+                thing+=70.0; 
+                break;
+            case 13: 
+                tt=timer();
+                tt-=thing;
+                if(tt>60.0) wfcs();
+                break;
+            }
+            if (!incom) {
+                _setcursortype(0);
+                frequent_init();
+                read_user(1,&thisuser);
+                fwaiting=numwaiting(&thisuser);
+                reset_act_sl();
+                usernum=1;
+            }
+            okskey=0;
+        }
+
+        /* Check for incoming TCP connection (replaces modem ring detection) */
+        if (!hold && ok_modem_stuff && !lokb && listen_fd >= 0) {
+            struct timeval tv = {0, 50000}; /* 50ms poll */
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(listen_fd, &fds);
+            if (select(listen_fd + 1, &fds, NULL, NULL, &tv) > 0) {
+                struct sockaddr_in caddr;
+                socklen_t clen = sizeof(caddr);
+                client_fd = accept(listen_fd, (struct sockaddr *)&caddr, &clen);
+                if (client_fd >= 0) {
+                    send_telnet_negotiation(client_fd);
+                    incom = 1;
+                    outcom = 1;
+                    com_speed = modem_speed = 38400;
+                    strcpy(curspeed, "TCP/IP");
+                }
+            }
+        } else if (!hold && !ok_modem_stuff) {
+            /* No modem/TCP — just poll briefly so we don't spin CPU */
+            usleep(50000);
+        }
+        dv_pause();
+
+    } 
+    while ((!incom) && (!lokb) && (!endday));
+
+    using_modem=incom;
+    if (lokb==2)
+        using_modem=-1;
+    okskey=1;
+    if (!endday) {
+        clrscr();
+        printf("Connection Established at: %s\n",curspeed);
+    }
+    wfc=0;
+    return 0;
+}
+
+void gotcaller(unsigned int ms, unsigned int cs)
+{
+    char s[MAX_PATH_LEN];
+    double d;
+
+    frequent_init();
+    com_speed = cs;
+    set_baud(cs);
+    modem_speed = ms;
+    sl1(1,"");
+    if(already_on==1) {
+        incom=1;
+        outcom=1;
+    }
+    read_user(1,&thisuser);
+    reset_act_sl();
+    usernum=1;
+    if (thisuser.inact & inact_deleted) {
+        thisuser.screenchars=80;
+        thisuser.screenlines=25;
+    }
+    screenlinest=25;
+    clrscrb();
+    sprintf(s,"Connection Established at: %s\r\n",curspeed);
+    outs(s);
+    if(already_on==2)
+        using_modem=-1;
+    else
+        using_modem=1;
+    d=(timer()) / 102.723;
+    d-=floor(d);
+    d*=10000.0;
+    srand((unsigned int)d);
+    _setcursortype(2);
+}
+
+
+void topit(void)
+{
+    char s[MAX_PATH_LEN];
+    int i;
+
+    gotoxy(39,2);
+    for(i=39;i<77;i++) printf(" ");
+}
+
+
+void topit2(void)
+{
+    char s[MAX_PATH_LEN];
+    int i;
+
+    gotoxy(39,3);
+    for(i=39;i<77;i++) printf(" ");
+}
+
+
+char *curt(void)
+{
+    struct time t;
+    char s[MAX_PATH_LEN],an[3];
+
+    gettime(&t);
+    if(t.ti_hour>11) strcpy(an,"pm");
+    else strcpy(an,"am");
+    if(t.ti_hour==0) {
+        t.ti_hour=12;
+        strcpy(an,"pm");
+    }
+    if(t.ti_hour>12) t.ti_hour-=12;
+
+    sprintf(s,"%02d:%02d:%02d%s",t.ti_hour,t.ti_min,t.ti_sec,an);
+    return(s);
+}
+
+int timex=6,timey=17,timeattr=15;
+
+void wfct(void)
+{
+    double tt;
+
+    tt=timer();
+    tt=tt-reinit;
+    if(tt>600.0) {
+        if (!tcp_port) imodem(0);
+        reinit=timer();
+    }
+    tt=timer();
+    tt-=thing;
+    if(tt<60.0) {
+        textattr(timeattr);
+        gotoxy(timex,timey);
+        cprintf(curt());
+    }
+    else clrscr();
+}
+
+void wfcs(void)
+{
+    char s[MAX_PATH_LEN],*p;
+    FILE *f;
+    long l;
+    int i,x,y,attr,type;
+    echo=1;
+    clrscr();
+    thing=timer();
+    reinit=timer();
+
+    _setcursortype(0);
+    fastscreen("wfc.bin");
+
+    sprintf(s,"%swfc.dat",syscfg.gfilesdir);
+    f=fopen(s,"rt");
+
+    while(f && fgets(s,81,f)!=NULL) {
+
+        filter(s,'\n');
+        p=strtok(s,",");
+        x=atoi(p);
+        p=strtok(NULL,",");
+        y=atoi(p);
+        p=strtok(NULL,",");
+        attr=atoi(p);
+        p=strtok(NULL,",");
+        type=atoi(p);
+
+        gotoxy(x,y);
+        textattr(attr);
+
+        switch(type) {
+        case 1:
+            cprintf(wwiv_version);
+            break;
+        case 2:
+            cprintf("%d",status.callstoday);
+            break;
+        case 3:
+            cprintf("%d%%",(10*status.activetoday/144));
+            break;
+        case 4:
+            cprintf("%d",status.msgposttoday);
+            break;
+        case 5:
+            cprintf("%svailable",sysop2()?"A":"Una");
+            break;
+        case 6:
+            cprintf("%s",status.lastuser);
+            break;
+        case 7:
+            cprintf("%d",status.uptoday);
+            break;
+        case 8:
+            cprintf("%d",status.dltoday);
+            break;
+        case 9:
+            l=(long) freek(_getdrive());
+            cprintf("%ldk",l);
+            break;
+        case 10:
+            cprintf("%d",fwaiting);
+            break;
+        case 11:
+            bargraph(10*status.activetoday/144);
+            break;
+        case 12:
+            timex=x;
+            timey=y;
+            timeattr=attr;
+            break;
+        }
+    }
+    if(f) fclose(f);
+}
+
+int ok_local()
+{
+    if (syscfg.sysconfig& sysconfig_no_local)
+        return(0);
+    else
+        return(1);
+}
+
+void bargraph(int percent)
+{
+    int x;
+    textattr(15);
+    for(x=0;x<50;x++)
+        cprintf("%c",177);
+    for(x=50;x>0;x--)
+        cprintf("\b");
+    for(x=0;x<percent/2;x++)
+        cprintf("%c",219);
+}
+

@@ -1,0 +1,246 @@
+~1============================================================================
+1þ0ð1þ7 Dominion MsgBase Commands 1þ0ð1þ7
+
+1<1ENTER1>0 Read Next Message     1<1A1>0gain - Read Msg Again
+1<1#1>0 Go to Message # Entered   1<1-1>0 Back Up One Message #
+1<1]1>0 Forward Thread            1<1[1>0 Backward Thread
+1<1E1>0Mail Author of Message     1<1R1>0eply with "Regards"
+1<1P1>0ost a Public Message       1<1S1>0kip Current Sub (For N-Scan)
+1<1T1>0itles of Next Ten Messages 1<1C1>0ontinuous Message Read
+1<1K1>0ill Current Message #
+1<1Q1>0uit
+~2============================================================================
+1þ0ð1þ7 Dominion Message Editor 1þ0ð1þ7
+
+1<1/S1>0 Save Message                    1<1/C1>0 Clear Message and Start Over
+1<1/M1>0 MCI/Color Codes                 1<1/T1>0 Re-Type Message Title
+1<1/A1>0 Abort Entire Message (Quit)     1<1/L1>0 List Message So Far
+1<1/Q1>0uote Reply Text
+
+1<1CTRL-P+Digit1>0 Change Color to Digit From 1st Set
+1<1CTRL-E+Digit1>0 Change Color to Digit From 2nd Set
+
+~4============================================================================
+1þ0ð1þ7 Dominion Email Reader 1þ0ð1þ7
+
+1<1A1>0 Display Message Again        1<1Q1>0uit
+1<1D1>0elete Last Mail Read          1<1F1>0orward Mail to Another User
+1<1R1>0eply to Message               1<1G1>0o to Specific Mail
+1<1-1>0 Goto Previous Mail           1<1+1>0 Goto Next Mail #
+1<1P1>0 Purge Mail
+
+~6============================================================================
+
+1þ0ð1þ7 Dominion User Editor 1þ0ð1þ7
+
+1<1[1>0 Down One User                1<1]1>0 Up One User
+1<1,1>0 Temp. Full Info              1<1.1>0 Full Info
+1<1^1>0 Delete/Restore User          1<1Q1>0 Quit to BBS
+1<1U1>0 Go to User                   1<1|1>0 Use Security Profile
+1<1_1>0 Read New User Infoform       1<1!1>0 Lock/UnLock User
+1<1:1>0 Reset Personal Info          1<1-1>0 Read any Infoform
+
+~7============================================================================
+1þ0ð1þ7 Commands Available Anywhere in Dominion 1þ0ð1þ7
+
+Grafix  - Toggle Graphics Mode
+/Off    - Logoff
+Ver     - Dominion Version Information
+Cls     - Clear the Screen
+Reload  - ReLoad main menu (for when system seems wierd)
+Speed   - Connection Information
+
+~8======================
+1þ0ð1þ7 Dominion Menu Editor 1þ0ð1þ7
+
+1<1?1>0 Help
+1<1Q1>0uit and Save Menu
+1<1M1>0odify Commands
+1<1P1>0osition Commands
+1<1D1>0elete Commands
+1<1X1>0 Toggle Display Mode
+1<1V1>0iew Menu
+
+~9============================================================================
+1þ0ð1þ7 Dominion String Editor 1þ0ð1þ7
+
+1<1[1>0 Last Page
+1<1]1>0 Next Page
+1<1Q1>0uit
+1<1E1>0xtract All Strings to Strings.Txt
+1<1R1>0ead All Strings from Strings.Txt
+1<1#1>0 Edit #
+
+~10===========================================================================
+L - Only 1 Log On per Day              E - Can't Send E-Mail
+C - Can't Page for Chat                V - Restricted from Voting Section
+M - Posts Require Sysop Validation     N - Restricted from Network Access
+A - Restricted from Auto-Message       ! - Restricted to Sysop Dir Uploads
+* - Restricted from Anonymous Posting  R - Restricted from Posting Rumours
+P - Can't Post Messages                B - Can't Add to BBSList
+U - Restricted from Viewing Userlist   T - Restricted from withdrawing time
+~11===========================================================================
+1þ0ð1þ7 Dominion Text Editor 1þ0ð1þ7
+
+C1>01lear Message
+D1>01elete Current Line
+I1>01nsert Lines
+L1>01ist All Lines
+P1>01rint Current Line
+Q1>01uit Editing
+S1>01ave Message
++1>01 Forward 1 Line #
+-1>01 Backward 1 Line #
+
+~13===========================================================================
+
+1<1V1>0 Edit User's Account          1<1U1>0 Toggle Anonyminity
+1<1X1>0 Extract Message to Disk      1<1*1>0 Toggle Net Pending
+1<1M1>0ove Message to Another Sub    1<1N1>0 Toggle Permanence
+~15=========================================================
+To use MCI Codes, hit an `, then enter a Letter.
+
+! - The System's File Ratio       A - The Current Message Base number
+% - The System's Post Call Ratio  B - The Current Message Base
+# - The User's File Ratio         C - The Current File Base number
+$ - The User's Post Call Ratio    D - The Current File Base name
+^ - File Ratio Status             E - Users Last Logon Date
+& - Post Call Ratio Status        G - The Current Conference Name
+* - User's Number of Posts        H - User's Handle WITHOUT user number
+( - User's Number of Calls        F - The number of File Points
+I - Clearscreen                   T - Time left
+J - Download Security Level       U - The amount files the user has Uploaded
+L - User Number                   W - # of Messages in Current Message Base
+K - Kilobytes Uploaded            V - Current Message being read
+M - A Return                      X - Kilobytes downloaded
+N - User Name                     Y - Provides a Few Seconds Delay
+O - Files Downloaded              Z - Randomly Displays a Rumour
+P - Pauses The Screen             @ - SysOp Availablity
+R - User's Real Name              [ - Current Time
+S - User's Security Level         + - Last Caller
+) - User's number of calls today
+
+There are 2 sets of Colors.
+To use the First Set, Hold Down Control and P, let go, and pick a #
+00 11 22 33 44 55 66 77 88 99
+
+To use the Second Set, Hold Down Control and E, let go, and pick a #
+00 11 22 33 44 55 66 77 88 99
+~17====================
+1<1!1>0 Validate Files
+1<1@1>0 Remove Files
+1<1#1>0 Edit Files
+1<1$1>0 Move Files
+~18=========================
+1<1T1>0 Toggle No Time Check for Dls
+1<1R1>0 Toggle No File Point/File Ratio check for Dls
+1<1U1>0 Toggle Hidden From Userlist
+1<1P1>0 Toggle No Post Call Ratio
+~19=============
+1<111>0 Names and Paths                 1<121>0 Flagged Info
+1<131>0 Varible System Data             1<141>0 Event Manager
+1<151>0 Modem Info                      1<161>0 Security Profiles
+1<171>0 Archive Configuration           1<181>0 New User Data
+1<191>0 Security Level Data             1<101>0 NetWork Configuration
+1<1A1>0 Default Colors
+~21=====================
+1þ0ð1þ7 Dominion Chat Commands 1þ0ð1þ7
+
+1<1/?1>0Help                       1<1/Q1>0uit
+1<1/V1>0iew Files                  1<1/S1>0hell
+1<1/P1>0age SysOp                  1<1/B1>0ye
+~22====================
+1þ0ð1þ7 Dominion File Listing Commands 1þ0ð1þ7
+
+1<1D1>0ownload Files          1<1CR1>0Continue
+1<1V1>0iew Archive            1<1M1>0ark Files
+1<1S1>0top                    1<1N1>0onStop
+1<1B1>0atch Queue Editor      1<1I1>0nfo on Files
+1<1R1>0elist Current Page
+
+~23=======
+1þ0ð1þ7 Dominion File Editor 1þ0ð1þ7
+
+1<1D1>0escription       1<1V1>0alidated
+1<1F1>0ile Name         1<1E1>0xtended Description
+1<1P1>0oints            1<1Q1>0uit
+1<1CR1>0Next File
+
+~24==================
+1þ0ð1þ7 Dominion Time Bank 1þ0ð1þ7
+
+1<1D1>0eposite                  1<1W1>0ithdraw
+1<1Q1>0uit
+
+~25====================
+
+3E5xpert  : No Menu or Help is Displayed unless asked for
+3R5egular : A short list of commands is displayed on command line
+3I5diot   : A short list of commands and the menu is display with each command
+~26================
+1þ0ð1þ7 Dominion File Base Editor 1þ0ð1þ7
+
+1<1]1>0Next Area             1<1[1>0Last Area
+1<1J1>0Jump to Area          1<1Q1>0uit
+
+1<1U1>0Toggle Uploads
+1<1C1>0Toggle Auto Upload Crediting
+1<1A1>0Toggle Archives Only
+1<1R1>0Toggle Ratio Checking
+
+~27=================================
+1þ0ð1þ7 Dominion ACS Types 1þ0ð1þ7
+
+S+xxx : Must have SL of xxx for access
+D+xxx : Must have DSL of xxx for access
+A+xxx : Must have AR of xxx (A-P)
+I+xxx : Must have DAR of xxx (A-P)
+#     : SysOp Must be available
+Bxxxx : Baud of xxxx
+Uxxxx : Usernumber must be xxxx
+@x    : Current Conference Flag have x in it
+V     : Desqview Must Be Active
+G+xxx : Age must be xxx or greater
+
+A ! negates all ACS codes.  Use & for a second ACS
+
+~28================
+1þ0ð1þ7 Dominion Message Base Editor 1þ0ð1þ7
+
+1<1]1>0Next Area             1<1[1>0Last Area
+1<1J1>0Jump to Area          1<1Q1>0uit
+
+1<1U1>0Toggle Anonymous Allowed
+1<1F1>0Toggle FidoNet
+1<1A1>0Toggle AutoScanning
+1<1N1>0Toggle Net Validation
+1<1G1>0Toggle Grafix Required
+
+~29============================================================================
+
+1<1Z1>0ap Mail
+1<1E1>0xtract to Disk
+1<1U1>0 Edit Sender's Account
+1<1F1>0 Foward Mail
+
+~30===========================
+1þ0ð1þ7 Dominion Matrix 1þ0ð1þ7
+
+1<1L1>0ogon to System
+1<1C1>0heck for Validation
+1<1N1>0 Apply for an Account
+1<1E1>0mail SysOp
+1<1P1>0age SysOp
+1<1H1>0angup
+~31=====================
+1þ0ð1þ7 Dominion New User Voting 1þ0ð1þ7
+
+1<1L1>0ist Users
+1<1V1>0ote on Users
+1<1Q1>0uit
+~32==========================
+%1 = File Name             %5 = File Number
+%2 = Description           %6 = Uploader
+%3 = File Size             %7 = Upload Date
+%4 = File Points           %8 = Number of times Downloaded
+

@@ -1,0 +1,22 @@
+NAME: Hayes compatible 2400|
+SETU: AT&C1&D2Q0V1{|
+INIT: ATE0H0M1Q0V1X4S0=0{|
+ANSR: ATA{|
+PICK: ATH1{|
+HANG: ATH0{|
+SEPR: |
+SPD: 2400
+END:
+OK              |Normal        |NORM
+RING            |Ring          |RING
+NO CARRIER      |No Carrier    |DIS
+ERROR           |Error         |ERR
+NO DIAL TONE    |No Dial Tone  |NDT
+NO DIALTONE     |No Dial Tone  |NDT
+BUSY            |Busy          |DIS
+NO ANSWER       |No Answer     |DIS
+RINGING         |Ringing       |RINGING
+VOICE           |Voice         |DIS
+CONNECT         |300           |MS=300 CS=300 CON
+CONNECT 1200    |1200          |MS=1200 CS=1200 CON
+CONNECT 2400    |2400          |MS=2400 CS=2400 CON

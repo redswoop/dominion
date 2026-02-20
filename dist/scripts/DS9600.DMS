@@ -1,0 +1,31 @@
+NAME: USR Dual Standard 9600 HST|
+SETU: ATC1E0F1H0M1Q0V1X6&A3&B2&C1&D2S38=1{~~AT&H1&I0&K1&N0&R2&S0S0=0{|
+INIT: ATB0H0M1{|
+ANSR: ATA{|
+PICK: ATH1{|
+HANG: ATH0{|
+DIAL: ATB1DT|
+SEPR: /|
+SPD: 19200|
+END:
+OK               |Normal         |NORM
+RING             |Ring           |RING
+NO CARRIER       |No Carrier     |DIS
+ERROR            |Error          |ERR
+NO DIAL TONE     |No Dial Tone   |NDT
+BUSY             |Busy           |DIS
+NO ANSWER        |No Answer      |DIS
+RINGING          |Ringing        |RINGING
+VOICE            |Voice          |DIS
+CONNECT          |300            |MS=300 CS=300 CON
+CONNECT 1200     |1200           |MS=1200 CS=1200 CON
+CONNECT 2400     |2400           |MS=2400 CS=2400 CON
+CONNECT 4800     |4800           |MS=4800 CS=4800 CON
+CONNECT 9600     |9600           |MS=9600 CS=9600 CON
+ARQ              |+/ARQ          |EC=Y CS=19200
+HST              |+/HST          |AS=Y MS=14400
+V32              |+/V.32         |AS=N
+MNP              |+/MNP          |EC=Y
+LAPM             |+/LAPM         |EC=Y
+MNP5             |+/MNP5         |DC=Y
+V42BIS           |+/V.42bis      |DC=Y

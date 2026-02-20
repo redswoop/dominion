@@ -1,0 +1,141 @@
+
+ÚÚÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·¿¿
+³³º                  Dominous Productions Proudly Presents:                 º³³
+³³º                   Dominion Bulletin Board System v3.00                  º³³
+³³º                            Released: 2/04/93                            º³³
+³³ÇÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¶³³
+³³º                 Written By: Fallen Angel and Particle Man               º³³
+³³º                  (Special Thanks to Thoradin and Boltar)                º³³
+ÀÀÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½ÙÙ
+
+    Dominion BBS was born about 2 years ago with the boredom and
+    dissatisfaction of Fallen Angel and myself (Particle Man). We both
+    tried out different softwares, and finally Fallen Angel decided to
+    write his own. He named this software îpsiloï. îpsiloï, to say the
+    least, was quite buggy and finally scrapped a few months later. Fallen
+    Angel did not give up, however.  He used that îpsiloï source to come up
+    with what is now Dominion and he has been working on it ever since.
+    What you see before you is the product of over 2 years of dilligent
+    work by Fallen Angel and Particle Man.
+
+
+ÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·
+º Installation º
+ÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½
+
+To Install your Dominion Bulletin Board System simply extract the files found
+in the archive 'Dom300.zip' into any directory.  This directory may be the
+directory you plan to use to run your BBS from, or perhaps some temporary
+directory, which you will delete when you are done installing. Run
+Install.exe.  This will begin the installation process, which will create
+directories, install files, and configure the system. While installing, you
+will be asked to enter the directory to install to, and a few other things.
+The Install to directory can be any directory, anywhere. Entering nothing
+will make the Install assume you want to install into the current directory.
+You will be asked what Communications Port to use.  Enter this, as 1-5. Once
+this is complete, you will be asked what Modem you are using.  This is
+tricky. If your specific modem is not listed, try the generic configuration
+for your modem speed (2400,9600,14400, etc). If you have problems using the
+supplied modem scripts, try using a text editor to edit the script that most
+closely resembles your modem. If problems persist, please check one of Alpha,
+beta, or distro sites for the Script you need. If problems STILL persist,
+notify Fallen Angel or Particle Man.
+
+Please read the documentation ('Dominion.Doc') for complete Dominion
+Documentation.
+
+
+ÖÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ·
+º Other Software º
+ÓÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ½
+
+Dominion REQUIRES the use of some external programs. These programs are
+listed below, and all may be found on your nearest (decent) PD BBS. They must
+be placed somewhere in your path.
+
+ûDSZ.COM      It will most likely be contained in a zip with the filename
+              DSZxxxx.zip. This is neccessary for the proper operation of many
+              of your transfer protocols.
+
+DOORWAY.EXE   It will most likely be contained in a zip with the filename
+              DRWYxxx.zip. The program's name is Doorway, and is required
+              for remote SysOps to access your DOS.
+
+HSLINK.EXE    It will most likely be contained in a zip with the filename
+              HSxxxxx.zip. The program's name is HSLink, and is an excellent
+              BiDirectional Protocol that recieves DDT's Seal of Approval.
+
+BIMODEM.COM   It will most likely be contained in a zip with the filename
+------Line Number 69! Grab the nearest member of the opposite sex and squeeze!
+              Bimodxxx.zip. The program's name is Bimodem, and is another
+              BiDirectional Protocol. Dominion has internal Bimodem support
+              which basically means that all you need is Bimodem.com anywhere
+              in your path for it to work perfectly.
+
+ûX00.SYS      It will most likely be contained in a zip with the filename
+              X00vxxxx.zip. This is a fossil driver, which is REQUIRED to
+              boot Dominion.
+BNU.SYS       You may use this instead of X00.SYS if you prefer, it is a
+              different fossil driver.
+
+ûPKUNZIP.EXE  It will most likely be contained in an archive w/the filename
+ûPKZIP.EXE    PKZxxx.exe. This is probably the most often used archiver
+              available.
+
+ARJ.EXE       It will most likely be contained in an archive w/the filename
+              ARJxxx.exe. This is another often used archiver.
+
+LHA.EXE       It will most likely be contained in an archive w/the filename
+              LHAxxx.exe. This is another often used archiver.
+
+FD-xxx.ZIP    This is only needed if you plan on FidoNetting some/all of your
+              Message Bases. The program's name is Front Door, and is the
+              most often used Front End Mailer.
+
+SQUISHxx.zip  This is only needed if you plan on FidoNetting some/all of your
+              Message Bases. The program's name is SQUISH, and is the most
+              often used Mail Processor.
+
+      NOTE: û Denotes a program that you should be laughed at if you don't use
+            in the operation of your board.
+
+XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxX
+
+ÖÄÄÄÄÄÄÄÄ·
+º Greets º
+ÓÄÄÄÄÄÄÄÄ½
+
+Greets go out to :
+
+Martin Pollard - Thank you for the many ideas that Telegard gave us, it was
+                 way ahead of its time as far as configurable softwares go.
+                 It is a shame you did not continue work on it.
+
+Cott Lang -      You are doing a solid job in continuing Martin Pollard's
+                 work. Keep it up!
+
+Michael Smith -  Anyone remember RadioActive Telegard? I thought not. Nice
+                 Hex Editting job on Telegard v2.5, sorry we all laughed at
+                 you so hard.
+
+Ken Sallot -     Where is Express BBS? Saw the demo for it, still waiting...
+
+Ryec -           What a pretty BBS Vision-X is!
+
+Sam Brown -      You had to go and release your Emulex source, look at all
+                 the Forum Hack mania you have caused!
+
+Celerity -       If we could remember who you are, we'd tell you to keep
+                 up the work on one of the best Forum Hacks available.
+
+SlaveLord -      You keep showing that even Forum Hacks can be very original.
+
+Other Forum  -   Step 1, Download LSD, VX, and Celerity. Step 2, see what
+Hack Authors -   they're doing (ie - originality) and you aren't.
+
+Everyone Else -  If your software wasn't mentioned here, sorry, but my mother
+                 always taught me, if you dont have anything nice to say, dont
+                 say anything at all... (either that, or we just plain forgot).
+
+Max Sterling -   When will you be returning from Alaska?
+

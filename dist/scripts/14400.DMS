@@ -1,0 +1,29 @@
+NAME: v32bis 14,400|
+SETU: AT&F&C1S95=44{|
+INIT: ATM1{|
+ANSR: ATA{|
+PICK: ATH1{|
+HANG: ATH0{|
+SEPR: |
+SPD: 19200|
+END:
+OK                     |Normal               |NORM
+RING                   |Ring                 |RING
+NO CARRIER             |No Carrier           |DIS
+ERROR                  |ERROR                |ERR
+CARRIER 300            |300                  |MS=300
+CARRIER 600            |600                  |MS=600
+CARRIER 1200           |1200                 |MS=1200
+CARRIER 2400           |2400                 |MS=2400
+CARRIER 4800           |4800                 |MS=4800
+CARRIER 7200           |7200                 |MS=7200
+CARRIER 9600           |9600                 |MS=9600
+CARRIER 12000          |12000                |MS=12000
+CARRIER 14400          |14400                |MS=14400
+PROTOCOL: NONE         |-                    |EC=N
+PROTOCOL: LAP-M        |+/LAP-M              |EC=Y
+PROTOCOL: ALT          |-/MNP                |EC=Y
+COMPRESSION: NONE      |+                    |DC=N
+COMPRESSION: CLASS 5   |+/MNP5               |DC=Y
+COMPRESSION: V.42BIS   |+/V.42bis            |DC=Y
+CONNECT 19200          |-                    |CS=19200 CON
