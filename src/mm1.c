@@ -83,20 +83,20 @@ void readmnufmt(mmrec pf)
 unsigned char bo(unsigned char c)
 {
     switch(c) {
-    case '<': 
+    case '<':
         return '>';
-    case '[': 
+    case '[':
         return ']';
-    case '(': 
+    case '(':
         return ')';
-    case '¯': 
-        return '®';
-    case '®': 
-        return '¯';
-    case 'Þ': 
-        return 'Ý';
-    case 'Ý': 
-        return 'Þ';
+    case 0xAF:
+        return 0xAE;
+    case 0xAE:
+        return 0xAF;
+    case 0xDE:
+        return 0xDD;
+    case 0xDD:
+        return 0xDE;
     }
     return(c);
 }
@@ -194,10 +194,17 @@ int readmenu(char fn[15])
 int ccount(char s[MAX_PATH_LEN])
 {
     int i=0,t=0;
+    int len=strlen(s);
 
-    for(i=0;i<strlen(s);i++) {
-        if(s[i]==5||s[i]==14||s[i]==3||s[i]==6) t+=2;
-        if(s[i]=='|') t+=3;
+    for(i=0;i<len;i++) {
+        if(s[i]==3||s[i]==5||s[i]==6||s[i]==14) {
+            t+=2;
+            i++;    /* skip parameter byte */
+        }
+        else if(s[i]=='|') {
+            t+=3;
+            i+=2;   /* skip 2 parameter chars */
+        }
     }
     return(t);
 }
@@ -244,7 +251,7 @@ char *aligncmd(char in[MAX_PATH_LEN])
         stuff_in(s1,mmfmt.fmt,s2,s3,s,"","");
     } 
     else
-        sprintf(s1,"%c%c%c%s%c%c%c%s",pp.col[0]+1,init,pp.col[1]+1,s2,pp.col[0]+1,bo(init),pp.col[2]+1,s3);
+        sprintf(s1,"%c%c%c%s%c%c%c%s",pp.col[0]+1,init,pp.col[1]+1,s2,pp.col[0]+1,bo(init),pp.col[2]+1,s);
 
     switch(pp.columns) {
     case 1: 
