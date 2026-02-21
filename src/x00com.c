@@ -1,4 +1,5 @@
 #include "vars.h"
+#include "cp437.h"
 #pragma hdrstop
 
 /*
@@ -87,9 +88,16 @@ void dtr(int i)
 void outcomch(char ch)
 /* Output one character to the remote user via TCP */
 {
+    unsigned char uch = (unsigned char)ch;
+    const char *utf8;
     if (!ok_modem_stuff) return;
     if (client_fd < 0) return;
-    write(client_fd, &ch, 1);
+    if (uch >= 0x80) {
+        utf8 = cp437_to_utf8[uch];
+        write(client_fd, utf8, strlen(utf8));
+    } else {
+        write(client_fd, &ch, 1);
+    }
 }
 
 char peek1c()
@@ -279,4 +287,19 @@ void send_telnet_negotiation(int fd)
     };
     write(fd, neg, sizeof(neg));
     _iac_state = 0;
+}
+
+/* Switch remote terminal to alternate screen with black background */
+void send_terminal_init(int fd)
+{
+    /* ?1049h = alt screen, 0m = reset attrs, 40m = black bg, 2J = clear, H = home */
+    const char *seq = "\033[?1049h\033[0m\033[40m\033[2J\033[H";
+    write(fd, seq, strlen(seq));
+}
+
+/* Restore remote terminal to primary screen */
+void send_terminal_restore(int fd)
+{
+    const char *seq = "\033[0m\033[?1049l";
+    write(fd, seq, strlen(seq));
 }

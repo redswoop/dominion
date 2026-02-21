@@ -8,34 +8,28 @@
 void cd_to(char *s)
 {
     char s1[MAX_PATH_LEN];
-    int i,db;
+    int i;
 
     if (!s) return;
     strcpy(s1,s);
     i=strlen(s1)-1;
-    if(s1[strlen(s1)-1]=='\\')
-        s1[strlen(s1)-1]=0;
-
-    db=(s1[i]=='\\');
-    if (i==0)
-        db=0;
-    if ((i==2) && (s1[1]==':'))
-        db=0;
-    if (db)
+    if (i>0 && (s1[i]=='\\' || s1[i]=='/'))
         s1[i]=0;
-    chdir(s1);
-    if (s[1]==':')
-        setdisk(s[0]-'A');
+    /* skip DOS drive letter prefix (e.g. "A:\") */
+    if (s1[1]==':' && (s1[2]=='\\' || s1[2]=='/'))
+        chdir(&s1[2]);
+    else if (s1[1]==':')
+        chdir(&s1[2]);
+    else
+        chdir(s1);
 }
 
 void get_dir(char *s, int be)
 {
-    strcpy(s,"X:\\");
-    s[0]='A'+getdisk();
-    getcurdir(0,&(s[3]));
+    getcwd(s, MAX_PATH_LEN);
     if (be) {
-        if (s[strlen(s)-1]!='\\')
-            strcat(s,"\\");
+        if (s[strlen(s)-1]!='/')
+            strcat(s,"/");
     }
 }
 

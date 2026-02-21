@@ -24,8 +24,9 @@ char *disk_string(int whichstring,char *fn)
     sprintf(s1,"%s%s",syscfg.datadir,fn);
     i=open(s1,O_RDONLY|O_BINARY);
 
-    if (i<0)
+    if (i<0) {
         err(1,s1,"In Disk_String");
+    }
 
     lseek(i,((long)(whichstring-1))*(sizeof(astring)),SEEK_SET);
     read(i,(void *)&astring,sizeof(astring));
@@ -147,7 +148,7 @@ void addsay(void)
 
     inputdat("Enter your Rumour",s,70,1);
     if(!s[0]) return;
-    logpr("5þ> Added Rumor 0: %s",s);
+    logpr("5ï¿½> Added Rumor 0: %s",s);
     strcpy(astring.rumour,s);
     strcpy(astring.by,nam(&thisuser,usernum));
     nl();

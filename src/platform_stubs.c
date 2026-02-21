@@ -60,7 +60,7 @@ void textattr(int attr)
 
 void clrscr(void)
 {
-    printf("\033[0m\033[2J\033[H");
+    printf("\033[0m\033[40m\033[2J\033[H");
     fflush(stdout);
     _cur_x = 0;
     _cur_y = 0;

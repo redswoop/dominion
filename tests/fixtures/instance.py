@@ -18,7 +18,7 @@ DOMINION_DIR = pathlib.Path(__file__).resolve().parent.parent.parent
 # Source directories containing static assets needed by the BBS
 STATIC_DIRS = ["afiles", "menus"]
 # Individual static data files that mkconfig does NOT generate
-STATIC_DATA_FILES = ["STRINGS.DAT", "SYSSTR.DAT"]
+STATIC_DATA_FILES = ["strings.dat", "sysstr.dat"]
 
 
 def _free_port():
@@ -149,9 +149,9 @@ def bbs_instance(bbs_binary, mkconfig_binary):
             shutil.copy2(str(src_file), str(data_dir / fname))
 
     # --- Copy DOM.KEY ---
-    dom_key = DOMINION_DIR / "dist" / "DOM.KEY"
+    dom_key = DOMINION_DIR / "dist" / "dom.key"
     if dom_key.exists():
-        shutil.copy2(str(dom_key), str(workdir / "DOM.KEY"))
+        shutil.copy2(str(dom_key), str(workdir / "dom.key"))
 
     # --- Start BBS ---
     port = _free_port()

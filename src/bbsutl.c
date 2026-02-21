@@ -541,7 +541,7 @@ void sl1(int cmd,char *s)
         f[i++]=s[3];
         f[i++]=s[4];
         f[i]=0;
-        strcat(f,".LOG");
+        strcat(f,".log");
         break;
     case 3: /* Close sysop's log  + return filename */
         if (slf>0) {

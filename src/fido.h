@@ -1,3 +1,6 @@
+#ifndef _FIDO_H_
+#define _FIDO_H_
+
 typedef struct {
         int zone,net,node,point;
 } addressrec;
@@ -8,11 +11,11 @@ typedef struct {
 #define fdr_cmdtype 0x0008
 
 typedef struct {
-        char  desc[51],                 // Description of ErrorLevel
-              fn[MAX_PATH_LEN];                   // Filename to run on mail
- unsigned int speed;                    // Modem Speed returned
-        int   level,                    // Actual Error Level
-              attr;                     // Action Type
+        char  desc[51],                 /* Description of ErrorLevel */
+              fn[MAX_PATH_LEN];                   /* Filename to run on mail */
+ unsigned int speed;                    /* Modem Speed returned */
+        int   level,                    /* Actual Error Level */
+              attr;                     /* Action Type */
 } fdrrec;
 
 typedef struct {
@@ -22,7 +25,7 @@ typedef struct {
     unsigned long attr;
 } fnetrec;
 
-//FIDO .msg Format
+/* FIDO .msg Format */
 typedef struct {
         char from[36],
              to[36],
@@ -55,3 +58,5 @@ typedef struct {
 #else
 extern fnetrec fnet;
 #endif
+
+#endif /* _FIDO_H_ */

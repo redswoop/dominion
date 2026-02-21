@@ -163,7 +163,7 @@ void displayformat()
     char s[161],s1[161],s2[51];
     FILE *f;
 
-    sprintf(s,"%sFile%d.fmt",syscfg.gfilesdir,thisuser.flisttype);
+    sprintf(s,"%sfile%d.fmt",syscfg.gfilesdir,thisuser.flisttype);
     f=fopen(s,"rt");
     fgets(s,81,f);
     fclose(f);

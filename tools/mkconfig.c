@@ -1,5 +1,5 @@
 /*
- * mkconfig.c - Generate minimal Config.dat, Status.dat, and all required
+ * mkconfig.c - Generate minimal config.dat, status.dat, and all required
  * data files for Dominion BBS. Compile with the same flags as the BBS so
  * struct layout matches exactly.
  *
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     }
 
     /* =================================================================
-     * Config.dat  (configrec + niftyrec)
+     * config.dat  (configrec + niftyrec)
      * ================================================================= */
     memset(&syscfg, 0, sizeof(syscfg));
 
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
     memset(&nifty, 0, sizeof(nifty));
     nifty.matrixtype = 0;
     nifty.systemtype = 0;
-    strcpy(nifty.firstmenu, "MAIN");
+    strcpy(nifty.firstmenu, "main");
     /* defaultcol is a byte array of DOS color attributes, NOT a string */
     nifty.defaultcol[0]  = 7;   /* default text: white on black */
     nifty.defaultcol[1]  = 11;  /* highlight: bright cyan on black */
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
     nifty.defaultcol[18] = (char)0x8F; /* extra8 */
     nifty.defaultcol[19] = 7;   /* extra9 */
 
-    snprintf(path, sizeof(path), "%sConfig.dat", base);
+    snprintf(path, sizeof(path), "%sconfig.dat", base);
     f = fopen(path, "wb");
     if (!f) { perror(path); return 1; }
     fwrite(&syscfg, sizeof(syscfg), 1, f);
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * Status.dat  (statusrec)
+     * status.dat  (statusrec)
      * ================================================================= */
     memset(&status, 0, sizeof(status));
     {
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
     status.qscanptr = 1;
     strcpy(status.lastuser, "SysOp");
 
-    snprintf(path, sizeof(path), "%sdata/Status.dat", base);
+    snprintf(path, sizeof(path), "%sdata/status.dat", base);
     f = fopen(path, "wb");
     if (!f) { perror(path); return 1; }
     fwrite(&status, sizeof(status), 1, f);
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * SUBS.DAT  (subboardrec array — need at least sub 0 = email)
+     * subs.dat  (subboardrec array — need at least sub 0 = email)
      * ================================================================= */
     memset(&sub, 0, sizeof(sub));
     strcpy(sub.name, "Private Mail");
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
     sub.storage_type = 2;   /* JAM */
     sub.attr = 0x0020;      /* mattr_private */
 
-    snprintf(path, sizeof(path), "%sdata/SUBS.DAT", base);
+    snprintf(path, sizeof(path), "%sdata/subs.dat", base);
     f = fopen(path, "wb");
     if (!f) { perror(path); return 1; }
     fwrite(&sub, sizeof(sub), 1, f);
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * DIRS.DAT  (directoryrec array — at least one file directory)
+     * dirs.dat  (directoryrec array — at least one file directory)
      * ================================================================= */
     memset(&dir, 0, sizeof(dir));
     strcpy(dir.name, "General Files");
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
     dir.mask = 0;
     dir.type = 0;
 
-    snprintf(path, sizeof(path), "%sdata/DIRS.DAT", base);
+    snprintf(path, sizeof(path), "%sdata/dirs.dat", base);
     f = fopen(path, "wb");
     if (!f) { perror(path); return 1; }
     fwrite(&dir, sizeof(dir), 1, f);
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * RESULTS.DAT  (resultrec array — modem result codes)
+     * results.dat  (resultrec array — modem result codes)
      * ================================================================= */
     memset(&result, 0, sizeof(result));
     strcpy(result.curspeed, "TCP/IP");
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
     result.mode = 0;
     result.attr = 0;
 
-    snprintf(path, sizeof(path), "%sdata/RESULTS.DAT", base);
+    snprintf(path, sizeof(path), "%sdata/results.dat", base);
     f = fopen(path, "wb");
     if (!f) { perror(path); return 1; }
     fwrite(&result, sizeof(result), 1, f);
@@ -304,9 +304,9 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * MODEM.DAT  (modem init strings — just create empty)
+     * modem.dat  (modem init strings — just create empty)
      * ================================================================= */
-    snprintf(path, sizeof(path), "%sdata/MODEM.DAT", base);
+    snprintf(path, sizeof(path), "%sdata/modem.dat", base);
     f = fopen(path, "wb");
     if (!f) { perror(path); return 1; }
     /* Write minimal modem data: "ATZ\r" as init string */
@@ -356,6 +356,10 @@ int main(int argc, char **argv)
     sysop_user.day = 1;
     sysop_user.year = 80;         /* years since 1900 */
     sysop_user.age = 46;
+    sysop_user.flisttype = 1;     /* file list format (0 = prompts user) */
+    sysop_user.mlisttype = 1;     /* msg list format (0 = prompts user) */
+    strcpy(sysop_user.street, "123 BBS Street");
+    strcpy(sysop_user.city, "Anytown, USA");
 
     snprintf(path, sizeof(path), "%sdata/user.lst", base);
     f = fopen(path, "wb");

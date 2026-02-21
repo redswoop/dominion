@@ -364,7 +364,7 @@ void diredit()
         }
     } 
     while ((!done) && (!hangup));
-    sprintf(s,"%sDIRS.DAT",syscfg.datadir);
+    sprintf(s,"%sdirs.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f,(void *)&directories[0], num_dirs * sizeof(directoryrec));
     close(f);
@@ -606,7 +606,7 @@ void protedit()
         }
     } 
     while ((!done) && (!hangup));
-    sprintf(s,"%sprotocol.DAT",syscfg.datadir);
+    sprintf(s,"%sprotocol.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f,(void *)&proto[0], numextrn * sizeof(protocolrec));
     close(f);

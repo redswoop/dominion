@@ -14,7 +14,7 @@ void fiscan(int b)
     int f;
     char s[MAX_PATH_LEN];
 
-    sprintf(s, "%s%s.SUB", syscfg.datadir, subboards[b].filename);
+    sprintf(s, "%s%s.sub", syscfg.datadir, subboards[b].filename);
     f = open(s, O_BINARY | O_RDWR);
     if (f == -1) {
         f = open(s, O_BINARY | O_RDWR | O_CREAT, S_IREAD | S_IWRITE);
@@ -32,7 +32,7 @@ void fsavebase(int b)
     int f;
     char s[MAX_PATH_LEN];
 
-    sprintf(s, "%s%s.SUB", syscfg.datadir, subboards[b].filename);
+    sprintf(s, "%s%s.sub", syscfg.datadir, subboards[b].filename);
     f = open(s, O_BINARY | O_RDWR);
     lseek(f, 0L, SEEK_SET);
     msgs[0].owneruser = nummsgs;
@@ -157,16 +157,16 @@ int fidotosser(int bn)
 
 
     if (subboards[bn].attr & mattr_netmail)
-        sprintf(s, "%s\\HI-WATER.MRK", subboards[bn].nmpath);
+        sprintf(s, "%s/hi-water.mrk", subboards[bn].nmpath);
     else
-        sprintf(s, "%s%s\\HI-WATER.MRK", syscfg.msgsdir, subboards[bn].filename);
+        sprintf(s, "%s%s/hi-water.mrk", syscfg.msgsdir, subboards[bn].filename);
     i = open(s, O_BINARY | O_RDWR | O_CREAT, S_IREAD | S_IWRITE);
     if (i < 0) {
         i = open(s, O_BINARY | O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
         c = 1;
         write(i, &c, sizeof(c));
         i2 = 2;
-    } 
+    }
     else {
         read(i, &i2, 1);
     }
@@ -174,9 +174,9 @@ int fidotosser(int bn)
     i = 1;
 
     if (subboards[bn].attr & mattr_netmail)
-        sprintf(s, "%s\\%d.msg", subboards[bn].nmpath, i2 + 1);
+        sprintf(s, "%s/%d.msg", subboards[bn].nmpath, i2 + 1);
     else
-        sprintf(s, "%s%s\\%d.msg", syscfg.msgsdir, subboards[bn].filename, i2 + 1);
+        sprintf(s, "%s%s/%d.msg", syscfg.msgsdir, subboards[bn].filename, i2 + 1);
     if (!exist(s))
         i = 0;
 
@@ -185,9 +185,9 @@ int fidotosser(int bn)
 
     while (i) {
         if (subboards[bn].attr & mattr_netmail)
-            sprintf(s, "%s\\%d.msg", subboards[bn].nmpath, i2 + 1);
+            sprintf(s, "%s/%d.msg", subboards[bn].nmpath, i2 + 1);
         else
-            sprintf(s, "%s%s\\%d.msg", syscfg.msgsdir, subboards[bn].filename, i2 + 1);
+            sprintf(s, "%s%s/%d.msg", syscfg.msgsdir, subboards[bn].filename, i2 + 1);
         i1 = open(s, O_BINARY | O_RDWR);
         if (i1 > -1) {
             read(i1, &f, sizeof(fmsgrec));
@@ -211,9 +211,9 @@ int fidotosser(int bn)
     if (total) {
         fsavebase(bn);
         if (subboards[bn].attr & mattr_netmail)
-            sprintf(s, "%s\\HI-WATER.MRK", subboards[bn].nmpath);
+            sprintf(s, "%s/hi-water.mrk", subboards[bn].nmpath);
         else
-            sprintf(s, "%s%s\\HI-WATER.MRK", syscfg.msgsdir, subboards[bn].filename);
+            sprintf(s, "%s%s/hi-water.mrk", syscfg.msgsdir, subboards[bn].filename);
         i = open(s, O_BINARY | O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
         write(i, &i2, 1);
         close(i);
@@ -350,16 +350,16 @@ int fidoscan(int bn, int *tot)
     char *b;
 
     if (subboards[bn].attr & mattr_netmail)
-        sprintf(s, "%s\\HI-WATER.MRK", subboards[bn].nmpath);
+        sprintf(s, "%s/hi-water.mrk", subboards[bn].nmpath);
     else
-        sprintf(s, "%s%s\\HI-WATER.MRK", syscfg.msgsdir, subboards[bn].filename);
+        sprintf(s, "%s%s/hi-water.mrk", syscfg.msgsdir, subboards[bn].filename);
     f = open(s, O_BINARY | O_RDWR);
     if (f < 0) {
         f = open(s, O_BINARY | O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
         c = 1;
         write(f, &c, sizeof(c));
         i2 = 1;
-    } 
+    }
     else
         read(f, &i2, 1);
     close(f);
@@ -372,10 +372,10 @@ int fidoscan(int bn, int *tot)
             i2++;
             b = readfile(&msgs[i1].msg, subboards[bn].filename, &len);
             if (subboards[curlsub].attr & mattr_netmail) {
-                sprintf(s, "%s\\%d.msg", subboards[bn].nmpath, i2);
-            } 
+                sprintf(s, "%s/%d.msg", subboards[bn].nmpath, i2);
+            }
             else
-                sprintf(s, "%s%s\\%d.msg", syscfg.msgsdir, subboards[bn].filename, i2);
+                sprintf(s, "%s%s/%d.msg", syscfg.msgsdir, subboards[bn].filename, i2);
             writefmsg(b, len, noc2(msgs[i1].title), s, subboards[bn]);
             total++;
             msgs[i1].status ^= status_pending_fido;
@@ -389,7 +389,7 @@ int fidoscan(int bn, int *tot)
     if (total)
         *tot = 1;
 
-    sprintf(s, "%s%s\\HI-WATER.MRK", syscfg.msgsdir, subboards[bn].filename);
+    sprintf(s, "%s%s/hi-water.mrk", syscfg.msgsdir, subboards[bn].filename);
     f = open(s, O_BINARY | O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f, &i2, 1);
     close(f);
@@ -417,9 +417,9 @@ int mailsys(int m)
         if(!(subboards[i].attr & mattr_deleted)) {
             if ((subboards[i].attr & mattr_fidonet)) {
                 if (subboards[i].attr & mattr_netmail)
-                    sprintf(s, "%s\\nul", subboards[i].nmpath);
+                    sprintf(s, "%s/nul", subboards[i].nmpath);
                 else
-                    sprintf(s, "%s%s\\nul", syscfg.msgsdir, subboards[i].filename);
+                    sprintf(s, "%s%s/nul", syscfg.msgsdir, subboards[i].filename);
                 if (!exist(s)) {
                     if (subboards[i].attr & mattr_netmail)
                         strcpy(s, subboards[i].nmpath);
@@ -462,9 +462,9 @@ int mailsys(int m)
                     num_listed = 0;
                     if (subboards[i].attr & mattr_fidonet) {
                         npr("Purging %s [%d]\r\n", subboards[i].name, i);
-                        sprintf(s, "%s%s\\", syscfg.msgsdir, subboards[i].filename);
+                        sprintf(s, "%s%s/", syscfg.msgsdir, subboards[i].filename);
                         remove_from_temp("*.*", s, 0);
-                        sprintf(s, "%s%s\\HI-WATER.MRK", syscfg.msgsdir, subboards[i].filename);
+                        sprintf(s, "%s%s/hi-water.mrk", syscfg.msgsdir, subboards[i].filename);
                         f = fopen(s, "wb");
                         fputc(1, f);
                         fclose(f);

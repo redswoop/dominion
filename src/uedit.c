@@ -20,7 +20,7 @@ void deluser(int un)
         u.inact |= inact_deleted;
         u.waiting=0;
         write_user(un,&u);
-        sprintf(fn,"%sVOTING.DAT",syscfg.datadir);
+        sprintf(fn,"%svoting.dat",syscfg.datadir);
         f=open(fn,O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
         n=(int) (filelength(f) / sizeof(votingrec)) -1;
         for (i=0; i<20; i++)

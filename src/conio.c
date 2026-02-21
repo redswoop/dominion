@@ -77,14 +77,18 @@ static void _scrn_scroll(int t, int b, int n)
 
 
 void SCROLL_UP(int t, int b, int l) {
+    /* Ensure black bg so erase/scroll fills black, not terminal default */
+    printf("\033[40m");
     if (l == 0) {
         /* Clear region */
         if (t == 0 && b == screenbottom) {
             printf("\033[2J");
         } else {
-            printf("\033[%d;%dr", t + 1, b + 1);
-            printf("\033[%d;1H\033[J", t + 1);
-            printf("\033[r");
+            /* Clear each line individually — \033[J erases to end of
+             * screen (not scroll region), which would nuke lines below b */
+            int row;
+            for (row = t; row <= b; row++)
+                printf("\033[%d;1H\033[2K", row + 1);
         }
         _scrn_scroll(t, b, 0);
     } else {
@@ -94,6 +98,7 @@ void SCROLL_UP(int t, int b, int l) {
         printf("\033[r");
         _scrn_scroll(t, b, l);
     }
+    _last_attr = -1;  /* terminal state changed — invalidate cache */
     fflush(stdout);
 }
 
@@ -156,8 +161,9 @@ void cr()
 
 void clrscrb()
 {
-    /* Reset terminal to known color state before clearing */
-    printf("\033[0m");
+    /* Reset terminal to known color state before clearing.
+     * 40m = explicit black bg so erase fills black, not terminal default. */
+    printf("\033[0m\033[40m");
     _last_attr = -1;
     SCROLL_UP(topline, screenbottom, 0);
     movecsr(0, 0);

@@ -15,7 +15,7 @@ void checkreg(void)
     unsigned long correct_key;
     char registered=0;
 
-    if((fp=fopen("DOM.KEY","r"))!=NULL)
+    if((fp=fopen("dom.key","r"))!=NULL)
     {
         fgets(registered_name,200,fp);
         if(registered_name[strlen(registered_name)-1]=='\n')

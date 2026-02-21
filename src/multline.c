@@ -92,7 +92,7 @@ void opendlf_w1(int dn) /* open a download file for write */
   char s[MAX_PATH_LEN];
 
   closedlf_w();
-  sprintf(s,"%s%s.DIR",syscfg.datadir,directories[dn].filename);
+  sprintf(s,"%s%s.dir",syscfg.datadir,directories[dn].filename);
   dlf_w=open_w(s,0);
 }
 
@@ -113,7 +113,7 @@ void openedlf_w1(int dn) /* open an extended download file for write */
   char s[MAX_PATH_LEN];
 
   closeedlf_w();
-  sprintf(s,"%s%s.EXT",syscfg.datadir,directories[dn].filename);
+  sprintf(s,"%s%s.ext",syscfg.datadir,directories[dn].filename);
   edlf_w=open_w(s,0);
 }
 
@@ -134,7 +134,7 @@ void load_status()
   char s[80];
 
   if (statusfile<0) {
-    sprintf(s,"%sSTATUS.DAT",syscfg.datadir);
+    sprintf(s,"%sstatus.dat",syscfg.datadir);
     do
       statusfile=open(s,O_RDWR | O_BINARY | O_DENYALL);
     while (statusfile<0);
@@ -171,7 +171,7 @@ int open_user_w()
   char s[MAX_PATH_LEN];
 
   close_user_w();
-  sprintf(s,"%sUSER.LST",syscfg.datadir);
+  sprintf(s,"%suser.lst",syscfg.datadir);
   userfile_w=open_w(s,0);
   return(userfile_w);
 }
@@ -198,7 +198,7 @@ void prnodestatus()
   nl();
   pla("Who is currently online: ",&abort);
   nl();
-  sprintf(s,"%sSTATUS.1",syscfg.datadir);
+  sprintf(s,"%sstatus.1",syscfg.datadir);
   for (i=1; (!abort) && (exist(s)); i++) {
     otherstatusfile=open_r(s);
     read(otherstatusfile, (void *)(&nodestatus), sizeof(nodestatusrec));
@@ -206,7 +206,7 @@ void prnodestatus()
     sprintf(s,"%s #%d  ...................",nodestatus.name,nodestatus.number);
     sprintf(s1,"  Node %d  %-.25s  %s",i,(nodestatus.number ? s : ".........................."),nodestatus.action);
     pla(s1,&abort);
-    sprintf(s,"%sSTATUS.%d",syscfg.datadir,i+1);
+    sprintf(s,"%sstatus.%d",syscfg.datadir,i+1);
   }
   nl();
 }

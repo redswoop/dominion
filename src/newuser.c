@@ -42,7 +42,7 @@ int check_name(char *nn)
     if (!ok)
         return(ok);
 
-    sprintf(s,"%sTRASHCAN.LST",syscfg.gfilesdir);
+    sprintf(s,"%strashcan.lst",syscfg.gfilesdir);
     f=open(s,O_RDWR | O_BINARY);
 
     if (f<0)
@@ -480,9 +480,9 @@ void newuser()
 
     if (!hangup) {
         if (incom) {
-            if (printfile("SYSTEM")) sl1(0,"9# 0Aborted System Info Message!");
+            if (printfile("system")) sl1(0,"9# 0Aborted System Info Message!");
             pausescr();
-            if (printfile("NEWUSER")) sl1(0,"9# 0Aborted Newuser Message!");
+            if (printfile("newuser")) sl1(0,"9# 0Aborted Newuser Message!");
             pausescr();
         }
         outchr(12);
@@ -604,7 +604,7 @@ void newuser()
         ssm(1,0,s);
         if(incom) {
             infoform(nifty.nuinf,0);
-            if(printfile("FEEDBACK")) sl1(0,"9# 0Aborted Feedback Message!");
+            if(printfile("feedback")) sl1(0,"9# 0Aborted Feedback Message!");
             email(1,"NewUser Validation Feedback",0);
             if (syscfg.newuser_c[0]) ex("D1",syscfg.newuser_c);
         }

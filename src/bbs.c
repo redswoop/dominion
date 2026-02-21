@@ -22,7 +22,7 @@ void main(int argc, char *argv[])
     checkreg();
 
     if(getenv("DOM")) cd_to(getenv("DOM"));
-    if(!exist("Config.dat")) {
+    if(!exist("config.dat")) {
         cd_to(searchpath("config.dat"));
     }
 
@@ -45,7 +45,7 @@ void main(int argc, char *argv[])
     port=0;
 
     textcolor(9);
-    cprintf("þ ");
+    cprintf("ï¿½ ");
     textcolor(15);
     cprintf("%s, Dominous 1993\n\n\r",wwiv_version);
 
@@ -214,6 +214,7 @@ void main(int argc, char *argv[])
         if (!hangup) {
             logon();
             sprintf(s,"%s%s",syscfg.menudir,nifty.firstmenu);
+            if(!strchr(nifty.firstmenu,'.')) strcat(s,".mnu");
             if(!exist(s)) {
                 pl("8Main Menu is missing!!  System cannot Continue!  If Possible, Inform SysOp!");
                 logpr("7!0 MAIN MENU MISSING.  Hanging up on User");
@@ -230,6 +231,8 @@ main_menu_label:
         }
 
 hanging_up:
+        if (client_fd >= 0)
+            send_terminal_restore(client_fd);
         if ((cdet()) && (!no_hangup) && (ok_modem_stuff)) {
             i=0;
             dtr(1);

@@ -50,10 +50,10 @@ void del_nuv(unsigned int user)
     nuvdata dn;
     int dnc,nnu,i,o;
 
-    sprintf(s,"%sNUV.DAT",syscfg.datadir);
+    sprintf(s,"%snuv.dat",syscfg.datadir);
     i=open(s,O_BINARY|O_RDWR);
 
-    sprintf(s1,"%sNUV.BAK",syscfg.datadir);
+    sprintf(s1,"%snuv.bak",syscfg.datadir);
     o=open(s1,O_BINARY|O_RDWR|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
 
     nnu=filelength(i)/sizeof(dn);
@@ -80,7 +80,7 @@ int enter_nuv(userrec tu,int un,int form)
     int i,num;
     nuvdata nu;
 
-    num=num_nuv("NUV.dat");
+    num=num_nuv("nuv.dat");
 
     for(i=0;i<num;i++) {
         read_nuv(i,"nuv.dat",&nu);
@@ -109,8 +109,8 @@ int enter_nuv(userrec tu,int un,int form)
         strcpy(nu.vote_comment[i].say,"");
     }
 
-    num=num_nuv("NUV.DAT");
-    write_nuv(num,"NUV.DAT",&nu);
+    num=num_nuv("nuv.dat");
+    write_nuv(num,"nuv.dat",&nu);
     if(form) {
         infoform(nifty.nuvinf,0);
         printfile("nuvmsg");
@@ -127,7 +127,7 @@ int avoted(unsigned int user)
     char s[MAX_PATH_LEN];
 
 
-    read_nuv(user,"NUV.DAT",&v);
+    read_nuv(user,"nuv.dat",&v);
 
     strcpy(s,nam(&thisuser,usernum));
 
@@ -171,7 +171,7 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
     int vv=0,done=0;
     userrec u;
 
-    read_nuv(user,"NUV.DAT",&vn);
+    read_nuv(user,"nuv.dat",&vn);
 
     /*    if(so()) {
             nl();
@@ -259,7 +259,7 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
         vn.vcmt_num++;
     }
 
-    write_nuv(user,"NUV.DAT",&vn);
+    write_nuv(user,"nuv.dat",&vn);
     *resn = vn;
 
     if ((vn.vote_yes>=nifty.nuvyes)||(vn.vote_no>=nifty.nuvbad)) {
@@ -279,7 +279,7 @@ void val_nuv(unsigned int user)
     int work;
 
 
-    read_nuv(user,"NUV.DAT",&valn);
+    read_nuv(user,"nuv.dat",&valn);
     del_nuv(user);
     i1 = valn.num;
     read_user(i1,&u);
@@ -343,7 +343,7 @@ void nuv(void)
     }
 
     i = 1; 
-    cnt = num_nuv("NUV.DAT");
+    cnt = num_nuv("nuv.dat");
 
     if(!cnt) {
         nl();
@@ -367,7 +367,7 @@ void nuv(void)
             inputdat("Remove Which? ",s,3,0);
             if(!s[0]) break;
             del_nuv(atoi(s));
-            cnt = num_nuv("NUV.DAT");
+            cnt = num_nuv("nuv.dat");
             break;
         case '?': 
             printmenu(31);
@@ -376,7 +376,7 @@ void nuv(void)
         case 'L':
             nl();
             for(i=0;i<cnt;i++) {
-                read_nuv(i,"NUV.DAT",&newuser);
+                read_nuv(i,"nuv.dat",&newuser);
                 read_user(newuser.num,&u);
                 npr("1<1%d1> 0%-35s 3[3%.3s3] 5[5%s5]\r\n",i,nam(&u,newuser.num),u.phone,u.comment);
             }
@@ -392,7 +392,7 @@ void nuv(void)
             sh=0;
             done1=0;
             while (i < cnt &&!hangup&&!done1) {
-                read_nuv(i,"NUV.DAT",&newuser);
+                read_nuv(i,"nuv.dat",&newuser);
                 nl();
                 if (!avoted(i)) {
                     sh=1;

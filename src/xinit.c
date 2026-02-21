@@ -83,9 +83,7 @@ void init(int show)
         memmove(scrn,ANSIHEADER,4000);
         gotoxy(1,12);
     }
-    strcpy(cdir,"X:\\");
-    cdir[0]='A'+getdisk();
-    getcurdir(0,&(cdir[3]));
+    getcwd(cdir, sizeof(cdir));
     userfile=-1;
     configfile=-1;
     statusfile=-1;
@@ -111,13 +109,13 @@ void init(int show)
     if(!restoring_shrink&&!show) {
         //      GODOWN(2,3);
         //      bargraph(0);
-        dotopinit("Config.dat",10);
+        dotopinit("config.dat",10);
     }
 
-    configfile=open("CONFIG.DAT",O_RDWR | O_BINARY);
+    configfile=open("config.dat",O_RDWR | O_BINARY);
     if (configfile<0) {
-        printf("\n\nConfig.Dat, Main Configuration File, Not Found!!.\n");
-        err(1,"Config.dat","In Init()");
+        printf("\n\nconfig.dat, Main Configuration File, Not Found!!.\n");
+        err(1,"config.dat","In Init()");
     }
 
     read(configfile,(void *) (&syscfg), sizeof(configrec));
@@ -202,10 +200,10 @@ void init(int show)
     }
 
     if(resaveconfig) {
-        configfile=open("CONFIG.DAT",O_RDWR | O_BINARY);
+        configfile=open("config.dat",O_RDWR | O_BINARY);
         if (configfile<0) {
-            printf("\n\nConfig.Dat, Main Configuration File, Not Found!!.\n");
-            err(1,"Config.dat","In Init()");
+            printf("\n\nconfig.dat, Main Configuration File, Not Found!!.\n");
+            err(1,"config.dat","In Init()");
         }
         write(configfile,(void *) (&syscfg), sizeof(configrec));
         write(configfile,&nifty,sizeof(niftyrec));
@@ -216,10 +214,10 @@ void init(int show)
     if(!restoring_shrink&&!show)
         dotopinit("Status.dat",20);
 
-    sprintf(s,"%sSTATUS.DAT",syscfg.datadir);
+    sprintf(s,"%sstatus.dat",syscfg.datadir);
     statusfile=open(s,O_RDWR | O_BINARY);
     if (statusfile<0) {
-        printf("\n\n\n%sStatus.Dat not found!\n\n",syscfg.datadir);
+        printf("\n\n\n%sstatus.dat not found!\n\n",syscfg.datadir);
         err(1,s,"In Init()");
     }
 
@@ -246,12 +244,12 @@ void init(int show)
     subboards=(subboardrec *) mallocx(200*sizeof(subboardrec));
     directories=(directoryrec *)mallocx(200*sizeof(directoryrec));
     if(!restoring_shrink&&!show)
-        dotopinit("Config.dat",40);
+        dotopinit("config.dat",40);
 
-    sprintf(s,"%sSUBS.DAT",syscfg.datadir);
+    sprintf(s,"%ssubs.dat",syscfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if (i<0) {
-        printf("\n\n%sSubs.Dat not found!",syscfg.datadir);
+        printf("\n\n%ssubs.dat not found!",syscfg.datadir);
         err(1,s,"In Init()");
     }
     num_subs=(read(i,subboards, (200*sizeof(subboardrec))))/
@@ -274,10 +272,10 @@ void init(int show)
         dotopinit("Subs.dat",50);
     }
 
-    sprintf(s,"%sDIRS.DAT",syscfg.datadir);
+    sprintf(s,"%sdirs.dat",syscfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if (i<0) {
-        printf("\n\n%sDirs.dat Not found!\n\n",syscfg.datadir);
+        printf("\n\n%sdirs.dat not found!\n\n",syscfg.datadir);
         err(1,s,"In Init()");
     }
 
@@ -305,7 +303,7 @@ void init(int show)
         sizeof(protocolrec);
     close(i);
 
-    sprintf(s,"%sRESULTS.DAT",syscfg.datadir);
+    sprintf(s,"%sresults.dat",syscfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if (i>0) {
         l=filelength(i);
@@ -356,7 +354,7 @@ void init(int show)
             close(f);
           }*/
 
-    sprintf(s,"%sMODEM.DAT",syscfg.datadir);
+    sprintf(s,"%smodem.dat",syscfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if (i>0) {
         l=filelength(i);
@@ -365,7 +363,7 @@ void init(int show)
         close(i);
     } 
     else {
-        printf("\n\n%sModem.Dat not found!\n\n",syscfg.datadir);
+        printf("\n\n%smodem.dat not found!\n\n",syscfg.datadir);
     }
 
     read_user(1,&thisuser);

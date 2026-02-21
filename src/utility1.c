@@ -51,7 +51,7 @@ void ssm(unsigned int un, unsigned int sy, char *s)
     if (sy==0) {
         read_user(un,&u);
         if (!(u.inact & inact_deleted)) {
-            sprintf(s1,"%sSMW.DAT",syscfg.datadir);
+            sprintf(s1,"%ssmw.dat",syscfg.datadir);
             f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
             i=(int) (filelength(f) / sizeof(shortmsgrec));
             i1=i-1;
@@ -90,7 +90,7 @@ void rsm(int un, userrec *u)
 
     any=0;
     if ((u->sysstatus) & sysstatus_smw) {
-        sprintf(s1,"%sSMW.DAT",syscfg.datadir);
+        sprintf(s1,"%ssmw.dat",syscfg.datadir);
         f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
         i=(int) (filelength(f) / sizeof(shortmsgrec));
         for (i1=0; i1<i; i1++) {

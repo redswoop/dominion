@@ -54,3 +54,28 @@ def mkconfig_binary():
         )
     assert out.exists(), f"mkconfig not found at {out}"
     return out
+
+
+@pytest.fixture(scope="session")
+def datadump_binary():
+    """Compile datadump.c. Returns path to build/datadump."""
+    out = DOMINION_DIR / "build" / "datadump"
+    result = subprocess.run(
+        [
+            "cc", "-std=gnu89", "-DPD", "-fsigned-char",
+            "-I", str(DOMINION_DIR / "src"),
+            "-o", str(out),
+            str(DOMINION_DIR / "tools" / "datadump.c"),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if result.returncode != 0:
+        pytest.fail(
+            f"datadump build failed:\n"
+            f"stdout: {result.stdout}\n"
+            f"stderr: {result.stderr}"
+        )
+    assert out.exists(), f"datadump not found at {out}"
+    return out

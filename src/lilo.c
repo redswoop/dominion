@@ -490,7 +490,7 @@ void logon()
                 menuman();*/
         menubatch("logon");
 
-        sprintf(s2,"%sLASTON.TXT",syscfg.gfilesdir);
+        sprintf(s2,"%slaston.txt",syscfg.gfilesdir);
         ss=get_file(s2,&len);
         pos=0;
 
@@ -521,7 +521,7 @@ void logon()
             stuff_in1(s,s1,s4,curspeed,s6,s3,thisuser.city,s5,date(),times(),s7);
             strcat(s,"\r\n");
 
-            sprintf(s1,"%sUSER.LOG",syscfg.gfilesdir);
+            sprintf(s1,"%suser.log",syscfg.gfilesdir);
             f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
             lseek(f,0L,SEEK_END);
             i=strlen(s);
@@ -578,6 +578,8 @@ void logoff()
 
     menubatch("logoff");
     _setcursortype(0);
+    if (client_fd >= 0)
+        send_terminal_restore(client_fd);
     dtr(0);
     hangup=1;
 
@@ -614,7 +616,7 @@ void logoff()
 
 
     if (mailcheck) {
-        sprintf(s,"%sEMAIL.DAT",syscfg.datadir);
+        sprintf(s,"%semail.dat",syscfg.datadir);
         f=open(s,O_BINARY | O_RDWR);
         if (f!=-1) {
             t=(int) (filelength(f)/sizeof(mailrec));
@@ -638,7 +640,7 @@ void logoff()
     }
 
     if (smwcheck) {
-        sprintf(s,"%sSMW.DAT",syscfg.datadir);
+        sprintf(s,"%ssmw.dat",syscfg.datadir);
         f=open(s,O_BINARY | O_RDWR);
         if (f!=-1) {
             t=(int) (filelength(f)/sizeof(shortmsgrec));
@@ -707,7 +709,7 @@ void oneliner()
     if(hangup) return;
     dtitle("Dominion OneLiners");
     nl();
-    printfile("ONELINE.LST");
+    printfile("oneline.lst");
     if(!hangup) {
         prt(5,"Add a OneLiner? ");
         if (yn()) {
@@ -727,7 +729,7 @@ void oneliner()
                 strncat(s,s1,69);
                 sysoplog(s);
                 strcpy(s,syscfg.gfilesdir);
-                strcat(s,"ONELINE.LST");
+                strcat(s,"oneline.lst");
                 f=open(s,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
                 if (filelength(f)) {
                     lseek(f,-1L,SEEK_END);
@@ -796,7 +798,7 @@ void lastfewcall(void)
     long len,pos;
     int abort,i;
 
-    sprintf(s2,"%sLASTON.TXT",syscfg.gfilesdir);
+    sprintf(s2,"%slaston.txt",syscfg.gfilesdir);
     ss=get_file(s2,&len);
     pos=0;
     abort=0;

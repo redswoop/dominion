@@ -74,7 +74,7 @@ int list_arc_out(char *fn, char *dir)
                 done=1; 
                 break;
             case 'R': 
-                printfile("Arctemp."); 
+                printfile("arctemp."); 
                 break;
             case 'V': 
                 nl();

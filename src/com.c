@@ -136,7 +136,10 @@ void makeansi(unsigned char attr, char *s, int forceit)
         }
         if ((catr & 0x07) != (attr & 0x07))
             addto(s, 30 + temp[attr & 0x07] - '0');
-        if ((catr & 0x70) != (attr & 0x70))
+        /* Always include explicit background when emitting color changes.
+         * Terminals with non-black default backgrounds show through when
+         * background is omitted because it "hasn't changed" from black. */
+        if (s[0] || (catr & 0x70) != (attr & 0x70))
             addto(s, 40 + temp[(attr & 0x70) >> 4] - '0');
         if ((catr & 0x08) ^ (attr & 0x08))
             addto(s, 1);
@@ -298,6 +301,13 @@ void outchr(unsigned char c)
         }
     }
 
+    if(easycolor) {
+        easycolor=0;
+        if(c>0&&c<=20)
+            ansic(c-1);
+        return;
+    }
+
     if(c==5&&ac==0) {
         ac=10;
         return;
@@ -344,13 +354,6 @@ void outchr(unsigned char c)
         if(outcom)
             outcomch(c);
         ac=0;
-        return;
-    }
-
-    if(easycolor) {
-        easycolor=0;
-        if(c>0&&c<=20)
-            ansic(c-1);
         return;
     }
 
@@ -538,11 +541,11 @@ void backblue(void)
     i = echo;
     echo = 1;
     if(bluein==1)
-        outstr("[D±[D");
+        outstr("[Dï¿½[D");
     else {
         makeansi(8,s,1);
         outstr(s);
-        outstr("[Dù[D");
+        outstr("[Dï¿½[D");
         makeansi(15,s,1);
         outstr(s);
     }

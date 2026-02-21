@@ -1097,7 +1097,7 @@ void fdredit()
     int i,i1,i2,done,f;
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN],ch;
 
-    sprintf(s,"%snetfdr.DAT",syscfg.datadir);
+    sprintf(s,"%snetfdr.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_BINARY );
     read(f,(void *)&fdr[0], numfdr * sizeof(fdrrec));
     close(f);
@@ -1152,7 +1152,7 @@ void fdredit()
         }
     } 
     while ((!done) && (!hangup));
-    sprintf(s,"%snetfdr.DAT",syscfg.datadir);
+    sprintf(s,"%snetfdr.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f,(void *)&fdr[0], numfdr * sizeof(fdrrec));
     close(f);

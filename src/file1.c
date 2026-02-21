@@ -11,7 +11,7 @@ void batrec(int rw, int bnum)
     int f;
     char s[MAX_PATH_LEN];
 
-    sprintf(s,"%sBATREC.DAT",syscfg.datadir);
+    sprintf(s,"%sbatrec.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
     lseek(f,(bnum)*(long)sizeof(batchrec),SEEK_SET);
     switch (rw) {
@@ -44,7 +44,7 @@ void delbatch(int i)
             sprintf(s,"%sTemp.%s",syscfg.tempdir,xarc[ARC_NUMBER].extension);
             unlink(s);
         }
-        sprintf(s,"%sBATREC.DAT",syscfg.datadir);
+        sprintf(s,"%sbatrec.dat",syscfg.datadir);
         f=open(s,O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
         for (i1=i; i1<=numbatch; i1++) {
             lseek(f,(i1+1)*(long)sizeof(batchrec),SEEK_SET);
@@ -632,7 +632,7 @@ void newul(int dn)
     sprintf(s,"Upload - %ldk free.",l);
     dtitle(s);
     nl();
-    if(thisuser.helplevel==2) printfile("Ulhelp");
+    if(thisuser.helplevel==2) printfile("ulhelp");
     pl(get_string(62));
     mpl(78);
     input(s,78);

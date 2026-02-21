@@ -652,7 +652,7 @@ void reqchat1(char reason[MAX_PATH_LEN])
     else {
         pl("Sysop not available.");
         nl();
-        printfile("NoSysop");
+        printfile("nosysop");
         logtypes(3,"Chat 2[2%s2]",chatreason);
         if(usernum) {
             pl("Use feedback instead.");
@@ -716,7 +716,7 @@ void reqchat(char reason[MAX_PATH_LEN])
 #endif
     if(!ok||i>9) {
         logtypes(3,"Chat 2[2%s2]",chatreason);
-        printfile("NoSysop");
+        printfile("nosysop");
         if(!ok) {
             chatcall=0;
             topscreen();

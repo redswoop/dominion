@@ -553,7 +553,7 @@ void configpldn(int config)
     }
 
     if(okansi()) {
-        printfile("PullDown");
+        printfile("pulldown");
         nl();
         outstr(get_string(31));
         usepldns=yn();

@@ -97,7 +97,7 @@ void open_user()
     char s[MAX_PATH_LEN];
 
     if (userfile==-1) {
-        sprintf(s,"%sUSER.LST",syscfg.datadir);
+        sprintf(s,"%suser.lst",syscfg.datadir);
         /*        if(lock) {
                     userfile=open(s,O_RDWR | O_BINARY | SH_DENYRW);
                 }
@@ -168,7 +168,7 @@ void write_user(unsigned int un, userrec *u)
     if(usernum==0) return;
 
     if (userfile==-1) {
-        sprintf(s,"%sUSER.LST",syscfg.datadir);
+        sprintf(s,"%suser.lst",syscfg.datadir);
         userfile=open(s,O_RDWR | O_BINARY | O_CREAT | O_DENYALL, S_IREAD | S_IWRITE);
     }
 
@@ -179,7 +179,7 @@ void write_user(unsigned int un, userrec *u)
     lseek(userfile,pos,SEEK_SET);
     i=write(userfile, (void *)u, syscfg.userreclen);
     if (i==-1) {
-        sprintf(s,"%sUSER.LST",syscfg.datadir);
+        sprintf(s,"%suser.lst",syscfg.datadir);
         userfile=open(s,O_RDWR | O_BINARY | O_CREAT|O_DENYALL, S_IREAD | S_IWRITE);
         pos=((long) syscfg.userreclen) * ((long) un);
         lseek(userfile,pos,SEEK_SET);
@@ -197,7 +197,7 @@ void save_status()
 {
     char s[80];
 
-    sprintf(s,"%sSTATUS.DAT",syscfg.datadir);
+    sprintf(s,"%sstatus.dat",syscfg.datadir);
     statusfile=open(s,O_RDWR | O_BINARY | O_DENYALL);
     write(statusfile, (void *)(&status), sizeof(statusrec));
     close(statusfile);
@@ -458,35 +458,35 @@ int printfile(char *fn)
         strcpy(tmp,s);
 
         if(thisuser.sysstatus & sysstatus_rip) {
-            strcat(s,".RIP");
+            strcat(s,".rip");
             if(exist(s))
                 done=1;
         }
 
         if(!done&&(thisuser.sysstatus & sysstatus_avatar)) {
             strcpy(s,tmp);
-            strcat(s,".AVT");
+            strcat(s,".avt");
             if(exist(s))
                 done=1;
         }
 
         if(!done&&(thisuser.sysstatus & sysstatus_color)) {
             strcpy(s,tmp);
-            strcat(s,".ANS");
+            strcat(s,".ans");
             if(exist(s))
                 done=1;
         }
 
         if(!done&&(thisuser.sysstatus & sysstatus_ansi)) {
             strcpy(s,tmp);
-            strcat(s,".B&W");
+            strcat(s,".b&w");
             if(exist(s))
                 done=1;
         }
 
         if(!done) {
             strcpy(s,tmp);
-            strcat(s,".MSG");
+            strcat(s,".msg");
         }
     }
 

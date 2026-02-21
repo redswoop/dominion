@@ -541,6 +541,7 @@ int getcaller(void)
                 client_fd = accept(listen_fd, (struct sockaddr *)&caddr, &clen);
                 if (client_fd >= 0) {
                     send_telnet_negotiation(client_fd);
+                    send_terminal_init(client_fd);
                     incom = 1;
                     outcom = 1;
                     com_speed = modem_speed = 38400;
@@ -581,6 +582,7 @@ void gotcaller(unsigned int ms, unsigned int cs)
     if(already_on==1) {
         incom=1;
         outcom=1;
+        send_terminal_init(client_fd);
     }
     read_user(1,&thisuser);
     reset_act_sl();

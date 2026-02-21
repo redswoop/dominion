@@ -13,7 +13,7 @@ void change_colors(userrec *u1)
     done=0;
     do {
         outchr(12);
-        printfile("Collist");
+        printfile("collist");
         nl();
         inputdat("Enter # of Color to Edit, Q=Quit",ss,2,0);
         if (ss[0]=='Q') done=1;
@@ -489,7 +489,7 @@ void getfileformat()
 
     logtypes(2,"Changed File List Format");
     do {
-        sprintf(s,"%sFile%d.fmt",syscfg.gfilesdir,c);
+        sprintf(s,"%sfile%d.fmt",syscfg.gfilesdir,c);
         f=fopen(s,"rt");
         if(f!=NULL) {
             fgets(s,81,f);
@@ -677,7 +677,7 @@ void getmsgformat()
 
     logtypes(2,"Changed Msg List Format");
     do {
-        sprintf(s,"%sMsg%d.fmt",syscfg.gfilesdir,c);
+        sprintf(s,"%smsg%d.fmt",syscfg.gfilesdir,c);
         f=fopen(s,"rt");
         if(f!=NULL) {
             fgets(s1,81,f);

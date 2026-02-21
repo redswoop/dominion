@@ -1,3 +1,6 @@
+#ifndef _NUV_H_
+#define _NUV_H_
+
 typedef struct {
         int vote,
             counts,
@@ -18,3 +21,5 @@ typedef struct {
             vcmt_num;
          vcrec vote_comment[20];
 } nuvdata;
+
+#endif /* _NUV_H_ */

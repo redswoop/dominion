@@ -7,7 +7,7 @@
 #   make -j4          Build BBS + sync data into build/
 #   make binary       Build BBS binary only (no data sync)
 #   make tools        Build standalone utilities (mkconfig, dosconv)
-#   make init         Generate Config.dat + seed data (run once after clean)
+#   make init         Generate config.dat + seed data (run once after clean)
 #   make clean        Remove everything in build/
 #   make clean-obj    Remove objects only (keep binary + data)
 #
@@ -85,13 +85,30 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 # --- Tool targets ---
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest
 
 $(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
 
 $(BUILDDIR)/dosconv: $(TOOLDIR)/dosconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+
+$(BUILDDIR)/mnudump: $(TOOLDIR)/mnudump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
+	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+
+$(BUILDDIR)/mnuconv: $(TOOLDIR)/mnuconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
+	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+
+$(BUILDDIR)/datadump: $(TOOLDIR)/datadump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
+	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+
+$(BUILDDIR)/jamdump: $(TOOLDIR)/jamdump.c $(SRCDIR)/jam.h $(SRCDIR)/jamsys.h | $(BUILDDIR)
+	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+
+# Terminal test — links against real BBS .o files to test rendering
+TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o
+$(BUILDDIR)/termtest: $(TOOLDIR)/termtest.c $(TERMTEST_OBJS) | $(BUILDDIR)
+	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(TERMTEST_OBJS)
 
 # --- Data sync from dist/ into build/ ---
 data: | $(BUILDDIR)
@@ -101,19 +118,19 @@ data: | $(BUILDDIR)
 			cp -a $(DISTDIR)/$$d/. $(BUILDDIR)/$$d/; \
 		fi; \
 	done
-	@for f in DOM.KEY; do \
+	@for f in dom.key; do \
 		if [ -f $(DISTDIR)/$$f ]; then cp -a $(DISTDIR)/$$f $(BUILDDIR)/$$f; fi; \
 	done
 
-# --- Generate Config.dat + seed data (first-time setup) ---
+# --- Generate config.dat + seed data (first-time setup) ---
 # Order matters: mkconfig first (generates stubs), then dist data on top
 # (overwrites stubs with real content like mnudata.dat).
 init: $(BUILDDIR)/mkconfig
-	@if [ ! -f $(BUILDDIR)/Config.dat ]; then \
-		echo "Generating Config.dat and seed data..."; \
-		cd $(BUILDDIR) && ./mkconfig ./; \
+	@if [ ! -f $(BUILDDIR)/config.dat ]; then \
+		echo "Generating config.dat and seed data..."; \
+		cd $(BUILDDIR) && ./mkconfig .; \
 	else \
-		echo "Config.dat already exists (use 'make clean' first to regenerate)"; \
+		echo "config.dat already exists (use 'make clean' first to regenerate)"; \
 	fi
 	@$(MAKE) data
 

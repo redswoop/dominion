@@ -274,7 +274,7 @@ void othercmd(char type,char ms[40])
 #endif
         nl();
         pausescr();
-        printfile("SYSTEM");
+        printfile("system");
         pausescr();
         break;
     case 'O':  
@@ -713,7 +713,8 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
 
 void menuman(void)
 {
-    char cmd,c,*ss,begx,s[161],test[MAX_PATH_LEN];
+    char cmd,c,begx,s[161],test[MAX_PATH_LEN];
+    char *ss=s;
     int i,helpl,i1,x;
     menurec mm;
     char avail[61];
@@ -752,7 +753,7 @@ void menuman(void)
         }
 
     if(chatcall&&chatsoundon) chatsound();
-    memmove(s,0,40);
+    memset(s,0,40);
 #ifdef PD
     if((pp.attr & menu_popup)&&okansi()) {
         popup("popup");

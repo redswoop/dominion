@@ -47,7 +47,7 @@ void get_status()
     char s[MAX_PATH_LEN];
     int statusfile;
 
-    sprintf(s,"%sSTATUS.DAT",syscfg.datadir);
+    sprintf(s,"%sstatus.dat",syscfg.datadir);
     statusfile=open(s,O_RDWR | O_BINARY);
     if (statusfile>=0) {
         read(statusfile,(void *)(&status), sizeof(statusrec));
@@ -95,7 +95,7 @@ void zlog()
     char s[MAX_PATH_LEN];
     int abort,f,i,i1;
 
-    sprintf(s,"%sHistory.DAT",syscfg.datadir);
+    sprintf(s,"%shistory.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_BINARY);
     if (f<0)
         return;
@@ -149,7 +149,7 @@ void beginday()
     z.fback=status.fbacktoday;
     z.up=status.uptoday;
     z.dl=status.dltoday;
-    sprintf(s,"%sHistory.DAT",syscfg.datadir);
+    sprintf(s,"%shistory.dat",syscfg.datadir);
     f=open(s,O_RDWR|O_BINARY);
     lseek(f,(nifty.systemtype-1)*sizeof(zlogrec),SEEK_SET);
     read(f,&z1,sizeof(z1));
@@ -173,10 +173,10 @@ void beginday()
     status.activetoday=0;
     strcpy(status.date1,date());
     sl1(2,date());
-    sprintf(s,"%sUSER.LOG",syscfg.gfilesdir);
+    sprintf(s,"%suser.log",syscfg.gfilesdir);
     unlink(s);
     save_status();
-    sprintf(s,"%sHistory.DAT",syscfg.datadir);
+    sprintf(s,"%shistory.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_BINARY);
     if (f<0) {
         f=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
@@ -266,7 +266,7 @@ void text_edit()
           npr("3Filename\r\n5: ");
           mpl(71);
           input(s,71);
-          if (strstr(s,".LOG")!=NULL)
+          if (strstr(s,".log")!=NULL)
             s[0]=0;
           if (s[0]) {
             logpr("5@0 Edited 4%s",s);
