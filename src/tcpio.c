@@ -3,9 +3,9 @@
 #pragma hdrstop
 
 /*
- * x00com.c — TCP socket I/O layer
+ * tcpio.c — TCP socket I/O layer
  *
- * Replaces the FOSSIL (INT 14h) serial port driver with TCP socket operations.
+ * Originally x00com.c (FOSSIL INT 14h serial driver), now pure TCP sockets.
  * listen_fd = server socket (listens for incoming connections)
  * client_fd = connected client socket (the remote user)
  */

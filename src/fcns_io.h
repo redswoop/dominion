@@ -77,7 +77,7 @@ void prt(int i, char *s);
 void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc);
 
 
-/* File: x00com.c */
+/* File: tcpio.c */
 
 void dtr(int i);
 void outcomch(char ch);

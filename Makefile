@@ -42,7 +42,7 @@ CFLAGS = -std=gnu89 -DPD \
 
 # The BBS core modules (from the original makefile)
 BBS_CORE = bbs com conio bbsutl file file1 mm \
-           utility extrn mm1 x00com jam
+           utility extrn mm1 tcpio jam
 
 BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               file2 file3 archive filesys \
@@ -118,7 +118,7 @@ $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 	$(CC) -std=gnu89 -o $@ $<
 
 # Input function test — links against real BBS .o files to test input1/inputdat/getkey
-INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/x00com.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o
+INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
 	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
 
