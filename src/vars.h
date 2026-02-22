@@ -40,7 +40,7 @@ int already_on, ansiptr,  arcling, async_irq, base, bchanged,confmode,
     oklevel, okmacro, okskey, ok_modem_stuff, oldx, oldy, ooneuser,
     outcom, restoring_shrink, screenbottom, screenlen, screenlinest,
     smwcheck, statusfile, sysop_alert, tempio, topdata, topline,
-    userfile, usernum, useron, use_workspace, using_modem, wfc,
+    usernum, useron, use_workspace, using_modem, wfc,
     x_only,listing,running_dv,msgr,umaxsubs,umaxdirs,
     ARC_NUMBER,MAX_BATCH,backdoor;
 
@@ -65,7 +65,6 @@ confrec conf[20];
 userrec thisuser;
 configrec syscfg;
 statusrec status;
-smalrec *smallist;
 subboardrec *subboards;
 directoryrec *directories;
 usersubrec usub[MAX_SUBS],udir[MAX_DIRS];
@@ -126,7 +125,7 @@ extern int already_on, ansiptr,  arcling, async_irq, base, bchanged,confmode,
     oklevel, okmacro, okskey, ok_modem_stuff, oldx, oldy, ooneuser,
     outcom, restoring_shrink, screenbottom, screenlen, screenlinest,
     smwcheck, statusfile, sysop_alert, tempio, topdata, topline,
-    userfile, usernum, useron, use_workspace, using_modem, wfc,
+    usernum, useron, use_workspace, using_modem, wfc,
     x_only,listing,running_dv,msgr,umaxsubs,umaxdirs,
     ARC_NUMBER,MAX_BATCH,backdoor;
 
@@ -151,7 +150,6 @@ extern fnetrec fnet;
 extern configrec syscfg;
 extern confrec conf[20];
 extern statusrec status;
-extern smalrec *smallist;
 extern subboardrec *subboards;
 extern directoryrec *directories;
 extern usersubrec usub[MAX_SUBS],udir[MAX_DIRS];

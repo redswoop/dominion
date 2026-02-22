@@ -3,6 +3,7 @@
 
 
 #include <math.h>
+#include "json_io.h"
 
 
 void read_in_file(char *fn, messagerec *m, int maxary)
@@ -43,7 +44,7 @@ void read_in_file(char *fn, messagerec *m, int maxary)
             which=atoi(s);
             m[which].storage_type=l1;
             m[which].stored_as=0;
-        } 
+        }
         else {
             m[which].stored_as++;
             l1++;
@@ -69,194 +70,17 @@ double freek(int dr)
 }
 
 
-void fix_user_rec(userrec *u)
-{
-    u->name[30]=0;
-    u->realname[20]=0;
-    u->callsign[6]=0;
-    u->phone[12]=0;
-    u->pw[19]=0;
-    //  u->laston[8]=0;
-    u->note[40]=0;
-    u->macros[0][80]=0;
-    u->macros[1][80]=0;
-    u->macros[2][80]=0;
-}
-
-
-void close_user()
-{
-    if (userfile!=-1) {
-        close(userfile);
-        userfile=-1;
-    }
-}
-
-void open_user()
-{
-    char s[MAX_PATH_LEN];
-
-    if (userfile==-1) {
-        sprintf(s,"%suser.lst",syscfg.datadir);
-        /*        if(lock) {
-                    userfile=open(s,O_RDWR | O_BINARY | SH_DENYRW);
-                }
-                else*/
-            userfile=open(s,O_RDWR | O_BINARY | SH_DENYNONE);
-        if (userfile<0) {
-            userfile=-1;
-        }
-    }
-}
-
-
-int number_userrecs()
-{
-    open_user();
-    return((int) (filelength(userfile)/syscfg.userreclen)-1);
-}
-
-void read_user(unsigned int un, userrec *u)
-{
-    long pos;
-    char s[80];
-    int i;
-
-    open_user();
-    if(userfile==-2) sysoplog(">*< File Locked!!! >*<");
-    if ((userfile<0) || (un>number_userrecs())) {
-        u->inact=inact_deleted;
-        fix_user_rec(u);
-        return;
-    }
-
-    if (((useron) && (un==usernum)) || ((wfc) && (un==1))) {
-        *u=thisuser;
-        fix_user_rec(u);
-        return;
-    }
-
-    pos=((long) syscfg.userreclen) * ((long) un);
-    lseek(userfile,pos,SEEK_SET);
-    i=read(userfile, (void *)u, syscfg.userreclen);
-    if (i==-1) {
-        open_user();
-        if ((userfile<0) || (un>number_userrecs())) {
-            u->inact=inact_deleted;
-            fix_user_rec(u);
-            return;
-        }
-        pos=((long) syscfg.userreclen) * ((long) un);
-        lseek(userfile,pos,SEEK_SET);
-        i=read(userfile, (void *)u, syscfg.userreclen);
-        if (i==-1) {
-            pl("COULDN'T READ USER.");
-        }
-        close_user();
-    }
-    fix_user_rec(u);
-}
-
-
-void write_user(unsigned int un, userrec *u)
-{
-    long pos;
-    char s[80];
-    unsigned char oldsl;
-    int i;
-
-    if(usernum==0) return;
-
-    if (userfile==-1) {
-        sprintf(s,"%suser.lst",syscfg.datadir);
-        userfile=open(s,O_RDWR | O_BINARY | O_CREAT | O_DENYALL, S_IREAD | S_IWRITE);
-    }
-
-    if (((useron) && (un==usernum)) || ((wfc) && (un==1))) {
-        thisuser=*u;
-    }
-    pos=((long) syscfg.userreclen) * ((long) un);
-    lseek(userfile,pos,SEEK_SET);
-    i=write(userfile, (void *)u, syscfg.userreclen);
-    if (i==-1) {
-        sprintf(s,"%suser.lst",syscfg.datadir);
-        userfile=open(s,O_RDWR | O_BINARY | O_CREAT|O_DENYALL, S_IREAD | S_IWRITE);
-        pos=((long) syscfg.userreclen) * ((long) un);
-        lseek(userfile,pos,SEEK_SET);
-        i=write(userfile, (void *)u, syscfg.userreclen);
-        if (i==-1) {
-            pl("COULDN'T WRITE USER.");
-        }
-        close_user();
-    }
-    close_user();
-}
-
-
 void save_status()
 {
-    char s[80];
+    char path[MAX_PATH_LEN];
+    cJSON *root;
 
-    sprintf(s,"%sstatus.dat",syscfg.datadir);
-    statusfile=open(s,O_RDWR | O_BINARY | O_DENYALL);
-    write(statusfile, (void *)(&status), sizeof(statusrec));
-    close(statusfile);
-    statusfile=-1;
+    sprintf(path, "%sstatus.json", syscfg.datadir);
+    root = statusrec_to_json(&status);
+    write_json_file(path, root);
+    cJSON_Delete(root);
 }
 
-
-void isr(int un, char *name)
-{
-    int cp,i;
-    char s[MAX_PATH_LEN];
-    smalrec sr;
-
-    cp=0;
-    while ((cp<status.users) && (strcmp(name,(smallist[cp].name))>0))
-        ++cp;
-    memmove(&(smallist[cp+1]),&(smallist[cp]),sizeof(smalrec)*(status.users-cp));
-    strcpy(sr.name,name);
-    sr.number=un;
-    smallist[cp]=sr;
-    sprintf(s,"%suser.idx",syscfg.datadir);
-    i=open(s,O_RDWR | O_BINARY | O_TRUNC);
-    if (i<0) {
-        err(1,s,"In ISR");
-
-    }
-    ++status.users;
-    save_status();
-    write(i,(void *) (smallist), (sizeof(smalrec) * status.users));
-    close(i);
-}
-
-
-void dsr(char *name)
-{
-    int cp,i;
-    char s[MAX_PATH_LEN];
-    smalrec sr;
-
-    cp=0;
-    while ((cp<status.users) && (strcmp(name,(smallist[cp].name))!=0))
-        ++cp;
-    if (strcmp(name,(smallist[cp].name))) {
-        sprintf(s,"6%s NOT ABLE TO BE DELETED",name);
-        sl1(0,s);
-        sl1(0,"9### 7Reset User Index to fix it");
-        return;
-    }
-    memmove(&(smallist[cp]),&(smallist[cp+1]),sizeof(smalrec)*(status.users-cp));
-    sprintf(s,"%suser.idx",syscfg.datadir);
-    i=open(s,O_RDWR | O_BINARY | O_TRUNC | O_CREAT, S_IREAD | S_IWRITE);
-    if (i<0) {
-        err(4,s,"In Dsr");
-    }
-    --status.users;
-    save_status();
-    write(i,(void *) (smallist), (sizeof(smalrec) * status.users));
-    close(i);
-}
 
 double freek1(char *s)
 {
@@ -317,7 +141,7 @@ void set_global_handle(int i)
             }
 
         }
-    } 
+    }
     else {
         if (global_handle) {
             write(global_handle,global_buf,global_ptr);
@@ -495,4 +319,3 @@ int printfile(char *fn)
     showfile(s);
     return(1);
 }
-

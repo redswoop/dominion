@@ -1,0 +1,6 @@
+IBM Compatible
+Macintosh
+Amiga
+Atari ST
+Linux/Unix
+Other

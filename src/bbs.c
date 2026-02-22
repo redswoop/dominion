@@ -22,8 +22,8 @@ void main(int argc, char *argv[])
     checkreg();
 
     if(getenv("DOM")) cd_to(getenv("DOM"));
-    if(!exist("config.dat")) {
-        cd_to(searchpath("config.dat"));
+    if(!exist("config.json")) {
+        cd_to(searchpath("config.json"));
     }
 
     already_on=0;

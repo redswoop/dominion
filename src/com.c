@@ -672,7 +672,7 @@ void skey1(char *ch)
             else if (c== 25)
                 c=3;
             if(lastcon) {
-                read_user(1,&u);
+                userdb_load(1,&u);
                 strcpy(charbuffer, &(u.macros[c][0]));
             } 
             else if (okskey)

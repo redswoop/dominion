@@ -276,7 +276,7 @@ int getcaller(void)
     usernum=0;
     wfc=0;
     hold=0;
-    read_user(1,&thisuser);
+    userdb_load(1,&thisuser);
     usernum=1;
     reset_act_sl();
     cursub=0;
@@ -348,7 +348,7 @@ int getcaller(void)
                     }
                     if ((ch=='F') && (ok_local())) {
                         outs("Fast\r\n");
-                        read_user(1,&thisuser);
+                        userdb_load(1,&thisuser);
                         reset_act_sl();
                         com_speed=modem_speed=syscfg.baudrate[syscfg.primaryport];
                         if (thisuser.inact & inact_deleted) {
@@ -457,8 +457,7 @@ int getcaller(void)
                         okskey=1;
                         readmailj(0,0);
                         okskey=0;
-                        write_user(1,&thisuser);
-                        close_user();
+                        userdb_save(1,&thisuser);
                         holdphone(0,0);
                     }
                 }
@@ -482,8 +481,7 @@ int getcaller(void)
                     post(cursub=0);
                     okskey=0;
                     useron=0;
-                    write_user(1,&thisuser);
-                    close_user();
+                    userdb_save(1,&thisuser);
                     holdphone(0,0);
                 }
                 wfcs();
@@ -500,7 +498,7 @@ int getcaller(void)
                 if(!ok_local()) break;
                 clrscr();
                 usernum=1;
-                read_user(1,&thisuser);
+                userdb_load(1,&thisuser);
                 changedsl();
                 getcmdtype();
                 pausescr();
@@ -521,7 +519,7 @@ int getcaller(void)
             if (!incom) {
                 _setcursortype(0);
                 frequent_init();
-                read_user(1,&thisuser);
+                userdb_load(1,&thisuser);
                 fwaiting=numwaiting(&thisuser);
                 reset_act_sl();
                 usernum=1;
@@ -584,7 +582,7 @@ void gotcaller(unsigned int ms, unsigned int cs)
         outcom=1;
         send_terminal_init(client_fd);
     }
-    read_user(1,&thisuser);
+    userdb_load(1,&thisuser);
     reset_act_sl();
     usernum=1;
     if (thisuser.inact & inact_deleted) {

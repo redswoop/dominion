@@ -293,7 +293,7 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
                 } 
                 else
                     if (back) {
-                    pl("0[þ9Previous Line0þ]");
+                    pl("0[ï¿½9Previous Line0ï¿½]");
                     return(1);
                 }
                 break;
@@ -589,22 +589,6 @@ void sysoplog(char s[161])
     }
 }
 
-void isr1(int un, char *name)
-{
-    int cp,i;
-    char s[MAX_PATH_LEN];
-    smalrec sr;
-
-    cp=0;
-    while ((cp<status.users) && (strcmp(name,(smallist[cp].name))>0))
-        ++cp;
-    memmove(&(smallist[cp+1]),&(smallist[cp]),sizeof(smalrec)*(status.users-cp));
-    strcpy(sr.name,name);
-    sr.number=un;
-    smallist[cp]=sr;
-    ++status.users;
-}
-
 char *smkey(char *avail,int num, int slash, int crend,int full)
 {
     static unsigned char cmd1[MAX_PATH_LEN];
@@ -776,7 +760,7 @@ void setmci(char ch)
         break;
 */
     case 'a': 
-        read_user(status.amsguser,&u);
+        userdb_load(status.amsguser,&u);
         if(status.amsganon==1) {
             if(so()) {
                 strcpy(s," ");

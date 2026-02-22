@@ -373,7 +373,7 @@ void searchrum(void)
             else {
                 i2=finduser(r.by);
                 if(i2) {
-                    read_user(i2,&u);
+                    userdb_load(i2,&u);
                     strcpy(s,nam(&u,i2));
                 }
             }

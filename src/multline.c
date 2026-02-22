@@ -2,6 +2,8 @@
 
 #pragma hdrstop
 
+#include "json_io.h"
+
 /* Multi-node file handles — not in globals, local to this module */
 static int dlf_w = -1;
 static int edlf_w = -1;
@@ -131,57 +133,44 @@ void closeedlf_w() /* close extended download file */
 
 void load_status()
 {
-  char s[80];
+  char s[MAX_PATH_LEN];
+  cJSON *st_root;
 
-  if (statusfile<0) {
-    sprintf(s,"%sstatus.dat",syscfg.datadir);
-    do
-      statusfile=open(s,O_RDWR | O_BINARY | O_DENYALL);
-    while (statusfile<0);
+  sprintf(s,"%sstatus.json",syscfg.datadir);
+  st_root = read_json_file(s);
+  if (st_root) {
+    json_to_statusrec(st_root, &status);
+    cJSON_Delete(st_root);
   }
-  read(statusfile, (void *)(&status), sizeof(statusrec));
 }
 
 void load_user(unsigned int un, userrec *u)
 {
-  long pos;
-  char s[80];
-  unsigned char oldsl;
-  int i;
+  char path[MAX_PATH_LEN];
+  cJSON *root;
 
   if (un>0) {
-    open_user_w();
-    pos=((long) syscfg.userreclen) * ((long) un);
-    lseek(userfile_w,pos,SEEK_SET);
-    i=read(userfile_w, (void *)u, syscfg.userreclen);
-    if (i==-1) {
-      open_user_w();
-      pos=((long) syscfg.userreclen) * ((long) un);
-      lseek(userfile_w,pos,SEEK_SET);
-      i=read(userfile_w, (void *)u, syscfg.userreclen);
-      if (i==-1) {
-        pl("COULDN'T LOAD USER.");
-      }
+    sprintf(path, "%susers/%04d.json", syscfg.datadir, un);
+    root = read_json_file(path);
+    if (root) {
+      json_to_userrec(root, u);
+      cJSON_Delete(root);
+    } else {
+      memset(u, 0, sizeof(userrec));
+      u->inact = inact_deleted;
     }
   }
 }
 
 int open_user_w()
 {
-  char s[MAX_PATH_LEN];
-
-  close_user_w();
-  sprintf(s,"%suser.lst",syscfg.datadir);
-  userfile_w=open_w(s,0);
-  return(userfile_w);
+  /* No-op: JSON user files are opened/closed per operation */
+  return 0;
 }
 
 void close_user_w()
 {
-  if (userfile_w!=-1) {
-    close(userfile_w);
-    userfile_w = -1;
-  }
+  /* No-op: JSON user files are opened/closed per operation */
 }
 
 void prnodestatus()

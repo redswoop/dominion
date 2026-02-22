@@ -143,7 +143,7 @@ void print_nuv(nuvdata v)
     int i;
     userrec u;
 
-    read_user(v.num,&u);
+    userdb_load(v.num,&u);
     outchr(12);
     npr("3Voting On5: 3%s\r\n",nam(&u,v.num));
     nl();
@@ -209,7 +209,7 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
             done=1; 
             break;
         case 'I':
-            read_user(vn.num,&u);
+            userdb_load(vn.num,&u);
             readform(nifty.nuvinf,u.name);
             break;
 
@@ -282,7 +282,7 @@ void val_nuv(unsigned int user)
     read_nuv(user,"nuv.dat",&valn);
     del_nuv(user);
     i1 = valn.num;
-    read_user(i1,&u);
+    userdb_load(i1,&u);
     u.nuv=-1;
 
     if (valn.vote_no >= nifty.nuvbad) {
@@ -297,7 +297,7 @@ void val_nuv(unsigned int user)
             pl("7Locking Out User");
             u.inact |= inact_lockedout;
             logtypes(3,"NUV Locking Out %s",nam(&u,i1));
-            write_user(i1,&u);
+            userdb_save(i1,&u);
             u.nuv=0;
             nl();
             break;
@@ -310,7 +310,7 @@ void val_nuv(unsigned int user)
             u.restrict=syscfg.autoval[nifty.nuvbadlevel-1].restrict;
             logtypes(3,"NUV Bad Validated %s",nam(&u,i1));
             u.nuv=0;
-            write_user(i1,&u);
+            userdb_save(i1,&u);
             break;
         }
     }
@@ -323,7 +323,7 @@ void val_nuv(unsigned int user)
         u.restrict=syscfg.autoval[nifty.nuvlevel-1].restrict;
         logtypes(3,"NUV Validated %s",nam(&u,i1));
         u.nuv=0;
-        write_user(i1,&u);
+        userdb_save(i1,&u);
     }
 }
 
@@ -377,7 +377,7 @@ void nuv(void)
             nl();
             for(i=0;i<cnt;i++) {
                 read_nuv(i,"nuv.dat",&newuser);
-                read_user(newuser.num,&u);
+                userdb_load(newuser.num,&u);
                 npr("1<1%d1> 0%-35s 3[3%.3s3] 5[5%s5]\r\n",i,nam(&u,newuser.num),u.phone,u.comment);
             }
             nl();

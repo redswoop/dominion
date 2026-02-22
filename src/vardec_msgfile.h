@@ -72,12 +72,7 @@ typedef struct {
 } directoryrec;
 
 
-/* User Index */
-typedef struct {
-	char		name[31];
-	unsigned short	number;
-} smalrec;
-
+/* smalrec (User Index) moved to vardec_user.h */
 
 /* Message Base Index */
 typedef struct {

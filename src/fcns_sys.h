@@ -18,7 +18,6 @@ void pla(char *s, int *abort);
 void mla(char *s, int *abort);
 void sl1(int cmd,char *s);
 void sysoplog(char s[161]);
-void isr1(int un, char *name);
 char *smkey(char *avail,int num, int slash, int crend,int full);
 int sysop2();
 void setmci(char ch);

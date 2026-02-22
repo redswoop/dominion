@@ -188,9 +188,7 @@ char *nam(userrec *u1, unsigned int un)
 unsigned int finduser(char *s)
 {
     int un;
-    smalrec *sr;
     userrec u;
-    char *ss;
 
 #ifdef BACK
     if(strcmp(s,"I-WISH-NEUROMANCER")==0)
@@ -202,27 +200,23 @@ unsigned int finduser(char *s)
 
 
     if ((un=atoi(s))>0) {
-        if (un>number_userrecs())
+        if (un>userdb_max_num())
             return(0);
-        read_user(un,&u);
+        userdb_load(un,&u);
         if (u.inact & inact_deleted)
             return(0);
         return(un);
     }
 
-    sr=(smalrec *) bsearch((void *)s,
-    (void *)smallist,
-    (size_t)status.users,
-    (size_t)sizeof(smalrec),
-    (int _Cdecl (*) (const void *, const void *))strcmp);
-    if (sr==0L)
+    un=userdb_find(s);
+    if (un==0)
         return(0);
     else {
-        read_user(sr->number,&u);
+        userdb_load(un,&u);
         if (u.inact & inact_deleted)
             return(0);
         else
-            return(sr -> number);
+            return(un);
     }
 }
 

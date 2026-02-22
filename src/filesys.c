@@ -225,11 +225,10 @@ void valfiles()
                 write(dlf,(void *)&u,sizeof(uploadsrec));
                 sprintf(s2,"%s was Validated on %s",u.filename,date());
                 ssm(u.ownerusr,0,s2);
-                read_user(u.ownerusr,&uu);
+                userdb_load(u.ownerusr,&uu);
                 u.points=((u.numbytes+1023)/10240);
                 uu.fpts+=u.points;
-                write_user(u.ownerusr,&uu);
-                close_user();
+                userdb_save(u.ownerusr,&uu);
                 logtypes(3,"Validated file 4%s0 to 4%d0 points",u.filename,u.points);
             } 
             else {
@@ -256,10 +255,9 @@ void valfiles()
                     write(dlf,(void *)&u,sizeof(uploadsrec));
                     sprintf(s2,"%s was Validated on %s",u.filename,date());
                     ssm(u.ownerusr,0,s2);
-                    read_user(u.ownerusr,&uu);
+                    userdb_load(u.ownerusr,&uu);
                     uu.fpts+=u.points;
-                    write_user(u.ownerusr,&uu);
-                    close_user();
+                    userdb_save(u.ownerusr,&uu);
                     logtypes(3,"Validated file 4%s0 to 4%d0 points",u.filename,u.points);
                     break;
                 case 'N': 
@@ -463,14 +461,13 @@ void removefile(void)
                     strcat(s1,u.filename);
                     unlink(s1);
                     if ((rdlp) && (u.ownersys==0)) {
-                        read_user(u.ownerusr,&uu);
+                        userdb_load(u.ownerusr,&uu);
                         if ((uu.inact & inact_deleted)==0) {
                             --uu.uploaded;
                             uu.uk -= ((u.numbytes+1023)/1024);
                             uu.fpts-=u.points;
-                            write_user(u.ownerusr,&uu);
+                            userdb_save(u.ownerusr,&uu);
                         }
-                        close_user();
                     }
                 }
                 if (u.mask & mask_extended)
@@ -544,7 +541,7 @@ void editfile()
                     if(i) {
                         u.ownersys=i;
                         nl();
-                        read_user(u.ownersys,&ur);
+                        userdb_load(u.ownersys,&ur);
                         npr("3File now private for 0%s\r\n",nam(&ur,u.ownersys));
                         changed=1;
                     }

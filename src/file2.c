@@ -143,7 +143,7 @@ int printfileinfo(uploadsrec *u, int dn)
         sprintf(s2,"%s",ctim(t));
 
         if(u->ownersys)
-            read_user(u->ownersys,&us);
+            userdb_load(u->ownersys,&us);
         else
             strcpy(us.name,"PUBLIC");
         stuff_in1(s,s1,(u->filename),(u->description),s3,s4,s2,(u->upby),status,(u->date),ctim(t),nam(&us,u->ownersys));

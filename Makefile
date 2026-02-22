@@ -7,7 +7,7 @@
 #   make -j4          Build BBS + sync data into build/
 #   make binary       Build BBS binary only (no data sync)
 #   make tools        Build standalone utilities (mkconfig, dosconv)
-#   make init         Generate config.dat + seed data (run once after clean)
+#   make init         Generate config.json + seed data (run once after clean)
 #   make clean        Remove everything in build/
 #   make clean-obj    Remove objects only (keep binary + data)
 #
@@ -44,7 +44,7 @@ CFLAGS = -std=gnu89 -DPD \
 BBS_CORE = bbs com conio bbsutl file file1 mm \
            utility extrn mm1 x00com jam
 
-BBS_MODULES = mm2 msgbase disk timest utility1 \
+BBS_MODULES = mm2 msgbase disk userdb timest utility1 \
               file2 file3 archive filesys \
               menued uedit diredit subedit stringed \
               bbsutl2 sysopf modem xinit \
@@ -56,13 +56,16 @@ BBS_MODULES = mm2 msgbase disk timest utility1 \
 # Platform compatibility
 PLATFORM = platform_stubs jam_stubs
 
-MODULES = version $(BBS_CORE) $(BBS_MODULES) $(PLATFORM)
+# JSON I/O (cJSON library + serialization layer)
+JSON_IO = cJSON json_io
+
+MODULES = version $(BBS_CORE) $(BBS_MODULES) $(PLATFORM) $(JSON_IO)
 OBJS    = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(MODULES)))
 
 TARGET  = $(BUILDDIR)/dominion
 
 # Data directories the BBS needs at runtime (relative to build/)
-DATA_DIRS = afiles data menus msgs scripts batch dls temp
+DATA_DIRS = afiles data data/users menus msgs scripts batch dls temp
 
 all: $(TARGET) init
 
@@ -87,8 +90,8 @@ $(OBJDIR):
 # --- Tool targets ---
 tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest
 
-$(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+$(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c | $(BUILDDIR)
+	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
 
 $(BUILDDIR)/dosconv: $(TOOLDIR)/dosconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
@@ -122,15 +125,15 @@ data: | $(BUILDDIR)
 		if [ -f $(DISTDIR)/$$f ]; then cp -a $(DISTDIR)/$$f $(BUILDDIR)/$$f; fi; \
 	done
 
-# --- Generate config.dat + seed data (first-time setup) ---
-# Order matters: mkconfig first (generates stubs), then dist data on top
+# --- Generate config.json + seed data (first-time setup) ---
+# Order matters: mkconfig first (generates JSON), then dist data on top
 # (overwrites stubs with real content like mnudata.dat).
 init: $(BUILDDIR)/mkconfig
-	@if [ ! -f $(BUILDDIR)/config.dat ]; then \
-		echo "Generating config.dat and seed data..."; \
+	@if [ ! -f $(BUILDDIR)/config.json ]; then \
+		echo "Generating config.json and seed data..."; \
 		cd $(BUILDDIR) && ./mkconfig .; \
 	else \
-		echo "config.dat already exists (use 'make clean' first to regenerate)"; \
+		echo "config.json already exists (use 'make clean' first to regenerate)"; \
 	fi
 	@$(MAKE) data
 

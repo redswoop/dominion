@@ -1,7 +1,6 @@
 /*
- * mkconfig.c - Generate minimal config.dat, status.dat, and all required
- * data files for Dominion BBS. Compile with the same flags as the BBS so
- * struct layout matches exactly.
+ * mkconfig.c - Generate config.json, status.json, user JSON files,
+ * and all required binary data files for Dominion BBS.
  *
  * Usage: ./mkconfig [basedir]
  *   basedir defaults to current directory
@@ -16,6 +15,7 @@
 #include <unistd.h>
 
 #include "vardec.h"
+#include "json_io.h"
 
 static void mkd(const char *path)
 {
@@ -36,11 +36,12 @@ int main(int argc, char **argv)
     confrec conf;
     xarcrec xarc;
     userrec sysop_user;
-    smalrec idx;
+    userrec empty_user;
     char base[256];
     char path[512];
     FILE *f;
-    int fd, i;
+    int i;
+    cJSON *root;
 
     if (argc > 1)
         snprintf(base, sizeof(base), "%s/", argv[1]);
@@ -58,13 +59,12 @@ int main(int argc, char **argv)
     printf("  confrec      = %4zu\n", sizeof(confrec));
     printf("  xarcrec      = %4zu\n", sizeof(xarcrec));
     printf("  userrec      = %4zu\n", sizeof(userrec));
-    printf("  smalrec      = %4zu\n", sizeof(smalrec));
     printf("\n");
 
     /* --- Create directories --- */
     {
-        char *dirs[] = {"data", "afiles", "temp", "msgs", "batch", "menus",
-                        "dls", "scripts", "data/dir", NULL};
+        char *dirs[] = {"data", "data/users", "afiles", "temp", "msgs",
+                        "batch", "menus", "dls", "scripts", "data/dir", NULL};
         for (i = 0; dirs[i]; i++) {
             snprintf(path, sizeof(path), "%s%s", base, dirs[i]);
             mkd(path);
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     }
 
     /* =================================================================
-     * config.dat  (configrec + niftyrec)
+     * config.json  (configrec + niftyrec)
      * ================================================================= */
     memset(&syscfg, 0, sizeof(syscfg));
 
@@ -100,9 +100,17 @@ int main(int argc, char **argv)
     syscfg.primaryport = 0;
     syscfg.maxusers = 500;
     syscfg.maxwaiting = 5;
-    syscfg.newusersl = 10;
-    syscfg.newuserdsl = 10;
+    syscfg.newusersl = 100;
+    syscfg.newuserdsl = 100;
     syscfg.newusergold = 100.0;
+
+    /* autoval[0] is the new user validation level (nifty.nulevel=0).
+       set_autoval() in newuser.c applies this to set the user's SL/DSL. */
+    syscfg.autoval[0].sl = 100;
+    syscfg.autoval[0].dsl = 100;
+    syscfg.autoval[0].ar = 0;
+    syscfg.autoval[0].dar = 0;
+    syscfg.autoval[0].restrict = 0;
     syscfg.req_ratio = 0.0;
     syscfg.post_call_ratio = 0.0;
     syscfg.sysoplowtime = 0;
@@ -145,16 +153,14 @@ int main(int argc, char **argv)
     nifty.defaultcol[18] = (char)0x8F; /* extra8 */
     nifty.defaultcol[19] = 7;   /* extra9 */
 
-    snprintf(path, sizeof(path), "%sconfig.dat", base);
-    f = fopen(path, "wb");
-    if (!f) { perror(path); return 1; }
-    fwrite(&syscfg, sizeof(syscfg), 1, f);
-    fwrite(&nifty, sizeof(nifty), 1, f);
-    fclose(f);
+    snprintf(path, sizeof(path), "%sconfig.json", base);
+    root = configrec_to_json(&syscfg, &nifty);
+    if (write_json_file(path, root) != 0) { perror(path); return 1; }
+    cJSON_Delete(root);
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * status.dat  (statusrec)
+     * data/status.json  (statusrec)
      * ================================================================= */
     memset(&status, 0, sizeof(status));
     {
@@ -171,11 +177,10 @@ int main(int argc, char **argv)
     status.qscanptr = 1;
     strcpy(status.lastuser, "SysOp");
 
-    snprintf(path, sizeof(path), "%sdata/status.dat", base);
-    f = fopen(path, "wb");
-    if (!f) { perror(path); return 1; }
-    fwrite(&status, sizeof(status), 1, f);
-    fclose(f);
+    snprintf(path, sizeof(path), "%sdata/status.json", base);
+    root = statusrec_to_json(&status);
+    if (write_json_file(path, root) != 0) { perror(path); return 1; }
+    cJSON_Delete(root);
     printf("Wrote %s\n", path);
 
     /* =================================================================
@@ -190,7 +195,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * subs.dat  (subboardrec array — need at least sub 0 = email)
+     * subs.dat  (subboardrec array -- need at least sub 0 = email)
      * ================================================================= */
     memset(&sub, 0, sizeof(sub));
     strcpy(sub.name, "Private Mail");
@@ -217,7 +222,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * dirs.dat  (directoryrec array — at least one file directory)
+     * dirs.dat  (directoryrec array -- at least one file directory)
      * ================================================================= */
     memset(&dir, 0, sizeof(dir));
     strcpy(dir.name, "General Files");
@@ -250,7 +255,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * results.dat  (resultrec array — modem result codes)
+     * results.dat  (resultrec array -- modem result codes)
      * ================================================================= */
     memset(&result, 0, sizeof(result));
     strcpy(result.curspeed, "TCP/IP");
@@ -268,7 +273,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * conf.dat  (confrec array — at least one conference)
+     * conf.dat  (confrec array -- at least one conference)
      * ================================================================= */
     memset(&conf, 0, sizeof(conf));
     strcpy(conf.name, "Main");
@@ -283,7 +288,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * archive.dat  (xarcrec array — archive definitions)
+     * archive.dat  (xarcrec array -- archive definitions)
      * ================================================================= */
     snprintf(path, sizeof(path), "%sdata/archive.dat", base);
     f = fopen(path, "wb");
@@ -304,7 +309,7 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * modem.dat  (modem init strings — just create empty)
+     * modem.dat  (modem init strings -- just create empty)
      * ================================================================= */
     snprintf(path, sizeof(path), "%sdata/modem.dat", base);
     f = fopen(path, "wb");
@@ -315,7 +320,19 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * User record #1 (SysOp) — user.lst + user.idx
+     * User #0 (sentinel) -- data/users/0000.json
+     * ================================================================= */
+    memset(&empty_user, 0, sizeof(empty_user));
+    empty_user.inact = 0x01;  /* inact_deleted */
+
+    snprintf(path, sizeof(path), "%sdata/users/0000.json", base);
+    root = userrec_to_json(&empty_user);
+    if (write_json_file(path, root) != 0) { perror(path); return 1; }
+    cJSON_Delete(root);
+    printf("Wrote %s (sentinel)\n", path);
+
+    /* =================================================================
+     * User #1 (SysOp) -- data/users/0001.json
      * ================================================================= */
     memset(&sysop_user, 0, sizeof(sysop_user));
     strcpy(sysop_user.name, "SYSOP");
@@ -341,55 +358,33 @@ int main(int argc, char **argv)
     sysop_user.colors[7] = 9;
     sysop_user.colors[8] = 6;
     sysop_user.colors[9] = 3;
-    /* Extended colors 10-19 (used by ctrl-N color codes in strings) */
-    sysop_user.colors[10] = 112; /* inverse: black on white */
-    sysop_user.colors[11] = 7;   /* extra1: white on black */
-    sysop_user.colors[12] = 15;  /* extra2: bright white on black */
-    sysop_user.colors[13] = 7;   /* extra3 */
-    sysop_user.colors[14] = 15;  /* extra4 */
-    sysop_user.colors[15] = 7;   /* extra5 */
-    sysop_user.colors[16] = (char)0x8F; /* extra6: blinking bright white */
-    sysop_user.colors[17] = 112; /* extra7: inverse */
-    sysop_user.colors[18] = (char)0x8F; /* extra8 */
-    sysop_user.colors[19] = 7;   /* extra9 */
-    sysop_user.month = 1;         /* birthday: Jan 1, 1980 (placeholder) */
+    sysop_user.colors[10] = 112;
+    sysop_user.colors[11] = 7;
+    sysop_user.colors[12] = 15;
+    sysop_user.colors[13] = 7;
+    sysop_user.colors[14] = 15;
+    sysop_user.colors[15] = 7;
+    sysop_user.colors[16] = (char)0x8F;
+    sysop_user.colors[17] = 112;
+    sysop_user.colors[18] = (char)0x8F;
+    sysop_user.colors[19] = 7;
+    sysop_user.month = 1;
     sysop_user.day = 1;
-    sysop_user.year = 80;         /* years since 1900 */
+    sysop_user.year = 80;
     sysop_user.age = 46;
-    sysop_user.flisttype = 1;     /* file list format (0 = prompts user) */
-    sysop_user.mlisttype = 1;     /* msg list format (0 = prompts user) */
+    sysop_user.flisttype = 1;
+    sysop_user.mlisttype = 1;
     strcpy(sysop_user.street, "123 BBS Street");
     strcpy(sysop_user.city, "Anytown, USA");
 
-    snprintf(path, sizeof(path), "%sdata/user.lst", base);
-    f = fopen(path, "wb");
-    if (!f) { perror(path); return 1; }
-    /* User 0 = empty system slot (BBS uses 1-based user numbers) */
-    {
-        userrec empty_user;
-        memset(&empty_user, 0, sizeof(empty_user));
-        empty_user.inact = 0x01;  /* inact_deleted — mark as unused */
-        fwrite(&empty_user, sizeof(empty_user), 1, f);
-    }
-    /* User 1 = SysOp */
-    fwrite(&sysop_user, sizeof(sysop_user), 1, f);
-    fclose(f);
-    printf("Wrote %s (2 records: empty slot + sysop)\n", path);
-
-    /* user.idx — sorted active-user index for name lookups (NOT position-indexed) */
-    memset(&idx, 0, sizeof(idx));
-    strcpy(idx.name, "SYSOP");
-    idx.number = 1;
-
-    snprintf(path, sizeof(path), "%sdata/user.idx", base);
-    f = fopen(path, "wb");
-    if (!f) { perror(path); return 1; }
-    fwrite(&idx, sizeof(idx), 1, f);
-    fclose(f);
-    printf("Wrote %s\n", path);
+    snprintf(path, sizeof(path), "%sdata/users/0001.json", base);
+    root = userrec_to_json(&sysop_user);
+    if (write_json_file(path, root) != 0) { perror(path); return 1; }
+    cJSON_Delete(root);
+    printf("Wrote %s (sysop)\n", path);
 
     /* =================================================================
-     * names.lst — username to number mapping (text file)
+     * names.lst -- username to number mapping (text file)
      * ================================================================= */
     snprintf(path, sizeof(path), "%sdata/names.lst", base);
     f = fopen(path, "w");
@@ -399,14 +394,11 @@ int main(int argc, char **argv)
     printf("Wrote %s\n", path);
 
     /* =================================================================
-     * acs.dat — access control strings (all empty = no restrictions)
-     * Without this file, checkacs() reads garbage and may wrongly
-     * prompt for system password or block features.
+     * acs.dat -- access control strings (all empty = no restrictions)
      * ================================================================= */
     {
         acsrec acs;
         memset(&acs, 0, sizeof(acs));
-        /* S999 = "only if SL >= 999" = nobody, so system password is never prompted */
         strcpy(acs.syspw, "S999");
         snprintf(path, sizeof(path), "%sdata/acs.dat", base);
         f = fopen(path, "wb");

@@ -85,9 +85,9 @@ void downloaded(char *fn)
                 npr("2þ 4%s 0Succesfully Transfered. 4%4ldK0, 2%3d Points\r\n",u.filename,((u.numbytes+1023)/1024),u.points);
                 sprintf(s,"%s downloaded '%s' on %s",nam(&thisuser,usernum), u.filename, date());
                 ssm(u.ownerusr,0,s);
-                read_user(u.ownerusr,&ur);
+                userdb_load(u.ownerusr,&ur);
                 ur.fpts+=nifty.fcom;
-                write_user(u.ownerusr,&ur);
+                userdb_save(u.ownerusr,&ur);
                 sprintf(s,"\tYou recieved %d commision points",nifty.fcom);
                 ssm(u.ownerusr,0,s);
                 logtypes(4,"Downloaded %s from %s - %ldk",u.filename,directories[batch.dir].name,(u.numbytes+1023)/1024);

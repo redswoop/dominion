@@ -2,56 +2,30 @@
 
 #pragma hdrstop
 
+#include "json_io.h"
+
 extern char commstr[41];
 
 
 void reset_files(int show)
 {
-    int i,i1;
-    userrec u;
-    char s[MAX_PATH_LEN];
-
-    status.users=0;
-
-    read_user(1,&u);
-    i1=number_userrecs();
-    for (i=1; i<=i1; i++) {
-        read_user(i,&u);
-        if ((u.inact & inact_deleted)==0)
-            isr1(i,u.name);
-        if ((i % 10)==0) {
-            if(show)
-                npr("%d\r",i);
-        }
-    }
-
-    if(show)
-        npr("\r\n\r\n");
-
-    sprintf(s,"%suser.idx",syscfg.datadir);
-    i=open(s,O_RDWR | O_BINARY | O_TRUNC | O_CREAT,S_IREAD|S_IWRITE);
-    if (i<0) {
-        printf("Error creating %s.\n",s);
-        err(1,s,"In Reset IDX");
-    }
-    write(i,(void *) (smallist), (sizeof(smalrec) * status.users));
-    close(i);
-
+    (void)show;
+    userdb_rebuild_index();
+    status.users = userdb_user_count();
     save_status();
-    close_user();
 }
 
 
 void get_status()
 {
     char s[MAX_PATH_LEN];
-    int statusfile;
+    cJSON *st_root;
 
-    sprintf(s,"%sstatus.dat",syscfg.datadir);
-    statusfile=open(s,O_RDWR | O_BINARY);
-    if (statusfile>=0) {
-        read(statusfile,(void *)(&status), sizeof(statusrec));
-        close(statusfile);
+    sprintf(s,"%sstatus.json",syscfg.datadir);
+    st_root = read_json_file(s);
+    if (st_root) {
+        json_to_statusrec(st_root, &status);
+        cJSON_Delete(st_root);
     } 
     else
         save_status();
@@ -77,10 +51,9 @@ void chuser()
     input(s,30);
     i=finduser1(s);
     if (i>0) {
-        write_user(usernum,&thisuser);
-        read_user(i,&thisuser);
+        userdb_save(usernum,&thisuser);
+        userdb_load(i,&thisuser);
         usernum=i;
-        close_user();
         actsl=255;
         logtypes(3,"Changed to 4%s",nam(&thisuser,usernum));
         topscreen();
@@ -103,7 +76,7 @@ void zlog()
     abort=0;
     read(f,(void *)&z,sizeof(zlogrec));
     pla("0  Date     Calls  Active   Posts   Email   Fback    U/L   D/L   %Act   T/user",&abort);
-    pla("7ÄÄÄÄÄÄÄÄ   ÍÍÍÍÍ  ÄÄÄÄÄÄ   ÍÍÍÍÍ   ÄÄÄÄÄ   ÍÍÍÍÍ    ÄÄÄ   ÍÍÍ   ÄÄÄÄÄ  ÍÍÍÍÍÍ0",&abort);
+    pla("7ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½   ï¿½ï¿½ï¿½ï¿½ï¿½   ï¿½ï¿½ï¿½ï¿½ï¿½   ï¿½ï¿½ï¿½ï¿½ï¿½    ï¿½ï¿½ï¿½   ï¿½ï¿½ï¿½   ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0",&abort);
     while ((i<230) && (!abort) && (!hangup) && (z.date[0]!=0)) {
         if (z.calls)
             i1=z.active/z.calls;
@@ -133,7 +106,7 @@ void beginday()
 
     pl("Updating Logs");
     logpr("");
-    logpr("1ş1>0Totals for 7%s1<1ş",status.date1); 
+    logpr("1ï¿½1>0Totals for 7%s1<1ï¿½",status.date1); 
     logpr("   0Calls             1: 7%d",status.callstoday); 
     logpr("   0Message Posted    1: 7%d",status.msgposttoday);
     logpr("   0FeedBack          1: 7%d",status.fbacktoday);
@@ -213,7 +186,7 @@ void beginday()
     }
 
     fk=freek1(syscfg.datadir);
-    nus=syscfg.maxusers-status.users;
+    nus=syscfg.maxusers-userdb_user_count();
 
     if (fk<512.0) {
         sprintf(s,"2! 0Only %dk free in data directory.",(int) fk);
@@ -339,7 +312,7 @@ void glocolor(void)
     outstr("5Continue? "); 
     if(!yn()) return;
 
-    write_user(usernum,&thisuser);
+    userdb_save(usernum,&thisuser);
 
     dtitle("Setting Users to: ");
     if(sl!=-1)     npr("Sl    : %d\r\n",sl);
@@ -351,8 +324,8 @@ void glocolor(void)
     if(resetptr)   pl("Reseting Message Ponters");
     if(fixneg)     pl("Fixing negative DL/UL/Fpts");
 
-    for(x=1;x<=status.users;x++) {
-        read_user(x,&u);
+    for(x=1;x<=userdb_user_count();x++) {
+        userdb_load(x,&u);
         if(fixneg) {
             if((long)u.dk<0)
                 u.dk=0;
@@ -383,10 +356,10 @@ void glocolor(void)
             for(i=0;i<200;i++)
                 u.qscn[i]=0;
         }
-        write_user(x,&u);
+        userdb_save(x,&u);
     }
 
-    read_user(usernum,&thisuser);
+    userdb_load(usernum,&thisuser);
 
     reset_files(1);
 }

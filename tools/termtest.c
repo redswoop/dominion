@@ -62,8 +62,8 @@ int opp(int i)                   { return !i; }
 int exist(char *s)               { (void)s; return 0; }
 
 /* --- user/config --- */
-void read_user(unsigned int un, userrec *u)  { (void)un; (void)u; }
-void write_user(unsigned int un, userrec *u) { (void)un; (void)u; }
+void userdb_load(unsigned int un, userrec *u)  { (void)un; (void)u; }
+void userdb_save(unsigned int un, userrec *u) { (void)un; (void)u; }
 void val_cur_user(int i)         { (void)i; }
 void set_autoval(int i)          { (void)i; }
 void changedsl()                 {}

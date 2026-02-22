@@ -240,13 +240,13 @@ void insert_dir(int n,char path[60], int temp,int config)
     directories[n]=r;
     if(!temp) {
         ++num_dirs;
-        read_user(1,&u);
-        nu=(int) (filelength(userfile) / sizeof(userrec));
+        userdb_load(1,&u);
+        nu=userdb_max_num() + 1;
         for (i=1; i<nu; i++) {
-            read_user(i,&u);
+            userdb_load(i,&u);
             for(i1=n;i1<200;i1++)
                 u.nscn[i1]=u.nscn[i1+1];
-            write_user(i,&u);
+            userdb_save(i,&u);
         }
     }
 
@@ -264,14 +264,14 @@ void delete_dir(int n)
     for (i=n; i<num_dirs; i++)
         directories[i]=directories[i+1];
     --num_dirs;
-    read_user(1,&u);
-    nu=(int) (filelength(userfile) / sizeof(userrec));
+    userdb_load(1,&u);
+    nu=userdb_max_num() + 1;
 
     for (i=1; i<nu; i++) {
-        read_user(i,&u);
+        userdb_load(i,&u);
         for(i1=200;i1<n;i--)
             u.nscn[i1]=u.nscn[i1-1];
-        write_user(i,&u);
+        userdb_save(i,&u);
     }
 
     if (!wfc)

@@ -3,6 +3,12 @@
 
 #include "vardec_types.h"
 
+/* User Index (name-to-number mapping) */
+typedef struct {
+	char		name[31];
+	unsigned short	number;
+} smalrec;
+
 /* DATA FOR EVERY USER */
 
 typedef struct {

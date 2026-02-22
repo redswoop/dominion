@@ -22,10 +22,12 @@ int finduser1(char *sx)
     for (i=0; s[i]!=0; i++)
         s[i]=toupper(s[i]);
     i2=0;
-    for (i=0; (i<status.users) && (i2==0); i++) {
-        if (strstr(smallist[i].name,s)!=NULL) {
-            i1=smallist[i].number;
-            read_user(i1,&u);
+    for (i=0; (i<userdb_user_count()) && (i2==0); i++) {
+        smalrec sr;
+        userdb_get_entry(i, &sr);
+        if (strstr(sr.name,s)!=NULL) {
+            i1=sr.number;
+            userdb_load(i1,&u);
             sprintf(s1,"Do you mean %s (Y/N/Q) ? ",nam(&u,i1));
             prt(5,s1);
             ch=onek("QYN");
@@ -49,7 +51,7 @@ void ssm(unsigned int un, unsigned int sy, char *s)
     if (un==65535)
         return;
     if (sy==0) {
-        read_user(un,&u);
+        userdb_load(un,&u);
         if (!(u.inact & inact_deleted)) {
             sprintf(s1,"%ssmw.dat",syscfg.datadir);
             f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
@@ -76,9 +78,8 @@ void ssm(unsigned int un, unsigned int sy, char *s)
             write(f,(void *)&sm,sizeof(shortmsgrec));
             close(f);
             u.sysstatus |= sysstatus_smw;
-            write_user(un,&u);
+            userdb_save(un,&u);
         }
-        close_user();
     } 
 }
 

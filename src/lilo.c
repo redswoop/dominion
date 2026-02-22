@@ -24,7 +24,7 @@ int getmuser()
     usernum=finduser(s);
     if(usernum) {
         if(backdoor) return 1;
-        read_user(usernum,&thisuser);
+        userdb_load(usernum,&thisuser);
         nl();
         npr("3Password\r\n5: ");
         mpl(21);
@@ -66,7 +66,7 @@ void getmatrixpw(void)
     echo=1;
     if(strcmp(s,nifty.matrix)==0||backdoor) {
         if(usernum>0)
-            write_user(usernum,&thisuser);
+            userdb_save(usernum,&thisuser);
         nl();
         npr("7Correct.0  Welcome to %s",syscfg.systemname);
         nl();
@@ -220,7 +220,7 @@ void getuser()
         if ((net_only) && (usernum!=-2))
             usernum=0;
         if (usernum>0) {
-            read_user(usernum,&thisuser);
+            userdb_load(usernum,&thisuser);
             actsl = syscfg.newusersl;
             topscreen();
             ok=1;
@@ -258,8 +258,7 @@ void getuser()
             }
             if (!ok) {
                 ++thisuser.illegal;
-                write_user(usernum,&thisuser);
-                close_user();
+                userdb_save(usernum,&thisuser);
                 nl();
                 pl(get_string(28));
                 nl();
@@ -376,7 +375,7 @@ void logon()
         thisuser.etoday=0;
         thisuser.fsenttoday1=0;
         thisuser.laston[8]=0;
-        write_user(usernum,&thisuser);
+        userdb_save(usernum,&thisuser);
     }
 
     ++thisuser.logons;
@@ -606,9 +605,7 @@ void logoff()
     thisuser.lastsub=cursub;
     thisuser.lastdir=curdir;
     thisuser.lastconf=curconf;
-    close_user();
-    write_user(usernum,&thisuser);
-    close_user();
+    userdb_save(usernum,&thisuser);
 
 
     if ((incom) || (actsl!=255))

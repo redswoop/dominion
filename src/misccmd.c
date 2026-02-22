@@ -210,8 +210,10 @@ void list_users()
     npr("0%-30s 1[0%-40s1]\r\n","Users Name","Comment");
     abort=0;
     num=0;
-    for (i=0; (i<status.users) && (!abort) && (!hangup); i++) {
-        read_user(smallist[i].number,&u);
+    for (i=0; (i<userdb_user_count()) && (!abort) && (!hangup); i++) {
+        smalrec sr;
+        userdb_get_entry(i, &sr);
+        userdb_load(sr.number,&u);
         ok=1;
         if (u.age<s.age)
             ok=0;
@@ -222,7 +224,7 @@ void list_users()
         if(u.exempt & exempt_userlist)
             ok=0;
         if (ok) {
-            npr("3%-30s 1[0%-40s1]\r\n",nam(&u,smallist[i].number),u.comment);
+            npr("3%-30s 1[0%-40s1]\r\n",nam(&u,sr.number),u.comment);
             ++num;
         }
     }
@@ -336,7 +338,7 @@ void add_time(int limit)
         return;
     }
     thisuser.timebank += minutes;
-    write_user(usernum,&thisuser);
+    userdb_save(usernum,&thisuser);
     logtypes(2,"Deposit 3%d0 minutes.", minutes);
     nl();
     npr("%d minute%c deposited.", minutes,((minutes > 1) ? 's' : 0));
@@ -482,14 +484,14 @@ void updtopten(void)
         timeon_per_user[i] = 0;
     }
 
-    num_users = number_userrecs();
+    num_users = userdb_max_num();
 
     for (i = 0; i < 5; i++)
         for (i1 = 0; i1 < 10; i1++)
             strcpy(s[i][i1], "None");
 
     for (i = 1; i <= num_users; i++) {
-        read_user(i, &u);
+        userdb_load(i, &u);
         if(u.inact & inact_deleted)
             continue;
 

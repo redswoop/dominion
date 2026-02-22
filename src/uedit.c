@@ -13,13 +13,15 @@ void deluser(int un)
     votingrec v;
     voting_response vr;
 
-    read_user(un,&u);
+    userdb_load(un,&u);
     if ((u.inact & inact_deleted)==0) {
         rsm(un,&u);
-        dsr(u.name);
+        userdb_index_remove(u.name);
+        status.users = userdb_user_count();
+        save_status();
         u.inact |= inact_deleted;
         u.waiting=0;
-        write_user(un,&u);
+        userdb_save(un,&u);
         sprintf(fn,"%svoting.dat",syscfg.datadir);
         f=open(fn,O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
         n=(int) (filelength(f) / sizeof(votingrec)) -1;
@@ -36,7 +38,7 @@ void deluser(int un)
                 }
                 u.votes[i]=0;
             }
-        write_user(un,&u);
+        userdb_save(un,&u);
         close(f);
     }
 }
@@ -155,7 +157,7 @@ int usearch(int un,char val[41])
     int i;
     userrec u;
 
-    read_user(un,&u);
+    userdb_load(un,&u);
     strcpy(s,val);
 
     p=strtok(s,"&");
@@ -220,10 +222,10 @@ void uedit(int usern)
     full=opp(outcom);
     un=usern;
     done=0;
-    read_user(un,&u);
-    nu=(int) (filelength(userfile) / sizeof(userrec)) - 1;
+    userdb_load(un,&u);
+    nu=userdb_max_num();
     do {
-        read_user(un,&u);
+        userdb_load(un,&u);
         done1=0;
         temp_full=0;
         do {
@@ -251,7 +253,7 @@ void uedit(int usern)
                         if(ch=='R')
                             del_nuv(u.nuv);
                         u.nuv=-1;
-                        write_user(un,&u);
+                        userdb_save(un,&u);
                     } 
                     else
                         pl("no");
@@ -261,7 +263,7 @@ void uedit(int usern)
                         nl();
                         npr("5Ask infoform? ");
                         u.nuv=enter_nuv(u,un,yn());
-                        write_user(un,&u);
+                        userdb_save(un,&u);
                     } 
                     else
                         pl("no");
@@ -277,9 +279,9 @@ void uedit(int usern)
                     nl();
                     npr("5Are you SURE you want to swap %s and %s? ",nam(&u,un),nam(&u1,i));
                     if(yn()) {
-                        read_user(i,&u1);
-                        write_user(un,&u1);
-                        write_user(i,&u);
+                        userdb_load(i,&u1);
+                        userdb_save(un,&u1);
+                        userdb_save(i,&u);
                     }
                 }
                 break;
@@ -289,24 +291,24 @@ void uedit(int usern)
                 break;
             case '$': 
                 u.dk=u.uk=u.fpts=u.uploaded=u.downloaded=0;
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case '/': 
                 strcpy(u.laston,date()); 
-                write_user(un,&u); 
+                userdb_save(un,&u); 
                 break;
             case ':': 
                 u.street[0]=0; 
                 u.city[0]=0; 
                 u.year=0; 
-                write_user(un,&u); 
+                userdb_save(un,&u); 
                 break;
             case '5': 
                 nl();
                 inputdat("Street Address",s,31,1);
                 if(s[0]) { 
                     strcpy(u.street,s);
-                    write_user(un,&u); 
+                    userdb_save(un,&u); 
                 }
                 break;
             case '_': 
@@ -329,7 +331,7 @@ void uedit(int usern)
                     u.ar=syscfg.autoval[i].ar;
                     u.dar=syscfg.autoval[i].dar;
                     u.restrict=syscfg.autoval[i].restrict;
-                    write_user(un,&u);
+                    userdb_save(un,&u);
                 }
                 break;
 
@@ -345,7 +347,7 @@ void uedit(int usern)
                     prt(5,"Are you sure? ");
                     if(yn()) strcpy(u.pw,s); 
                 }
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case ']':
                 ++un;
@@ -407,14 +409,16 @@ void uedit(int usern)
                     prt(5,"Delete? ");
                     if (yn()) {
                         deluser(un);
-                        read_user(un,&u);
+                        userdb_load(un,&u);
                     }
                 } 
                 else
                     if (u.inact & inact_deleted) {
                         u.inact ^= inact_deleted;
-                        isr(un,u.name);
-                        write_user(un,&u);
+                        userdb_index_add(un,u.name);
+                        status.users = userdb_user_count();
+                        save_status();
+                        userdb_save(un,&u);
                     }
                 addtrash(u);
                 break;
@@ -424,14 +428,16 @@ void uedit(int usern)
                     prt(5,"Lock Out? ");
                     if (yn()) {
                         u.inact ^= inact_lockedout;
-                        write_user(un,&u);
+                        userdb_save(un,&u);
                     }
                 } 
                 else
                     if (u.inact & inact_lockedout) {
                     u.inact ^= inact_lockedout;
-                    isr(un,u.name);
-                    write_user(un,&u);
+                    userdb_index_add(un,u.name);
+                    status.users = userdb_user_count();
+                    save_status();
+                    userdb_save(un,&u);
                 }
                 break;
 
@@ -448,10 +454,12 @@ void uedit(int usern)
                 nl();
                 inputdat("Handle",s,31,0);
                 if (s[0]) {
-                    dsr(u.name);
+                    userdb_index_remove(u.name);
                     strcpy(u.name,s);
-                    isr(un,u.name);
-                    write_user(un,&u);
+                    userdb_index_add(un,u.name);
+                    status.users = userdb_user_count();
+                    save_status();
+                    userdb_save(un,&u);
                 }
                 break;
 
@@ -460,7 +468,7 @@ void uedit(int usern)
                 inputdat("Real Name",s,31,1);
                 if (s[0]) {
                     strcpy(u.realname,s);
-                    write_user(un,&u);
+                    userdb_save(un,&u);
                 }
                 break;
             case '6':
@@ -468,7 +476,7 @@ void uedit(int usern)
                 inputdat("City/State",s,31,1);
                 if (s[0]) {
                     strcpy(u.city,s);
-                    write_user(un,&u);
+                    userdb_save(un,&u);
                 }
                 break;
             case '8':
@@ -476,24 +484,24 @@ void uedit(int usern)
                 inputdat("Phone number",s,12,0);
                 if (s[0]) {
                     strcpy(u.phone,s);
-                    write_user(un,&u);
+                    userdb_save(un,&u);
                 }
                 break;
             case 'C':
                 nl();
                 inputdat("SysOp Note",s,39,1);
                 strcpy(u.note,s);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case 'D':
                 nl();
                 inputdat("User Note",s,39,1);
                 strcpy(u.comment,s);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case 'I': 
                 input_sex(&u); 
-                write_user(un,&u); 
+                userdb_save(un,&u); 
                 break;
             case 'H':
                 nl();
@@ -508,7 +516,7 @@ void uedit(int usern)
                 u.day=atoi(&(s[3]));
                 u.year=atoi(&(s[6]));
                 u.age=years_old(u.month,u.day,u.year);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case '4':
                 nl();
@@ -522,37 +530,37 @@ void uedit(int usern)
                 i1=1;
                 if ((i2<1) || (i2>i)) i1=0;
                 if(i1) u.comp_type=i2-1;
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case '7':
                 nl();
                 inputdat("File Points",s,4,0);
                 u.fpts=atoi(s);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
 
             case '9':
                 nl();
                 inputdat("Security Level",s,3,0);
                 u.sl=atoi(s);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
 
             case '0':
                 inputdat("Transfer Level",s,3,0);
                 i=atoi(s);
                 u.dsl=i;
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case 'J': 
                 inputdat("New Specific Ratio (0.000 form)",s,5,0);
                 if(s[0]) sscanf(s,"%f",&u.ratio);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case 'K': 
                 inputdat("New Specific PCR (0.000 form)",s,5,0);
                 if(s[0]) sscanf(s,"%f",&u.pcr);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case 'A':
                 i=0;
@@ -590,7 +598,7 @@ void uedit(int usern)
                     }
                 } 
                 while(!i);
-                write_user(un,&u);
+                userdb_save(un,&u);
                 break;
             case 'G':
                 nl();
@@ -612,7 +620,7 @@ void uedit(int usern)
                                 i=i1;
                         if (i>-1) {
                             u.restrict ^= (1 << i);
-                            write_user(un,&u);
+                            userdb_save(un,&u);
                         }
                     }
                 } 
@@ -626,7 +634,7 @@ void uedit(int usern)
                     if (ch1!=13&&ch1!='Q') {
                         ch1-='A';
                         u.ar ^= (1 << ch1);
-                        write_user(un,&u);
+                        userdb_save(un,&u);
                     } 
                 } 
                 while(ch1!='Q'&&!hangup);
@@ -639,7 +647,7 @@ void uedit(int usern)
                     if (ch1!=13&&ch1!='Q') {
                         ch1-='A';
                         u.dar ^= (1 << ch1);
-                        write_user(un,&u);
+                        userdb_save(un,&u);
                     } 
                 } 
                 while (ch1!='Q'&&!hangup);
@@ -649,7 +657,6 @@ void uedit(int usern)
         while ((!done1) && (!hangup));
     } 
     while ((!done) && (!hangup));
-    close_user();
     if (!wfc)
         topscreen();
 }

@@ -125,7 +125,7 @@ void print_cur_stat()
                 pl("Closed");
             } 
             else {
-                read_user(thisuser.forwardusr,&ur);
+                userdb_load(thisuser.forwardusr,&ur);
                 if (ur.inact & inact_deleted) {
                     thisuser.forwardusr=0;
                     pl("Normal");

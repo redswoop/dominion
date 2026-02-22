@@ -510,7 +510,6 @@ int runmailer()
         }
         if (result >= 0) {
             if (fdr[result].attr & fdr_connect) {
-                close_user();
                 usernum = 0;
                 incom = 1;
                 outcom = 1;
@@ -526,7 +525,7 @@ int runmailer()
             else if (fdr[result].attr & fdr_mail)
                 runprog(fdr[result].fn, 0);
             else if (fdr[result].attr & fdr_local) {
-                read_user(1, &thisuser);
+                userdb_load(1, &thisuser);
                 usernum = 1;
                 reset_act_sl();
                 com_speed = modem_speed = syscfg.baudrate[syscfg.primaryport];
@@ -537,7 +536,7 @@ int runmailer()
             } 
             else if (fdr[result].attr & fdr_cmdtype) {
                 usernum = 1;
-                read_user(1, &thisuser);
+                userdb_load(1, &thisuser);
                 reset_act_sl();
                 com_speed = modem_speed = syscfg.baudrate[syscfg.primaryport];
                 ex(fdr[result].fn, &fdr[result].fn[3]);

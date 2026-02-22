@@ -999,7 +999,7 @@ int get_receiver(hdrinfo *hdr)
                 if(!i)
                     return 1;
             }
-            read_user(i,&u);
+            userdb_load(i,&u);
             strcpy(hdr->who_to,pnam(&u));
         }
     } 
@@ -1419,7 +1419,7 @@ void email(int u,char subject[MAX_PATH_LEN],int ask)
     hdrinfo hdr;
     userrec ur;
 
-    read_user(u,&ur);
+    userdb_load(u,&ur);
     if ((ur.inact & inact_deleted))
         return;
 

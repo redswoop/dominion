@@ -36,11 +36,18 @@ static void _emit_attr(int attr)
     bold = (attr & 0x08) ? 1 : 0;
     blink = (attr & 0x80) ? 1 : 0;
 
-    printf("\033[0;%s%s%d;%dm",
-           bold ? "1;" : "",
-           blink ? "5;" : "",
-           30 + (temp[fg] - '0'),
-           40 + (temp[bg] - '0'));
+    /* DOS attr 0x08 = bold black = dark gray.  Modern terminals often
+       render this as invisible on a black background.  Use 256-color
+       palette index 240 (a visible dark gray) instead. */
+    if (bold && fg == 0 && bg == 0) {
+        printf("\033[0;38;5;240;40m");
+    } else {
+        printf("\033[0;%s%s%d;%dm",
+               bold ? "1;" : "",
+               blink ? "5;" : "",
+               30 + (temp[fg] - '0'),
+               40 + (temp[bg] - '0'));
+    }
 
     _last_attr = attr;
 }
@@ -642,7 +649,7 @@ void skey(unsigned char ch)
                     if(toupper(getche())=='Y')
                         save_state("exitdata.dom",1);
                     sl1(1,"");
-                    write_user(usernum,&thisuser);
+                    userdb_save(usernum,&thisuser);
                     sysoplog("7SysOp BBS Exit");
                     pr_wait(1);
                     if (ok_modem_stuff)
@@ -689,7 +696,7 @@ void skey(unsigned char ch)
             case 44:
                 save_state("exitdata.dom",1);
                 sl1(1,"");
-                write_user(usernum,&thisuser);
+                userdb_save(usernum,&thisuser);
                 sysoplog("SysOp Quick BBS Exit");
                 pr_wait(1);
                 if (ok_modem_stuff)
@@ -959,7 +966,7 @@ void topscreen(void)
             sprintf(s,"%d ",status.emailtoday); 
             break;
         case 8:
-            read_user(1,&u);
+            userdb_load(1,&u);
             sprintf(s,"%d",numwaiting(&u));
             break;
         case 9:

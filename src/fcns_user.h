@@ -1,19 +1,13 @@
 #ifndef _FCNS_USER_H_
 #define _FCNS_USER_H_
 
+#include "userdb.h"
+
 /* File: disk.c */
 
 void read_in_file(char *fn, messagerec *m, int maxary);
 double freek(int dr);
-void fix_user_rec(userrec *u);
-void close_user();
-void open_user();
-int number_userrecs();
-void read_user(unsigned int un, userrec *u);
-void write_user(unsigned int un, userrec *u);
 void save_status();
-void isr(int un, char *name);
-void dsr(char *name);
 double freek1(char *s);
 char *get_file(char *fn, long *len);
 void set_global_handle(int i);

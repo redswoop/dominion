@@ -36,7 +36,6 @@ void multimail(mmailrec un[40], int numu)
   for (cv=0; cv<numu; cv++)
     sendout_email(t,&m.msg,i,un[cv].un,un[cv].sy,1);
 
-  close_user();
   save_status();
   if (!wfc) topscreen();
 }
@@ -86,7 +85,7 @@ mmailrec oneuser(int which)
   }
 
   if(!sy) {
-      read_user(un,&u);
+      userdb_load(un,&u);
       if (((u.sl==255) && (u.waiting>(syscfg.maxwaiting * 5))) ||
           ((u.sl!=255) && (u.waiting>syscfg.maxwaiting)) ||
           (u.waiting>200)) {
@@ -306,7 +305,7 @@ void nmail(int unn,int syy)
                   break;
         case 'L': for (i=0; i<numu; i++) {
                       if(!un[i].sy) {
-                          read_user(un[i].un,&u);
+                          userdb_load(un[i].un,&u);
                           npr("%d. %s\r\n",i+1,nam(&u,un[i].un));
                       } else
                           npr("%d. %d@%d\r\n",i+1,un[i].un,un[i].sy);

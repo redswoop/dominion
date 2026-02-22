@@ -197,8 +197,8 @@ void input_phone()
                     ok=0;
                 if ((thisuser.phone[3]!='-') || (thisuser.phone[7]!='-'))
                     ok=0;
-                if ((thisuser.phone[1]!='0') && (thisuser.phone[1]!='1'))
-                    ok=0;
+                /* 1993 area code rule (second digit must be 0 or 1) removed —
+                   no longer valid after mid-90s area code expansion */
                 for (i=0; i<12; i++)
                     if ((i!=3) && (i!=7))
                         if ((thisuser.phone[i]<'0') || (thisuser.phone[i]>'9'))
@@ -371,7 +371,7 @@ void newuser()
     sprintf(s,"7!! 0New User 4%s 0at 5%s0, %s Baud",date(),times(),curspeed);
     sl1(0,"");
     sl1(0,s);
-    if (status.users>=syscfg.maxusers) {
+    if (userdb_user_count()>=(int)syscfg.maxusers) {
         nl();
         nl();
         pl("I'm sorry, but the system currently has the maximum number of users it can handle.");
@@ -475,7 +475,10 @@ void newuser()
     set_autoval(nifty.nulevel);
 
     actsl=thisuser.sl;
-    input_ansistat();
+    /* Default to ANSI + color, skip Avatar/RIP questions */
+    thisuser.sysstatus |= sysstatus_ansi;
+    thisuser.sysstatus |= sysstatus_color;
+    setcolors(&thisuser);
     input_screensize();
 
     if (!hangup) {
@@ -488,6 +491,7 @@ void newuser()
         outchr(12);
         withansi=thisuser.sysstatus & sysstatus_ansi;
         if(withansi) {
+            mciok=0;
             incom=0;
             printfile("newans.ans");
             incom=1;
@@ -565,33 +569,25 @@ void newuser()
     while ((!ok) && (!hangup));
 
     outchr(12);
-    ex("OP","3");
-    ex("OP","A");
-    getfileformat();
-    selecthelplevel();
-    ex("OP","J");
+    /* Set sensible defaults — skip the barrage of post-reg questions.
+       Users can change these later from the Options menu. */
+    thisuser.flisttype=1;
+    thisuser.helplevel=2;
 
 
     if (!hangup) {
         nl();
         outstr("Saving Your Info:");
-        read_user(0,&u);
-        l1=(filelength(userfile)) / ((long) sizeof(userrec))-1;
-        if (l1==(long) status.users) {
-            usernum=status.users+1;
-        } 
-        else {
-            usernum=1;
-            do {
-                read_user(usernum,&u);
-                if ((u.inact & inact_deleted)==0) ++usernum;
-            } 
-            while (((u.inact & inact_deleted)==0) && ((long)usernum<=l1));
-        }
-        write_user(usernum,&thisuser);
-        close_user();
+
+        /* Assign next user number.  JSON users live in data/users/NNNN.json
+           so we just take the highest existing number + 1. */
+        usernum = userdb_max_num() + 1;
+
+        userdb_save(usernum,&thisuser);
         pl(" Done...");
-        isr(usernum,thisuser.name);
+        userdb_index_add(usernum,thisuser.name);
+        status.users = userdb_user_count();
+        save_status();
         ok=0;
         topscreen();
         logpr("9!! 0Added New User 4%s0 to user list",nam(&thisuser,usernum));
@@ -717,7 +713,7 @@ void readform(char fn[8],char i[31])
     fnin=fopen(s,"rt");
     i1=finduser(i);
     if(i1>0)
-        read_user(i1,&u);
+        userdb_load(i1,&u);
     else
         return;
 

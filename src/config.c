@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "fcns.h"
+#include "json_io.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -1386,7 +1387,7 @@ void defcoled()
     userrec u;
 
     outchr(12);
-    read_user(1,&u);
+    userdb_load(1,&u);
 
     colblock=1;
     change_colors(&u);
@@ -1411,10 +1412,12 @@ void main(int argc, char *argv[])
     topdata=0;
     topscreen();
 #else
-    f=fopen("config.dat","rb");
-    fread(&syscfg,sizeof(configrec),1,f);
-    fread(&nifty,sizeof(niftyrec),1,f);
-    fclose(f);
+    {
+        cJSON *cfg_root = read_json_file("config.json");
+        if (!cfg_root) { printf("config.json not found!\n"); exit(1); }
+        json_to_configrec(cfg_root, &syscfg, &nifty);
+        cJSON_Delete(cfg_root);
+    }
     sprintf(s,"%sfnet.dat",syscfg.datadir);
     f=fopen(s,"rb");
     fread(&fnet,sizeof(fnetrec),1,f);
@@ -1492,10 +1495,11 @@ void main(int argc, char *argv[])
     } 
     while(!done&&!hangup);
 
-    f=fopen("config.dat","wb");
-    fwrite(&syscfg,sizeof(configrec),1,f);
-    fwrite(&nifty,sizeof(niftyrec),1,f);
-    fclose(f);
+    {
+        cJSON *cfg_root = configrec_to_json(&syscfg, &nifty);
+        write_json_file("config.json", cfg_root);
+        cJSON_Delete(cfg_root);
+    }
 #ifdef OLDFIDO
     sprintf(s,"%sfnet.dat",syscfg.datadir);
     f=fopen(s,"wb");

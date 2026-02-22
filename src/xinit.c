@@ -3,7 +3,9 @@
 #pragma hdrstop
 
 #include <math.h>
+#include <dirent.h>
 #include "ansi.h"
+#include "json_io.h"
 
 extern char menuat[15];
 
@@ -84,7 +86,6 @@ void init(int show)
         gotoxy(1,12);
     }
     getcwd(cdir, sizeof(cdir));
-    userfile=-1;
     configfile=-1;
     statusfile=-1;
     dlf=-1;
@@ -109,18 +110,18 @@ void init(int show)
     if(!restoring_shrink&&!show) {
         //      GODOWN(2,3);
         //      bargraph(0);
-        dotopinit("config.dat",10);
+        dotopinit("config.json",10);
     }
 
-    configfile=open("config.dat",O_RDWR | O_BINARY);
-    if (configfile<0) {
-        printf("\n\nconfig.dat, Main Configuration File, Not Found!!.\n");
-        err(1,"config.dat","In Init()");
+    {
+        cJSON *cfg_root = read_json_file("config.json");
+        if (!cfg_root) {
+            printf("\n\nconfig.json, Main Configuration File, Not Found!!.\n");
+            err(1,"config.json","In Init()");
+        }
+        json_to_configrec(cfg_root, &syscfg, &nifty);
+        cJSON_Delete(cfg_root);
     }
-
-    read(configfile,(void *) (&syscfg), sizeof(configrec));
-    read(configfile,&nifty,sizeof(niftyrec));
-    close(configfile);
 
     if (!syscfg.primaryport && !tcp_port)
         ok_modem_stuff=0;
@@ -200,46 +201,32 @@ void init(int show)
     }
 
     if(resaveconfig) {
-        configfile=open("config.dat",O_RDWR | O_BINARY);
-        if (configfile<0) {
-            printf("\n\nconfig.dat, Main Configuration File, Not Found!!.\n");
-            err(1,"config.dat","In Init()");
-        }
-        write(configfile,(void *) (&syscfg), sizeof(configrec));
-        write(configfile,&nifty,sizeof(niftyrec));
-        close(configfile);
+        cJSON *cfg_root = configrec_to_json(&syscfg, &nifty);
+        write_json_file("config.json", cfg_root);
+        cJSON_Delete(cfg_root);
     }
 
 
     if(!restoring_shrink&&!show)
         dotopinit("Status.dat",20);
 
-    sprintf(s,"%sstatus.dat",syscfg.datadir);
-    statusfile=open(s,O_RDWR | O_BINARY);
-    if (statusfile<0) {
-        printf("\n\n\n%sstatus.dat not found!\n\n",syscfg.datadir);
-        err(1,s,"In Init()");
+    sprintf(s,"%sstatus.json",syscfg.datadir);
+    {
+        cJSON *st_root = read_json_file(s);
+        if (!st_root) {
+            printf("\n\n\n%sstatus.json not found!\n\n",syscfg.datadir);
+            err(1,s,"In Init()");
+        }
+        json_to_statusrec(st_root, &status);
+        cJSON_Delete(st_root);
     }
-
-    read(statusfile,(void *)(&status), sizeof(statusrec));
-    close(statusfile);
     status.wwiv_version=wwiv_num_version;
-    smallist=(smalrec *) mallocx((long)syscfg.maxusers * (long)sizeof(smalrec));
+    userdb_init(syscfg.datadir, syscfg.maxusers);
+    status.users = userdb_user_count();
 
     screensave.scrn1=(char *)mallocx(screenlen);
 
     read_in_file("mnudata.dat",(menus),50);
-
-    sprintf(s,"%suser.idx",syscfg.datadir);
-    i=open(s,O_RDWR | O_BINARY);
-    if (i<0) {
-        reset_files(0);
-    } 
-    else {
-        read(i,(void *) (smallist), (sizeof(smalrec) * status.users));
-        close(i);
-    }
-
 
     subboards=(subboardrec *) mallocx(200*sizeof(subboardrec));
     directories=(directoryrec *)mallocx(200*sizeof(directoryrec));
@@ -366,7 +353,7 @@ void init(int show)
         printf("\n\n%smodem.dat not found!\n\n",syscfg.datadir);
     }
 
-    read_user(1,&thisuser);
+    userdb_load(1,&thisuser);
     cursub=0;
     fwaiting=numwaiting(&thisuser);
 

@@ -65,7 +65,6 @@ int runprog(char *s, int swp)
     unsigned char f;
 
     sl1(1,"");
-    close_user();
     checkhangup();
     if(swp) {
         sprintf(x,"/C %s",s);
@@ -256,7 +255,7 @@ int restore_data(char *s)
         set_global_handle(1);
     }
 
-    read_user(usernum,&thisuser);
+    userdb_load(usernum,&thisuser);
     useron=1;
     changedsl();
     topscreen();
