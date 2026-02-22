@@ -1,5 +1,6 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "vars.h"
+#include "terminal_bridge.h"
 
 #pragma hdrstop
 
@@ -725,126 +726,27 @@ void mpl1(int i)
  * 7. LOW-LEVEL INPUT
  ***********************************************************************/
 
-/* Translate ncurses KEY_xxx to DOS scan codes for skey() */
-static int _nc_to_scancode(int key)
-{
-    switch (key) {
-    case KEY_F(1):  return 59;
-    case KEY_F(2):  return 60;
-    case KEY_F(3):  return 61;
-    case KEY_F(4):  return 62;
-    case KEY_F(5):  return 63;
-    case KEY_F(6):  return 64;
-    case KEY_F(7):  return 65;
-    case KEY_F(8):  return 66;
-    case KEY_F(9):  return 67;
-    case KEY_F(10): return 68;
-    case KEY_F(13): return 84;  /* Shift-F1 */
-    case KEY_F(14): return 85;  /* Shift-F2 */
-    case KEY_F(15): return 86;  /* Shift-F3 */
-    case KEY_F(16): return 87;  /* Shift-F4 */
-    case KEY_F(17): return 88;  /* Shift-F5 */
-    case KEY_F(18): return 89;  /* Shift-F6 */
-    case KEY_F(19): return 90;  /* Shift-F7 */
-    case KEY_F(20): return 91;  /* Shift-F8 */
-    case KEY_F(21): return 92;  /* Shift-F9 */
-    case KEY_F(22): return 93;  /* Shift-F10 */
-    case KEY_F(25): return 94;  /* Ctrl-F1 */
-    case KEY_F(26): return 95;  /* Ctrl-F2 */
-    case KEY_F(27): return 96;  /* Ctrl-F3 */
-    case KEY_F(28): return 97;  /* Ctrl-F4 */
-    case KEY_F(29): return 98;  /* Ctrl-F5 */
-    case KEY_F(30): return 99;  /* Ctrl-F6 */
-    case KEY_F(31): return 100; /* Ctrl-F7 */
-    case KEY_F(32): return 101; /* Ctrl-F8 */
-    case KEY_F(33): return 102; /* Ctrl-F9 */
-    case KEY_F(34): return 103; /* Ctrl-F10 */
-    case KEY_UP:    return 72;
-    case KEY_DOWN:  return 80;
-    case KEY_LEFT:  return 75;
-    case KEY_RIGHT: return 77;
-    case KEY_HOME:  return 71;
-    case KEY_END:   return 79;
-    default:        return 0;
-    }
-}
-
-/* Pending scan code → io_session_t (Phase 2) */
-#define _pending_scancode io.pending_scancode
-
 /* kbhitb — non-blocking local keyboard check.
- * Returns 1 if a key is waiting, 0 otherwise.
- * Uses wgetch+ungetch to peek without consuming.
- * Note: the ungetch'd value is read back by getchd1() on the next call. */
+ * Delegates to Terminal which handles ncurses wgetch/ungetch internally. */
 int kbhitb()
 {
-    int ch;
-    if (_pending_scancode >= 0) return 1;
-    if (!nc_active) return 0;
-    nodelay(stdscr, TRUE);
-    ch = wgetch(stdscr);
-    if (ch == ERR) return 0;
-    ungetch(ch);
-    return 1;
+    return term_local_key_ready();
 }
 
 /* getchd — BLOCKING read of one key from local keyboard.
- *
- * Translates ncurses special keys (KEY_F1..F10, KEY_UP, etc.) to the DOS
- * two-byte pattern: first call returns 0 (NUL prefix), next call returns
- * the scan code (e.g. 59=F1, 72=UP).  This lets the existing skey()
- * function-key dispatcher work unchanged.
- *
- * Also maps: KEY_ENTER/LF → CR, KEY_BACKSPACE/127(DEL) → 8(BS).
- * The 127→8 mapping is critical on macOS where backspace sends DEL. */
+ * Terminal handles: ncurses special keys → DOS scan codes (two-byte pattern),
+ * KEY_ENTER/LF → CR, KEY_BACKSPACE/127(DEL) → 8(BS). */
 char getchd()
 {
-    int ch;
-    if (_pending_scancode >= 0) {
-        ch = _pending_scancode;
-        _pending_scancode = -1;
-        return (char)ch;
-    }
-    if (!nc_active) { usleep(100000); return 0; }
-    nodelay(stdscr, FALSE);
-    while ((ch = wgetch(stdscr)) == ERR)
-        usleep(1000);
-    nodelay(stdscr, TRUE);  /* restore non-blocking for kbhitb */
-    if (ch == KEY_ENTER) return '\r';
-    if (ch == '\n') return '\r';  /* raw mode Enter → CR for BBS */
-    if (ch == KEY_BACKSPACE || ch == 127) return 8;
-    if (ch >= KEY_MIN) {
-        _pending_scancode = _nc_to_scancode(ch);
-        return 0;  /* NUL prefix — next call returns scan code */
-    }
-    return (char)ch;
+    return (char)term_local_get_key();
 }
-
 
 /* getchd1 — NON-BLOCKING read of one key from local keyboard.
  * Returns 255 if nothing available (not 0, since 0 is the NUL scan-code prefix).
- * Same key translations as getchd(): special→DOS scan codes, 127→8, Enter→CR.
- * Called by inkey() after kbhitb() confirms a key is waiting. */
+ * Terminal handles same key translations as getchd(). */
 char getchd1()
 {
-    int ch;
-    if (_pending_scancode >= 0) {
-        ch = _pending_scancode;
-        _pending_scancode = -1;
-        return (char)ch;
-    }
-    if (!nc_active) return (char)255;
-    nodelay(stdscr, TRUE);
-    ch = wgetch(stdscr);
-    if (ch == ERR) return (char)255;
-    if (ch == KEY_ENTER) return '\r';
-    if (ch == '\n') return '\r';
-    if (ch == KEY_BACKSPACE || ch == 127) return 8;
-    if (ch >= KEY_MIN) {
-        _pending_scancode = _nc_to_scancode(ch);
-        return 0;
-    }
-    return (char)ch;
+    return (char)term_local_get_key_nb();
 }
 
 

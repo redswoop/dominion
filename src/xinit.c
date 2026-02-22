@@ -8,6 +8,7 @@
 #include "ansi.h"
 #include "json_io.h"
 #include "menudb.h"
+#include "terminal_bridge.h"
 
 extern char menuat[15];
 
@@ -67,14 +68,15 @@ void init(int show)
     /* Initialize default text attribute to white-on-black */
     curatr=0x07;
 
-    /* Initialize ncurses for SysOp console.
-     * When no tty is present (test harness), ncurses is skipped and
-     * nc_active stays 0. Force line-buffered stdout so printf output
-     * (e.g. "TCP listening") flushes promptly even when redirected. */
+    /* Initialize ncurses via Terminal class.
+     * ncurses_init() delegates to term_init_local() and wires the
+     * BBS's scrn buffer into Terminal.  setvbuf handled inside. */
     ncurses_init();
-    if (!nc_active)
-        setvbuf(stdout, NULL, _IOLBF, 0);
     term_raw_mode = 1;
+
+    /* Sync BBS screen state → Terminal */
+    term_set_screen_bottom(screenbottom);
+    term_set_cur_attr(curatr);
 
     if(!exist("exitdata.dom")) restoring_shrink=0; 
     else restoring_shrink=1;

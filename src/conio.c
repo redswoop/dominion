@@ -1,5 +1,6 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "vars.h"
+#include "terminal_bridge.h"
 
 #pragma hdrstop
 
@@ -9,91 +10,42 @@
 extern char menuat[15];
 
 /* ================================================================== */
-/* ANSI terminal console — replaces DOS int86(0x10) video BIOS calls  */
+/* State sync macros — push BBS state to Terminal and pull back        */
+/* Terminal owns cursor (_cx/_cy) and lastAttr now.                    */
 /* ================================================================== */
 
-/* Tracked cursor position (absolute, 0-based) */
-static int _cx = 0;  /* column */
-static int _cy = 0;  /* row */
-static int _last_attr = -1; /* last attribute sent to terminal */
+#define SYNC_TO_TERM() \
+    term_sync_from_bbs(topline, screenbottom, curatr, \
+                       term_cursor_x(), term_cursor_y_abs())
+
+#define SYNC_FROM_TERM() do { \
+    int _a; \
+    term_sync_to_bbs(&_a, (int*)0, (int*)0); \
+    curatr = _a; \
+} while(0)
+
+
+/* ================================================================== */
+/* ANSI terminal console — delegates to Terminal via bridge            */
+/* ================================================================== */
 
 /* Reset cached terminal attribute (call after direct ANSI output) */
 void reset_attr_cache(void)
 {
-    _last_attr = -1;
+    term_emit_attr(-1);
 }
 
 /* Sync conio cursor position — called by platform_stubs.c clrscr() */
 void conio_sync_cursor(int x, int y)
 {
-    _cx = x;
-    _cy = y;
-}
-
-/* Set ncurses attribute from DOS attribute byte */
-static void _emit_attr(int attr)
-{
-    if (attr == _last_attr)
-        return;
-    if (nc_active) attrset(nc_attr(attr));
-    _last_attr = attr;
-}
-
-/* Update the scrn[] buffer at current cursor position */
-static void _scrn_put(int x, int y, unsigned char ch, unsigned char attr)
-{
-    int off;
-    if (!scrn) return;
-    if (x < 0 || x >= 80 || y < 0 || y > screenbottom) return;
-    off = (y * 80 + x) * 2;
-    if (off >= 0 && off < 4000) {
-        scrn[off] = ch;
-        scrn[off + 1] = attr;
-    }
-}
-
-/* Scroll the scrn[] buffer up by n lines in range [t..b] */
-static void _scrn_scroll(int t, int b, int n)
-{
-    int row;
-    if (!scrn) return;
-    if (n <= 0) {
-        /* clear region */
-        for (row = t; row <= b; row++)
-            memset(&scrn[row * 160], 0, 160);
-        return;
-    }
-    for (row = t; row <= b - n; row++)
-        memmove(&scrn[row * 160], &scrn[(row + n) * 160], 160);
-    for (row = b - n + 1; row <= b; row++)
-        memset(&scrn[row * 160], 0, 160);
+    term_set_cursor_pos(x, y);
 }
 
 
 void SCROLL_UP(int t, int b, int l) {
-    if (l == 0) {
-        /* Clear region */
-        if (nc_active) {
-            int row;
-            for (row = t; row <= b; row++) {
-                move(row, 0);
-                clrtoeol();
-            }
-        }
-        _scrn_scroll(t, b, 0);
-    } else {
-        /* Scroll up l lines in region [t..b] using ncurses scroll region */
-        if (nc_active) {
-            setscrreg(t, b);
-            scrollok(stdscr, TRUE);
-            wscrl(stdscr, l);
-            scrollok(stdscr, FALSE);
-            setscrreg(0, screenbottom);
-        }
-        _scrn_scroll(t, b, l);
-    }
-    _last_attr = -1;
-    if (nc_active) refresh();
+    SYNC_TO_TERM();
+    term_scroll_up(t, b, l);
+    SYNC_FROM_TERM();
 }
 
 static int wx=0;
@@ -101,61 +53,45 @@ static int wx=0;
 
 void movecsr(int x,int y)
 {
-    if (x<0)
-        x=0;
-    if (x>79)
-        x=79;
-    if (y<0)
-        y=0;
-    y+=topline;
-    if (y>screenbottom)
-        y=screenbottom;
-
-    _cx = x;
-    _cy = y;
-    if (nc_active) {
-        move(y, x);
-        refresh();
-    }
+    SYNC_TO_TERM();
+    term_move_cursor(x, y);
+    SYNC_FROM_TERM();
 }
 
 
 
 int wherex()
 {
-    return _cx;
+    return term_cursor_x();
 }
 
 
 int wherey()
 {
-    return _cy - topline;
+    return term_cursor_y();
 }
 
 
 
 void lf()
 {
-    if (_cy == screenbottom) {
-        SCROLL_UP(topline, screenbottom, 1);
-        if (nc_active) { move(_cy, _cx); refresh(); }
-    } else {
-        _cy++;
-        if (nc_active) { move(_cy, _cx); refresh(); }
-    }
+    SYNC_TO_TERM();
+    term_lf();
+    SYNC_FROM_TERM();
 }
 
 void cr()
 {
-    _cx = 0;
-    if (nc_active) { move(_cy, 0); refresh(); }
+    SYNC_TO_TERM();
+    term_cr();
+    SYNC_FROM_TERM();
 }
 
 void clrscrb()
 {
-    _last_attr = -1;
-    SCROLL_UP(topline, screenbottom, 0);
-    movecsr(0, 0);
+    SYNC_TO_TERM();
+    term_clear_screen();
+    SYNC_FROM_TERM();
     lines_listed=0;
 }
 
@@ -163,40 +99,18 @@ void clrscrb()
 
 void bs()
 {
-    if (_cx == 0) {
-        if (_cy != topline) {
-            _cx = 79;
-            _cy--;
-            if (nc_active) { move(_cy, _cx); refresh(); }
-        }
-    } else {
-        _cx--;
-        if (nc_active) { move(_cy, _cx); refresh(); }
-    }
+    SYNC_TO_TERM();
+    term_bs();
+    SYNC_FROM_TERM();
 }
 
 
 
 void out1chx(unsigned char ch)
 {
-    _emit_attr(curatr);
-    _scrn_put(_cx, _cy, ch, curatr);
-    if (nc_active) {
-        move(_cy, _cx);  /* sync ncurses cursor to conio position */
-        addstr(cp437_to_utf8[ch]);
-    }
-
-    _cx++;
-    if (_cx >= 80) {
-        _cx = 0;
-        if (_cy == screenbottom) {
-            SCROLL_UP(topline, screenbottom, 1);
-        } else {
-            _cy++;
-        }
-        if (nc_active) move(_cy, _cx);  /* position after wrap */
-    }
-    if (nc_active) refresh();
+    SYNC_TO_TERM();
+    term_out1chx(ch);
+    SYNC_FROM_TERM();
 }
 
 
@@ -210,10 +124,10 @@ void out1ch(unsigned char ch)
     if (x_only) {
         if (ch>31) {
             wx=(wx+1)%80;
-        } 
+        }
         else if ((ch==13) || (ch==12)) {
             wx=0;
-        } 
+        }
         else if (ch==8) {
             if (wx)
                 wx--;
@@ -348,10 +262,10 @@ void restorescreen(screentype *s)
     topline=s->topline1;
     curatr=s->curatr1;
 
-    /* Redraw screen from scrn buffer via ncurses */
+    /* Redraw screen from scrn buffer via Terminal */
     if (scrn) {
-        nc_render_scrn(0, screenbottom + 1);
-        _last_attr = -1;
+        term_render_scrn(0, screenbottom + 1);
+        reset_attr_cache();
     }
     movecsr(s->x1,s->y1);
 }
@@ -425,7 +339,7 @@ int alt_key(unsigned char ch)
                         if(ss1[i]!=32&&ss1[i]!=',') {
                             tx[i]=ss1[i];
                             tx[i+1]=0;
-                        } 
+                        }
                         else {
                             f=0;
                             tx[i]=0;
@@ -440,12 +354,12 @@ int alt_key(unsigned char ch)
                         if (ss1)
                             strcpy(cmd,ss1);
                         ss1=NULL;
-                    } 
+                    }
                     else
                         ss1=strtok(NULL,"\r\n");
                 }
                 farfree(ss);
-            } 
+            }
             else
                 close(f);
             if (cmd[0]) {
@@ -472,7 +386,7 @@ void skey(unsigned char ch)
         if ((ch>=104) && (ch<=113)) {
             set_autoval(ch-104);
             read_menu(menuat,0);
-        } 
+        }
         else
             switch (type) {
             case 120:
@@ -483,18 +397,18 @@ void skey(unsigned char ch)
             case 125:
             case 126:
             case 127:
-            case 128: 
-                sprintf(s,"WFCBAT%d.bat",ch-119); 
-                temp_cmd(s,1); 
+            case 128:
+                sprintf(s,"WFCBAT%d.bat",ch-119);
+                temp_cmd(s,1);
                 break;
-            case 129: 
-                temp_cmd("wfcbat0.bat",1); 
+            case 129:
+                temp_cmd("wfcbat0.bat",1);
                 break;
-            case 81: 
-                temp_cmd(getenv("DOMDL"),1); 
+            case 81:
+                temp_cmd(getenv("DOMDL"),1);
                 break;
-            case 131: 
-                printf("\nFree Stack: %u",stackavail()); 
+            case 131:
+                printf("\nFree Stack: %u",stackavail());
                 break;
             case 94:
             case 59: /* F1 */
@@ -549,10 +463,10 @@ void skey(unsigned char ch)
                 if (thisuser.sl!=255) {
                     if (actsl!=255) {
                         actsl=255;
-                        logpr("7!! 0Temp SysOp Access given at 4%s",times());
-                    } 
+                        logpr("7!! 0Temp SysOp Access given at 4%s",times());
+                    }
                     else {
-                        logpr("7! 0Temp SysOp Access Removed");
+                        logpr("7! 0Temp SysOp Access Removed");
                         reset_act_sl();
                     }
                     changedsl();
@@ -575,8 +489,8 @@ void skey(unsigned char ch)
                         chat_file=1;
                 }
                 break;
-            case 86: 
-                if(using_modem) outcom=opp(outcom); 
+            case 86:
+                if(using_modem) outcom=opp(outcom);
                 break;
             case 38:
             case 88: /* Shift-F5 */
@@ -621,7 +535,7 @@ void skey(unsigned char ch)
                         save_state("exitdata.dom",1);
                     sl1(1,"");
                     userdb_save(usernum,&thisuser);
-                    sysoplog("7SysOp BBS Exit");
+                    sysoplog("7SysOp BBS Exit");
                     pr_wait(1);
                     if (ok_modem_stuff)
                         closeport();
@@ -629,28 +543,28 @@ void skey(unsigned char ch)
                 }
                 restorescreen(&screensave);
                 break;
-            case 72: 
-                strcpy(charbuffer,";[A");
+            case 72:
+                strcpy(charbuffer,";[A");
                 charbufferpointer=1;
                 break;
-            case 80: 
-                strcpy(charbuffer,";[B");
+            case 80:
+                strcpy(charbuffer,";[B");
                 charbufferpointer=1;
                 break;
-            case 75: 
-                strcpy(charbuffer,";[D");
+            case 75:
+                strcpy(charbuffer,";[D");
                 charbufferpointer=1;
                 break;
-            case 77: 
-                strcpy(charbuffer,";[C");
+            case 77:
+                strcpy(charbuffer,";[C");
                 charbufferpointer=1;
                 break;
             case 71:
-                strcpy(charbuffer,";[H");
+                strcpy(charbuffer,";[H");
                 charbufferpointer=1;
                 break;
             case 79:
-                strcpy(charbuffer,";[K");
+                strcpy(charbuffer,";[K");
                 charbufferpointer=1;
                 break;
             case 35:
@@ -658,7 +572,7 @@ void skey(unsigned char ch)
                     doinghelp=1;
                     savescreen(&screensave);
                     fastscreen("syshelp.bin");
-                } 
+                }
                 else {
                     doinghelp=0;
                     restorescreen(&screensave);
@@ -726,37 +640,37 @@ void tleft(int dot)
 
             switch(type) {
 
-            case 1: 
+            case 1:
                 if ((using_modem) && (!incom))
                     strcpy(s,arg);
                 break;
 
-            case 2:     
+            case 2:
                 if ((actsl==255) && (thisuser.sl!=255) && !backdoor)
                     strcpy(s,arg);
                 break;
 
-            case 3: 
+            case 3:
                 if (global_handle)
                     strcpy(s,arg);
                 break;
 
-            case 4: 
+            case 4:
                 if (sysop_alert)
                     strcpy(s,arg);
                 break;
 
-            case 5: 
+            case 5:
                 if(running_dv)
                     strcpy(s,arg);
                 break;
 
-            case 6: 
+            case 6:
                 if (sysop2())
                     strcpy(s,arg);
                 break;
 
-            case 7: 
+            case 7:
                 if(useron)
                     sprintf(s,"%s",ctim(nsl()));
                 else
@@ -832,7 +746,7 @@ void topscreen(void)
 /* asm: bl,0x0 */
 /* asm: int 0x10 */
 
-    /* Read topscreen binary into scrn buffer and render via ncurses */
+    /* Read topscreen binary into scrn buffer and render via Terminal */
     sprintf(s,"%stops%d.bin",syscfg.gfilesdir,topdata);
     i=open(s,O_RDWR|O_BINARY);
     if (i >= 0) {
@@ -842,7 +756,7 @@ void topscreen(void)
             close(i);
             memmove(&scrn[0],b,linelen*160);
             farfree(b);
-            nc_render_scrn(0, linelen);
+            term_render_scrn(0, linelen);
         } else {
             close(i);
         }
@@ -875,13 +789,13 @@ void topscreen(void)
     ar[16]=0;
     restrict[16]=0;
 
-    if(thisuser.exempt & exempt_ratio) lo[0]='R'; 
+    if(thisuser.exempt & exempt_ratio) lo[0]='R';
     else lo[0]=32;
-    if(thisuser.exempt & exempt_time)  lo[1]='T'; 
+    if(thisuser.exempt & exempt_time)  lo[1]='T';
     else lo[1]=32;
-    if(thisuser.exempt & exempt_userlist)  lo[2]='U'; 
+    if(thisuser.exempt & exempt_userlist)  lo[2]='U';
     else lo[2]=32;
-    if(thisuser.exempt & exempt_post)  lo[3]='P'; 
+    if(thisuser.exempt & exempt_post)  lo[3]='P';
     else lo[3]=32;
     lo[4]=0;
 
@@ -904,23 +818,23 @@ void topscreen(void)
         case 0:
             strcpy(s,nam(&thisuser,usernum));
             break;
-        case 1: 
-            sprintf(s,"%d",modem_speed); 
+        case 1:
+            sprintf(s,"%d",modem_speed);
             break;
-        case 3: 
+        case 3:
             strcpy(s,thisuser.street);
             break;
-        case 4: 
+        case 4:
             strcpy(s,thisuser.city);
             break;
-        case 5: 
+        case 5:
             strcpy(s,thisuser.note);
             break;
-        case 6: 
-            sprintf(s,"%d",status.msgposttoday); 
+        case 6:
+            sprintf(s,"%d",status.msgposttoday);
             break;
-        case 7: 
-            sprintf(s,"%d ",status.emailtoday); 
+        case 7:
+            sprintf(s,"%d ",status.emailtoday);
             break;
         case 8:
             userdb_load(1,&u);
@@ -928,74 +842,74 @@ void topscreen(void)
             break;
         case 9:
             sprintf(s,"%d",status.fbacktoday);
-        case 11: 
-            sprintf(s,"%d",status.uptoday); 
+        case 11:
+            sprintf(s,"%d",status.uptoday);
             break;
-        case 12: 
-            sprintf(s,"%d%%",10*status.activetoday/144); 
+        case 12:
+            sprintf(s,"%d%%",10*status.activetoday/144);
             break;
-        case 13: 
-            sprintf(s,"%d",status.activetoday); 
+        case 13:
+            sprintf(s,"%d",status.activetoday);
             break;
-        case 14: 
-            sprintf(s,"%d",status.callstoday); 
+        case 14:
+            sprintf(s,"%d",status.callstoday);
             break;
-        case 15: 
+        case 15:
             strcpy(s,thisuser.laston);
             break;
-        case 16: 
-            sprintf(s,"%s",chatreason[0]? "On":"Off"); 
+        case 16:
+            sprintf(s,"%s",chatreason[0]? "On":"Off");
             break;
         case 18:
             sprintf(s,thisuser.realname);
             break;
-        case 19: 
+        case 19:
             strcpy(s,thisuser.comment);
             break;
-        case 21: 
-            sprintf(s,"%d",thisuser.sl); 
+        case 21:
+            sprintf(s,"%d",thisuser.sl);
             break;
-        case 22: 
-            sprintf(s,"%d",thisuser.msgpost); 
+        case 22:
+            sprintf(s,"%d",thisuser.msgpost);
             break;
-        case 23: 
-            sprintf(s,"%d",thisuser.uploaded); 
+        case 23:
+            sprintf(s,"%d",thisuser.uploaded);
             break;
-        case 24: 
-            sprintf(s,"%d",thisuser.fpts); 
+        case 24:
+            sprintf(s,"%d",thisuser.fpts);
             break;
-        case 25: 
+        case 25:
             strcpy(s,lo);
             break;
-        case 26: 
+        case 26:
             strcpy(s,restrict);
             break;
-        case 27: 
+        case 27:
             strcpy(s,ar);
             break;
-        case 28: 
+        case 28:
             strcpy(s,dar);
             break;
-        case 29: 
-            sprintf(s,"%d",thisuser.dsl); 
+        case 29:
+            sprintf(s,"%d",thisuser.dsl);
             break;
-        case 30: 
-            sprintf(s,"%d",thisuser.logons); 
+        case 30:
+            sprintf(s,"%d",thisuser.logons);
             break;
-        case 31: 
-            sprintf(s,"%d",thisuser.downloaded); 
+        case 31:
+            sprintf(s,"%d",thisuser.downloaded);
             break;
-        case 32: 
-            sprintf(s,"%d",thisuser.timebank); 
+        case 32:
+            sprintf(s,"%d",thisuser.timebank);
             break;
         case 37:
-            strcpy(s,thisuser.phone); 
+            strcpy(s,thisuser.phone);
             break;
         case 38:
-            sprintf(s,"%d",thisuser.age); 
+            sprintf(s,"%d",thisuser.age);
             break;
         case 39:
-            sprintf(s,"%c",thisuser.sex); 
+            sprintf(s,"%c",thisuser.sex);
             break;
         case 40:
             strcpy(s,ctype(thisuser.comp_type));
@@ -1017,7 +931,7 @@ void topscreen(void)
         case 45:
             strcpy(s,status.lastuser);
             break;
-        default: 
+        default:
             strcpy(s,"");
             break;
         }
@@ -1098,4 +1012,3 @@ void executemouse(int x,int y)
 
 }
 #endif
-

@@ -57,7 +57,7 @@ BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               qwk
 
 # Platform compatibility
-PLATFORM = platform_stubs jam_stubs io_stream io_ncurses
+PLATFORM = platform_stubs jam_stubs io_stream io_ncurses terminal terminal_bridge
 
 # JSON I/O (cJSON library + serialization layer)
 JSON_IO = cJSON json_io
@@ -75,9 +75,9 @@ all: $(TARGET) init
 # Alias: build just the binary
 binary: $(TARGET)
 
-# Link
+# Link (CXX needed for terminal.o / terminal_bridge.o)
 $(TARGET): $(OBJS) | $(BUILDDIR)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) -lm -lncurses
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) -lm -lncurses
 
 # Compile C
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
@@ -116,18 +116,18 @@ $(BUILDDIR)/jamdump: $(TOOLDIR)/jamdump.c $(SRCDIR)/jam.h $(SRCDIR)/jamsys.h | $
 	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
 
 # Terminal test — links against real BBS .o files to test rendering
-TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o
+TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
 $(BUILDDIR)/termtest: $(TOOLDIR)/termtest.c $(TERMTEST_OBJS) | $(BUILDDIR)
-	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(TERMTEST_OBJS) -lncurses
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(TERMTEST_OBJS) -lncurses
 
 # Raw input byte inspector — standalone, no BBS dependencies
 $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 	$(CC) -std=gnu89 -o $@ $<
 
 # Input function test — links against real BBS .o files to test input1/inputdat/getkey
-INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o
+INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
-	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
 
 # IO test — clean Terminal class, ZERO BBS dependencies
 $(BUILDDIR)/iotest: $(TOOLDIR)/iotest.cpp $(OBJDIR)/terminal.o | $(BUILDDIR)

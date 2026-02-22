@@ -63,7 +63,8 @@ Terminal::Terminal()
 Terminal::~Terminal()
 {
     shutdown();
-    std::free(scrn_);
+    if (ownsScrn_)
+        std::free(scrn_);
     scrn_ = nullptr;
 }
 
@@ -74,10 +75,13 @@ Terminal::~Terminal()
 
 bool Terminal::initLocal()
 {
+    /* Always save original terminal state for belt-and-suspenders restore */
+    if (isatty(STDIN_FILENO))
+        tcgetattr(STDIN_FILENO, &origTermios_);
+
     if (!isatty(STDOUT_FILENO)) {
         ncActive_ = false;
         if (isatty(STDIN_FILENO)) {
-            tcgetattr(STDIN_FILENO, &origTermios_);
             struct termios raw = origTermios_;
             raw.c_lflag &= ~(ICANON | ECHO | ISIG);
             raw.c_iflag &= ~(IXON | ICRNL);
@@ -125,9 +129,10 @@ void Terminal::shutdown()
     if (ncActive_) {
         endwin();
         ncActive_ = false;
-    } else if (isatty(STDIN_FILENO)) {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &origTermios_);
     }
+    /* Always restore terminal state (belt-and-suspenders after endwin) */
+    if (isatty(STDIN_FILENO))
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &origTermios_);
     if (g_crash_term == this)
         g_crash_term = nullptr;
 }
@@ -151,6 +156,12 @@ void Terminal::closeRemote()
         close(remote_.fd);
         remote_.fd = -1;
     }
+    remote_.active = false;
+}
+
+void Terminal::detachRemote()
+{
+    remote_.fd = -1;
     remote_.active = false;
 }
 
@@ -242,7 +253,7 @@ unsigned char Terminal::remoteGetKey()
     while (1) {
         int n = read(remote_.fd, &ch, 1);
         if (n <= 0) {
-            if (n == 0) closeRemote();
+            if (n == 0) detachRemote();  /* EOF — mark inactive, BBS owns fd close */
             return 0;
         }
         if (telnetFilter(&ch))
@@ -724,6 +735,26 @@ int Terminal::ncToScancode(int key)
     case KEY_F(8):  return 66;
     case KEY_F(9):  return 67;
     case KEY_F(10): return 68;
+    case KEY_F(13): return 84;  /* Shift-F1 */
+    case KEY_F(14): return 85;  /* Shift-F2 */
+    case KEY_F(15): return 86;  /* Shift-F3 */
+    case KEY_F(16): return 87;  /* Shift-F4 */
+    case KEY_F(17): return 88;  /* Shift-F5 */
+    case KEY_F(18): return 89;  /* Shift-F6 */
+    case KEY_F(19): return 90;  /* Shift-F7 */
+    case KEY_F(20): return 91;  /* Shift-F8 */
+    case KEY_F(21): return 92;  /* Shift-F9 */
+    case KEY_F(22): return 93;  /* Shift-F10 */
+    case KEY_F(25): return 94;  /* Ctrl-F1 */
+    case KEY_F(26): return 95;  /* Ctrl-F2 */
+    case KEY_F(27): return 96;  /* Ctrl-F3 */
+    case KEY_F(28): return 97;  /* Ctrl-F4 */
+    case KEY_F(29): return 98;  /* Ctrl-F5 */
+    case KEY_F(30): return 99;  /* Ctrl-F6 */
+    case KEY_F(31): return 100; /* Ctrl-F7 */
+    case KEY_F(32): return 101; /* Ctrl-F8 */
+    case KEY_F(33): return 102; /* Ctrl-F9 */
+    case KEY_F(34): return 103; /* Ctrl-F10 */
     case KEY_UP:    return 72;
     case KEY_DOWN:  return 80;
     case KEY_LEFT:  return 75;

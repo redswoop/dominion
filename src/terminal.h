@@ -28,10 +28,15 @@ public:
     /* -- Remote TCP stream -- */
     void setRemote(int fd);
     void closeRemote();
+    void detachRemote();            /* reset state without closing fd */
     bool remoteConnected() const;
     void sendTelnetNegotiation();
     void sendTerminalInit();        /* alt screen + black bg */
     void sendTerminalRestore();     /* restore primary screen */
+    void remotePutch(unsigned char c);   /* single char, CP437→UTF-8 */
+    void remoteWriteRaw(const char *s);  /* raw bytes to TCP */
+    bool remoteDataReady();
+    unsigned char remoteGetKey();         /* with IAC filtering */
 
     /* -- Output (writes to all active streams) -- */
     void putch(unsigned char c);
@@ -42,59 +47,61 @@ public:
     /* -- Color -- */
     void setAttr(unsigned char attr);
     unsigned char attr() const { return curatr_; }
+    void setCurAttr(unsigned char a) { curatr_ = a; }
     int makeAnsi(unsigned char attr, char *buf);
+    void emitAttr(int attr);
+    int ncAttr(int dosAttr);
 
     /* -- Input -- */
     bool keyReady();                /* any input from any source? */
     unsigned char getKey();         /* blocking */
     unsigned char getKeyNB();       /* non-blocking, 0 if nothing */
+    bool localKeyReady();
+    unsigned char localGetKey();         /* blocking */
+    unsigned char localGetKeyNB();       /* non-blocking, 255 if nothing */
 
-    /* -- Screen -- */
+    /* -- Screen primitives -- */
     void clearScreen();
     void moveCursor(int x, int y);
+    void scrollUp(int top, int bottom, int lines);
+    void out1chx(unsigned char ch);      /* char + attr to screen buf + ncurses */
+    void out1ch(unsigned char ch);       /* dispatch CR/LF/BS/FF/printable */
+    void cr();
+    void lf();
+    void bs();
+
+    /* -- Screen state -- */
     int cursorX() const { return cx_; }
     int cursorY() const { return cy_ - topLine_; }
+    int cursorYabs() const { return cy_; }
     int screenBottom() const { return screenBottom_; }
     int topLine() const { return topLine_; }
+    void setTopLine(int t) { topLine_ = t; }
+    void setScreenBottom(int b) { screenBottom_ = b; }
+    void setCursorPos(int x, int yabs) { cx_ = x; cy_ = yabs; }
     bool localActive() const { return ncActive_; }
+
+    /* -- Screen buffer -- */
+    char *screenBuffer() { return scrn_; }
+    void setScreenBuffer(char *buf) { scrn_ = buf; ownsScrn_ = false; }
+    void scrnPut(int x, int y, unsigned char ch, unsigned char attr);
+    void renderScrn(int startRow, int numRows);
 
     /* -- Helpers for input UI -- */
     void backspace();               /* BS, space, BS */
 
 private:
-    /* -- Remote I/O -- */
-    void remotePutch(unsigned char c);   /* single char, CP437→UTF-8 */
-    void remoteWriteRaw(const char *s);  /* raw bytes to TCP */
-    bool remoteDataReady();
-    unsigned char remoteGetKey();         /* with IAC filtering */
     bool telnetFilter(unsigned char *ch);
 
-    /* -- Local screen primitives -- */
-    void out1chx(unsigned char ch);      /* char + attr to screen buf + ncurses */
-    void out1ch(unsigned char ch);       /* dispatch CR/LF/BS/FF/printable */
-    void scrollUp(int top, int bottom, int lines);
-    void cr();
-    void lf();
-    void bs();
-
-    /* -- Screen buffer -- */
-    void scrnPut(int x, int y, unsigned char ch, unsigned char attr);
+    /* -- Screen buffer internal -- */
     void scrnScroll(int top, int bottom, int n);
-    void renderScrn(int startRow, int numRows);
 
     /* -- ANSI -- */
     void executeAnsi();
     void addAnsiParam(char *s, int val);
 
-    /* -- ncurses -- */
-    int ncAttr(int dosAttr);
-    void emitAttr(int attr);
-
     /* -- Keyboard -- */
     int ncToScancode(int key);
-    bool localKeyReady();
-    unsigned char localGetKey();         /* blocking */
-    unsigned char localGetKeyNB();       /* non-blocking, 255 if nothing */
 
     /* -- Stream state -- */
     struct Stream {
@@ -106,6 +113,7 @@ private:
 
     /* -- Screen state -- */
     char *scrn_ = nullptr;
+    bool ownsScrn_ = true;
     int topLine_ = 0;
     int screenBottom_ = 24;
     int cx_ = 0, cy_ = 0;
