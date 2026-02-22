@@ -1,6 +1,7 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "vars.h"
 #include "terminal_bridge.h"
+#include "stream_processor.h"
 
 #pragma hdrstop
 
@@ -11,8 +12,6 @@
 
 /* com.c file-scoped state → io_session_t (Phase 2)
  * colblock is in io_stream.h (used by personal.c, config.c too) */
-#define mci         io.mci
-#define easycolor   io.easycolor
 #define bluein      io.bluein
 
 extern char MCISTR[161];
@@ -66,18 +65,6 @@ void addto(char *s, int i)
     strcat(s, temp);
 }
 
-void makeavt(unsigned char attr, char *s, int forceit)
-{
-    unsigned char catr;
-
-    catr = curatr;
-    s[0] = 0;
-
-    if (attr != catr) sprintf(s,"%c",attr);
-    if (!okavt() && !forceit)
-        s[0]=0;
-}
-
 void makeansi(unsigned char attr, char *s, int forceit)
 {
     unsigned char catr;
@@ -85,11 +72,6 @@ void makeansi(unsigned char attr, char *s, int forceit)
 
     catr = curatr;
     s[0] = 0;
-
-    if(okavt()) {
-        makeavt(attr,s,forceit);
-        return;
-    }
 
     if (attr != catr) {
         if ((catr & 0x88) ^ (attr & 0x88)) {
@@ -128,10 +110,7 @@ void setbgc(int i)
 
 void setc(unsigned char ch)
 {
-    char s[30];
-
-    makeansi(ch,s,0);
-    outstr(s);
+    term_set_attr(ch);
 }
 
 void ansic(int n)
@@ -152,333 +131,65 @@ void ansic(int n)
 
 
 /***********************************************************************
- * 3. ANSI PARSER
+ * 3. CORE OUTPUT
  ***********************************************************************/
 
-void execute_ansi()
+/* stream_emit_char — called by stream_processor when a normal character
+ * emerges after all markup processing.  Handles TCP output, local
+ * rendering, tab expansion, line counting, and pause. */
+void stream_emit_char(unsigned char c)
 {
-    int args[11], argptr, count, ptr, tempptr, ox, oy;
-    char cmd, temp[11], teol[MAX_PATH_LEN], *clrlst = "04261537";
-    union REGS r;
+    int i, i1;
 
-    if (ansistr[1] != '[') {
-
-    }
-    else {
-        argptr = tempptr = 0;
-        ptr = 2;
-        for (count = 0; count < 10; count++)
-            args[count] = temp[count] = 0;
-        cmd = ansistr[ansiptr - 1];
-        ansistr[ansiptr - 1] = 0;
-        while ((ansistr[ptr]) && (argptr<10) && (tempptr<10)) {
-            if (ansistr[ptr] == ';') {
-                temp[tempptr] = 0;
-                tempptr = 0;
-                args[argptr++] = atoi(temp);
-            }
-            else
-                temp[tempptr++] = ansistr[ptr];
-            ++ptr;
-        }
-        if (tempptr && (argptr<10)) {
-            temp[tempptr]  = 0;
-            args[argptr++] = atoi(temp);
-        }
-        if ((cmd >= 'A') && (cmd <= 'D') && !args[0])
-            args[0] = 1;
-        switch (cmd) {
-        case 'f':
-        case 'H':
-            movecsr(args[1] - 1, args[0] - 1);
-            break;
-        case 'A':
-            movecsr(wherex(), wherey() - args[0]);
-            break;
-        case 'B':
-            movecsr(wherex(), wherey() + args[0]);
-            break;
-        case 'C':
-            movecsr(wherex() + args[0], wherey());
-            break;
-        case 'D':
-            movecsr(wherex() - args[0], wherey());
-            break;
-        case 's':
-            oldx = wherex();
-            oldy = wherey();
-            break;
-        case 'u':
-            movecsr(oldx, oldy);
-            break;
-        case 'J':
-            if (args[0] == 2) {
-                clrscrb();
-            }
-            break;
-        case 'k':
-        case 'K':
-            /* Erase from cursor to end of line */
-            ox = wherex();
-            oy = wherey();
-            if (nc_active) {
-                clrtoeol();
-                refresh();
-            }
-            /* Clear scrn[] buffer from cursor to end of line */
-            if (scrn) {
-                int col, row = oy + topline;
-                for (col = ox; col < 80; col++) {
-                    int off = (row * 80 + col) * 2;
-                    if (off >= 0 && off < 4000) {
-                        scrn[off] = ' ';
-                        scrn[off + 1] = curatr;
-                    }
-                }
-            }
-            movecsr(ox, oy);
-            break;
-        case 'm':
-            if (!argptr) {
-                argptr = 1;
-                args[0] = 0;
-            }
-            for (count = 0; count < argptr; count++)
-                switch (args[count]) {
-                case 0:
-                    curatr = 0x07;
-                    break;
-                case 1:
-                    curatr = curatr | 0x08;
-                    break;
-                case 4:
-                    break;
-                case 5:
-                    curatr = curatr | 0x80;
-                    break;
-                case 7:
-                    ptr = curatr & 0x77;
-                    curatr = (curatr & 0x88) | (ptr << 4) | (ptr >> 4);
-                    break;
-                case 8:
-                    curatr = 0;
-                    break;
-                default:
-                    if ((args[count] >= 30) && (args[count] <= 37))
-                        setfgc(clrlst[args[count] - 30] - '0');
-                    else if ((args[count] >= 40) && (args[count] <= 47))
-                        setbgc(clrlst[args[count] - 40] - '0');
-                }
-            break;
+    /* TCP output (skip tabs — they expand locally) */
+    if (outcom && (c != 9)) {
+        if (c == 12 && echo) {
+            /* Form feed: ANSI clear + home for TCP.
+             * Raw 0x0C is unreliable on modern terminals. */
+            term_remote_write_raw("\x1b[2J\x1b[H");
+        } else {
+            outcomch(echo ? c : nifty.echochar);
         }
     }
-    ansiptr = 0;
+
+    if (c == 9) {
+        /* Tab expansion */
+        i1 = wherex();
+        for (i = i1; i < (((i1 / 8) + 1) * 8); i++)
+            stream_emit_char(32);
+    }
+    else if (echo || lecho) {
+        out1ch(c);
+        if (c == 12 && okansi()) outstrm("\x1b[0;1m");
+        if (c == 10) {
+            ++lines_listed;
+            if (((sysstatus_pause_on_page & thisuser.sysstatus)) &&
+                (lines_listed >= screenlinest - 1) && !listing) {
+                pausescr();
+                lines_listed = 0;
+            }
+            else if (((sysstatus_pause_on_message & thisuser.sysstatus)) &&
+                (lines_listed >= screenlinest - 1) && readms) {
+                pausescr();
+                lines_listed = 0;
+            }
+        }
+    }
+    else
+        out1ch(nifty.echochar);
 }
 
 
-/***********************************************************************
- * 4. CORE OUTPUT
- ***********************************************************************/
-
-/* Avatar/pipe state → io_session_t (Phase 2)
- * Note: 'pipe' is macro-expanded to 'bbs_pipe' by platform.h,
- * so we define bbs_pipe here to catch the expanded token. */
-#define ac          io.ac
-#define bbs_pipe    io.pipe_state
-#define pipestr     io.pipestr
-#define ac2         io.ac2
-
 void outchr(unsigned char c)
 {
-    int i, i1;
-    char s[15];
-
-    if(pipe) {
-        if(c>='0'&&c<='9') {
-            pipestr[pipe-1]=c;
-            pipe++;
-            return;
-        }
-        else {
-            pipestr[pipe-1]=0;
-            pipe=0;
-            if(okansi()) {
-                makeansi((unsigned char)atoi(pipestr),s,1);
-                outstr(s);
-            }
-        }
-    }
-
-    if(easycolor) {
-        easycolor=0;
-        if(c>0&&c<=20)
-            ansic(c-1);
-        return;
-    }
-
-    if(c==5&&ac==0) {
-        ac=10;
-        return;
-    }
-
-    if(ac==10) {
-        ac=0;
-        if(okansi()) {
-            makeansi(c,s,1);
-            outstr(s);
-        }
-        return;
-    }
-
-    if(ac==101) {
-        ac=0;
-        for(i=0;i<c;i++)
-            outchr(ac2);
-        return;
-    }
-
-    if(ac==100) {
-        ac2=c;
-        ac=101;
-        return;
-    }
-
-    if(c==22&&ac==0) {
-        if(outcom)
-            outcomch(c);
-        ac=1;
-        return;
-    }
-
-    if(ac==1) {
-        ac=2;
-        if(outcom)
-            outcomch(c);
-        return;
-    }
-
-    if(ac==2) {
-        curatr=c;
-        if(outcom)
-            outcomch(c);
-        ac=0;
-        return;
-    }
-
-
-    if(mci) {
-        mci=0;
-        if(mciok) {
-            setmci(c);
-            outstr(MCISTR);
-            return;
-        }
-    }
-
-    if (change_color) {
-        change_color = 0;
-        if ((c >= '0') && (c <= '9'))
-            ansic(c - '0');
-        return;
-    }
-
-    if (change_ecolor) {
-        change_ecolor = 0;
-        if ((c >= '0') && (c <= '9'))
-            ansic(c - '0' + 10);
-        return;
-    }
-
-    if (c == 3) {
-        change_color=1;
-        return;
-    }
-
-    if (c == 14) {
-        change_ecolor=1;
-        return;
-    }
-
-    if(c==6) {
-        easycolor=1;
-        return;
-    }
-
-    if(c=='`') {
-        if(mciok&&!mci) {
-            mci=1;
-            return;
-        }
-    }
-
-    if(c=='|') {
-        if(mciok) {
-            pipe=1;
-            return;
-        }
-    }
-
-    if(c==151) {
-        if(mciok) {
-            ac=100;
-            return;
-        }
-    }
-
-    if ((c == 10) && endofline[0]) {
-        outstr(endofline);
-        endofline[0] = 0;
-    }
-
-    if (global_handle) {
-        if (echo)
-            global_char(c);
-    }
+    if (global_handle && echo)
+        global_char(c);
 
     if (chatcall && !x_only && !(syscfg.sysconfig & sysconfig_no_beep))
         setbeep(1);
 
-    if (outcom && (c != 9))
-        outcomch(echo ? c : nifty.echochar);
-    if (ansiptr) {
-        ansistr[ansiptr++] = c;
-        ansistr[ansiptr]   = 0;
-        if ((((c < '0') || (c > '9')) && (c!='[') && (c!=';')) ||
-            (ansistr[1] != '[') || (ansiptr>75))
-            execute_ansi();
-    }
-    else if (c == 27) {
-        ansistr[0] = 27;
-        ansiptr = 1;
-        ansistr[ansiptr]=0;
-    }
-    else {
-        if (c == 9) {
-            i1 = wherex();
-            for (i = i1; i< (((i1 / 8) + 1) * 8); i++)
-                outchr(32);
-        }
-        else if (echo || lecho) {
-            out1ch(c);
-            if (c==12&&okansi()) outstrm("\x1b[0;1m");
-            if (c == 10) {
-                ++lines_listed;
-                if (((sysstatus_pause_on_page & thisuser.sysstatus)) &&
-                    (lines_listed >= screenlinest - 1)&&!listing) {
-                    pausescr();
-                    lines_listed=0;
-                }
-                else
-                    if (((sysstatus_pause_on_message & thisuser.sysstatus)) &&
-                    (lines_listed >= screenlinest - 1)&&readms) {
-                    pausescr();
-                    lines_listed=0;
-                }
-            }
-        }
-        else
-            out1ch(nifty.echochar);
-    }
+    stream_putch(c);
+
     if (chatcall)
         setbeep(0);
 }

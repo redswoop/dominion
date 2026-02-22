@@ -45,7 +45,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-unused-parameter \
 
 # The BBS core modules (from the original makefile)
 BBS_CORE = bbs com conio bbsutl file file1 mm \
-           utility extrn mm1 tcpio jam
+           utility extrn mm1 tcpio jam stream_processor
 
 BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               file2 file3 archive filesys \
@@ -57,7 +57,7 @@ BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               qwk
 
 # Platform compatibility
-PLATFORM = platform_stubs jam_stubs io_stream io_ncurses terminal terminal_bridge
+PLATFORM = platform_stubs jam_stubs io_stream terminal terminal_bridge
 
 # JSON I/O (cJSON library + serialization layer)
 JSON_IO = cJSON json_io
@@ -116,7 +116,7 @@ $(BUILDDIR)/jamdump: $(TOOLDIR)/jamdump.c $(SRCDIR)/jam.h $(SRCDIR)/jamsys.h | $
 	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
 
 # Terminal test — links against real BBS .o files to test rendering
-TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
+TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
 $(BUILDDIR)/termtest: $(TOOLDIR)/termtest.c $(TERMTEST_OBJS) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(TERMTEST_OBJS) -lncurses
 
@@ -125,7 +125,7 @@ $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 	$(CC) -std=gnu89 -o $@ $<
 
 # Input function test — links against real BBS .o files to test input1/inputdat/getkey
-INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
+INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/stream_processor.o
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
 
@@ -153,15 +153,25 @@ init: $(BUILDDIR)/mkconfig
 		echo "Generating config.json and seed data..."; \
 		cd $(BUILDDIR) && ./mkconfig .; \
 	else \
-		echo "config.json already exists (use 'make clean' first to regenerate)"; \
+		echo "config.json already exists (use 'make distclean' first to regenerate)"; \
 	fi
 	@$(MAKE) data
 
+# Remove binary + objects, preserve data dirs (config, users, messages, etc.)
 clean:
-	rm -rf $(BUILDDIR)
+	rm -rf $(OBJDIR)
+	rm -f $(BUILDDIR)/dominion
+	rm -f $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump
+	rm -f $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump
+	rm -f $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest
+	rm -f $(BUILDDIR)/iotest
 
-# Remove just objects (keep data and binary for quick relink)
+# Remove just objects (keep binary + data for quick relink)
 clean-obj:
 	rm -rf $(OBJDIR)
 
-.PHONY: all binary clean clean-obj data tools init
+# Nuclear: remove entire build directory including all data
+distclean:
+	rm -rf $(BUILDDIR)
+
+.PHONY: all binary clean clean-obj distclean data tools init

@@ -44,6 +44,7 @@ void term_set_cur_attr(unsigned char attr);
 int  term_make_ansi(unsigned char attr, char *buf);
 void term_emit_attr(int attr);
 int  term_nc_attr(int dos_attr);
+void term_put_cp437(unsigned char ch);
 
 /* -- Input -- */
 int  term_key_ready(void);
@@ -55,7 +56,9 @@ unsigned char term_local_get_key_nb(void);
 
 /* -- Screen primitives -- */
 void term_clear_screen(void);
+void term_clear_to_eol(void);
 void term_move_cursor(int x, int y);
+void term_goto(int x, int y);          /* cursor position: local + TCP */
 void term_scroll_up(int top, int bottom, int lines);
 void term_out1chx(unsigned char ch);
 void term_out1ch(unsigned char ch);
@@ -81,9 +84,8 @@ void term_set_screen_buffer(char *buf);
 void term_scrn_put(int x, int y, unsigned char ch, unsigned char attr);
 void term_render_scrn(int start_row, int num_rows);
 
-/* -- BBS state sync (transition period) -- */
-void term_sync_from_bbs(int tl, int sb, int ca, int cx, int cy);
-void term_sync_to_bbs(int *ca_out, int *cx_out, int *cy_out);
+/* -- State binding (Phase 3: share memory with BBS io_session_t) -- */
+void term_bind_state(int *ca, int *tl, int *sb);
 
 /* -- Direct access for transition period -- */
 void *term_instance(void);  /* returns Terminal* */

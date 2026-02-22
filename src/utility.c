@@ -1,4 +1,5 @@
 #include "vars.h"
+#include "stream_processor.h"
 #pragma hdrstop
 
 
@@ -48,7 +49,7 @@ void frequent_init()
     ARC_NUMBER=-1;
     chatsoundon=1;
     curlsub=-1;
-    ansiptr=0;
+    stream_reset();
     curatr=0x07;
     outcom=0;
     incom=0;
@@ -61,7 +62,6 @@ void frequent_init()
     chatcall=0;
     chatreason[0]=0;
     useron=0;
-    change_color=0;
     chatting=0;
     echo=1;
     okskey=0;

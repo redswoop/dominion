@@ -31,14 +31,8 @@ typedef struct {
     char echo_char;      /* mask char (usually '*') */
 
     /* com.c parser state (Phase 2) */
-    char mci;               /* MCI parse state */
-    char easycolor;         /* easy color mode */
     char bluein;            /* input field: 0=none, 1=blue, 2=alt */
     int  colblock;          /* color override */
-    unsigned char ac;       /* Avatar state */
-    unsigned char pipe_state; /* pipe color state */
-    unsigned char pipestr[5]; /* pipe color accumulator */
-    unsigned char ac2;      /* Avatar repeat char */
     int  pending_scancode;  /* ncurses→DOS bridge */
 
     /* IO-internal globals from vars.h (Phase 3) */

@@ -46,11 +46,12 @@ public:
 
     /* -- Color -- */
     void setAttr(unsigned char attr);
-    unsigned char attr() const { return curatr_; }
-    void setCurAttr(unsigned char a) { curatr_ = a; }
+    unsigned char attr() const { return (unsigned char)*pCuratr_; }
+    void setCurAttr(unsigned char a) { *pCuratr_ = a; }
     int makeAnsi(unsigned char attr, char *buf);
     void emitAttr(int attr);
     int ncAttr(int dosAttr);
+    void ncPutCp437(unsigned char ch);
 
     /* -- Input -- */
     bool keyReady();                /* any input from any source? */
@@ -62,7 +63,9 @@ public:
 
     /* -- Screen primitives -- */
     void clearScreen();
+    void clearToEol();
     void moveCursor(int x, int y);
+    void gotoXY(int x, int y);          /* cursor position: local + TCP */
     void scrollUp(int top, int bottom, int lines);
     void out1chx(unsigned char ch);      /* char + attr to screen buf + ncurses */
     void out1ch(unsigned char ch);       /* dispatch CR/LF/BS/FF/printable */
@@ -72,14 +75,17 @@ public:
 
     /* -- Screen state -- */
     int cursorX() const { return cx_; }
-    int cursorY() const { return cy_ - topLine_; }
+    int cursorY() const { return cy_ - *pTopLine_; }
     int cursorYabs() const { return cy_; }
-    int screenBottom() const { return screenBottom_; }
-    int topLine() const { return topLine_; }
-    void setTopLine(int t) { topLine_ = t; }
-    void setScreenBottom(int b) { screenBottom_ = b; }
+    int screenBottom() const { return *pScreenBottom_; }
+    int topLine() const { return *pTopLine_; }
+    void setTopLine(int t) { *pTopLine_ = t; }
+    void setScreenBottom(int b) { *pScreenBottom_ = b; }
     void setCursorPos(int x, int yabs) { cx_ = x; cy_ = yabs; }
     bool localActive() const { return ncActive_; }
+
+    /* -- State binding (Phase 3: share memory with BBS io_session_t) -- */
+    void bindState(int *curatr, int *topLine, int *screenBottom);
 
     /* -- Screen buffer -- */
     char *screenBuffer() { return scrn_; }
@@ -114,11 +120,19 @@ private:
     /* -- Screen state -- */
     char *scrn_ = nullptr;
     bool ownsScrn_ = true;
-    int topLine_ = 0;
-    int screenBottom_ = 24;
     int cx_ = 0, cy_ = 0;
     int lastAttr_ = -1;
-    unsigned char curatr_ = 0x07;
+
+    /* State fields with pointer indirection.
+     * Pointers default to internal storage (standalone/iotest).
+     * bindState() rebinds them to BBS io_session_t fields so both
+     * sides share the same memory — no sync needed. */
+    int curatrVal_ = 0x07;
+    int topLineVal_ = 0;
+    int screenBottomVal_ = 24;
+    int *pCuratr_ = &curatrVal_;
+    int *pTopLine_ = &topLineVal_;
+    int *pScreenBottom_ = &screenBottomVal_;
 
     /* -- ANSI parser -- */
     char ansiStr_[81] = {};
@@ -133,6 +147,7 @@ private:
 
     /* -- Terminal -- */
     bool ncActive_ = false;
+    bool use16colors_ = false;
     struct termios origTermios_ = {};
 };
 

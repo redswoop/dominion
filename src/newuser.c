@@ -4,7 +4,8 @@
 
 void go(int x,int y)
 {
-    npr("[%d;%dH",x,y);
+    /* x = row (1-based), y = col (1-based) — ANSI convention */
+    term_goto(y - 1, x - 1);
 }
 
 void goin(int x,int y)
@@ -491,10 +492,11 @@ void newuser()
         outchr(12);
         withansi=thisuser.sysstatus & sysstatus_ansi;
         if(withansi) {
+            int saved_incom = incom;
             mciok=0;
             incom=0;
             printfile("newans.ans");
-            incom=1;
+            incom=saved_incom;
         }
         input_name(s);
         input_realname(s);

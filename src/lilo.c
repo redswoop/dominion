@@ -4,6 +4,7 @@
 #pragma hdrstop
 
 #include "cp437.h"
+#include "terminal_bridge.h"
 
 extern char withansi,MCISTR[161];
 
@@ -742,7 +743,7 @@ void fastscreen(char fn[13])
     read(i,ss,4000);
     close(i);
     memcpy(scrn,ss,4000);
-    nc_render_scrn(0, 25);
+    term_render_scrn(0, 25);
     reset_attr_cache();
     farfree(ss);
 }

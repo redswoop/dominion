@@ -4,6 +4,7 @@
 /* File: conio.c */
 
 void movecsr(int x,int y);
+void term_goto(int x, int y);   /* cursor position: local + TCP */
 int wherex();
 int wherey();
 void lf();
@@ -36,11 +37,10 @@ void savel(char *cl, char *atr, char *xl, char *cc);
 void restorel(char *cl, char *atr, char *xl, char *cc);
 void checkhangup();
 void addto(char *s, int i);
-void makeavt(unsigned char attr, char *s, int forceit);
 void makeansi(unsigned char attr, char *s, int forceit);
 void setfgc(int i);
 void setbgc(int i);
-void execute_ansi();
+void stream_emit_char(unsigned char c);
 void outchr(unsigned char c);
 void outstr(char *s);
 void outstrm(char *s);

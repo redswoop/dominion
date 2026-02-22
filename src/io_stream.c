@@ -69,14 +69,8 @@ void io_init(io_session_t *s)
     s->echo_char = '*';
 
     /* com.c parser state (Phase 2) */
-    s->mci = 0;
-    s->easycolor = 0;
     s->bluein = 0;
     s->colblock = 0;
-    s->ac = 0;
-    s->pipe_state = 0;
-    memset(s->pipestr, 0, sizeof(s->pipestr));
-    s->ac2 = 0;
     s->pending_scancode = -1;
 
     /* IO-internal globals (Phase 3) */

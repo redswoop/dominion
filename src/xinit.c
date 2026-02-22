@@ -68,22 +68,24 @@ void init(int show)
     /* Initialize default text attribute to white-on-black */
     curatr=0x07;
 
-    /* Initialize ncurses via Terminal class.
-     * ncurses_init() delegates to term_init_local() and wires the
-     * BBS's scrn buffer into Terminal.  setvbuf handled inside. */
-    ncurses_init();
+    /* Initialize ncurses via Terminal class */
+    nc_active = term_init_local();
+    if (scrn)
+        term_set_screen_buffer(scrn);
+    if (!nc_active)
+        setvbuf(stdout, NULL, _IOLBF, 0);
     term_raw_mode = 1;
 
-    /* Sync BBS screen state → Terminal */
-    term_set_screen_bottom(screenbottom);
-    term_set_cur_attr(curatr);
+    /* Bind Terminal state pointers to BBS io_session_t fields.
+     * After this, both sides share the same memory — no sync needed. */
+    term_bind_state(&curatr, &topline, &screenbottom);
 
     if(!exist("exitdata.dom")) restoring_shrink=0; 
     else restoring_shrink=1;
     if (!restoring_shrink&&!show) {
         clrscr();
         memmove(scrn,ANSIHEADER,4000);
-        nc_render_scrn(0, 25);
+        term_render_scrn(0, 25);
         gotoxy(1,12);
     }
     getcwd(cdir, sizeof(cdir));
@@ -434,7 +436,8 @@ void end_bbs(int lev)
     _setcursortype(2);
 
     /* Restore terminal */
-    ncurses_shutdown();
+    term_shutdown();
+    nc_active = 0;
     term_raw_mode = 0;
 
     exit(lev);

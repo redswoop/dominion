@@ -35,6 +35,28 @@ static const int dos2nc[8] = {
     COLOR_RED, COLOR_MAGENTA, COLOR_YELLOW, COLOR_WHITE
 };
 
+/* CGA RGB values for all 16 DOS colors.
+ * DOS order: 0=black 1=blue 2=green 3=cyan 4=red 5=magenta 6=brown 7=white
+ *            8-15 = bright versions of 0-7 */
+static const int cgaRGB[16][3] = {
+    {  0,   0,   0},  /* 0:  black */
+    {  0,   0, 170},  /* 1:  blue */
+    {  0, 170,   0},  /* 2:  green */
+    {  0, 170, 170},  /* 3:  cyan */
+    {170,   0,   0},  /* 4:  red */
+    {170,   0, 170},  /* 5:  magenta */
+    {170,  85,   0},  /* 6:  brown */
+    {170, 170, 170},  /* 7:  light grey */
+    { 85,  85,  85},  /* 8:  dark grey */
+    { 85,  85, 255},  /* 9:  light blue */
+    { 85, 255,  85},  /* 10: light green */
+    { 85, 255, 255},  /* 11: light cyan */
+    {255,  85,  85},  /* 12: light red */
+    {255,  85, 255},  /* 13: light magenta */
+    {255, 255,  85},  /* 14: yellow */
+    {255, 255, 255},  /* 15: white */
+};
+
 
 /* ================================================================== */
 /*  Crash handler — restore terminal before dying                     */
@@ -98,9 +120,30 @@ bool Terminal::initLocal()
 
     if (has_colors()) {
         start_color();
+        /* Normal 8-color pairs: 1..64 (terminal palette) */
         for (int bg = 0; bg < 8; bg++)
             for (int fg = 0; fg < 8; fg++)
                 init_pair(bg * 8 + fg + 1, dos2nc[fg], dos2nc[bg]);
+        /* Bright foreground pairs: 65..128 (explicit bright, no A_BOLD) */
+        if (COLORS >= 16 && COLOR_PAIRS > 128) {
+            use16colors_ = true;
+            /* Define custom bright colors with exact CGA RGB.
+             * Use color indices 16-23 so we don't disturb the
+             * terminal's built-in palette (0-15). */
+            int brightOff = 8;
+            if (can_change_color() && COLORS >= 24) {
+                for (int i = 0; i < 8; i++)
+                    init_color(dos2nc[i] + 16,
+                               cgaRGB[i+8][0] * 1000 / 255,
+                               cgaRGB[i+8][1] * 1000 / 255,
+                               cgaRGB[i+8][2] * 1000 / 255);
+                brightOff = 16;
+            }
+            for (int bg = 0; bg < 8; bg++)
+                for (int fg = 0; fg < 8; fg++)
+                    init_pair(64 + bg * 8 + fg + 1,
+                              dos2nc[fg] + brightOff, dos2nc[bg]);
+        }
     }
 
     raw();
@@ -299,14 +342,22 @@ int Terminal::ncAttr(int dosAttr)
 {
     int fg = dosAttr & 7;
     int bg = (dosAttr >> 4) & 7;
+    int blink = (dosAttr & 0x80) ? A_BLINK : 0;
+
+    if ((dosAttr & 0x08) && use16colors_) {
+        /* Use explicit bright-color pair instead of A_BOLD */
+        int pair = 64 + bg * 8 + fg + 1;
+        return COLOR_PAIR(pair) | blink;
+    }
+
     int pair = bg * 8 + fg + 1;
     int bold = (dosAttr & 0x08) ? A_BOLD : 0;
-    int blink = (dosAttr & 0x80) ? A_BLINK : 0;
     return COLOR_PAIR(pair) | bold | blink;
 }
 
 void Terminal::emitAttr(int attr)
 {
+    if (attr < 0) { lastAttr_ = -1; return; }  /* cache invalidation only */
     if (attr == lastAttr_) return;
     if (ncActive_) attrset(ncAttr(attr));
     lastAttr_ = attr;
@@ -320,7 +371,7 @@ void Terminal::emitAttr(int attr)
 void Terminal::scrnPut(int x, int y, unsigned char ch, unsigned char attr)
 {
     if (!scrn_) return;
-    if (x < 0 || x >= 80 || y < 0 || y > screenBottom_) return;
+    if (x < 0 || x >= 80 || y < 0 || y > *pScreenBottom_) return;
     int off = (y * 80 + x) * 2;
     if (off >= 0 && off < 4000) {
         scrn_[off] = ch;
@@ -367,6 +418,10 @@ void Terminal::scrollUp(int t, int b, int l)
 {
     if (l == 0) {
         if (ncActive_) {
+            /* Sync ncurses attr to curatr before clearing.
+             * setAttr()/emitAttr() may have set a non-black background;
+             * clrtoeol fills with the current ncurses background. */
+            attrset(ncAttr(*pCuratr_));
             for (int row = t; row <= b; row++) {
                 move(row, 0);
                 clrtoeol();
@@ -375,11 +430,12 @@ void Terminal::scrollUp(int t, int b, int l)
         scrnScroll(t, b, 0);
     } else {
         if (ncActive_) {
+            attrset(ncAttr(*pCuratr_));
             setscrreg(t, b);
             scrollok(stdscr, TRUE);
             wscrl(stdscr, l);
             scrollok(stdscr, FALSE);
-            setscrreg(0, screenBottom_);
+            setscrreg(0, *pScreenBottom_);
         }
         scrnScroll(t, b, l);
     }
@@ -392,11 +448,26 @@ void Terminal::moveCursor(int x, int y)
     if (x < 0) x = 0;
     if (x > 79) x = 79;
     if (y < 0) y = 0;
-    y += topLine_;
-    if (y > screenBottom_) y = screenBottom_;
+    y += *pTopLine_;
+    if (y > *pScreenBottom_) y = *pScreenBottom_;
     cx_ = x;
     cy_ = y;
     if (ncActive_) { move(y, x); refresh(); }
+}
+
+void Terminal::gotoXY(int x, int y)
+{
+    /* Send ANSI cursor position to remote */
+    if (remote_.active) {
+        int absY = y;
+        if (absY < 0) absY = 0;
+        absY += *pTopLine_;
+        char buf[20];
+        std::snprintf(buf, sizeof(buf), "\x1b[%d;%dH", absY + 1, x + 1);
+        remoteWriteRaw(buf);
+    }
+    /* Position locally (moveCursor handles clamping + ncurses) */
+    moveCursor(x, y);
 }
 
 void Terminal::cr()
@@ -407,8 +478,8 @@ void Terminal::cr()
 
 void Terminal::lf()
 {
-    if (cy_ == screenBottom_) {
-        scrollUp(topLine_, screenBottom_, 1);
+    if (cy_ == *pScreenBottom_) {
+        scrollUp(*pTopLine_, *pScreenBottom_, 1);
         if (ncActive_) { move(cy_, cx_); refresh(); }
     } else {
         cy_++;
@@ -419,7 +490,7 @@ void Terminal::lf()
 void Terminal::bs()
 {
     if (cx_ == 0) {
-        if (cy_ != topLine_) {
+        if (cy_ != *pTopLine_) {
             cx_ = 79;
             cy_--;
             if (ncActive_) { move(cy_, cx_); refresh(); }
@@ -433,14 +504,35 @@ void Terminal::bs()
 void Terminal::clearScreen()
 {
     lastAttr_ = -1;
-    scrollUp(topLine_, screenBottom_, 0);
+    scrollUp(*pTopLine_, *pScreenBottom_, 0);
     moveCursor(0, 0);
+}
+
+void Terminal::clearToEol()
+{
+    int ox = cursorX();
+    int oy = cursorY();
+
+    if (ncActive_) { attrset(ncAttr(*pCuratr_)); clrtoeol(); refresh(); }
+
+    if (scrn_) {
+        int row = oy + *pTopLine_;
+        for (int col = ox; col < 80; col++) {
+            int off = (row * 80 + col) * 2;
+            if (off >= 0 && off < 4000) {
+                scrn_[off] = ' ';
+                scrn_[off + 1] = *pCuratr_;
+            }
+        }
+    }
+
+    moveCursor(ox, oy);
 }
 
 void Terminal::out1chx(unsigned char ch)
 {
-    emitAttr(curatr_);
-    scrnPut(cx_, cy_, ch, curatr_);
+    emitAttr(*pCuratr_);
+    scrnPut(cx_, cy_, ch, *pCuratr_);
     if (ncActive_) {
         move(cy_, cx_);
         addstr(cp437_to_utf8[ch]);
@@ -448,8 +540,8 @@ void Terminal::out1chx(unsigned char ch)
     cx_++;
     if (cx_ >= 80) {
         cx_ = 0;
-        if (cy_ == screenBottom_)
-            scrollUp(topLine_, screenBottom_, 1);
+        if (cy_ == *pScreenBottom_)
+            scrollUp(*pTopLine_, *pScreenBottom_, 1);
         else
             cy_++;
         if (ncActive_) move(cy_, cx_);
@@ -493,7 +585,7 @@ void Terminal::addAnsiParam(char *s, int val)
 int Terminal::makeAnsi(unsigned char attr, char *s)
 {
     static const char *temp = "04261537";
-    unsigned char catr = curatr_;
+    unsigned char catr = *pCuratr_;
     s[0] = 0;
 
     if (attr != catr) {
@@ -590,12 +682,12 @@ void Terminal::executeAnsi()
             oy = cursorY();
             if (ncActive_) { clrtoeol(); refresh(); }
             if (scrn_) {
-                int row = oy + topLine_;
+                int row = oy + *pTopLine_;
                 for (int col = ox; col < 80; col++) {
                     int off = (row * 80 + col) * 2;
                     if (off >= 0 && off < 4000) {
                         scrn_[off] = ' ';
-                        scrn_[off + 1] = curatr_;
+                        scrn_[off + 1] = *pCuratr_;
                     }
                 }
             }
@@ -605,21 +697,21 @@ void Terminal::executeAnsi()
             if (!argptr) { argptr = 1; args[0] = 0; }
             for (count = 0; count < argptr; count++) {
                 switch (args[count]) {
-                case 0: curatr_ = 0x07; break;
-                case 1: curatr_ |= 0x08; break;
+                case 0: *pCuratr_ = 0x07; break;
+                case 1: *pCuratr_ |= 0x08; break;
                 case 4: break;
-                case 5: curatr_ |= 0x80; break;
+                case 5: *pCuratr_ |= 0x80; break;
                 case 7: {
-                    int p = curatr_ & 0x77;
-                    curatr_ = (curatr_ & 0x88) | (p << 4) | (p >> 4);
+                    int p = *pCuratr_ & 0x77;
+                    *pCuratr_ = (*pCuratr_ & 0x88) | (p << 4) | (p >> 4);
                     break;
                 }
-                case 8: curatr_ = 0; break;
+                case 8: *pCuratr_ = 0; break;
                 default:
                     if (args[count] >= 30 && args[count] <= 37)
-                        curatr_ = (curatr_ & 0xf8) | (clrlst[args[count] - 30] - '0');
+                        *pCuratr_ = (*pCuratr_ & 0xf8) | (clrlst[args[count] - 30] - '0');
                     else if (args[count] >= 40 && args[count] <= 47)
-                        curatr_ = (curatr_ & 0x8f) | ((clrlst[args[count] - 40] - '0') << 4);
+                        *pCuratr_ = (*pCuratr_ & 0x8f) | ((clrlst[args[count] - 40] - '0') << 4);
                 }
             }
             break;
@@ -635,19 +727,30 @@ void Terminal::executeAnsi()
 
 void Terminal::setAttr(unsigned char attr)
 {
-    if (attr == curatr_) return;
+    if (attr == *pCuratr_) return;
 
     char buf[30];
     makeAnsi(attr, buf);
 
     if (buf[0]) {
         /* Send ANSI sequence to remote */
-        if (remote_.active)
+        if (remote_.active) {
             remoteWriteRaw(buf);
+            /* Inject true color foreground to bypass terminal palette.
+             * Ensures CGA-accurate colors regardless of terminal profile. */
+            int fgi = attr & 0x0F;
+            char tc[24];
+            std::snprintf(tc, sizeof(tc), "\x1b[38;2;%d;%d;%dm",
+                          cgaRGB[fgi][0], cgaRGB[fgi][1], cgaRGB[fgi][2]);
+            remoteWriteRaw(tc);
+        }
 
-        /* Update local state directly (no need to re-parse) */
-        curatr_ = attr;
-        emitAttr(attr);
+        /* Update curatr only — do NOT call emitAttr() here.
+         * ncurses attribute is set by out1chx() when characters are
+         * actually rendered, and by explicit attrset() in clear ops.
+         * Calling emitAttr here pollutes lastAttr_, causing stale
+         * cache hits after session transitions (WFC → login). */
+        *pCuratr_ = attr;
     }
 }
 
@@ -852,4 +955,27 @@ unsigned char Terminal::getKey()
     } while (!ch);
     if (ch == 127) ch = 8;  /* DEL → BS */
     return ch;
+}
+
+
+/* ================================================================== */
+/*  State binding                                                      */
+/* ================================================================== */
+
+void Terminal::bindState(int *curatr, int *topLine, int *screenBottom)
+{
+    pCuratr_ = curatr;
+    pTopLine_ = topLine;
+    pScreenBottom_ = screenBottom;
+}
+
+
+/* ================================================================== */
+/*  ncurses CP437 output                                               */
+/* ================================================================== */
+
+void Terminal::ncPutCp437(unsigned char ch)
+{
+    if (!ncActive_) return;
+    addstr(cp437_to_utf8[ch]);
 }

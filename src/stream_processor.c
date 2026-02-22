@@ -161,14 +161,24 @@ static void sp_execute_ansi(void)
                 if (had_reset && outcom && (curatr & 0x70) == 0)
                     term_remote_write_raw("\x1b[40m");
 
-                /* Prevent invisible text: black-on-black (0x00) comes from
-                 * ANSI art gradients like ESC[0;30m. On DOS CRTs this was
-                 * slightly visible; on modern displays it's truly invisible.
-                 * Promote to dark grey (0x08) for readability. */
-                if ((curatr & 0x7F) == 0x00) {
-                    curatr |= 0x08;
-                    if (outcom)
-                        term_remote_write_raw("\x1b[90m");
+                /* Inject true color foreground to bypass terminal palette.
+                 * Ensures CGA-accurate colors regardless of terminal profile. */
+                if (outcom) {
+                    static const int cga_rgb[16][3] = {
+                        {  0,   0,   0}, {  0,   0, 170},
+                        {  0, 170,   0}, {  0, 170, 170},
+                        {170,   0,   0}, {170,   0, 170},
+                        {170,  85,   0}, {170, 170, 170},
+                        { 85,  85,  85}, { 85,  85, 255},
+                        { 85, 255,  85}, { 85, 255, 255},
+                        {255,  85,  85}, {255,  85, 255},
+                        {255, 255,  85}, {255, 255, 255},
+                    };
+                    int fg = curatr & 0x0F;
+                    char tc[24];
+                    sprintf(tc, "\x1b[38;2;%d;%d;%dm",
+                            cga_rgb[fg][0], cga_rgb[fg][1], cga_rgb[fg][2]);
+                    term_remote_write_raw(tc);
                 }
             }
             break;

@@ -8,6 +8,7 @@
 #include "platform.h"
 #include "io_stream.h"
 #include "cp437.h"
+#include "terminal_bridge.h"
 
 extern void reset_attr_cache(void);
 extern void conio_sync_cursor(int x, int y);
@@ -37,19 +38,19 @@ static int _cur_color = 7;
 void textcolor(int color)
 {
     _cur_color = (_cur_color & 0xf0) | (color & 0x0f);
-    if (nc_active) attrset(nc_attr(_cur_color));
+    if (nc_active) attrset(term_nc_attr(_cur_color));
 }
 
 void textattr(int attr)
 {
     _cur_color = attr;
-    if (nc_active) attrset(nc_attr(attr));
+    if (nc_active) attrset(term_nc_attr(attr));
 }
 
 void clrscr(void)
 {
     if (nc_active) {
-        attrset(nc_attr(0x07));
+        attrset(term_nc_attr(0x07));
         erase();
         move(0, 0);
         refresh();
@@ -108,7 +109,7 @@ int getche(void)
     nodelay(stdscr, FALSE);
     ch = wgetch(stdscr);
     if (ch != ERR && ch < 256) {
-        nc_put_cp437((unsigned char)ch);
+        term_put_cp437((unsigned char)ch);
         refresh();
     }
     return ch;

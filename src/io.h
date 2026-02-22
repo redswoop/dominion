@@ -18,7 +18,7 @@
  *
  * After these includes you have:
  *   - io_session_t io (session state struct + compat macros)
- *   - ncurses functions (ncurses_init, nc_attr, nc_put_cp437, etc.)
+ *   - ncurses include guard + nc_active flag
  *   - All IO function prototypes (via fcns_io.h in fcns.h)
  */
 

@@ -18,6 +18,10 @@
 
 static Terminal g_term;
 
+/* nc_active — 1 if ncurses is active, 0 if headless.
+ * Declared extern in io_ncurses.h, owned here. */
+int nc_active = 0;
+
 
 /* ================================================================== */
 /*  Lifecycle                                                          */
@@ -25,12 +29,14 @@ static Terminal g_term;
 
 int term_init_local(void)
 {
-    return g_term.initLocal() ? 1 : 0;
+    nc_active = g_term.initLocal() ? 1 : 0;
+    return nc_active;
 }
 
 void term_shutdown(void)
 {
     g_term.shutdown();
+    nc_active = 0;
 }
 
 
@@ -76,6 +82,7 @@ void term_set_cur_attr(unsigned char attr)  { g_term.setCurAttr(attr); }
 int  term_make_ansi(unsigned char attr, char *buf) { return g_term.makeAnsi(attr, buf); }
 void term_emit_attr(int attr)               { g_term.emitAttr(attr); }
 int  term_nc_attr(int dos_attr)             { return g_term.ncAttr(dos_attr); }
+void term_put_cp437(unsigned char ch)       { g_term.ncPutCp437(ch); }
 
 
 /* ================================================================== */
@@ -95,7 +102,9 @@ unsigned char term_local_get_key_nb(void) { return g_term.localGetKeyNB(); }
 /* ================================================================== */
 
 void term_clear_screen(void)        { g_term.clearScreen(); }
+void term_clear_to_eol(void)        { g_term.clearToEol(); }
 void term_move_cursor(int x, int y) { g_term.moveCursor(x, y); }
+void term_goto(int x, int y)        { g_term.gotoXY(x, y); }
 void term_scroll_up(int t, int b, int l) { g_term.scrollUp(t, b, l); }
 void term_out1chx(unsigned char ch) { g_term.out1chx(ch); }
 void term_out1ch(unsigned char ch)  { g_term.out1ch(ch); }
@@ -137,22 +146,12 @@ void term_render_scrn(int start_row, int num_rows)
 
 
 /* ================================================================== */
-/*  BBS state sync                                                     */
+/*  State binding                                                      */
 /* ================================================================== */
 
-void term_sync_from_bbs(int tl, int sb, int ca, int cx, int cy)
+void term_bind_state(int *ca, int *tl, int *sb)
 {
-    g_term.setTopLine(tl);
-    g_term.setScreenBottom(sb);
-    g_term.setCurAttr((unsigned char)ca);
-    g_term.setCursorPos(cx, cy);
-}
-
-void term_sync_to_bbs(int *ca_out, int *cx_out, int *cy_out)
-{
-    if (ca_out) *ca_out = g_term.attr();
-    if (cx_out) *cx_out = g_term.cursorX();
-    if (cy_out) *cy_out = g_term.cursorYabs();
+    g_term.bindState(ca, tl, sb);
 }
 
 

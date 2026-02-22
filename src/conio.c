@@ -10,22 +10,6 @@
 extern char menuat[15];
 
 /* ================================================================== */
-/* State sync macros — push BBS state to Terminal and pull back        */
-/* Terminal owns cursor (_cx/_cy) and lastAttr now.                    */
-/* ================================================================== */
-
-#define SYNC_TO_TERM() \
-    term_sync_from_bbs(topline, screenbottom, curatr, \
-                       term_cursor_x(), term_cursor_y_abs())
-
-#define SYNC_FROM_TERM() do { \
-    int _a; \
-    term_sync_to_bbs(&_a, (int*)0, (int*)0); \
-    curatr = _a; \
-} while(0)
-
-
-/* ================================================================== */
 /* ANSI terminal console — delegates to Terminal via bridge            */
 /* ================================================================== */
 
@@ -43,9 +27,7 @@ void conio_sync_cursor(int x, int y)
 
 
 void SCROLL_UP(int t, int b, int l) {
-    SYNC_TO_TERM();
     term_scroll_up(t, b, l);
-    SYNC_FROM_TERM();
 }
 
 static int wx=0;
@@ -53,9 +35,7 @@ static int wx=0;
 
 void movecsr(int x,int y)
 {
-    SYNC_TO_TERM();
     term_move_cursor(x, y);
-    SYNC_FROM_TERM();
 }
 
 
@@ -75,42 +55,30 @@ int wherey()
 
 void lf()
 {
-    SYNC_TO_TERM();
     term_lf();
-    SYNC_FROM_TERM();
 }
 
 void cr()
 {
-    SYNC_TO_TERM();
     term_cr();
-    SYNC_FROM_TERM();
 }
 
 void clrscrb()
 {
-    SYNC_TO_TERM();
     term_clear_screen();
-    SYNC_FROM_TERM();
     lines_listed=0;
 }
 
 
-
 void bs()
 {
-    SYNC_TO_TERM();
     term_bs();
-    SYNC_FROM_TERM();
 }
-
 
 
 void out1chx(unsigned char ch)
 {
-    SYNC_TO_TERM();
     term_out1chx(ch);
-    SYNC_FROM_TERM();
 }
 
 
@@ -688,6 +656,7 @@ void tleft(int dot)
         if (f) fclose(f);
     }
 
+    reset_attr_cache();
 
     if ((dot) && (useron))
         if ((nsln==0.0) && (thisuser.sl!=255)) {
@@ -944,6 +913,7 @@ void topscreen(void)
     movecsr(cx,cy);
     curatr=cc;
     tleft(0);
+    reset_attr_cache();
 }
 
 #ifdef MOUSE
