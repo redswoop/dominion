@@ -1,4 +1,5 @@
 #include "io_stream.h"
+#include <string.h>
 
 /* Undefine compat macros so we can access struct members directly */
 #undef echo
@@ -8,6 +9,37 @@
 #undef outcom
 #undef ok_modem_stuff
 #undef client_fd
+#undef colblock
+#undef hungup
+#undef change_color
+#undef change_ecolor
+#undef ansistr
+#undef ansiptr
+#undef endofline
+#undef oldx
+#undef oldy
+#undef screenlen
+#undef lecho
+#undef orig_termios
+#undef term_raw_mode
+#undef curatr
+#undef topline
+#undef screenbottom
+#undef screenlinest
+#undef defscreenbottom
+#undef lines_listed
+#undef listing
+#undef scrn
+#undef hangup
+#undef mciok
+#undef charbuffer
+#undef charbufferpointer
+#undef chatcall
+#undef chatting
+#undef chat_file
+#undef x_only
+#undef curspeed
+#undef global_handle
 
 io_session_t io;
 
@@ -35,4 +67,51 @@ void io_init(io_session_t *s)
     s->session_type = 0;
     s->lastcon = 0;
     s->echo_char = '*';
+
+    /* com.c parser state (Phase 2) */
+    s->mci = 0;
+    s->easycolor = 0;
+    s->bluein = 0;
+    s->colblock = 0;
+    s->ac = 0;
+    s->pipe_state = 0;
+    memset(s->pipestr, 0, sizeof(s->pipestr));
+    s->ac2 = 0;
+    s->pending_scancode = -1;
+
+    /* IO-internal globals (Phase 3) */
+    s->hungup = 0;
+    s->change_color = 0;
+    s->change_ecolor = 0;
+    memset(s->ansistr, 0, sizeof(s->ansistr));
+    s->ansiptr = 0;
+    memset(s->endofline, 0, sizeof(s->endofline));
+    s->oldx = 0;
+    s->oldy = 0;
+    s->screenlen = 0;
+    s->lecho = 0;
+    memset(&s->orig_termios, 0, sizeof(s->orig_termios));
+    s->term_raw_mode = 0;
+
+    /* Screen state (Phase 4) */
+    s->curatr = 0x07;     /* white on black */
+    s->topline = 0;
+    s->screenbottom = 24;
+    s->screenlinest = 25;
+    s->defscreenbottom = 24;
+    s->lines_listed = 0;
+    s->listing = 0;
+    s->scrn = 0;         /* allocated by caller */
+
+    /* Session interface globals (Phase 5) */
+    s->hangup = 0;
+    s->mciok = 0;
+    memset(s->charbuffer, 0, sizeof(s->charbuffer));
+    s->charbufferpointer = 0;
+    s->chatcall = 0;
+    s->chatting = 0;
+    s->chat_file = 0;
+    s->x_only = 0;
+    memset(s->curspeed, 0, sizeof(s->curspeed));
+    s->global_handle = 0;
 }

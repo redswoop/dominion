@@ -1,7 +1,6 @@
 #include "vars.h"
 
 #pragma hdrstop
-extern int colblock;
 
 void change_colors(userrec *u1)
 {

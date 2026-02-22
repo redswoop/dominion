@@ -88,7 +88,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 # --- Tool targets ---
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest $(BUILDDIR)/iotest
 
 $(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c | $(BUILDDIR)
 	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
@@ -121,6 +121,11 @@ $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
 	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
+
+# IO test — menu-driven test program with optional TCP telnet support
+IOTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o
+$(BUILDDIR)/iotest: $(TOOLDIR)/iotest.c $(IOTEST_OBJS) | $(BUILDDIR)
+	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(IOTEST_OBJS) -lncurses
 
 # --- Data sync from dist/ into build/ ---
 data: | $(BUILDDIR)

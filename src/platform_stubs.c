@@ -6,11 +6,11 @@
 
 #include "io_ncurses.h"  /* MUST come before platform.h — see io_ncurses.h */
 #include "platform.h"
+#include "io_stream.h"
 #include "cp437.h"
 
 extern void reset_attr_cache(void);
 extern void conio_sync_cursor(int x, int y);
-extern char far *scrn;
 
 /* ================================================================== */
 /*  int86() — BIOS/DOS interrupt stub                                  */

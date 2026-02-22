@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Refactoring
+
+When refactoring, refer to refactor.md
+
 ## Project Overview
 
 Dominion BBS v3.1 Beta — a 1993 DOS Bulletin Board System being migrated to macOS/clang (64-bit). Originally built with Borland C++ 3.1 for real-mode 16-bit DOS.

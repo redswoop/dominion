@@ -132,7 +132,6 @@ void nc_put_cp437(unsigned char ch)
 void nc_render_scrn(int start_row, int num_rows)
 {
     int row, col;
-    extern char far *scrn;
 
     if (!scrn || !nc_active) return;
 

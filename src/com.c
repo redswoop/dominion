@@ -8,12 +8,21 @@
 
 #define sysstatus_pause_on_message 0x0400
 
-char mci=0,easycolor=0,bluein=0;
+/* com.c file-scoped state → io_session_t (Phase 2)
+ * colblock is in io_stream.h (used by personal.c, config.c too) */
+#define mci         io.mci
+#define easycolor   io.easycolor
+#define bluein      io.bluein
+
 extern char MCISTR[161];
-int colblock;
 extern int readms;
 
 void outstrm(char *s);
+
+
+/***********************************************************************
+ * 1. UTILITIES
+ ***********************************************************************/
 
 unsigned char upcase(unsigned char ch)
 {
@@ -26,7 +35,7 @@ int strlenc(char *s)
     int len=0,x=0;
     while(s[x]) {
         if(s[x]!=3&&s[x]!=14&&s[x]!='`') {
-            len++; 
+            len++;
             x++;
         }
         else {
@@ -40,56 +49,9 @@ int strlenc(char *s)
 }
 
 
-
-void savel(char *cl, char *atr, char *xl, char *cc)
-{
-    int i, i1;
-
-    *cc = curatr;
-    strcpy(xl, endofline);
-    i = ((wherey() + topline) * 80) * 2;
-    for (i1 = 0; i1 < wherex(); i1++) {
-        cl[i1]  = scrn[i + (i1 * 2)];
-        atr[i1] = scrn[i + (i1 * 2) + 1];
-    }
-    cl[wherex()]  = 0;
-    atr[wherex()] = 0;
-}
-
-
-void restorel(char *cl, char *atr, char *xl, char *cc)
-{
-    int i;
-
-    if (wherex())
-        nl();
-    for (i = 0; cl[i] != 0; i++) {
-        setc(atr[i]);
-        outchr(cl[i]);
-    }
-    setc(*cc);
-    strcpy(endofline, xl);
-}
-
-
-
-void checkhangup()
-{
-    int i, ok;
-
-    if (!hangup && using_modem && !cdet()) {
-        ok = 0;
-        for (i = 0; (i < 500) && !ok; i++)
-            if (cdet())
-                ok = 1;
-        if (!ok) {
-            hangup = hungup = 1;
-            if (useron && !in_extern)
-                sysoplog("Hung Up.");
-        }
-    }
-}
-
+/***********************************************************************
+ * 2. ANSI / COLOR
+ ***********************************************************************/
 
 void addto(char *s, int i)
 {
@@ -110,7 +72,7 @@ void makeavt(unsigned char attr, char *s, int forceit)
     catr = curatr;
     s[0] = 0;
 
-    if (attr != catr) sprintf(s,"%c",attr);
+    if (attr != catr) sprintf(s,"%c",attr);
     if (!okavt() && !forceit)
         s[0]=0;
 }
@@ -153,20 +115,44 @@ void makeansi(unsigned char attr, char *s, int forceit)
         s[0]=0;
 }
 
-
-
 void setfgc(int i)
 {
     curatr = (curatr & 0xf8) | i;
 }
-
-
 
 void setbgc(int i)
 {
     curatr = (curatr & 0x8f) | (i << 4);
 }
 
+void setc(unsigned char ch)
+{
+    char s[30];
+
+    makeansi(ch,s,0);
+    outstr(s);
+}
+
+void ansic(int n)
+{
+    char c,s[10];
+
+    if(colblock)
+        c=nifty.defaultcol[n];
+    else
+        c = thisuser.colors[n];
+
+    if (c == curatr) return;
+
+    setc(c);
+
+    makeansi(thisuser.colors[0],endofline, 0);
+}
+
+
+/***********************************************************************
+ * 3. ANSI PARSER
+ ***********************************************************************/
 
 void execute_ansi()
 {
@@ -176,7 +162,7 @@ void execute_ansi()
 
     if (ansistr[1] != '[') {
 
-    } 
+    }
     else {
         argptr = tempptr = 0;
         ptr = 2;
@@ -189,7 +175,7 @@ void execute_ansi()
                 temp[tempptr] = 0;
                 tempptr = 0;
                 args[argptr++] = atoi(temp);
-            } 
+            }
             else
                 temp[tempptr++] = ansistr[ptr];
             ++ptr;
@@ -258,23 +244,23 @@ void execute_ansi()
             }
             for (count = 0; count < argptr; count++)
                 switch (args[count]) {
-                case 0: 
-                    curatr = 0x07; 
+                case 0:
+                    curatr = 0x07;
                     break;
-                case 1: 
-                    curatr = curatr | 0x08; 
+                case 1:
+                    curatr = curatr | 0x08;
                     break;
-                case 4: 
+                case 4:
                     break;
-                case 5: 
+                case 5:
                     curatr = curatr | 0x80;
                     break;
                 case 7:
                     ptr = curatr & 0x77;
                     curatr = (curatr & 0x88) | (ptr << 4) | (ptr >> 4);
                     break;
-                case 8: 
-                    curatr = 0; 
+                case 8:
+                    curatr = 0;
                     break;
                 default:
                     if ((args[count] >= 30) && (args[count] <= 37))
@@ -288,7 +274,18 @@ void execute_ansi()
     ansiptr = 0;
 }
 
-unsigned char ac=0,pipe=0,pipestr[5],ac2;
+
+/***********************************************************************
+ * 4. CORE OUTPUT
+ ***********************************************************************/
+
+/* Avatar/pipe state → io_session_t (Phase 2)
+ * Note: 'pipe' is macro-expanded to 'bbs_pipe' by platform.h,
+ * so we define bbs_pipe here to catch the expanded token. */
+#define ac          io.ac
+#define bbs_pipe    io.pipe_state
+#define pipestr     io.pipestr
+#define ac2         io.ac2
 
 void outchr(unsigned char c)
 {
@@ -300,7 +297,7 @@ void outchr(unsigned char c)
             pipestr[pipe-1]=c;
             pipe++;
             return;
-        } 
+        }
         else {
             pipestr[pipe-1]=0;
             pipe=0;
@@ -370,10 +367,10 @@ void outchr(unsigned char c)
 
     if(mci) {
         mci=0;
-        if(mciok) { 
-            setmci(c); 
-            outstr(MCISTR); 
-            return; 
+        if(mciok) {
+            setmci(c);
+            outstr(MCISTR);
+            return;
         }
     }
 
@@ -407,24 +404,24 @@ void outchr(unsigned char c)
     }
 
     if(c=='`') {
-        if(mciok&&!mci) { 
-            mci=1; 
-            return; 
+        if(mciok&&!mci) {
+            mci=1;
+            return;
         }
     }
 
     if(c=='|') {
-        if(mciok) { 
-            pipe=1; 
-            return; 
-        } 
+        if(mciok) {
+            pipe=1;
+            return;
+        }
     }
 
-    if(c==151) { 
-        if(mciok) { 
-            ac=100; 
-            return; 
-        } 
+    if(c==151) {
+        if(mciok) {
+            ac=100;
+            return;
+        }
     }
 
     if ((c == 10) && endofline[0]) {
@@ -448,28 +445,28 @@ void outchr(unsigned char c)
         if ((((c < '0') || (c > '9')) && (c!='[') && (c!=';')) ||
             (ansistr[1] != '[') || (ansiptr>75))
             execute_ansi();
-    } 
+    }
     else if (c == 27) {
         ansistr[0] = 27;
         ansiptr = 1;
         ansistr[ansiptr]=0;
-    } 
+    }
     else {
         if (c == 9) {
             i1 = wherex();
             for (i = i1; i< (((i1 / 8) + 1) * 8); i++)
                 outchr(32);
-        } 
+        }
         else if (echo || lecho) {
             out1ch(c);
-            if (c==12&&okansi()) outstrm("[0;1m");
+            if (c==12&&okansi()) outstrm("\x1b[0;1m");
             if (c == 10) {
                 ++lines_listed;
                 if (((sysstatus_pause_on_page & thisuser.sysstatus)) &&
                     (lines_listed >= screenlinest - 1)&&!listing) {
                     pausescr();
                     lines_listed=0;
-                } 
+                }
                 else
                     if (((sysstatus_pause_on_message & thisuser.sysstatus)) &&
                     (lines_listed >= screenlinest - 1)&&readms) {
@@ -477,15 +474,13 @@ void outchr(unsigned char c)
                     lines_listed=0;
                 }
             }
-        } 
+        }
         else
             out1ch(nifty.echochar);
     }
     if (chatcall)
         setbeep(0);
 }
-
-
 
 
 void outstr(char *s)
@@ -535,7 +530,6 @@ void outstrm(char *s)
         outcomch(s[i++]);
 }
 
-
 void nl()
 {
     if (endofline[0]) {
@@ -545,69 +539,11 @@ void nl()
     outstr("\r\n");
 }
 
-/* backblue — erase one character inside a blue input field (mpl-style).
- * Sends: ESC[D (cursor left), CP437 0xB1 (▒ field background), ESC[D (cursor left).
- * Net effect: overwrites the deleted char with the field fill character, leaves
- * cursor positioned on it.  Used when bluein!=0 (set by mpl/mpl1).
- *
- * The raw bytes in the string literals are:
- *   \x1b[D  = ANSI cursor-left
- *   \xb1    = CP437 ▒ (light shade — the mpl() field background)
- * Do NOT run encoding-aware tools (sed, iconv) on this function. */
-void backblue(void)
+void pl(char *s)
 {
-    int i;
-    char s[15];
-
-    i = echo;
-    echo = 1;
-    if(bluein==1)
-        outstr("[D\xb1[D");
-    else {
-        makeansi(8,s,1);
-        outstr(s);
-        outstr("[D\xb1[D");
-        makeansi(15,s,1);
-        outstr(s);
-    }
-    echo = i;
-}
-
-/* backspace — erase one character in normal (non-blue-field) context.
- * Sends BS-SPACE-BS: moves cursor left, overwrites with space, moves left again.
- * Temporarily forces echo=1 so the output goes through even if echo is off. */
-void backspace()
-{
-    int i;
-
-    i = echo;
-    echo = 1;
-    outstr("\b \b");
-    echo = i;
-}
-
-
-
-void setc(unsigned char ch)
-{
-    char s[30];
-
-    makeansi(ch,s,0);
     outstr(s);
+    nl();
 }
-
-void pausescr()
-{
-    int i,i1,len;
-
-    i=curatr;
-    outstr(get_string(20));
-    len=strlenc(get_string(20));
-    getkey();
-    for(i1=0;i1<len;i1++) backspace();
-    curatr=i;
-}
-
 
 void npr(char *fmt, ...)
 {
@@ -631,7 +567,6 @@ void lpr(char *fmt, ...)
     pl(s);
 }
 
-
 void logpr(char *fmt, ...)
 {
     va_list ap;
@@ -643,12 +578,152 @@ void logpr(char *fmt, ...)
     sysoplog(s);
 }
 
-void pl(char *s)
+void prt(int i, char *s)
 {
+    ansic(i);
     outstr(s);
-    nl();
+    ansic(0);
 }
 
+
+/***********************************************************************
+ * 5. OUTPUT HELPERS
+ ***********************************************************************/
+
+void savel(char *cl, char *atr, char *xl, char *cc)
+{
+    int i, i1;
+
+    *cc = curatr;
+    strcpy(xl, endofline);
+    i = ((wherey() + topline) * 80) * 2;
+    for (i1 = 0; i1 < wherex(); i1++) {
+        cl[i1]  = scrn[i + (i1 * 2)];
+        atr[i1] = scrn[i + (i1 * 2) + 1];
+    }
+    cl[wherex()]  = 0;
+    atr[wherex()] = 0;
+}
+
+
+void restorel(char *cl, char *atr, char *xl, char *cc)
+{
+    int i;
+
+    if (wherex())
+        nl();
+    for (i = 0; cl[i] != 0; i++) {
+        setc(atr[i]);
+        outchr(cl[i]);
+    }
+    setc(*cc);
+    strcpy(endofline, xl);
+}
+
+/* backblue — erase one character inside a blue input field (mpl-style).
+ * Sends: ESC[D (cursor left), CP437 0xB1 (▒ field background), ESC[D (cursor left).
+ * Net effect: overwrites the deleted char with the field fill character, leaves
+ * cursor positioned on it.  Used when bluein!=0 (set by mpl/mpl1).
+ *
+ * The raw bytes in the string literals are:
+ *   \x1b[D  = ANSI cursor-left
+ *   \xb1    = CP437 ▒ (light shade — the mpl() field background)
+ * Do NOT run encoding-aware tools (sed, iconv) on this function. */
+void backblue(void)
+{
+    int i;
+    char s[15];
+
+    i = echo;
+    echo = 1;
+    if(bluein==1)
+        outstr("\x1b[D\xb1\x1b[D");
+    else {
+        makeansi(8,s,1);
+        outstr(s);
+        outstr("\x1b[D\xb1\x1b[D");
+        makeansi(15,s,1);
+        outstr(s);
+    }
+    echo = i;
+}
+
+/* backspace — erase one character in normal (non-blue-field) context.
+ * Sends BS-SPACE-BS: moves cursor left, overwrites with space, moves left again.
+ * Temporarily forces echo=1 so the output goes through even if echo is off. */
+void backspace()
+{
+    int i;
+
+    i = echo;
+    echo = 1;
+    outstr("\b \b");
+    echo = i;
+}
+
+void pausescr()
+{
+    int i,i1,len;
+
+    i=curatr;
+    outstr(get_string(20));
+    len=strlenc(get_string(20));
+    getkey();
+    for(i1=0;i1<len;i1++) backspace();
+    curatr=i;
+}
+
+
+/***********************************************************************
+ * 6. INPUT FIELD DRAWING
+ ***********************************************************************/
+
+/* mpl — draw a blue input field of i characters.
+ * Sets bluein=1, which changes input1()'s backspace behavior from
+ * backspace() (BS-SPACE-BS) to backblue() (cursor-left, redraw field bg, cursor-left).
+ * Draws i copies of CP437 177 in white-on-blue, then backs the cursor
+ * up to the field start so the user types over the fill characters.
+ * bluein is cleared by input1 when Enter is pressed. */
+void mpl1(int i);
+void mpl(int i)
+{
+    int i1;
+    char s[20];
+
+    if(!okansi())
+        return;
+
+    if(nifty.nifstatus & nif_comment) {
+        mpl1(i);
+        return;
+    }
+    bluein=1;
+    makeansi(31,s,0);
+    outstr(s);
+    for(i1=0;i1<i;i1++) outchr(177);
+    for(i1=0;i1<i;i1++) outstr("\x1b[D");
+}
+
+/* mpl1 — alt input field style (used when nif_comment is set).
+ * Sets bluein=2.  Uses CP437 0xF9 as fill instead of 0xB1. */
+void mpl1(int i)
+{
+    int i1;
+    char s[20];
+
+    bluein=2;
+    makeansi(8,s,1);
+    outstr(s);
+    for(i1=0;i1<i;i1++) outchr('\xF9');
+    for(i1=0;i1<i;i1++) outstr("\x1b[D");
+    makeansi(15,s,1);
+    outstr(s);
+}
+
+
+/***********************************************************************
+ * 7. LOW-LEVEL INPUT
+ ***********************************************************************/
 
 /* Translate ncurses KEY_xxx to DOS scan codes for skey() */
 static int _nc_to_scancode(int key)
@@ -694,10 +769,8 @@ static int _nc_to_scancode(int key)
     }
 }
 
-/* Pending scan code from ncurses special key detection.
- * The DOS pattern is: getch()=0 (NUL prefix), then getch()=scancode.
- * We emulate this by returning 0 first, then the scancode on next call. */
-static int _pending_scancode = -1;
+/* Pending scan code → io_session_t (Phase 2) */
+#define _pending_scancode io.pending_scancode
 
 /* kbhitb — non-blocking local keyboard check.
  * Returns 1 if a key is waiting, 0 otherwise.
@@ -713,80 +786,6 @@ int kbhitb()
     if (ch == ERR) return 0;
     ungetch(ch);
     return 1;
-}
-
-
-/* empty — returns 1 if no input is available from ANY source.
- * Checks: local keyboard (kbhitb), remote TCP (comhit), macro buffer
- * (charbufferpointer), external program pipe (in_extern==2), and
- * quote buffer (bquote).  Used by getkey() to spin-wait for input. */
-int empty()
-{
-    if(x_only) return 0;
-
-    if (kbhitb() || (incom && comhit()) ||
-        (charbufferpointer && charbuffer[charbufferpointer]) ||
-        (in_extern == 2)||bquote)
-        return(0);
-    return(1);
-}
-
-
-/* skey1 — post-process a key after reading from any source.
- * Called by inkey() on every character.  Handles:
- *   - 127→8 mapping (DEL→BS, defense in depth)
- *   - Ctrl-A/D/F/Y → expand user macros from thisuser.macros[]
- *   - Ctrl-T → display time remaining (ptime)
- *   - Ctrl-R → reprint last line (reprint)
- * Writes result back through *ch pointer. */
-void skey1(char *ch)
-{
-    char c;
-    userrec u;
-
-    c = *ch;
-    if (c == 127)
-        c = 8;
-    switch(c) {
-    case 1:
-    case 4:
-    case 6:
-    case 25:
-        if (okmacro && !charbufferpointer) {
-            if (c == 1)
-                c = 2;
-            else if (c == 4)
-                c = 0;
-            else if (c == 6)
-                c = 1;
-            else if (c== 25)
-                c=3;
-            if(lastcon) {
-                userdb_load(1,&u);
-                strcpy(charbuffer, &(u.macros[c][0]));
-            } 
-            else if (okskey)
-                strcpy(charbuffer, &(thisuser.macros[c][0]));
-            c = charbuffer[0];
-            if (c)
-                charbufferpointer = 1;
-        }
-        break;
-    case 20:
-        if (echo)
-            ptime();
-        break;
-    case 18:
-        if (echo)
-            reprint();
-        break;
-    case '': 
-        if (okskey) break;
-        nl();
-        ex("OP","3");
-        break;
-    }
-    *ch = c;
 }
 
 /* getchd — BLOCKING read of one key from local keyboard.
@@ -849,6 +848,99 @@ char getchd1()
 }
 
 
+/***********************************************************************
+ * 8. INPUT ROUTING
+ ***********************************************************************/
+
+void checkhangup()
+{
+    int i, ok;
+
+    if (!hangup && using_modem && !cdet()) {
+        ok = 0;
+        for (i = 0; (i < 500) && !ok; i++)
+            if (cdet())
+                ok = 1;
+        if (!ok) {
+            hangup = hungup = 1;
+            if (useron && !in_extern)
+                sysoplog("Hung Up.");
+        }
+    }
+}
+
+/* empty — returns 1 if no input is available from ANY source.
+ * Checks: local keyboard (kbhitb), remote TCP (comhit), macro buffer
+ * (charbufferpointer), external program pipe (in_extern==2), and
+ * quote buffer (bquote).  Used by getkey() to spin-wait for input. */
+int empty()
+{
+    if(x_only) return 0;
+
+    if (kbhitb() || (incom && comhit()) ||
+        (charbufferpointer && charbuffer[charbufferpointer]) ||
+        (in_extern == 2)||bquote)
+        return(0);
+    return(1);
+}
+
+/* skey1 — post-process a key after reading from any source.
+ * Called by inkey() on every character.  Handles:
+ *   - 127→8 mapping (DEL→BS, defense in depth)
+ *   - Ctrl-A/D/F/Y → expand user macros from thisuser.macros[]
+ *   - Ctrl-T → display time remaining (ptime)
+ *   - Ctrl-R → reprint last line (reprint)
+ * Writes result back through *ch pointer. */
+void skey1(char *ch)
+{
+    char c;
+    userrec u;
+
+    c = *ch;
+    if (c == 127)
+        c = 8;
+    switch(c) {
+    case 1:
+    case 4:
+    case 6:
+    case 25:
+        if (okmacro && !charbufferpointer) {
+            if (c == 1)
+                c = 2;
+            else if (c == 4)
+                c = 0;
+            else if (c == 6)
+                c = 1;
+            else if (c== 25)
+                c=3;
+            if(lastcon) {
+                userdb_load(1,&u);
+                strcpy(charbuffer, &(u.macros[c][0]));
+            }
+            else if (okskey)
+                strcpy(charbuffer, &(thisuser.macros[c][0]));
+            c = charbuffer[0];
+            if (c)
+                charbufferpointer = 1;
+        }
+        break;
+    case 20:
+        if (echo)
+            ptime();
+        break;
+    case 18:
+        if (echo)
+            reprint();
+        break;
+    case '\x15':
+        if (okskey) break;
+        nl();
+        ex("OP","3");
+        break;
+    }
+    *ch = c;
+}
+
 /* inkey — non-blocking read from ANY input source.
  *
  * Input priority (first match wins):
@@ -882,12 +974,12 @@ char inkey()
 /*        if (quote[cpointer]==13) {
             ++qpointer;
             if (qpointer>equote) {
-                qpointer=0; 
-                bquote=0; 
+                qpointer=0;
+                bquote=0;
                 equote=0;
 
                 return(13);
-            } 
+            }
             else
                 ++cpointer;
         }*/
@@ -896,8 +988,8 @@ char inkey()
         if (quote[cpointer]==14)
             quote[cpointer]=5;
         if (quote[cpointer]==0) {
-            qpointer=0; 
-            bquote=0; 
+            qpointer=0;
+            bquote=0;
             equote=0;
             return(13);
         }
@@ -928,11 +1020,11 @@ char inkey()
                 skey(ch);
                 ch = (((ch == 68) || (ch==103)) ? 2 : 0);
             }
-        } 
+        }
         else if (in_extern)
             in_extern = 1;
         timelastchar1=timer1();
-    } 
+    }
     else if (incom && comhit()) {
         ch = get1c();
         lastcon = 0;
@@ -941,48 +1033,10 @@ char inkey()
     return(ch);
 }
 
-/* mpl — draw a blue input field of i characters.
- * Sets bluein=1, which changes input1()'s backspace behavior from
- * backspace() (BS-SPACE-BS) to backblue() (cursor-left, redraw field bg, cursor-left).
- * Draws i copies of CP437 177 in white-on-blue, then backs the cursor
- * up to the field start so the user types over the fill characters.
- * bluein is cleared by input1 when Enter is pressed. */
-void mpl1(int i);
-void mpl(int i)
-{
-    int i1;
-    char s[20];
 
-    if(!okansi())
-        return;
-
-    if(nifty.nifstatus & nif_comment) {
-        mpl1(i); 
-        return;
-    }
-    bluein=1;
-    makeansi(31,s,0); 
-    outstr(s);
-    for(i1=0;i1<i;i1++) outchr(177);
-    for(i1=0;i1<i;i1++) outstr("[D");
-}
-
-/* mpl1 — alt input field style (used when nif_comment is set).
- * Sets bluein=2.  Uses CP437 0xF9 as fill instead of 0xB1. */
-void mpl1(int i)
-{
-    int i1;
-    char s[20];
-
-    bluein=2;
-    makeansi(8,s,1); 
-    outstr(s);
-    for(i1=0;i1<i;i1++) outchr('\xF9');
-    for(i1=0;i1<i;i1++) outstr("[D");
-    makeansi(15,s,1); 
-    outstr(s);
-}
-
+/***********************************************************************
+ * 9. BLOCKING INPUT
+ ***********************************************************************/
 
 /* getkey — BLOCKING read of one key from any source.
  *
@@ -1036,6 +1090,11 @@ unsigned char getkey()
     return(ch);
 }
 
+
+/***********************************************************************
+ * 10. STRING INPUT
+ ***********************************************************************/
+
 /*int input1(char *s,int maxlen, int lc, int crend)
 {
     int i,done=0,cur_pos=0;
@@ -1081,21 +1140,21 @@ unsigned char getkey()
                         if(ch=='C') {
                             if(cur_pos<maxlen) {
                                 cur_pos++;
-                                outstr("[C");
+                                outstr("\x1b[C");
                             }
                         } else if(ch=='D') {
                             if(cur_pos) {
                                 cur_pos--;
-                                outstr("[D");
+                                outstr("\x1b[D");
                             }
                         } else if(ch=='H') {
                             while(cur_pos) {
-                                outstr("[D");
+                                outstr("\x1b[D");
                                 cur_pos--;
                             }
                         } else if(ch=='K') {
                             while(cur_pos<maxlen) {
-                                outstr("[C");
+                                outstr("\x1b[C");
                                 cur_pos++;
                             }
                         }
@@ -1107,7 +1166,7 @@ unsigned char getkey()
                                 backblue();
                             else
                                 backspace();
-         
+
                         }
                         cur_pos=0;
                         break;
@@ -1121,7 +1180,7 @@ unsigned char getkey()
     ansic(0);
     if(crend)
         nl();
- 
+
     return 0;
 }
 */
@@ -1154,12 +1213,12 @@ int input1(char *s, int maxlen, int lc, int crend)
     if(!okansi())
         bluein=0;
 
-    if(bluein==1) { 
-        makeansi(31,s1,1); 
-        outstr(s1); 
+    if(bluein==1) {
+        makeansi(31,s1,1);
+        outstr(s1);
     }
     else if(bluein==2) {
-        makeansi(15,s1,1); 
+        makeansi(15,s1,1);
         outstr(s1);
     }
 
@@ -1186,7 +1245,7 @@ int input1(char *s, int maxlen, int lc, int crend)
                     outchr(ch);
                 }
                 if(!crend&&curpos==maxlen) done=1;
-            } 
+            }
             else
                 switch(ch) {
             case 14:
@@ -1208,7 +1267,7 @@ int input1(char *s, int maxlen, int lc, int crend)
                             else
                                 backspace();
                         }
-                    } 
+                    }
                     while ((curpos) && (s[curpos-1]!=32));
                 }
                 break;
@@ -1232,7 +1291,7 @@ int input1(char *s, int maxlen, int lc, int crend)
                             backspace();
 
                     }
-                } 
+                }
                 else if(!crend) return -1;
                 break;
             case 21:
@@ -1263,10 +1322,10 @@ int input1(char *s, int maxlen, int lc, int crend)
     }
     if (hangup)
         s[0] = 0;
-    if(bluein) { 
-        bluein=0; 
-        makeansi(15,s1,1); 
-        outstr(s1); 
+    if(bluein) {
+        bluein=0;
+        makeansi(15,s1,1);
+        outstr(s1);
     }
     if(crend) nl();
     return 0;
@@ -1278,12 +1337,12 @@ void inputdate(char *s,int time)
     unsigned char ch;
     char s1[19];
 
-    if(bluein==1) { 
-        makeansi(31,s1,1); 
-        outstr(s1); 
+    if(bluein==1) {
+        makeansi(31,s1,1);
+        outstr(s1);
     }
     else if(bluein==2) {
-        makeansi(15,s1,1); 
+        makeansi(15,s1,1);
         outstr(s1);
     }
 
@@ -1300,7 +1359,7 @@ void inputdate(char *s,int time)
                     curpos++;
                 }
             }
-        } 
+        }
         else
             switch(ch) {
         case 13:
@@ -1330,12 +1389,12 @@ int inputfone(char *s)
     unsigned char ch;
     char s1[19];
 
-    if(bluein==1) { 
-        makeansi(31,s1,1); 
-        outstr(s1); 
+    if(bluein==1) {
+        makeansi(31,s1,1);
+        outstr(s1);
     }
     else if(bluein==2) {
-        makeansi(15,s1,1); 
+        makeansi(15,s1,1);
         outstr(s1);
     }
 
@@ -1356,7 +1415,7 @@ int inputfone(char *s)
                     curpos++;
                 }
             }
-        } 
+        }
         else
             switch(ch) {
         case 13:
@@ -1394,6 +1453,19 @@ void inputl(char *s, int len)
     input1(s, len, 1, 1);
 }
 
+/* inputdat — prompt + blue input field + input1.  All-in-one for data entry forms. */
+void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc)
+{
+    npr("3%s\r\n5: ",msg);
+    mpl(len);
+    input1(s,len,lc,1);
+}
+
+
+/***********************************************************************
+ * 11. CHOICE INPUT
+ ***********************************************************************/
+
 /* ynn — yes/no prompt with arrow-key selection.  pos=0 defaults No, pos=1 defaults Yes.
  * yn() and ny() are convenience wrappers. */
 int ynn(int pos)
@@ -1408,22 +1480,22 @@ int ynn(int pos)
     while(!hangup && !done) {
         switch(ch=getkey()) {
         case 'n':
-        case 'N': 
+        case 'N':
             for(i=len;i>0;i--) backspace();
             pl(get_string(10));
             return 0;
         case 'y':
-        case 'Y': 
+        case 'Y':
             for(i=len;i>0;i--) backspace();
             pl(get_string(9));
             return 1;
-        case 13: 
+        case 13:
             for(i=len;i>0;i--) backspace();
             if(pos) pl(get_string(10));
             else pl(get_string(9));
             if(pos) return 0;
             else return 1;
-        case 27: 
+        case 27:
             ch=getkey();
             ch=getkey();
             if(ch=='C') {
@@ -1455,23 +1527,6 @@ int yn()
     return(ynn(1));
 }
 
-void ansic(int n)
-{
-    char c,s[10];
-
-    if(colblock)
-        c=nifty.defaultcol[n];
-    else
-        c = thisuser.colors[n];
-
-    if (c == curatr) return;
-
-    setc(c);
-
-    makeansi(thisuser.colors[0],endofline, 0);
-}
-
-
 /* nek — wait for one key from allowed set s (case-insensitive).
  * f=1: echo the key and newline.  f=0: silent. */
 char nek(char *s, int f)
@@ -1492,19 +1547,3 @@ char onek(char *s)
 {
     return(nek(s,1));
 }
-
-void prt(int i, char *s)
-{
-    ansic(i);
-    outstr(s);
-    ansic(0);
-}
-
-/* inputdat — prompt + blue input field + input1.  All-in-one for data entry forms. */
-void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc)
-{
-    npr("3%s\r\n5: ",msg);
-    mpl(len);
-    input1(s,len,lc,1);
-}
-

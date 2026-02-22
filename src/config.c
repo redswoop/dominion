@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include "fcns.h"
+#include "io_stream.h"
 #include "json_io.h"
 
 #include <fcntl.h>
@@ -14,11 +15,10 @@
 extern fnetrec fnet;
 extern configrec syscfg;
 extern niftyrec nifty;
-extern int hangup,topdata;
+extern int topdata;
 extern userrec thisuser;
-extern int usernum,colblock;
+extern int usernum;
 extern xarcrec xarc[8];
-extern char mciok;
 
 #else
 int mciok;
@@ -214,7 +214,7 @@ void filecfg()
 
     do {
         outchr(12);
-        lpr("5þ 0File Area Configuration");
+        lpr("5ï¿½ 0File Area Configuration");
         nl();
         bitset(get_string2(47),nifty.nifstatus,nif_ratio);
         bitset(get_string2(48),nifty.nifstatus,nif_fpts);
@@ -290,7 +290,7 @@ void namepath()
 
     do {
         outchr(12);
-        lpr("5þ 0System Info And Paths");
+        lpr("5ï¿½ 0System Info And Paths");
         nl();
         lpr("1. System Name       : %s",syscfg.systemname);
         lpr("2. System Phone      : %s",syscfg.systemphone);
@@ -372,7 +372,7 @@ void flagged()
 
     do {
         outchr(12);
-        lpr("5þ 0Flagged Information");
+        lpr("5ï¿½ 0Flagged Information");
         nl();
 #ifdef DOS
         bits("1. File Ratio",nifty.nifstatus,nif_ratio);
@@ -461,7 +461,7 @@ void varible()
 
     do {
         outchr(12);
-        lpr("5þ 0Variable System Data");
+        lpr("5ï¿½ 0Variable System Data");
         nl();
         lpr("1. Start Out Menu    : %s",nifty.firstmenu);
         lpr("2. New User Menu     : %s",nifty.newusermenu);
@@ -565,7 +565,7 @@ void events()
 
     do {
         outchr(12);
-        lpr("5þ 0Event Manager");
+        lpr("5ï¿½ 0Event Manager");
         nl();
         lpr("1. Logon Event     : %s",syscfg.logon_c);
         lpr("2. Logoff Event    : %s",syscfg.upload_c);
@@ -610,7 +610,7 @@ void modeminfo()
 
     do {
         outchr(12);
-        lpr("5þ 0Modem Information");
+        lpr("5ï¿½ 0Modem Information");
         nl();
         lpr("1. Com Port     : %d",syscfg.primaryport);
         lpr("2. Interrupt    : %d",syscfg.com_ISR[syscfg.primaryport]);
@@ -645,7 +645,7 @@ void autoval()
 
     do {
         outchr(12);
-        pl("5þ 0Security Profiles");
+        pl("5ï¿½ 0Security Profiles");
         nl();
         for(i1=0;i1<10;i1++) {
             for (i=0; i<=15; i++) {
@@ -707,7 +707,7 @@ void archive()
 
     do {
         outchr(12);
-        pl("5þ 0Archive Configuration");
+        pl("5ï¿½ 0Archive Configuration");
         nl();
         lpr("3Number 9%d/70",i1);
         nl();
@@ -784,7 +784,7 @@ void secleved()
 
     do {
         outchr(12);
-        pl("5þ 0Security Level Data");
+        pl("5ï¿½ 0Security Level Data");
         nl();
         lpr("3Number 9%d0",i1);
         nl();
@@ -870,7 +870,7 @@ void nued()
 
     do {
         outchr(12);
-        lpr("5þ 0New User Data");
+        lpr("5ï¿½ 0New User Data");
         nl();
         lpr(get_string2(66),nifty.nulevel+1);
         lpr(get_string2(67),nifty.nuinf);
@@ -964,7 +964,7 @@ void showfdr()
     int i;
 
     outchr(12);
-    lpr("0##2ÄÄ0Description2ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ0Lev2Ä0Speed");
+    lpr("0##2ï¿½ï¿½0Description2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0Lev2ï¿½0Speed");
     for (i=0; (i<numfdr) ; i++) {
         lpr("3%2d. 3%-40s 3%3d 3%5d",i,fdr[i].desc,fdr[i].level,fdr[i].speed);
     }
@@ -988,13 +988,13 @@ void modify_fdr(int n)
         lpr("34. ErrorLevel   : 0%d",r.level);
         s[0]=196;
         if (r.attr & fdr_connect) s[1]='C'; 
-        else s[1]='Ä';
+        else s[1]='ï¿½';
         if (r.attr & fdr_mail) s[2]='M'; 
-        else s[2]='Ä';
+        else s[2]='ï¿½';
         if (r.attr & fdr_cmdtype) s[3]='T'; 
-        else s[3]='Ä';
+        else s[3]='ï¿½';
         if (r.attr & fdr_local) s[4]='L'; 
-        else s[4]='Ä';
+        else s[4]='ï¿½';
         s[5]=0;
         lpr("3Flags           :0 %s",s);
         nl();
@@ -1179,7 +1179,7 @@ void fidocfg()
 
     do {
         outchr(12);
-        lpr("5þ 0Network Origin Configuration");
+        lpr("5ï¿½ 0Network Origin Configuration");
         nl();
         lpr("3Number 9%d/90",i1);
         nl();
@@ -1235,7 +1235,7 @@ void fidocfg()
 
     do {
         outchr(12);
-        lpr("5þ 0FidoNet Information");
+        lpr("5ï¿½ 0FidoNet Information");
         nl();
         lpr("1. Configure Origins");
         nl();
@@ -1301,7 +1301,7 @@ void acscfg(void)
 
     do {
         outchr(12);
-        lpr("5þ 0Access Level Configuration");
+        lpr("5ï¿½ 0Access Level Configuration");
         nl();
         lpr("A. Exempt from PCR           : %s",acs.epcr);
         lpr("B. Exempt from Ratio         : %s",acs.eratio);
@@ -1432,7 +1432,7 @@ void main(int argc, char *argv[])
 #endif
     do {
         outchr(12);
-        pl("5þ 0Dominion System Configuration");
+        pl("5ï¿½ 0Dominion System Configuration");
         nl();
 #ifndef DOS
         printmenu(19);
