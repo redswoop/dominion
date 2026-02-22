@@ -1,6 +1,7 @@
 #include "vars.h"
 #pragma hdrstop
 
+#include "menudb.h"
 
 extern menurec tg[50];
 extern mmrec pp;
@@ -173,11 +174,11 @@ void top(char fn[15])
     outchr(12);
     npr("5Current Menu: 3%s\r\n",fn);
     nl();
-    pl("2##. Type5³2Keys    5³2SL      ##. Type5³2Keys    5³2SL     ÿ##. Type5³2Keys    5³2SL");
-    pl("5ÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÙÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÙÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄ");
+    pl("2##. Type5ï¿½2Keys    5ï¿½2SL      ##. Type5ï¿½2Keys    5ï¿½2SL     ï¿½##. Type5ï¿½2Keys    5ï¿½2SL");
+    pl("5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 
     for(x=0;x<maxcmd;x++) {
-        npr("0%2d. %-2.2s  5³0%-8.8s5³0%-7.7s ",x,tg[x].type,tg[x].key,tg[x].sl);
+        npr("0%2d. %-2.2s  5ï¿½0%-8.8s5ï¿½0%-7.7s ",x,tg[x].type,tg[x].key,tg[x].sl);
         n++;
         if(n==3) { 
             nl(); 
@@ -190,19 +191,18 @@ void top(char fn[15])
 
 void menu(char fn[15])
 {
-    char ch,s[MAX_PATH_LEN],done=0;
-    struct ffblk f;
+    char ch,s[20],done=0;
+    char names[100][20];
+    int count, mi;
 
     if(!checkpw())
         return;
 
-    sprintf(s,"%s*.mnu",syscfg.menudir);
-    findfirst(s,&f,0);
+    count = menudb_list(names, 100);
     outchr(12);
     pl("5Menu Files Available to Edit");
     nl();
-    do npr("0%-20s",f.ff_name); 
-    while(findnext(&f)!=-1);
+    for(mi=0; mi<count; mi++) npr("0%-20s",names[mi]);
 
     do {
         nl();
@@ -211,39 +211,34 @@ void menu(char fn[15])
         ch=onek("QIMD\r");
         switch(ch) {
         case 13 : 
-            sprintf(s,"%s*.mnu",syscfg.menudir);
-            findfirst(s,&f,0);
+            count = menudb_list(names, 100);
             outchr(12);
             pl("5Menu Files Available to Edit");
             nl();
-            do npr("0%-20s",f.ff_name); 
-            while(findnext(&f)!=-1);
+            for(mi=0; mi<count; mi++) npr("0%-20s",names[mi]);
             break;
         case 'Q': 
             done=1; 
             break;
         case 'M': 
             nl();
-            inputdat("File to Edit",fn,8,0);
-            sprintf(s,"%s%s.mnu",syscfg.menudir,fn);
-            if(exist(s)) menued(fn);
-            else npr("\r\n4%s Not Found\r\n`P",fn);
+            inputdat("File to Edit",s,8,0);
+            if(menudb_exists(s)) menued(s);
+            else npr("\r\n4%s Not Found\r\n`P",s);
             break;
         case 'D': 
             nl();
-            inputdat("File to Delete",fn,8,0);
-            if(!fn[0]) break;
-            sprintf(s,"%s%s.mnu",syscfg.menudir,fn);
-            if(exist(s)) unlink(s);
-            else npr("\r\n4%s Not Found\r\n`P",fn);
+            inputdat("File to Delete",s,8,0);
+            if(!s[0]) break;
+            if(menudb_delete(s) != 0)
+                npr("\r\n4%s Not Found\r\n`P",s);
             break;
         case 'I': 
             nl();
-            inputdat("File to Add",fn,8,0);
-            if(!fn[0]) break;  
-            sprintf(s,"%s%s.mnu",syscfg.menudir,fn);
-            if(!exist(s)) addmenu(fn);
-            else npr("\r\n4%s All Ready Exists\r\n`P",fn);
+            inputdat("File to Add",s,8,0);
+            if(!s[0]) break;
+            if(!menudb_exists(s)) addmenu(s);
+            else npr("\r\n4%s All Ready Exists\r\n`P",s);
             break;
         }
     } 
@@ -252,33 +247,30 @@ void menu(char fn[15])
 
 void addmenu(char fn[15])
 {
-    int i;
-    char s[MAX_PATH_LEN];
+    menu_data_t data;
 
-    sprintf(s,"%s%s.mnu",syscfg.menudir,fn);
-    i=open(s,O_RDWR|O_TRUNC|O_CREAT,S_IREAD|S_IWRITE);
-    strcpy(pp.prompt,"Select: ");
-    strcpy(pp.title1,"–Dominion Bulletin Board System");
-    strcpy(pp.title2,"–A New Menu");
-    strcpy(pp.altmenu,"");
-    strcpy(pp.pausefile,"");
-    strcpy(pp.slneed,"");
-    strcpy(pp.format,"");
-    pp.columns=4;
-    pp.battr=5;
-    pp.attr=0;
-    pp.attr |= menu_extprompt;
-    pp.attr |= menu_format;
-    pp.attr |= menu_pulldown;
-    strcpy(tg[0].desc,"<NEW> Menu Command");
-    strcpy(tg[0].type,"OL");
-    strcpy(tg[0].line,"");
-    tg[0].attr=0;
-    strcpy(tg[0].ms,"");
-    write(i,&pp,sizeof(mmrec));
-    write(i,&tg[0],sizeof(menurec));
-    write(i,&tg[0],sizeof(menurec));
-    close(i);
+    memset(&data, 0, sizeof(data));
+    strcpy(data.header.prompt,"Select: ");
+    strcpy(data.header.title1,"ï¿½Dominion Bulletin Board System");
+    strcpy(data.header.title2,"ï¿½A New Menu");
+    strcpy(data.header.altmenu,"");
+    strcpy(data.header.pausefile,"");
+    strcpy(data.header.slneed,"");
+    strcpy(data.header.format,"");
+    data.header.columns=4;
+    data.header.battr=5;
+    data.header.attr=0;
+    data.header.attr |= menu_extprompt;
+    data.header.attr |= menu_format;
+    data.header.attr |= menu_pulldown;
+    strcpy(data.commands[0].desc,"<NEW> Menu Command");
+    strcpy(data.commands[0].type,"OL");
+    strcpy(data.commands[0].line,"");
+    data.commands[0].attr=0;
+    strcpy(data.commands[0].ms,"");
+    data.commands[1] = data.commands[0];
+    data.count = 2;
+    menudb_create(fn, &data);
     menued(fn);
 }
 
@@ -374,20 +366,15 @@ void menued(char fn[15])
     int i,x=0,y,z,type=status.net_version,d1=0;
     char ch,s[161],s1[161],done=0;
     menurec back;
-    maxcmd=0;
+    menu_data_t data;
 
-    if(!strchr(fn,'.'))
-        sprintf(s,"%s%s.mnu",syscfg.menudir,fn);
-    else sprintf(s,"%s%s",syscfg.menudir,fn);
-    i=open(s,O_RDWR|O_BINARY|O_CREAT,S_IREAD|S_IWRITE);
-
-    maxcmd=0;
-    lseek(i,0L,SEEK_SET);
-    read(i,(void *)&pp,sizeof(mmrec));
-    while(read(i,(void *)&tg[maxcmd],sizeof(menurec))&&maxcmd<64)
-        maxcmd++;
-
-    close(i);
+    if(menudb_load(fn, &data) != 0) {
+        npr("4Error loading menu %s\r\n", fn);
+        return;
+    }
+    pp = data.header;
+    memcpy(tg, data.commands, sizeof(menurec) * data.count);
+    maxcmd = data.count;
     readmnufmt(pp);
 
     if(type) top(fn); 
@@ -594,14 +581,10 @@ void menued(char fn[15])
         }
     } 
     while(!done&&!hangup);
-    close(i);
-
-    sprintf(s,"%s%s.mnu",syscfg.menudir,fn);
-    i=open(s,O_RDWR|O_BINARY|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
-    lseek(i,0L,SEEK_SET);
-    write(i,(void *)&pp,sizeof(mmrec));
-    write(i,(void *)&tg,sizeof(menurec)*maxcmd);
-    close(i);
+    data.header = pp;
+    memcpy(data.commands, tg, sizeof(menurec) * maxcmd);
+    data.count = maxcmd;
+    menudb_save(fn, &data);
 
     if(!wfc)
         read_menu(menuat,0);

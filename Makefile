@@ -44,7 +44,7 @@ CFLAGS = -std=gnu89 -DPD \
 BBS_CORE = bbs com conio bbsutl file file1 mm \
            utility extrn mm1 x00com jam
 
-BBS_MODULES = mm2 msgbase disk userdb timest utility1 \
+BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               file2 file3 archive filesys \
               menued uedit diredit subedit stringed \
               bbsutl2 sysopf modem xinit \

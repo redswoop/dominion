@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include "ansi.h"
 #include "json_io.h"
+#include "menudb.h"
 
 extern char menuat[15];
 
@@ -222,6 +223,7 @@ void init(int show)
     }
     status.wwiv_version=wwiv_num_version;
     userdb_init(syscfg.datadir, syscfg.maxusers);
+    menudb_init(syscfg.menudir);
     status.users = userdb_user_count();
 
     screensave.scrn1=(char *)mallocx(screenlen);

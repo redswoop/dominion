@@ -1,6 +1,8 @@
 #include "vars.h"
 #pragma hdrstop
 
+#include "menudb.h"
+
 extern int SYSTEMDEBUG;
 menurec tg[50];
 mmrec pp;

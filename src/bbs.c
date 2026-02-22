@@ -3,6 +3,7 @@
 #define _DEFINE_GLOBALS_
 #include "vars.h"
 #include <math.h>
+#include "menudb.h"
 
 #define modem_time 3.5
 /* extern unsigned _stklen=30000U; — DOS stack size, not needed on macOS */
@@ -213,9 +214,7 @@ void main(int argc, char *argv[])
 
         if (!hangup) {
             logon();
-            sprintf(s,"%s%s",syscfg.menudir,nifty.firstmenu);
-            if(!strchr(nifty.firstmenu,'.')) strcat(s,".mnu");
-            if(!exist(s)) {
+            if(!menudb_exists(nifty.firstmenu)) {
                 pl("8Main Menu is missing!!  System cannot Continue!  If Possible, Inform SysOp!");
                 logpr("7!0 MAIN MENU MISSING.  Hanging up on User");
                 pausescr();

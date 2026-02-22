@@ -1,6 +1,7 @@
 #include "vars.h"
 #pragma hdrstop
 
+#include "menudb.h"
 
 extern mmrec pp;
 extern menurec tg[50];
@@ -122,17 +123,11 @@ char *noc2(char s1[100])
 
 int read_menu(char fn[15],int doauto)
 {
-    int menu;
-    char s[255];
-    mmrec f;
-    int x;
+    menu_data_t raw;
+    int i, rc;
 
-    if(!strchr(fn,'.')) {
-        strcat(fn,".mnu");
-    }
-
-    sprintf(s,"%s%s",syscfg.menudir,fn);
-    if(!exist(s)) {
+    rc = menudb_load(fn, &raw);
+    if (rc != 0) {
         if(doauto) {
             npr("8Menu %s not found!  Please inform the SysOp!!",fn);
             logtypes(5,"Menu 4%s 0Not Found!",fn);
@@ -140,12 +135,8 @@ int read_menu(char fn[15],int doauto)
         readmenu(nifty.firstmenu);
         return 0;
     }
-    menu=open(s,O_BINARY|O_RDONLY);
 
-    maxcmd=0;
-    f=pp;
-    lseek(menu,0L,SEEK_SET);
-    read(menu,(void *)&pp,sizeof(mmrec));
+    pp = raw.header;
     if(!slok(pp.slneed,1)) {
         pl("8Sorry, you do not have the proper access to enter this menu.");
         logtypes(3,"Tried entering menu (4%s0) that did not have access for.",fn);
@@ -153,32 +144,34 @@ int read_menu(char fn[15],int doauto)
         return 0;
     }
 
+    /* Set menuat to filename with .mnu extension */
+    strncpy(menuat, fn, sizeof(menuat) - 1);
+    menuat[sizeof(menuat) - 1] = '\0';
+    if(!strchr(menuat,'.'))
+        strcat(menuat,".mnu");
 
-    strcpy(menuat,fn);
-
-    while(read(menu,(void *)&tg[maxcmd],sizeof(menurec))&&maxcmd<64) {
-        if(tg[maxcmd].attr==command_forced) {
-            if(doauto) if(slok(tg[maxcmd].sl,0)) ex(tg[maxcmd].type,tg[maxcmd].ms);
+    maxcmd = 0;
+    for (i = 0; i < raw.count; i++) {
+        if (raw.commands[i].attr == command_forced) {
+            if (doauto && slok(raw.commands[i].sl, 0))
+                ex(raw.commands[i].type, raw.commands[i].ms);
+        } else if (slok(raw.commands[i].sl, 1)) {
+            tg[maxcmd++] = raw.commands[i];
         }
-        else if(slok(tg[maxcmd].sl,1)) maxcmd++;
     }
 
-    close(menu);
     if(pp.format[0]) readmnufmt(pp);
 
     if(!(pp.attr & menu_noglobal)) {
-        sprintf(s,"%sglobal.mnu",syscfg.menudir);
-        if(exist(s)) {
-            menu=open(s,O_RDONLY|O_BINARY);
-            read(menu,&f,sizeof(mmrec));
-            while(read(menu,&tg[maxcmd],sizeof(menurec))&&maxcmd<64)
-                if(slok(tg[maxcmd].sl,1))
-                    maxcmd++;
-            close(menu);
+        menu_data_t global_raw;
+        if (menudb_load("global", &global_raw) == 0) {
+            for (i = 0; i < global_raw.count && maxcmd < MAX_MENU_COMMANDS; i++) {
+                if (slok(global_raw.commands[i].sl, 1))
+                    tg[maxcmd++] = global_raw.commands[i];
+            }
         }
     }
 
-    close(menu);
 #ifdef PD
     readmenup();
 #endif
