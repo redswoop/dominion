@@ -1,3 +1,4 @@
+#include "io_ncurses.h"  /* MUST come before vars.h */
 #include "vars.h"
 
 #pragma hdrstop
@@ -22,33 +23,19 @@ void reset_attr_cache(void)
     _last_attr = -1;
 }
 
-/* Convert DOS attribute byte to ANSI SGR sequence and emit it */
+/* Sync conio cursor position — called by platform_stubs.c clrscr() */
+void conio_sync_cursor(int x, int y)
+{
+    _cx = x;
+    _cy = y;
+}
+
+/* Set ncurses attribute from DOS attribute byte */
 static void _emit_attr(int attr)
 {
-    char *temp = "04261537";
-    int fg, bg, bold, blink;
-
     if (attr == _last_attr)
         return;
-
-    fg = attr & 0x07;
-    bg = (attr >> 4) & 0x07;
-    bold = (attr & 0x08) ? 1 : 0;
-    blink = (attr & 0x80) ? 1 : 0;
-
-    /* DOS attr 0x08 = bold black = dark gray.  Modern terminals often
-       render this as invisible on a black background.  Use 256-color
-       palette index 240 (a visible dark gray) instead. */
-    if (bold && fg == 0 && bg == 0) {
-        printf("\033[0;38;5;240;40m");
-    } else {
-        printf("\033[0;%s%s%d;%dm",
-               bold ? "1;" : "",
-               blink ? "5;" : "",
-               30 + (temp[fg] - '0'),
-               40 + (temp[bg] - '0'));
-    }
-
+    if (nc_active) attrset(nc_attr(attr));
     _last_attr = attr;
 }
 
@@ -84,29 +71,29 @@ static void _scrn_scroll(int t, int b, int n)
 
 
 void SCROLL_UP(int t, int b, int l) {
-    /* Ensure black bg so erase/scroll fills black, not terminal default */
-    printf("\033[40m");
     if (l == 0) {
         /* Clear region */
-        if (t == 0 && b == screenbottom) {
-            printf("\033[2J");
-        } else {
-            /* Clear each line individually — \033[J erases to end of
-             * screen (not scroll region), which would nuke lines below b */
+        if (nc_active) {
             int row;
-            for (row = t; row <= b; row++)
-                printf("\033[%d;1H\033[2K", row + 1);
+            for (row = t; row <= b; row++) {
+                move(row, 0);
+                clrtoeol();
+            }
         }
         _scrn_scroll(t, b, 0);
     } else {
-        /* Scroll up l lines in region [t..b] */
-        printf("\033[%d;%dr", t + 1, b + 1);
-        printf("\033[%dS", l);
-        printf("\033[r");
+        /* Scroll up l lines in region [t..b] using ncurses scroll region */
+        if (nc_active) {
+            setscrreg(t, b);
+            scrollok(stdscr, TRUE);
+            wscrl(stdscr, l);
+            scrollok(stdscr, FALSE);
+            setscrreg(0, screenbottom);
+        }
         _scrn_scroll(t, b, l);
     }
-    _last_attr = -1;  /* terminal state changed — invalidate cache */
-    fflush(stdout);
+    _last_attr = -1;
+    if (nc_active) refresh();
 }
 
 static int wx=0;
@@ -126,8 +113,10 @@ void movecsr(int x,int y)
 
     _cx = x;
     _cy = y;
-    printf("\033[%d;%dH", y + 1, x + 1);
-    fflush(stdout);
+    if (nc_active) {
+        move(y, x);
+        refresh();
+    }
 }
 
 
@@ -149,28 +138,21 @@ void lf()
 {
     if (_cy == screenbottom) {
         SCROLL_UP(topline, screenbottom, 1);
-        /* cursor stays on bottom row */
-        printf("\033[%d;%dH", _cy + 1, _cx + 1);
-        fflush(stdout);
+        if (nc_active) { move(_cy, _cx); refresh(); }
     } else {
         _cy++;
-        printf("\033[%d;%dH", _cy + 1, _cx + 1);
-        fflush(stdout);
+        if (nc_active) { move(_cy, _cx); refresh(); }
     }
 }
 
 void cr()
 {
     _cx = 0;
-    putchar('\r');
-    fflush(stdout);
+    if (nc_active) { move(_cy, 0); refresh(); }
 }
 
 void clrscrb()
 {
-    /* Reset terminal to known color state before clearing.
-     * 40m = explicit black bg so erase fills black, not terminal default. */
-    printf("\033[0m\033[40m");
     _last_attr = -1;
     SCROLL_UP(topline, screenbottom, 0);
     movecsr(0, 0);
@@ -185,13 +167,11 @@ void bs()
         if (_cy != topline) {
             _cx = 79;
             _cy--;
-            printf("\033[%d;%dH", _cy + 1, _cx + 1);
-            fflush(stdout);
+            if (nc_active) { move(_cy, _cx); refresh(); }
         }
     } else {
         _cx--;
-        printf("\033[D");
-        fflush(stdout);
+        if (nc_active) { move(_cy, _cx); refresh(); }
     }
 }
 
@@ -201,19 +181,22 @@ void out1chx(unsigned char ch)
 {
     _emit_attr(curatr);
     _scrn_put(_cx, _cy, ch, curatr);
-    put_cp437(ch);
+    if (nc_active) {
+        move(_cy, _cx);  /* sync ncurses cursor to conio position */
+        addstr(cp437_to_utf8[ch]);
+    }
 
     _cx++;
     if (_cx >= 80) {
         _cx = 0;
         if (_cy == screenbottom) {
             SCROLL_UP(topline, screenbottom, 1);
-            printf("\033[%d;1H", _cy + 1);
         } else {
             _cy++;
         }
+        if (nc_active) move(_cy, _cx);  /* position after wrap */
     }
-    fflush(stdout);
+    if (nc_active) refresh();
 }
 
 
@@ -360,26 +343,14 @@ void savescreen(screentype *s)
 
 void restorescreen(screentype *s)
 {
-    int row, col;
-
     if (scrn && s->scrn1)
         memmove(scrn,s->scrn1,screenlen);
     topline=s->topline1;
     curatr=s->curatr1;
 
-    /* Redraw screen from scrn buffer via ANSI */
+    /* Redraw screen from scrn buffer via ncurses */
     if (scrn) {
-        for (row = 0; row <= screenbottom; row++) {
-            printf("\033[%d;1H", row + 1);
-            for (col = 0; col < 80; col++) {
-                int off = (row * 80 + col) * 2;
-                unsigned char ch = scrn[off];
-                unsigned char at = scrn[off + 1];
-                _emit_attr(at);
-                put_cp437(ch ? ch : ' ');
-            }
-        }
-        fflush(stdout);
+        nc_render_scrn(0, screenbottom + 1);
         _last_attr = -1;
     }
     movecsr(s->x1,s->y1);
@@ -861,7 +832,7 @@ void topscreen(void)
 /* asm: bl,0x0 */
 /* asm: int 0x10 */
 
-    /* Read topscreen binary into scrn buffer and render via ANSI */
+    /* Read topscreen binary into scrn buffer and render via ncurses */
     sprintf(s,"%stops%d.bin",syscfg.gfilesdir,topdata);
     i=open(s,O_RDWR|O_BINARY);
     if (i >= 0) {
@@ -871,21 +842,7 @@ void topscreen(void)
             close(i);
             memmove(&scrn[0],b,linelen*160);
             farfree(b);
-            /* Render the topscreen binary via ANSI */
-            {
-                int row, col;
-                for (row = 0; row < linelen; row++) {
-                    printf("\033[%d;1H", row + 1);
-                    for (col = 0; col < 80; col++) {
-                        int off = (row * 80 + col) * 2;
-                        unsigned char ch = scrn[off];
-                        unsigned char at = scrn[off + 1];
-                        _emit_attr(at);
-                        put_cp437(ch ? ch : ' ');
-                    }
-                }
-                fflush(stdout);
-            }
+            nc_render_scrn(0, linelen);
         } else {
             close(i);
         }

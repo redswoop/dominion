@@ -1,6 +1,5 @@
+#include "vars.h"
 #pragma hdrstop
-#include "platform.h"
-extern int ok_modem_stuff;
 
 char *curtime(void);
 

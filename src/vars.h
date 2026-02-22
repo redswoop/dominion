@@ -4,6 +4,7 @@
 #include "platform.h"
 
 #include "fcns.h"
+#include "io_stream.h"
 
 #ifdef _DEFINE_GLOBALS_
 
@@ -30,17 +31,17 @@ char ansistr[MAX_PATH_LEN], cdir[MAX_PATH_LEN], charbuffer[161], chatreason[MAX_
 int already_on, ansiptr,  arcling, async_irq, base, bchanged,confmode,
     change_color, charbufferpointer, chatcall, chatting, chat_file,
     change_ecolor, checkit, configfile, curatr, curdir, curldir,
-    curlsub, cursub,  defscreenbottom, dlf, do_event, echo, edlf,
-    endday, express, expressabort, flow_control, fsenttoday, fwaiting,
-    gat_section, global_handle, global_xx, hangup, hungup, incom,
-    input_extern, in_extern, lastcon, lecho, lines_listed, live_user,
+    curlsub, cursub,  defscreenbottom, dlf, do_event, edlf,
+    endday, express, expressabort, fsenttoday, fwaiting,
+    gat_section, global_handle, global_xx, hangup, hungup,
+    input_extern, in_extern, lecho, lines_listed, live_user,
     ltime, mailcheck, msgreadlogon, noklevel, no_hangup, numbatch,
     numbatchdl, batchpoints, numextrn, numf, nummsgs, num_call_sys, num_dirs,
     num_listed, num_subs,
-    oklevel, okmacro, okskey, ok_modem_stuff, oldx, oldy, ooneuser,
-    outcom, restoring_shrink, screenbottom, screenlen, screenlinest,
+    oklevel, okmacro, okskey, oldx, oldy, ooneuser,
+    restoring_shrink, screenbottom, screenlen, screenlinest,
     smwcheck, statusfile, sysop_alert, tempio, topdata, topline,
-    usernum, useron, use_workspace, using_modem, wfc,
+    usernum, useron, use_workspace, wfc,
     x_only,listing,running_dv,msgr,umaxsubs,umaxdirs,
     ARC_NUMBER,MAX_BATCH,backdoor;
 
@@ -48,15 +49,12 @@ long hanguptime1, nscandate, this_date, timelastchar1;
 
 double extratimecall, last_time, timeon, time_event, xtime;
 
-unsigned char actsl, andwith;
+unsigned char actsl;
 
 /* --- Communication --- */
-unsigned short com_speed,modem_flag, modem_mode,
-               modem_speed;
+unsigned short com_speed, modem_speed;
 
 protocolrec proto[20];
-resultrec result_codes[30];
-int num_result_codes;
 
 /* --- Config/system --- */
 fnetrec fnet;
@@ -71,7 +69,6 @@ usersubrec usub[MAX_SUBS],udir[MAX_DIRS];
 screentype screensave;
 messagerec menus[50];
 xarcrec xarc[8];
-modem_info *modem_i;
 
 /* --- TCP/network --- */
 int X00port;
@@ -79,7 +76,6 @@ union REGS regs;
 
 int tcp_port;
 int listen_fd;
-int client_fd;
 struct termios orig_termios;
 int term_raw_mode;
 
@@ -115,17 +111,17 @@ extern char ansistr[MAX_PATH_LEN], cdir[MAX_PATH_LEN], charbuffer[161], chatreas
 extern int already_on, ansiptr,  arcling, async_irq, base, bchanged,confmode,
     change_color, charbufferpointer, chatcall, chatting, chat_file,
     change_ecolor, checkit, configfile, curatr, curdir, curldir,
-    curlsub, cursub,  defscreenbottom, dlf, do_event, echo, edlf,
-    endday, express, expressabort, flow_control, fsenttoday, fwaiting,
-    gat_section, global_handle, global_xx, hangup, hungup, incom,
-    input_extern, in_extern, lastcon, lecho, lines_listed, live_user,
+    curlsub, cursub,  defscreenbottom, dlf, do_event, edlf,
+    endday, express, expressabort, fsenttoday, fwaiting,
+    gat_section, global_handle, global_xx, hangup, hungup,
+    input_extern, in_extern, lecho, lines_listed, live_user,
     ltime, mailcheck, msgreadlogon, noklevel, no_hangup, numbatch,
     numbatchdl, numextrn, numf, nummsgs, num_call_sys, num_dirs,
     num_listed, num_subs,
-    oklevel, okmacro, okskey, ok_modem_stuff, oldx, oldy, ooneuser,
-    outcom, restoring_shrink, screenbottom, screenlen, screenlinest,
+    oklevel, okmacro, okskey, oldx, oldy, ooneuser,
+    restoring_shrink, screenbottom, screenlen, screenlinest,
     smwcheck, statusfile, sysop_alert, tempio, topdata, topline,
-    usernum, useron, use_workspace, using_modem, wfc,
+    usernum, useron, use_workspace, wfc,
     x_only,listing,running_dv,msgr,umaxsubs,umaxdirs,
     ARC_NUMBER,MAX_BATCH,backdoor;
 
@@ -133,15 +129,12 @@ extern long hanguptime1, nscandate, this_date, timelastchar1;
 
 extern double extratimecall, last_time, timeon, time_event, xtime;
 
-extern unsigned char actsl,andwith;
+extern unsigned char actsl;
 
 /* --- Communication --- */
-extern unsigned short com_speed, modem_flag, modem_mode,
-               modem_speed;
+extern unsigned short com_speed, modem_speed;
 
 extern protocolrec proto[20];
-extern resultrec result_codes[30];
-extern int num_result_codes;
 
 /* --- Config/system --- */
 extern niftyrec nifty;
@@ -155,7 +148,6 @@ extern directoryrec *directories;
 extern usersubrec usub[MAX_SUBS],udir[MAX_DIRS];
 extern screentype screensave;
 extern messagerec menus[50];
-extern modem_info *modem_i;
 extern xarcrec xarc[8];
 
 /* --- TCP/network --- */
@@ -164,7 +156,6 @@ extern union REGS regs;
 
 extern int tcp_port;
 extern int listen_fd;
-extern int client_fd;
 extern struct termios orig_termios;
 extern int term_raw_mode;
 

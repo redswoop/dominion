@@ -176,10 +176,7 @@ char *create_chain_file(char *fn)
     alf(f,s);
     itoa(thisuser.downloaded,s,10);
     alf(f,s);
-    if (andwith==0x7f)
-        alf(f,"7E1");
-    else
-        alf(f,"8N1");
+    alf(f,"8N1");
     sprintf(s,"%u",com_speed);
     alf(f,s);
     sprintf(s,"%u",syscfg.systemnumber);
@@ -215,7 +212,6 @@ int restore_data(char *s)
     READ(last_time_c);
     READ(sysop_alert);
     READ(do_event);
-    READ(andwith);
     READ(usernum);
     READ(chatcall);
     READ(chatreason);
@@ -224,7 +220,6 @@ int restore_data(char *s)
     READ(curspeed);
     READ(modem_speed);
     READ(com_speed);
-    READ(modem_flag);
     READ(cursub);
     READ(curdir);
     READ(msgreadlogon);
@@ -259,9 +254,6 @@ int restore_data(char *s)
     useron=1;
     changedsl();
     topscreen();
-    set_baud(com_speed);
-    if (modem_flag & flag_fc)
-        flow_control = 1;
 
     close(f);
     unlink(s);
@@ -290,7 +282,6 @@ void save_state(char *s, int state)
     WRITE(last_time_c);
     WRITE(sysop_alert);
     WRITE(do_event);
-    WRITE(andwith);
     WRITE(usernum);
     WRITE(chatcall);
     WRITE(chatreason);
@@ -299,7 +290,6 @@ void save_state(char *s, int state)
     WRITE(curspeed);
     WRITE(modem_speed);
     WRITE(com_speed);
-    WRITE(modem_flag);
     WRITE(cursub);
     WRITE(curdir);
     WRITE(msgreadlogon);

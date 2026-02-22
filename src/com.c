@@ -1,3 +1,4 @@
+#include "io_ncurses.h"  /* MUST come before vars.h */
 #include "vars.h"
 
 #pragma hdrstop
@@ -230,16 +231,25 @@ void execute_ansi()
             break;
         case 'k':
         case 'K':
+            /* Erase from cursor to end of line */
             ox = wherex();
             oy = wherey();
-            r.x.cx = 80 - ox;
-            r.h.ah = 0x09;
-            r.h.bh = 0x00;
-            r.h.al = 32;
-            r.h.bl = curatr;
-            int86(0x10,&r,&r);
+            if (nc_active) {
+                clrtoeol();
+                refresh();
+            }
+            /* Clear scrn[] buffer from cursor to end of line */
+            if (scrn) {
+                int col, row = oy + topline;
+                for (col = ox; col < 80; col++) {
+                    int off = (row * 80 + col) * 2;
+                    if (off >= 0 && off < 4000) {
+                        scrn[off] = ' ';
+                        scrn[off + 1] = curatr;
+                    }
+                }
+            }
             movecsr(ox, oy);
-
             break;
         case 'm':
             if (!argptr) {
@@ -489,11 +499,13 @@ void outstr(char *s)
     if(hangup) return;
 
     if(s[0]=='\x96') {
-            i++;
+        i++;
         slen=strlenc(s);
         x=79;
         x-=slen;
         x/=2;
+        curatr = 0xFF;  /* invalidate so setc always emits ANSI */
+        setc(0x07);     /* explicit white on black for centering spaces */
         for(slen=0;slen<x-2;slen++)
             outchr(' ');
     }
@@ -533,6 +545,15 @@ void nl()
     outstr("\r\n");
 }
 
+/* backblue — erase one character inside a blue input field (mpl-style).
+ * Sends: ESC[D (cursor left), CP437 0xB1 (▒ field background), ESC[D (cursor left).
+ * Net effect: overwrites the deleted char with the field fill character, leaves
+ * cursor positioned on it.  Used when bluein!=0 (set by mpl/mpl1).
+ *
+ * The raw bytes in the string literals are:
+ *   \x1b[D  = ANSI cursor-left
+ *   \xb1    = CP437 ▒ (light shade — the mpl() field background)
+ * Do NOT run encoding-aware tools (sed, iconv) on this function. */
 void backblue(void)
 {
     int i;
@@ -541,17 +562,20 @@ void backblue(void)
     i = echo;
     echo = 1;
     if(bluein==1)
-        outstr("[D�[D");
+        outstr("[D\xb1[D");
     else {
         makeansi(8,s,1);
         outstr(s);
-        outstr("[D�[D");
+        outstr("[D\xb1[D");
         makeansi(15,s,1);
         outstr(s);
     }
     echo = i;
 }
 
+/* backspace — erase one character in normal (non-blue-field) context.
+ * Sends BS-SPACE-BS: moves cursor left, overwrites with space, moves left again.
+ * Temporarily forces echo=1 so the output goes through even if echo is off. */
 void backspace()
 {
     int i;
@@ -626,17 +650,76 @@ void pl(char *s)
 }
 
 
+/* Translate ncurses KEY_xxx to DOS scan codes for skey() */
+static int _nc_to_scancode(int key)
+{
+    switch (key) {
+    case KEY_F(1):  return 59;
+    case KEY_F(2):  return 60;
+    case KEY_F(3):  return 61;
+    case KEY_F(4):  return 62;
+    case KEY_F(5):  return 63;
+    case KEY_F(6):  return 64;
+    case KEY_F(7):  return 65;
+    case KEY_F(8):  return 66;
+    case KEY_F(9):  return 67;
+    case KEY_F(10): return 68;
+    case KEY_F(13): return 84;  /* Shift-F1 */
+    case KEY_F(14): return 85;  /* Shift-F2 */
+    case KEY_F(15): return 86;  /* Shift-F3 */
+    case KEY_F(16): return 87;  /* Shift-F4 */
+    case KEY_F(17): return 88;  /* Shift-F5 */
+    case KEY_F(18): return 89;  /* Shift-F6 */
+    case KEY_F(19): return 90;  /* Shift-F7 */
+    case KEY_F(20): return 91;  /* Shift-F8 */
+    case KEY_F(21): return 92;  /* Shift-F9 */
+    case KEY_F(22): return 93;  /* Shift-F10 */
+    case KEY_F(25): return 94;  /* Ctrl-F1 */
+    case KEY_F(26): return 95;  /* Ctrl-F2 */
+    case KEY_F(27): return 96;  /* Ctrl-F3 */
+    case KEY_F(28): return 97;  /* Ctrl-F4 */
+    case KEY_F(29): return 98;  /* Ctrl-F5 */
+    case KEY_F(30): return 99;  /* Ctrl-F6 */
+    case KEY_F(31): return 100; /* Ctrl-F7 */
+    case KEY_F(32): return 101; /* Ctrl-F8 */
+    case KEY_F(33): return 102; /* Ctrl-F9 */
+    case KEY_F(34): return 103; /* Ctrl-F10 */
+    case KEY_UP:    return 72;
+    case KEY_DOWN:  return 80;
+    case KEY_LEFT:  return 75;
+    case KEY_RIGHT: return 77;
+    case KEY_HOME:  return 71;
+    case KEY_END:   return 79;
+    default:        return 0;
+    }
+}
+
+/* Pending scan code from ncurses special key detection.
+ * The DOS pattern is: getch()=0 (NUL prefix), then getch()=scancode.
+ * We emulate this by returning 0 first, then the scancode on next call. */
+static int _pending_scancode = -1;
+
+/* kbhitb — non-blocking local keyboard check.
+ * Returns 1 if a key is waiting, 0 otherwise.
+ * Uses wgetch+ungetch to peek without consuming.
+ * Note: the ungetch'd value is read back by getchd1() on the next call. */
 int kbhitb()
 {
-    /* Check if keyboard input is available on stdin (non-blocking) */
-    struct timeval tv = {0, 0};
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(STDIN_FILENO, &fds);
-    return select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0;
+    int ch;
+    if (_pending_scancode >= 0) return 1;
+    if (!nc_active) return 0;
+    nodelay(stdscr, TRUE);
+    ch = wgetch(stdscr);
+    if (ch == ERR) return 0;
+    ungetch(ch);
+    return 1;
 }
 
 
+/* empty — returns 1 if no input is available from ANY source.
+ * Checks: local keyboard (kbhitb), remote TCP (comhit), macro buffer
+ * (charbufferpointer), external program pipe (in_extern==2), and
+ * quote buffer (bquote).  Used by getkey() to spin-wait for input. */
 int empty()
 {
     if(x_only) return 0;
@@ -649,6 +732,13 @@ int empty()
 }
 
 
+/* skey1 — post-process a key after reading from any source.
+ * Called by inkey() on every character.  Handles:
+ *   - 127→8 mapping (DEL→BS, defense in depth)
+ *   - Ctrl-A/D/F/Y → expand user macros from thisuser.macros[]
+ *   - Ctrl-T → display time remaining (ptime)
+ *   - Ctrl-R → reprint last line (reprint)
+ * Writes result back through *ch pointer. */
 void skey1(char *ch)
 {
     char c;
@@ -699,28 +789,80 @@ void skey1(char *ch)
     *ch = c;
 }
 
+/* getchd — BLOCKING read of one key from local keyboard.
+ *
+ * Translates ncurses special keys (KEY_F1..F10, KEY_UP, etc.) to the DOS
+ * two-byte pattern: first call returns 0 (NUL prefix), next call returns
+ * the scan code (e.g. 59=F1, 72=UP).  This lets the existing skey()
+ * function-key dispatcher work unchanged.
+ *
+ * Also maps: KEY_ENTER/LF → CR, KEY_BACKSPACE/127(DEL) → 8(BS).
+ * The 127→8 mapping is critical on macOS where backspace sends DEL. */
 char getchd()
 {
-    /* Blocking read of one character from stdin.
-     * Terminal is already in raw mode (set in xinit.c). */
-    unsigned char ch;
-    while (read(STDIN_FILENO, &ch, 1) != 1)
+    int ch;
+    if (_pending_scancode >= 0) {
+        ch = _pending_scancode;
+        _pending_scancode = -1;
+        return (char)ch;
+    }
+    if (!nc_active) { usleep(100000); return 0; }
+    nodelay(stdscr, FALSE);
+    while ((ch = wgetch(stdscr)) == ERR)
         usleep(1000);
+    nodelay(stdscr, TRUE);  /* restore non-blocking for kbhitb */
+    if (ch == KEY_ENTER) return '\r';
+    if (ch == '\n') return '\r';  /* raw mode Enter → CR for BBS */
+    if (ch == KEY_BACKSPACE || ch == 127) return 8;
+    if (ch >= KEY_MIN) {
+        _pending_scancode = _nc_to_scancode(ch);
+        return 0;  /* NUL prefix — next call returns scan code */
+    }
     return (char)ch;
 }
 
 
+/* getchd1 — NON-BLOCKING read of one key from local keyboard.
+ * Returns 255 if nothing available (not 0, since 0 is the NUL scan-code prefix).
+ * Same key translations as getchd(): special→DOS scan codes, 127→8, Enter→CR.
+ * Called by inkey() after kbhitb() confirms a key is waiting. */
 char getchd1()
 {
-    /* Non-blocking read of one character from stdin.
-     * Returns 255 if no character available. */
-    unsigned char ch;
-    if (read(STDIN_FILENO, &ch, 1) == 1)
+    int ch;
+    if (_pending_scancode >= 0) {
+        ch = _pending_scancode;
+        _pending_scancode = -1;
         return (char)ch;
-    return (char)255;
+    }
+    if (!nc_active) return (char)255;
+    nodelay(stdscr, TRUE);
+    ch = wgetch(stdscr);
+    if (ch == ERR) return (char)255;
+    if (ch == KEY_ENTER) return '\r';
+    if (ch == '\n') return '\r';
+    if (ch == KEY_BACKSPACE || ch == 127) return 8;
+    if (ch >= KEY_MIN) {
+        _pending_scancode = _nc_to_scancode(ch);
+        return 0;
+    }
+    return (char)ch;
 }
 
 
+/* inkey — non-blocking read from ANY input source.
+ *
+ * Input priority (first match wins):
+ *   1. Quote buffer (bquote)  — auto-quoting in message reply
+ *   2. Macro buffer (charbufferpointer) — Ctrl-A/D/F/Y macro expansion
+ *   3. Local keyboard (kbhitb → getchd1) — sysop console via ncurses
+ *   4. Remote TCP (comhit → get1c) — telnet user
+ *
+ * Returns 0 if nothing available.  Calls skey1() to post-process
+ * (macro expansion, 127→8 mapping).  Sets lastcon=1 for local, 0 for remote.
+ *
+ * For the scan-code two-byte sequence: first call returns 0 (NUL prefix),
+ * getkey() loops on !ch, second call returns the scan code via getchd1()
+ * which reads _pending_scancode, then skey() dispatches the function key. */
 char inkey()
 {
     char ch=0;
@@ -792,13 +934,19 @@ char inkey()
         timelastchar1=timer1();
     } 
     else if (incom && comhit()) {
-        ch = (get1c() & andwith);
+        ch = get1c();
         lastcon = 0;
     }
     skey1(&ch);
     return(ch);
 }
 
+/* mpl — draw a blue input field of i characters.
+ * Sets bluein=1, which changes input1()'s backspace behavior from
+ * backspace() (BS-SPACE-BS) to backblue() (cursor-left, redraw field bg, cursor-left).
+ * Draws i copies of CP437 177 in white-on-blue, then backs the cursor
+ * up to the field start so the user types over the fill characters.
+ * bluein is cleared by input1 when Enter is pressed. */
 void mpl1(int i);
 void mpl(int i)
 {
@@ -819,6 +967,8 @@ void mpl(int i)
     for(i1=0;i1<i;i1++) outstr("[D");
 }
 
+/* mpl1 — alt input field style (used when nif_comment is set).
+ * Sets bluein=2.  Uses CP437 0xF9 as fill instead of 0xB1. */
 void mpl1(int i)
 {
     int i1;
@@ -834,6 +984,17 @@ void mpl1(int i)
 }
 
 
+/* getkey — BLOCKING read of one key from any source.
+ *
+ * The main input entry point for most BBS code.  Spins on empty() until
+ * input arrives (from keyboard, TCP, or macro buffer), then returns the
+ * character from inkey().  Has an inactivity timeout: beeps after half
+ * the limit, hangs up after the full limit ("you appear to have fallen asleep").
+ *
+ * For function keys: inkey() returns 0 (NUL prefix) on first call, getkey()
+ * loops (!ch), inkey() returns the scan code on second call, getkey() returns it.
+ *
+ * Call chain: getkey → inkey → [kbhitb + getchd1] or [comhit + get1c] */
 unsigned char getkey()
 {
     unsigned char ch;
@@ -869,8 +1030,9 @@ unsigned char getkey()
             checkhangup();
         }
         ch = inkey();
-    } 
+    }
     while (!ch && !in_extern && !hangup);
+    if (ch == 127) ch = 8;  /* macOS sends DEL for backspace */
     return(ch);
 }
 
@@ -964,6 +1126,25 @@ unsigned char getkey()
 }
 */
 
+/* input1 — core editable string input field.
+ *
+ *   s      — output buffer (must hold maxlen+1 bytes)
+ *   maxlen — max characters to accept
+ *   lc     — 0=force uppercase, 1=mixed case
+ *   crend  — 1=require Enter to submit, 0=auto-submit when maxlen reached
+ *
+ * If mpl() was called first, bluein==1 and backspace uses backblue() to
+ * redraw the field background character.  Otherwise uses plain backspace().
+ *
+ * Handles:  BS(8)=delete char, Ctrl-W(23)=delete word, Ctrl-U/X(21/24)=clear line,
+ *           Ctrl-Z(26)=insert ^Z marker (if input_extern), ESC(27)=swallow ANSI sequence.
+ *
+ * The ANSI swallowing (in_ansi state machine) eats ESC [ nn m sequences that
+ * arrive when the remote terminal echoes back color codes — without this,
+ * those bytes would be inserted into the input buffer as garbage.
+ *
+ * Wrappers: input(s,len)=uppercase+Enter, inputl(s,len)=mixed+Enter,
+ *           inputdat(msg,s,len,lc)=prompt+mpl+input1. */
 int input1(char *s, int maxlen, int lc, int crend)
 {
     int curpos=0, done=0, in_ansi=0;
@@ -1201,20 +1382,20 @@ int inputfone(char *s)
     return 0;
 }
 
+/* input — read string, forced uppercase, Enter to submit. */
 void input(char *s, int len)
 {
     input1(s, len, 0, 1);
 }
 
-
-
+/* inputl — read string, mixed case, Enter to submit. */
 void inputl(char *s, int len)
 {
     input1(s, len, 1, 1);
 }
 
-
-
+/* ynn — yes/no prompt with arrow-key selection.  pos=0 defaults No, pos=1 defaults Yes.
+ * yn() and ny() are convenience wrappers. */
 int ynn(int pos)
 {
     char ch=0,len,i,done=0;
@@ -1291,6 +1472,8 @@ void ansic(int n)
 }
 
 
+/* nek — wait for one key from allowed set s (case-insensitive).
+ * f=1: echo the key and newline.  f=0: silent. */
 char nek(char *s, int f)
 {
     char ch;
@@ -1304,6 +1487,7 @@ char nek(char *s, int f)
     return(ch);
 }
 
+/* onek — wait for one key from allowed set, always echo+newline. */
 char onek(char *s)
 {
     return(nek(s,1));
@@ -1316,6 +1500,7 @@ void prt(int i, char *s)
     ansic(0);
 }
 
+/* inputdat — prompt + blue input field + input1.  All-in-one for data entry forms. */
 void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc)
 {
     npr("3%s\r\n5: ",msg);

@@ -27,10 +27,7 @@ void run_event()
         pl("Now running external event.");
         nl();
         if (syscfg.executestr[0]) {
-            holdphone(1,0);
             runprog(syscfg.executestr,1);
-            /* run_external(syscfg.executestr); */
-            holdphone(0,0);
         } 
         else
             end_bbs(10);

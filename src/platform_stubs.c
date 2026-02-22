@@ -4,9 +4,13 @@
  * These are real implementations where possible, stubs where not yet needed.
  */
 
+#include "io_ncurses.h"  /* MUST come before platform.h — see io_ncurses.h */
 #include "platform.h"
+#include "cp437.h"
 
 extern void reset_attr_cache(void);
+extern void conio_sync_cursor(int x, int y);
+extern char far *scrn;
 
 /* ================================================================== */
 /*  int86() — BIOS/DOS interrupt stub                                  */
@@ -25,115 +29,138 @@ int int86(int intno, union REGS *inregs, union REGS *outregs)
 }
 
 /* ================================================================== */
-/*  CONSOLE FUNCTIONS                                                  */
+/*  CONSOLE FUNCTIONS — ncurses implementations                        */
 /* ================================================================== */
 
-static int _cur_x = 0;
-static int _cur_y = 0;
 static int _cur_color = 7;
 
 void textcolor(int color)
 {
-    _cur_color = color;
+    _cur_color = (_cur_color & 0xf0) | (color & 0x0f);
+    if (nc_active) attrset(nc_attr(_cur_color));
 }
 
 void textattr(int attr)
 {
-    char *cmap = "04261537";
-    int fg, bg, bold, blink;
-
     _cur_color = attr;
-
-    fg = attr & 0x07;
-    bg = (attr >> 4) & 0x07;
-    bold = (attr & 0x08) ? 1 : 0;
-    blink = (attr & 0x80) ? 1 : 0;
-
-    printf("\033[0;%s%s%d;%dm",
-           bold ? "1;" : "",
-           blink ? "5;" : "",
-           30 + (cmap[fg] - '0'),
-           40 + (cmap[bg] - '0'));
-    fflush(stdout);
-    reset_attr_cache();
+    if (nc_active) attrset(nc_attr(attr));
 }
 
 void clrscr(void)
 {
-    printf("\033[0m\033[40m\033[2J\033[H");
-    fflush(stdout);
-    _cur_x = 0;
-    _cur_y = 0;
+    if (nc_active) {
+        attrset(nc_attr(0x07));
+        erase();
+        move(0, 0);
+        refresh();
+    }
+    /* Clear the scrn[] shadow buffer so conio.c stays in sync */
+    if (scrn) memset(scrn, 0, 4000);
+    /* Reset conio.c cursor tracking to top-left */
+    conio_sync_cursor(0, 0);
     reset_attr_cache();
 }
 
 void gotoxy(int x, int y)
 {
-    printf("\033[%d;%dH", y, x);
-    fflush(stdout);
-    _cur_x = x - 1;
-    _cur_y = y - 1;
+    /* Borland gotoxy is 1-based; ncurses move is 0-based */
+    if (nc_active) {
+        move(y - 1, x - 1);
+        refresh();
+    }
 }
 
 /* wherex/wherey are defined in conio.c */
 
 void _setcursortype(int type)
 {
+    if (!nc_active) return;
     switch (type) {
     case _NOCURSOR:
-        printf("\033[?25l");
+        curs_set(0);
         break;
     default:
-        printf("\033[?25h");
+        curs_set(1);
         break;
     }
-    fflush(stdout);
 }
 
 int kbhit(void)
 {
-    /* Non-blocking keyboard check using select().
-     * Terminal is in raw mode (set in xinit.c). */
-    struct timeval tv = {0, 0};
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(STDIN_FILENO, &fds);
-    return select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0;
+    int ch;
+    if (!nc_active) return 0;
+    nodelay(stdscr, TRUE);
+    ch = wgetch(stdscr);
+    if (ch != ERR) {
+        ungetch(ch);
+        return 1;
+    }
+    return 0;
 }
 
-int getch(void)
-{
-    /* Terminal is already in raw mode from xinit.c.
-     * Just read one byte. */
-    unsigned char ch;
-    if (read(STDIN_FILENO, &ch, 1) == 1)
-        return ch;
-    return -1;
-}
+/* getch() is provided by ncurses via macro: getch() → wgetch(stdscr).
+ * No definition needed here — ncurses handles it. */
 
 int getche(void)
 {
-    int ch = getch();
-    if (ch >= 0) {
-        putchar(ch);
-        fflush(stdout);
+    int ch;
+    if (!nc_active) return 0;
+    nodelay(stdscr, FALSE);
+    ch = wgetch(stdscr);
+    if (ch != ERR && ch < 256) {
+        nc_put_cp437((unsigned char)ch);
+        refresh();
     }
     return ch;
 }
 
 void cprintf(const char *fmt, ...)
 {
+    char buf[512];
+    int i;
     va_list ap;
     va_start(ap, fmt);
-    vprintf(fmt, ap);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    fflush(stdout);
+    if (!nc_active) return;
+    /* Process each byte: convert CP437 high chars to UTF-8,
+     * handle CR/LF/BS for ncurses compatibility */
+    for (i = 0; buf[i]; i++) {
+        unsigned char ch = (unsigned char)buf[i];
+        if (ch >= 0x80) {
+            addstr(cp437_to_utf8[ch]);
+        } else if (ch == '\r') {
+            int y, x;
+            getyx(stdscr, y, x);
+            move(y, 0);
+        } else if (ch == '\n') {
+            int y, x;
+            getyx(stdscr, y, x);
+            if (y < LINES - 1)
+                move(y + 1, x);
+        } else if (ch == '\b') {
+            int y, x;
+            getyx(stdscr, y, x);
+            if (x > 0) move(y, x - 1);
+        } else {
+            addch(ch);
+        }
+    }
+    refresh();
 }
 
 void cputs(const char *s)
 {
-    fputs(s, stdout);
-    fflush(stdout);
+    int i;
+    if (!nc_active) return;
+    for (i = 0; s[i]; i++) {
+        unsigned char ch = (unsigned char)s[i];
+        if (ch >= 0x80)
+            addstr(cp437_to_utf8[ch]);
+        else
+            addch(ch);
+    }
+    refresh();
 }
 
 /* ================================================================== */

@@ -27,6 +27,7 @@ void main(int argc, char *argv[])
         cd_to(searchpath("config.json"));
     }
 
+    io_init(&io);
     already_on=0;
     endday=0;
     oklevel=0;
@@ -36,7 +37,6 @@ void main(int argc, char *argv[])
     ok_modem_stuff=1;
     tcp_port=0;
     listen_fd=-1;
-    client_fd=-1;
     term_raw_mode=0;
     if (exist("exitdata.dom"))
         restoring_shrink=1;
@@ -56,17 +56,13 @@ void main(int argc, char *argv[])
             ch=toupper(s[1]);
             switch(ch) {
             case '?':
-                printf("/B  - someone already logged on at rate (modem speed)\n");
-                printf("/S  - used only with /B, indicates com (Locked) speed\n");
                 printf("/N  - System Node\n");
                 printf("/P  - Com Port (1-5) or TCP port (e.g. -P2323)\n");
                 printf("/Q  - quit the bbs after one user done\n");
                 printf("/H  - don't hang up on user when he loggs off\n");
                 printf("/M  - don't access modem at all\n");
                 printf("/L  - Logon as SysOp Locally\n");
-                printf("/C  - Enable flow control\n");
                 printf("/I  - Load Quietly(Bypass all loading screens)\n");
-                printf("/Z  - Load up like /B, but force ComSpeed to your highest\n");
                 printf("/F  - Enable/Disable Mailer Loadup\n");
                 printf("/A  - Toss in File Net\n");
                 printf("\n");
@@ -81,38 +77,10 @@ void main(int argc, char *argv[])
                 show=1;
                 dogofer=1; 
                 break;
-            case 'C': 
-                flow_control=1;
-                break;
             case 'L': 
                 already_on=2; 
                 ui=19200; 
                 us=19200; 
-                break;
-            case 'Z':
-            case 'B':
-                ui=(unsigned int) atol(&(s[2]));
-                if ((ui==300)   || (ui==1200) ||  (ui==2400)  || (ui==4800)  ||
-                    (ui==7200)  || (ui==9600) ||  (ui==12000) || (ui==14400) ||
-                    (ui==19200) || (ui==38400) || (ui==57600) || (ui==16800)) {
-                    ultoa((unsigned long) ui,curspeed,10);
-                    if (!us&&ch!='Z')
-                        us=ui;
-                    else if(ch=='Z')
-                        us=7000;
-                    already_on=1;
-                } 
-                else {
-                    ui=us=0;
-                }
-                break;
-            case 'S':
-                us=(unsigned int) atol(&(s[2]));
-                if (!((us==300)   || (us==1200)  || (us==2400)  || (us==4800)  ||
-                    (us==7200)  || (us==9600)  || (us==12000) || (us==14400) ||
-                    (us==19200) || (us==38400) || (us==57600)) || (us==16800)) {
-                    us=ui;
-                }
                 break;
             case 'E':
                 oklevel=atoi(&(s[2]));
@@ -155,14 +123,13 @@ void main(int argc, char *argv[])
     }
 
 
-    if(us==7000) us=syscfg.baudrate[syscfg.primaryport];
 
     if (_OvrInitExt(0,0)==0)
-        printf("\nXMS Memory Found, Will Be Used for Overlay Swapping.\n");
+        cprintf("\nXMS Memory Found, Will Be Used for Overlay Swapping.\n");
     v = get_dv_version();
     if (running_dv)
-        printf("Running under Desqview %d.%02d.\n",v / 256, v % 256);
-    if(node) printf("System is Node %d using port %d",node,syscfg.primaryport);
+        cprintf("Running under Desqview %d.%02d.\n",v / 256, v % 256);
+    if(node) cprintf("System is Node %d using port %d",node,syscfg.primaryport);
 
     if(exist("critical")) {
         pl("8Cirtical Errors have occured!  Read Error.log!");
@@ -196,13 +163,10 @@ void main(int argc, char *argv[])
              getcaller();
 
         if (using_modem>-1) {
-            if (!using_modem)
-                holdphone(1,0);
-            getuser();
+                getuser();
         } 
         else {
-            holdphone(1,0);
-            using_modem=0;
+                using_modem=0;
             checkit=0;
             okmacro=1;
             usernum=1;
@@ -232,32 +196,15 @@ main_menu_label:
 hanging_up:
         if (client_fd >= 0)
             send_terminal_restore(client_fd);
-        if ((cdet()) && (!no_hangup) && (ok_modem_stuff)) {
-            i=0;
-            dtr(1);
-            while ((i++<2) && (cdet())) {
-                wait1(27);
-                pr1("+++");
-                wait1(54);
-                if (modem_i->hang[0])
-                    pr1(modem_i->hang);
-                else
-                    pr1("ATH{");
-                wait1(6);
-            }
-        }
+        if (!no_hangup && ok_modem_stuff)
+            dtr(0);
 
         frequent_init();
 wfc_label:
-        if (!using_modem)
-            holdphone(0,0);
         if ((!no_hangup) && ok_modem_stuff)
             dtr(0);
         already_on=0;
         if (sysop_alert && (!kbhitb())) {
-            dtr(1);
-            wait1(2);
-            holdphone(1,0);
             dt=timer();
             nl();
             pl("User Has Logged Off");
@@ -269,7 +216,6 @@ wfc_label:
                 wait1(18);
             }
             clrscrb();
-            holdphone(0,0);
         }
         sysop_alert=0;
     } 

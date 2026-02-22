@@ -63,7 +63,7 @@ int exist(char *s)               { (void)s; return 0; }
 
 /* --- user/config --- */
 void userdb_load(unsigned int un, userrec *u)  { (void)un; (void)u; }
-void userdb_save(unsigned int un, userrec *u) { (void)un; (void)u; }
+int  userdb_save(unsigned int un, userrec *u) { (void)un; (void)u; return 0; }
 void val_cur_user(int i)         { (void)i; }
 void set_autoval(int i)          { (void)i; }
 void changedsl()                 {}

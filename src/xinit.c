@@ -1,3 +1,4 @@
+#include "io_ncurses.h"
 #include "vars.h"
 
 #pragma hdrstop
@@ -17,7 +18,7 @@ void bargraph1(int percent)
 {
     int x;
     for(x=0;x<percent/2;x++)
-        printf("%c",219);
+        cprintf("%c",219);
 }
 
 void dotopinit(char fn[40],int per)
@@ -66,24 +67,21 @@ void init(int show)
     /* Initialize default text attribute to white-on-black */
     curatr=0x07;
 
-    /* Set terminal to raw mode for SysOp console */
-    {
-        struct termios raw;
-        tcgetattr(STDIN_FILENO, &orig_termios);
-        raw = orig_termios;
-        raw.c_lflag &= ~(ICANON | ECHO | ISIG);
-        raw.c_iflag &= ~(IXON | ICRNL);
-        raw.c_cc[VMIN] = 0;
-        raw.c_cc[VTIME] = 0;
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
-        term_raw_mode = 1;
-    }
+    /* Initialize ncurses for SysOp console.
+     * When no tty is present (test harness), ncurses is skipped and
+     * nc_active stays 0. Force line-buffered stdout so printf output
+     * (e.g. "TCP listening") flushes promptly even when redirected. */
+    ncurses_init();
+    if (!nc_active)
+        setvbuf(stdout, NULL, _IOLBF, 0);
+    term_raw_mode = 1;
 
     if(!exist("exitdata.dom")) restoring_shrink=0; 
     else restoring_shrink=1;
     if (!restoring_shrink&&!show) {
         clrscr();
         memmove(scrn,ANSIHEADER,4000);
+        nc_render_scrn(0, 25);
         gotoxy(1,12);
     }
     getcwd(cdir, sizeof(cdir));
@@ -292,17 +290,6 @@ void init(int show)
         sizeof(protocolrec);
     close(i);
 
-    sprintf(s,"%sresults.dat",syscfg.datadir);
-    i=open(s,O_RDWR | O_BINARY);
-    if (i>0) {
-        l=filelength(i);
-        num_result_codes=(read(i,result_codes,(unsigned) l))/sizeof(resultrec);
-        close(i);
-    } 
-    else {
-        end_bbs(noklevel);
-    }
-
 
     if(!restoring_shrink&&!show) {
         dotopinit("Conf.dat",70);
@@ -343,28 +330,14 @@ void init(int show)
             close(f);
           }*/
 
-    sprintf(s,"%smodem.dat",syscfg.datadir);
-    i=open(s,O_RDWR | O_BINARY);
-    if (i>0) {
-        l=filelength(i);
-        modem_i = mallocx(l);
-        read(i,modem_i, (unsigned) l);
-        close(i);
-    } 
-    else {
-        printf("\n\n%smodem.dat not found!\n\n",syscfg.datadir);
-    }
-
     userdb_load(1,&thisuser);
     cursub=0;
     fwaiting=numwaiting(&thisuser);
 
     sl1(2,status.date1);
 
-    if (ok_modem_stuff) {
+    if (ok_modem_stuff)
         initport(syscfg.primaryport);
-        set_baud(syscfg.baudrate[syscfg.primaryport]);
-    }
     if (syscfg.sysconfig & sysconfig_no_local)
         topdata=0;
     else
@@ -458,11 +431,9 @@ void end_bbs(int lev)
     cprintf("%s is outta here!\n\n",wwiv_version);
     _setcursortype(2);
 
-    /* Restore terminal to original mode */
-    if (term_raw_mode) {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
-        term_raw_mode = 0;
-    }
+    /* Restore terminal */
+    ncurses_shutdown();
+    term_raw_mode = 0;
 
     exit(lev);
 }

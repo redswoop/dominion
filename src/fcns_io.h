@@ -94,15 +94,8 @@ void send_terminal_init(int fd);
 void send_terminal_restore(int fd);
 
 
-/* File: modem.c */
+/* File: wfc.c */
 
-void pr1(unsigned char *s);
-void get_modem_line(char *s, double d, int allowa);
-void holdphone(int d,int force);
-void proresult(resultrec *ri);
-int switchresult(char *s);
-void imodem(int x);
-void answer_phone();
 int getcaller(void);
 void gotcaller(unsigned int ms, unsigned int cs);
 void topit(void);

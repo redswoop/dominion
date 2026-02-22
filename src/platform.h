@@ -37,11 +37,15 @@
 /* BBS function yn() conflicts with Bessel function yn() in math.h */
 /* BBS function wait() conflicts with POSIX wait() in sys/wait.h */
 /* BBS local var 'pipe' conflicts with POSIX pipe() in unistd.h */
+/* BBS function nl() conflicts with ncurses nl() */
+/* BBS function filter() conflicts with ncurses filter() */
 #define yn bbs_yn
 #define y0 bbs_y0
 #define y1 bbs_y1
 #define wait bbs_wait
 #define pipe bbs_pipe
+#define nl bbs_nl
+#define filter bbs_filter
 
 /* --- Path buffer size (replaces hardcoded [81] from DOS era) --- */
 #ifndef MAX_PATH_LEN
@@ -171,7 +175,9 @@ int  wherex(void);
 int  wherey(void);
 void _setcursortype(int type);
 int  kbhit(void);
+#if !defined(_IO_NCURSES_H_)
 int  getch(void);
+#endif
 int  getche(void);
 void cprintf(const char *fmt, ...);
 void cputs(const char *s);

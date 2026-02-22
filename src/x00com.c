@@ -80,7 +80,8 @@ void dtr(int i)
 
     if (i == 0 && client_fd >= 0) {
         close(client_fd);
-        client_fd = -1;
+        io.stream[IO_REMOTE].fd_in = -1;
+        io.stream[IO_REMOTE].fd_out = -1;
     }
     /* dtr(1) is a no-op for TCP — we're always "ready" */
 }
@@ -141,7 +142,8 @@ char get1c()
                  * stops reporting data available, allowing getkey()'s inner
                  * loop to run checkhangup() and detect the disconnect. */
                 close(client_fd);
-                client_fd = -1;
+                io.stream[IO_REMOTE].fd_in = -1;
+                io.stream[IO_REMOTE].fd_out = -1;
             }
             return 0;
         }
@@ -239,6 +241,7 @@ void initport(int port_num)
     }
 
     printf("TCP listening on port %d\n", port);
+    fflush(stdout);
     (void)port_num;
 }
 

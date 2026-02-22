@@ -4,264 +4,8 @@
 #include "swap.h"
 
 #include <math.h>
-#define modem_time 3.5
 
-double thing=0.00,reinit=0.00;
-
-void pr1(unsigned char *s)
-{
-    int i;
-
-    if(!ok_modem_stuff) return;
-    for (i = 0; s[i] > 0; i++)
-        if (s[i]=='{')
-            outcomch(13);
-        else if (s[i] =='~')
-            wait1(9);
-        else
-            outcomch(s[i]);
-}
-
-
-void get_modem_line(char *s, double d, int allowa)
-{
-    int i=0;
-    char ch=0, ch1;
-    double t;
-
-
-    if(!ok_modem_stuff) return;
-    t = timer();
-    do {
-        ch = get1c();
-        if (kbhitb() && allowa) {
-            ch1 = getchd();
-            if (toupper(ch1) == 'H') {
-                ch = 13;
-                s[0] = i = 1;
-            }
-        }
-        if (ch >= 32)
-            s[i++] = toupper(ch);
-    } 
-    while ((ch != 13) && (fabs(timer() - t) < d) && (i<=40));
-    s[i] = 0;
-}
-
-
-void holdphone(int d,int force)
-{
-
-    if (!ok_modem_stuff)
-        return;
-
-    if (no_hangup)
-        return;
-    if ((!(syscfg.pickupphone)) || (!(syscfg.hangupphone)))
-        return;
-
-    if (d) {
-        if (!global_xx) {
-            if ((syscfg.sysconfig & sysconfig_off_hook)||force) {
-                pr1(syscfg.pickupphone);
-                xtime=timer();
-                global_xx=1;
-            }
-        }
-    } 
-    else {
-        if ((syscfg.sysconfig & sysconfig_off_hook)||force) {
-            if (global_xx) {
-                dtr(1);
-                if (fabs(xtime-timer())<modem_time) {
-                    topit();
-                    movecsr(38,2);
-                    outs("Waiting for modem");
-                }
-                while (fabs(xtime-timer())<modem_time);
-                pr1(syscfg.hangupphone);
-                imodem(0);
-                global_xx=0;
-            }
-        }
-    }
-}
-
-
-void proresult(resultrec *ri)
-{
-    if(ri->curspeed[0]) {
-        if(ri->attr & flag_append)
-            strcat(curspeed,ri->curspeed);
-        else
-            strcpy(curspeed,ri->curspeed);
-    }
-
-    if(ri->attr & flag_fc)
-        flow_control=1;
-
-    if(ri->modem_speed)
-        modem_speed=ri->modem_speed;
-
-    if(ri->com_speed) {
-        com_speed=ri->com_speed;
-        set_baud(com_speed);
-    }
-}
-
-
-int switchresult(char *s)
-{
-    char *ss;
-    int i,mode=-1;
-
-    ss=strtok(s,"/");
-
-    while (ss) {
-        for (i=0; (i<num_result_codes); i++) {
-            if (stricmp(s,result_codes[i].return_code)==0) {
-                proresult(&result_codes[i]);
-                mode=result_codes[i].mode;
-                if(mode==mode_con) {
-                    incom=1; 
-                    outcom=1;
-                }
-                break;
-            }
-        }
-        ss=strtok(NULL,modem_i->sepr);
-    }
-    return(mode);
-}
-
-void imodem(int x)
-{
-    int i,done;
-    char ch,s[161],*is;
-    double d;
-
-    if (!ok_modem_stuff)
-        return;
-
-
-
-    if (x)
-        is=modem_i->setu;
-    else
-        is=modem_i->init;
-
-    if (!(*is))
-        return;
-
-
-    topit();
-    movecsr(38,1);
-    outs("Sending Modem Init String");
-    start_dv_crit();
-
-    dtr(1);
-    set_baud(syscfg.baudrate[syscfg.primaryport]);
-    i=0;
-    done=0;
-    wait1(9);
-
-
-    while (!done&&!kbhit()) {
-        initport(syscfg.primaryport);
-        pr1(is);
-        dump();
-
-        if (fabs(timer()-d)>45.0) {
-            pr1("AT{");
-            wait1(9);
-            dump();
-            topit();
-            topit2();
-            end_dv_crit();
-            return;
-        }
-        get_modem_line(s,(double)45.0,1);
-        if(s[0]==1) done=1;
-
-        if(switchresult(s)==mode_norm) {
-            done=1;
-        } 
-        else {
-            movecsr(38,4);
-            sprintf(s,"Error: (%d)  ",++i);
-            outs(s);
-        }
-
-        if (i>5)
-            done=1;
-    }
-
-    end_dv_crit();
-    wait1(2);
-    topit();
-    topit2();
-}
-
-void answer_phone()
-{
-    char ch,s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
-    int i,i1,done;
-    double d;
-
-    if(!ok_modem_stuff)
-        return;
-
-    topit();
-    movecsr(38,1);
-    outs("Answering phone, 'H' to abort.");
-    topit2();
-    movecsr(38,2);
-    com_speed=modem_speed=syscfg.baudrate[syscfg.primaryport];
-    outs(modem_i->ansr);
-    pr1(syscfg.answer);
-    d=timer();
-    done=0;
-
-    do {
-        if (fabs(timer()-d)>45.0) {
-            pr1("AT{");
-            wait1(9);
-            dump();
-            topit();
-            topit2();
-            return;
-        }
-        get_modem_line(s,(double)45.0,1);
-        if(s[0]==1) {
-            pr1("AT{");
-            wait1(9);
-            dump();
-            topit();
-            topit2();
-            return;
-        }        
-
-        switch(switchresult(s)) {
-        case mode_err:
-        case mode_dis:
-        case mode_norm:
-        case mode_con:
-        case mode_ndt: 
-            done=1; 
-            break;
-        }
-
-    } 
-    while (!done);
-
-    if (incom)
-        wait1(15);
-    else {
-        topit();
-        topit2();
-    }
-}
-
+double thing=0.00;
 
 int getcaller(void)
 {
@@ -291,13 +35,8 @@ int getcaller(void)
     d*=10000.0;
     srand((unsigned int)d);
     wfcs();
-    if (tcp_port > 0 && ok_modem_stuff) {
-        /* TCP mode: start listener directly, skip modem init strings */
+    if (tcp_port > 0 && ok_modem_stuff)
         initport(0);
-    } else {
-        imodem(1);
-        imodem(0);
-    }
     topit();
     strcpy(curspeed,"KB");
     do {
@@ -364,11 +103,6 @@ int getcaller(void)
                 }
                 topit();
                 break;
-            case 'A':
-                if (!ok_modem_stuff)
-                    break;
-                answer_phone();
-                break;
             case '1':
             case '2':
             case '3':
@@ -400,7 +134,6 @@ int getcaller(void)
             case 'U':
                 okskey=1;
                 if (ok_local()) {
-                    holdphone(1,0);
                     outchr(12);
                     if(ch=='B') boardedit();
                     else if(ch=='F') diredit();
@@ -416,26 +149,22 @@ int getcaller(void)
                     else if(ch=='S') edstring(0);
                     else if(ch=='C') confedit();
                     else if(ch=='O') config();
-                    holdphone(0,0);
                 }
                 okskey=0;
                 wfcs();
                 break;
             case 'D':
                 if (ok_local()) {
-                    holdphone(1,0);
                     clrscrb();
                     nl();
                     pl("Type \"EXIT\" to return to the BBS");
                     nl();
                     runprog(getenv("COMSPEC"),1);
-                    holdphone(0,0);
                     wfcs();
                 }
                 break;
             case 'H': 
                 hold=opp(hold); 
-                holdphone(hold,1); 
                 wfcs(); 
                 break;
             case 'L': 
@@ -453,21 +182,17 @@ int getcaller(void)
                     clrscrb();
                     usernum=1;
                     if (thisuser.waiting) {
-                        holdphone(1,0);
-                        okskey=1;
+                            okskey=1;
                         readmailj(0,0);
                         okskey=0;
                         userdb_save(1,&thisuser);
-                        holdphone(0,0);
-                    }
+                        }
                 }
                 wfcs();
                 break;
             case 'T':
                 if ((ok_local())) {
                     runprog("term.bat",1);
-                    imodem(1);
-                    imodem(0);
                 }
                 wfcs();
                 break;
@@ -476,13 +201,11 @@ int getcaller(void)
                     clrscrb();
                     usernum=1;
                     useron=1;
-                    holdphone(1,0);
                     okskey=1;
                     post(cursub=0);
                     okskey=0;
                     useron=0;
                     userdb_save(1,&thisuser);
-                    holdphone(0,0);
                 }
                 wfcs();
                 break;
@@ -490,9 +213,6 @@ int getcaller(void)
                 clrscr(); 
                 zlog(); 
                 wfcs();  
-                break;
-            case '+': 
-                imodem(0); 
                 break;
             case '|': 
                 if(!ok_local()) break;
@@ -536,10 +256,13 @@ int getcaller(void)
             if (select(listen_fd + 1, &fds, NULL, NULL, &tv) > 0) {
                 struct sockaddr_in caddr;
                 socklen_t clen = sizeof(caddr);
-                client_fd = accept(listen_fd, (struct sockaddr *)&caddr, &clen);
-                if (client_fd >= 0) {
-                    send_telnet_negotiation(client_fd);
-                    send_terminal_init(client_fd);
+                int accepted_fd = accept(listen_fd, (struct sockaddr *)&caddr, &clen);
+                if (accepted_fd >= 0) {
+                    io.stream[IO_REMOTE].fd_in = accepted_fd;
+                    io.stream[IO_REMOTE].fd_out = accepted_fd;
+                    io.stream[IO_REMOTE].needs_iac = 1;
+                    send_telnet_negotiation(accepted_fd);
+                    send_terminal_init(accepted_fd);
                     incom = 1;
                     outcom = 1;
                     com_speed = modem_speed = 38400;
@@ -561,7 +284,7 @@ int getcaller(void)
     okskey=1;
     if (!endday) {
         clrscr();
-        printf("Connection Established at: %s\n",curspeed);
+        cprintf("Connection Established at: %s\r\n",curspeed);
     }
     wfc=0;
     return 0;
@@ -574,7 +297,6 @@ void gotcaller(unsigned int ms, unsigned int cs)
 
     frequent_init();
     com_speed = cs;
-    set_baud(cs);
     modem_speed = ms;
     sl1(1,"");
     if(already_on==1) {
@@ -607,21 +329,19 @@ void gotcaller(unsigned int ms, unsigned int cs)
 
 void topit(void)
 {
-    char s[MAX_PATH_LEN];
     int i;
 
     gotoxy(39,2);
-    for(i=39;i<77;i++) printf(" ");
+    for(i=39;i<77;i++) cprintf(" ");
 }
 
 
 void topit2(void)
 {
-    char s[MAX_PATH_LEN];
     int i;
 
     gotoxy(39,3);
-    for(i=39;i<77;i++) printf(" ");
+    for(i=39;i<77;i++) cprintf(" ");
 }
 
 
@@ -650,12 +370,6 @@ void wfct(void)
     double tt;
 
     tt=timer();
-    tt=tt-reinit;
-    if(tt>600.0) {
-        if (!tcp_port) imodem(0);
-        reinit=timer();
-    }
-    tt=timer();
     tt-=thing;
     if(tt<60.0) {
         textattr(timeattr);
@@ -674,7 +388,6 @@ void wfcs(void)
     echo=1;
     clrscr();
     thing=timer();
-    reinit=timer();
 
     _setcursortype(0);
     fastscreen("wfc.bin");

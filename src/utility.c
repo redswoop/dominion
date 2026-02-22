@@ -53,7 +53,6 @@ void frequent_init()
     outcom=0;
     incom=0;
     charbufferpointer=0;
-    andwith=0xff;
     checkit=0;
     topline=0;
     screenlinest=defscreenbottom+1;

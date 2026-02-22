@@ -1,3 +1,4 @@
+#include "io_ncurses.h"  /* MUST come before vars.h */
 #include "vars.h"
 
 #pragma hdrstop
@@ -163,28 +164,6 @@ void getuser()
     if(ans)
         thisuser.sysstatus |= sysstatus_ansi;
 
-
-    if(modem_speed<=(int)nifty.lockoutrate&&incom) {
-        npr("0Sorry, but %d baud is not Supported.",modem_speed);
-        nl();
-        sprintf(s,"7!0 Call at unsupported rate, 4%d0.",modem_speed);
-        sl1(0,s);
-        npr("Please Enter Lockout Password: ");
-        input(s2,31);
-        if(strcmp(s2,nifty.lockoutpw)) {
-            pl("Sorry, Password Incorrect.");
-            sl1(0,"9### 0Unsuccesfully tried to logon with invalid Lockout Password");
-            nl();
-            nl();
-            pausescr();
-            hangup=1;
-            return;
-        } 
-        else {
-            pl("Correct.");
-            sl1(0,"9###0 Loged onto system with Lockout Password");
-        }
-    }
 
     net_only=0;
     count=0;
@@ -763,28 +742,7 @@ void fastscreen(char fn[13])
     read(i,ss,4000);
     close(i);
     memcpy(scrn,ss,4000);
-    /* Render to terminal via ANSI */
-    {
-        char *cmap = "04261537";
-        int fg,bg,bold,blink,last_a=-1;
-        for(row=0;row<25;row++) {
-            printf("\033[%d;1H",row+1);
-            for(col=0;col<80;col++) {
-                ch=(unsigned char)ss[row*160+col*2];
-                attr=(unsigned char)ss[row*160+col*2+1];
-                if(attr!=last_a) {
-                    fg=attr&0x07; bg=(attr>>4)&0x07;
-                    bold=(attr&0x08)?1:0; blink=(attr&0x80)?1:0;
-                    printf("\033[0;%s%s%d;%dm",
-                        bold?"1;":"", blink?"5;":"",
-                        30+(cmap[fg]-'0'), 40+(cmap[bg]-'0'));
-                    last_a=attr;
-                }
-                put_cp437(ch);
-            }
-        }
-    }
-    fflush(stdout);
+    nc_render_scrn(0, 25);
     reset_attr_cache();
     farfree(ss);
 }
@@ -835,11 +793,9 @@ int check_ansi()
     while (comhit())
         get1c();
 
-    pr1("\x1b[6n");
+    outstr("\x1b[6n");
 
     l=timer1()+36;
-    if (modem_flag & flag_ec)
-        l += 18;
 
     while ((timer1()<l) && (!hangup)) {
         checkhangup();
