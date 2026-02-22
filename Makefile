@@ -20,6 +20,7 @@ BUILDDIR = build
 OBJDIR   = $(BUILDDIR)/obj
 
 CC = cc
+CXX = c++
 CFLAGS = -std=gnu89 -DPD \
          -Wall -Wno-implicit-function-declaration \
          -Wno-return-type -Wno-pointer-sign \
@@ -39,6 +40,8 @@ CFLAGS = -std=gnu89 -DPD \
          -Wno-multichar \
          -fsigned-char \
          -g -O0
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-unused-parameter \
+           -fsigned-char -g -O0
 
 # The BBS core modules (from the original makefile)
 BBS_CORE = bbs com conio bbsutl file file1 mm \
@@ -76,9 +79,13 @@ binary: $(TARGET)
 $(TARGET): $(OBJS) | $(BUILDDIR)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) -lm -lncurses
 
-# Compile
+# Compile C
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile C++
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Create directories
 $(BUILDDIR):
@@ -122,10 +129,9 @@ INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/p
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
 	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
 
-# IO test — menu-driven test program with optional TCP telnet support
-IOTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_ncurses.o $(OBJDIR)/io_stream.o
-$(BUILDDIR)/iotest: $(TOOLDIR)/iotest.c $(IOTEST_OBJS) | $(BUILDDIR)
-	$(CC) $(CFLAGS) -I$(SRCDIR) -o $@ $< $(IOTEST_OBJS) -lncurses
+# IO test — clean Terminal class, ZERO BBS dependencies
+$(BUILDDIR)/iotest: $(TOOLDIR)/iotest.cpp $(OBJDIR)/terminal.o | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/terminal.o -lncurses
 
 # --- Data sync from dist/ into build/ ---
 data: | $(BUILDDIR)
