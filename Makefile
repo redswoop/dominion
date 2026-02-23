@@ -63,8 +63,7 @@ BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               menued uedit diredit subedit stringed \
               bbsutl2 sysopf wfc xinit \
               personal misccmd config \
-              lilo error chat nuv newuser \
-              multline multmail
+              lilo error chat nuv newuser
 
 # Platform compatibility
 PLATFORM = platform_stubs jam_stubs io_stream terminal terminal_bridge
