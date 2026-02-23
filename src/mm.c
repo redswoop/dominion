@@ -29,7 +29,6 @@ extern char *retfrompldn;
 #endif
 
 extern int fastlogon;
-extern char registered_name[201];
 
 
 void packm(void);
@@ -91,8 +90,8 @@ int slok(char val[31],char menu)
         case 'U': 
             if(atoi(s+1)!=usernum) curok=0; 
             break;
-        case 'V': 
-            if(!running_dv) curok=0; 
+        case 'V':
+            curok=0;
             break;
         case '@': 
             if(!strchr(conf[curconf].flagstr,s[1])) curok=0; 
@@ -271,9 +270,6 @@ void othercmd(char type,char ms[40])
     case 'I': 
         nl();
         npr("%s, Compiled %s\r\n",wwiv_version,wwiv_date);
-#ifndef BETA
-        npr("Registered to: %s\r\n",registered_name);
-#endif
         nl();
         pausescr();
         printfile("system");
@@ -849,11 +845,6 @@ void menuman(void)
     else if((!strcmp(s,"VER"))) {
         nl();
         npr("%s, Compiled %s\r\n",wwiv_version,wwiv_date);
-#ifndef BETA
-        npr("Registered to: %s\r\n",registered_name);
-#endif
-        if(running_dv)
-            pl(get_string(49));
         nl();
         i1=0;
     } 

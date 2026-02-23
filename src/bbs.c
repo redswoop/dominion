@@ -20,8 +20,7 @@ int main(int argc, char *argv[])
     unsigned int ui=0, us=0;
     double dt;
     unsigned short c_s,c_o,dogofer=0,dofilenet=0;
-
-    checkreg();
+    int splash_pause=0;
 
     if(getenv("DOM")) cd_to(getenv("DOM"));
     if(!exist("config.json")) {
@@ -65,6 +64,7 @@ int main(int argc, char *argv[])
                 printf("/M  - don't access modem at all\n");
                 printf("/L  - Logon as SysOp Locally\n");
                 printf("/I  - Load Quietly(Bypass all loading screens)\n");
+                printf("/W  - Pause at splash screen\n");
                 printf("/F  - Enable/Disable Mailer Loadup\n");
                 printf("/A  - Toss in File Net\n");
                 printf("\n");
@@ -109,6 +109,9 @@ int main(int argc, char *argv[])
             case 'M':
                 ok_modem_stuff=0;
                 break;
+            case 'W':
+                splash_pause=1;
+                break;
             }
         }
     }
@@ -128,9 +131,6 @@ int main(int argc, char *argv[])
 
     if (_OvrInitExt(0,0)==0)
         cprintf("\nXMS Memory Found, Will Be Used for Overlay Swapping.\n");
-    v = get_dv_version();
-    if (running_dv)
-        cprintf("Running under Desqview %d.%02d.\n",v / 256, v % 256);
     if(node) cprintf("System is Node %d using port %d",node,syscfg.primaryport);
 
     if(exist("critical")) {
@@ -139,6 +139,12 @@ int main(int argc, char *argv[])
         delay(500);
         nosound();
         unlink("critical");
+    }
+
+    if(splash_pause) {
+        printf("\nPress any key...");
+        fflush(stdout);
+        getchar();
     }
 
     if (restoring_shrink) {

@@ -47,7 +47,7 @@ int already_on, arcling, async_irq, base, bchanged,confmode,
     restoring_shrink,
     smwcheck, statusfile, sysop_alert, tempio, topdata,
     usernum, useron, use_workspace, wfc,
-    running_dv,msgr,umaxsubs,umaxdirs,
+    msgr,umaxsubs,umaxdirs,
     ARC_NUMBER,MAX_BATCH,backdoor;
 
 long hanguptime1, nscandate, this_date, timelastchar1;
@@ -131,7 +131,7 @@ extern int already_on, arcling, async_irq, base, bchanged,confmode,
     restoring_shrink,
     smwcheck, statusfile, sysop_alert, tempio, topdata,
     usernum, useron, use_workspace, wfc,
-    running_dv,msgr,umaxsubs,umaxdirs,
+    msgr,umaxsubs,umaxdirs,
     ARC_NUMBER,MAX_BATCH,backdoor;
 
 extern long hanguptime1, nscandate, this_date, timelastchar1;

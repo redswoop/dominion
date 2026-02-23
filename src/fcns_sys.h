@@ -201,10 +201,4 @@ void viewfile();
 void playmod(void);
 
 
-/* File: dv.c */
-
-int get_dv_version(void);
-void start_dv_crit(void);
-void dv_pause(void);
-
 #endif /* _FCNS_SYS_H_ */

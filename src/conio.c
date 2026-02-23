@@ -629,8 +629,6 @@ void tleft(int dot)
                 break;
 
             case 5:
-                if(running_dv)
-                    strcpy(s,arg);
                 break;
 
             case 6:

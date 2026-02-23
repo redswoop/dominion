@@ -273,9 +273,7 @@ int getcaller(void)
             /* No modem/TCP — just poll briefly so we don't spin CPU */
             usleep(50000);
         }
-        dv_pause();
-
-    } 
+    }
     while ((!incom) && (!lokb) && (!endday));
 
     using_modem=incom;

@@ -395,7 +395,6 @@ extern "C"
 int  swap(unsigned char *program_name, unsigned char *command_line,
           unsigned char *exec_return, unsigned char *swap_fname);
 #endif
-unsigned long bp(char *registration_string, unsigned int security_code);
 void pr(char *fmt, ...);
 
 /* --- BBS stub functions (platform_stubs.c) — not yet implemented --- */

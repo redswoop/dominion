@@ -400,8 +400,8 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
         case 'U': 
             if(atoi(s+1)!=usernum) curok=0; 
             break;
-        case 'V': 
-            if(!running_dv) curok=0; 
+        case 'V':
+            curok=0;
             break;
         case '@': 
             if(!strchr(conf[curconf].flagstr,s[1])) curok=0; 

@@ -125,10 +125,6 @@ int usearch(int un,char val[41]);
 void uedit(int usern);
 
 
-/* File: regis.c */
-
-void checkreg(void);
-
 /* File: personal.c (additional) */
 
 void modify_mailbox(void);

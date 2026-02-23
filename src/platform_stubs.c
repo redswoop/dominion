@@ -584,23 +584,6 @@ int swap(unsigned char *program_name, unsigned char *command_line,
 }
 
 /* ================================================================== */
-/*  REGISTRATION KEY (bp.h — Brian Pirie's registration library)       */
-/* ================================================================== */
-
-unsigned long bp(char *registration_string, unsigned int security_code)
-{
-    /* Stub — always return the "correct" key for any input.
-     * The real library was distributed as BP?.LIB (closed source).
-     * This makes the BBS think it's registered. */
-    unsigned long hash = 0;
-    int i;
-    (void)security_code;
-    for (i = 0; registration_string[i]; i++)
-        hash = hash * 31 + registration_string[i];
-    return hash ^ (unsigned long)security_code;
-}
-
-/* ================================================================== */
 /*  STANDALONE TOOL FUNCTIONS USED BY BBS MODULES                      */
 /* ================================================================== */
 
