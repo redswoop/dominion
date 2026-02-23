@@ -382,7 +382,7 @@ void batchul(int t)
     ultoa(sess.modem_speed,sx3,10);
     sx2[0]='0'+sys.cfg.primaryport;
     sx2[1]=0;
-    sprintf(s2,"%s\\BATCH.LST",sys.cdir);
+    sprintf(s2,"%s/BATCH.LST",sys.cdir);
     stuff_in(s,s1,sx1,sx2,"",sx3,s2);
 
     pl(get_string(70));
@@ -436,7 +436,7 @@ void batchdl(int t)
 
 
 
-    sprintf(s,"%s\\BATCH.LST",sys.cdir);
+    sprintf(s,"%s/BATCH.LST",sys.cdir);
     unlink(s);
     f=open(s,O_RDWR | O_BINARY| O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     if (f<0) {
@@ -464,7 +464,7 @@ void batchdl(int t)
     ultoa(sess.modem_speed,sx3,10);
     sx2[0]='0'+sys.cfg.primaryport;
     sx2[1]=0;
-    sprintf(s2,"%s\\BATCH.LST",sys.cdir);
+    sprintf(s2,"%s/BATCH.LST",sys.cdir);
     stuff_in(s,s1,sx1,sx2,"",sx3,s2);
     _chmod(sess.dszlog,1,0);
     pl(get_string(70));

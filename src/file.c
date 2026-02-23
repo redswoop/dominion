@@ -127,7 +127,7 @@ void dliscan1(int dn)
     if(sys.directories[dn].type==99)
         sprintf(s,"%sTEMPDIR.dir",sys.directories[dn].dpath);
     else
-        sprintf(s,"%sdir\\%s.DIR",sys.cfg.datadir,sys.directories[dn].filename);
+        sprintf(s,"%sdir/%s.DIR",sys.cfg.datadir,sys.directories[dn].filename);
     sess.dlf=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
     i=filelength(sess.dlf)/sizeof(uploadsrec);
     if (i==0) {
@@ -141,7 +141,7 @@ void dliscan1(int dn)
     }
     sess.numf=u.numbytes;
 
-    sprintf(s,"%sdir\\%s.EXT",sys.cfg.datadir,sys.directories[dn].filename);
+    sprintf(s,"%sdir/%s.EXT",sys.cfg.datadir,sys.directories[dn].filename);
     sess.edlf=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
 }
 

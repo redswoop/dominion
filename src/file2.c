@@ -596,7 +596,7 @@ void listgen(void)
     genner("filelist.dom",s,isnew);
     sprintf(s,"filelist.dom");
     add_arc("filelist","filelist.dom");
-    sprintf(s1,"%s\\filelist.%s",sys.cdir,sys.xarc[sys.ARC_NUMBER].extension);
+    sprintf(s1,"%s/filelist.%s",sys.cdir,sys.xarc[sys.ARC_NUMBER].extension);
     i=open(s1,O_RDONLY|O_BINARY);
     close(i);
     send_file(s1,(int *)&sent,(int *)&abort,s);

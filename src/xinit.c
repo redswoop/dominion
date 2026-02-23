@@ -354,7 +354,7 @@ void init(int show)
         strcat(sess.newprompt,ss);
     else
         strcat(sess.newprompt,"$P$G");
-    sprintf(sess.dszlog,"%s\\BBSDSZ.LOG",sys.cdir);
+    sprintf(sess.dszlog,"%s/BBSDSZ.LOG",sys.cdir);
     sprintf(s,"DSZLOG=%s",sess.dszlog);
     i=i1=0;
     while (environ[i]!=NULL) {
