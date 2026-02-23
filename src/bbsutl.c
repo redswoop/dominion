@@ -1,5 +1,12 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void far *malloca(unsigned long nbytes)
 {
@@ -149,22 +156,22 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
     done=0;
     do {
         ch=getkey();
-        if (nifty.chatcolor==1&&chatting) {
+        if (sys.nifty.chatcolor==1&&chatting) {
             if (okansi()) {
                 if (lastcon)
-                    makeansi(scfilt[ch],s3,curatr);
+                    makeansi(sys.scfilt[ch],s3,curatr);
                 else
-                    makeansi(cfilt[ch],s3,curatr);
+                    makeansi(sys.cfilt[ch],s3,curatr);
             } else s3[0]=0;
             outstr(s3);
         } 
-        else if (nifty.chatcolor==2&&chatting) {
+        else if (sys.nifty.chatcolor==2&&chatting) {
             if(lastcon) {
-                ansic(nifty.rotate[ronum++]);
+                ansic(sys.nifty.rotate[ronum++]);
                 if(ronum==5) ronum=0;
             } 
             else {
-                ansic(syscfg.dszbatchdl[ro2++]);
+                ansic(sys.cfg.dszbatchdl[ro2++]);
                 if(ro2==5) ro2=0;
             }
         }
@@ -246,14 +253,14 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
                 } 
             } 
             else
-                if( ( wherex()< (thisuser.screenchars-1) || !roll)   && (cp<maxlen)) {
+                if( ( wherex()< (sess.user.screenchars-1) || !roll)   && (cp<maxlen)) {
                 s[cp++]=ch;
                 outchr(ch);
-                if (wherex()==(thisuser.screenchars-1)&&roll)
+                if (wherex()==(sess.user.screenchars-1)&&roll)
                     done=1;
             } 
             else {
-                if (wherex()>=(thisuser.screenchars-1)&&roll)
+                if (wherex()>=(sess.user.screenchars-1)&&roll)
                     done=1;
             }
         } 
@@ -358,7 +365,7 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
 
             case 9:  /* Tab */
                 i=5-(cp % 5);
-                if (((cp+i)<maxlen) && ((wherex()+i)<thisuser.screenchars)) {
+                if (((cp+i)<maxlen) && ((wherex()+i)<sess.user.screenchars)) {
                     i=5-((wherex()+1) % 5);
                     for (i1=0; i1<i; i1++) {
                         s[cp++]=32;
@@ -491,9 +498,9 @@ void sl1(int cmd,char *s)
     char l[180],ch1;
     int i;
 
-    if(backdoor) return;
+    if(sess.backdoor) return;
 
-    if(syscfg.sysconfig & sysconfig_shrink_term)
+    if(sys.cfg.sysconfig & sysconfig_shrink_term)
         strcpy(s,noc2(s));
 
     switch(cmd) {
@@ -513,7 +520,7 @@ void sl1(int cmd,char *s)
         } 
         else
             strcpy(l,s);
-        if (syscfg.sysconfig & sysconfig_printer)
+        if (sys.cfg.sysconfig & sysconfig_printer)
             fprintf(stdprn,"%s\r\n",noc2(s));
         i=strlen(l);
         l[i++]='\r';
@@ -534,7 +541,7 @@ void sl1(int cmd,char *s)
             close(slf);
             slf=-1;
         }
-        strcpy(f,syscfg.gfilesdir);
+        strcpy(f,sys.cfg.gfilesdir);
         i=strlen(f);
         f[i++]=s[6];
         f[i++]=s[7];
@@ -550,7 +557,7 @@ void sl1(int cmd,char *s)
             close(slf);
             slf=-1;
         }
-        strcpy(s,&f[strlen(syscfg.gfilesdir)]);
+        strcpy(s,&f[strlen(sys.cfg.gfilesdir)]);
         break;
     case 4:
         if (slf <= 0) {
@@ -572,7 +579,7 @@ void sl1(int cmd,char *s)
             strcat(l, s);
             midline += (2 + strlen(s));
         }
-        if (syscfg.sysconfig & sysconfig_printer)
+        if (sys.cfg.sysconfig & sysconfig_printer)
             fprintf(stdprn, "%s", l);
         i = strlen(l);
         write(slf, (void *)l, i);
@@ -585,7 +592,7 @@ void sysoplog(char s[161])
 {
     char s1[181];
 
-    if ((actsl!=255)||incom) {
+    if ((sess.actsl!=255)||incom) {
         sprintf(s1,"   %s",s);
         sl1(0,s1);
     }
@@ -670,7 +677,7 @@ char *smkey(char *avail,int num, int slash, int crend,int full)
 }
 
 char MCISTR[161];
-/* pp now in vars.h (Phase B0) */
+/* sess.pp now in vars.h (Phase B0) */
 
 #include "mci.h"
 #include "mci_bbs.h"
@@ -681,15 +688,15 @@ int sysop2()
     int ok;
 
     ok=sysop1();
-    if (thisuser.restrict & restrict_chat)
+    if (sess.user.restrict & restrict_chat)
         ok=0;
-    if (syscfg.sysoplowtime != syscfg.sysophightime) {
-        if (syscfg.sysophightime>syscfg.sysoplowtime) {
-            if ((timer()<=(syscfg.sysoplowtime*60.0)) || (timer()>=(syscfg.sysophightime*60.0)))
+    if (sys.cfg.sysoplowtime != sys.cfg.sysophightime) {
+        if (sys.cfg.sysophightime>sys.cfg.sysoplowtime) {
+            if ((timer()<=(sys.cfg.sysoplowtime*60.0)) || (timer()>=(sys.cfg.sysophightime*60.0)))
                 ok=0;
         } 
         else {
-            if ((timer()<=(syscfg.sysoplowtime*60.0)) && (timer()>=(syscfg.sysophightime*60.0)))
+            if ((timer()<=(sys.cfg.sysoplowtime*60.0)) && (timer()>=(sys.cfg.sysophightime*60.0)))
                 ok=0;
         }
     }

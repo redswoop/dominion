@@ -1,33 +1,40 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 
 #include <math.h>
 
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 void check_event()
 {
     double tl;
 
-    if (syscfg.executetime) {
-        tl=time_event-timer();
+    if (sys.cfg.executetime) {
+        tl=sys.time_event-timer();
         if (tl<0.0)
             tl += 24.0*3600.0;
-        if ((tl-last_time)>2.0)
-            do_event=1;
-        last_time=tl;
+        if ((tl-sys.last_time)>2.0)
+            sys.do_event=1;
+        sys.last_time=tl;
     }
 }
 
 
 void run_event()
 {
-    if ((do_event) && (syscfg.executetime)) {
-        do_event=0;
+    if ((sys.do_event) && (sys.cfg.executetime)) {
+        sys.do_event=0;
         nl();
         pl("Now running external event.");
         nl();
-        if (syscfg.executestr[0]) {
-            runprog(syscfg.executestr,1);
+        if (sys.cfg.executestr[0]) {
+            runprog(sys.cfg.executestr,1);
         } 
         else
             end_bbs(10);
@@ -87,15 +94,15 @@ double nsl()
     slrec xx;
 
     dd=timer();
-    if (useron) {
-        if (session.timeon>(dd+60.0))
-            session.timeon -= 24.0*3600.0;
-        tot=(dd-session.timeon);
-        xx=syscfg.sl[actsl];
+    if (sess.useron) {
+        if (sess.timeon>(dd+60.0))
+            sess.timeon -= 24.0*3600.0;
+        tot=(dd-sess.timeon);
+        xx=sys.cfg.sl[sess.actsl];
         tpl=((double) xx.time_per_logon) * 60.0;
         tpd=((double) xx.time_per_day) * 60.0;
-        tlc = tpl - tot + (thisuser.extratime) + extratimecall;
-        tlt = tpd - tot - ((double) thisuser.timeontoday) + (thisuser.extratime);
+        tlc = tpl - tot + (sess.user.extratime) + sess.extratimecall;
+        tlt = tpd - tot - ((double) sess.user.timeontoday) + (sess.user.extratime);
 
         tlt=(((tlc)<(tlt)) ? (tlc) : (tlt));
         if (tlt<0.0)
@@ -107,17 +114,17 @@ double nsl()
     else {
         rtn=1.00;
     }
-    ltime=0;
-    if (syscfg.executetime) {
-        tlt=time_event-dd;
+    sess.ltime=0;
+    if (sys.cfg.executetime) {
+        tlt=sys.time_event-dd;
         if (tlt<0.0)
             tlt += 24.0*3600.0;
         if (rtn>tlt) {
             rtn=tlt;
-            ltime=1;
+            sess.ltime=1;
         }
         check_event();
-        if (do_event)
+        if (sys.do_event)
             rtn=0.0;
     }
     if (rtn<0.0)
@@ -212,8 +219,8 @@ void ptime()
     strcpy(s, ctime(&l));
     s[strlen(s) - 1] = 0;
     npr("3It is 0%s3.\r\n",s);
-    if (useron)
-        npr("3You have been on for 0%s3, and have 0`T3 left\r\n",ctim(timer()-session.timeon));
+    if (sess.useron)
+        npr("3You have been on for 0%s3, and have 0`T3 left\r\n",ctim(timer()-sess.timeon));
     nl();
 
     restorel(cl, atr, xl, &cc);

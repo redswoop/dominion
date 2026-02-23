@@ -1,9 +1,9 @@
 /*
- * system.h — System-wide state struct (Phase B3)
+ * system.h — System-wide state singleton (Phase C: kill vars.h)
  *
- * All system-wide globals live here. Per-session state stays in session_t.
- * Existing code compiles unchanged via compatibility macros in vars.h
- * (#define syscfg sys.cfg, etc.).
+ * All system-wide globals live here. Per-session state stays in Session.
+ * Previously accessed via compatibility macros in vars.h
+ * (#define syscfg sys.cfg, etc.) — now accessed directly.
  *
  * Layer 3: depends on vardec headers, platform.h, jammb.h
  */
@@ -18,17 +18,20 @@
 #include "platform.h"
 #include "jammb.h"
 
-typedef struct {
+class System {
+public:
+    static System& instance();
+
     /* Config (loaded from Config.dat) */
-    configrec cfg;              /* was syscfg — renamed to avoid 'sys.syscfg' */
+    configrec cfg;              /* was syscfg */
     niftyrec nifty;
-    statusrec status;           /* NO MACRO — collides with postrec.status, mailrec.status */
+    statusrec status;
 
     /* Board definitions */
     subboardrec *subboards;
     directoryrec *directories;
     protocolrec proto[20];
-    confrec conf[20];           /* NO MACRO — collides with subboardrec.conf */
+    confrec conf[20];
     messagerec menus[50];
     xarcrec xarc[8];
 
@@ -52,25 +55,23 @@ typedef struct {
     char cdir[MAX_PATH_LEN];
     char cfilt[255], scfilt[255];
 
-    /* Scheduled events (moved from session_t) */
+    /* Scheduled events */
     int do_event, wfc;
     double time_event, last_time, xtime;
     char xdate[9];
 
-    /* Misc moved from session_t */
+    /* Misc */
     int global_xx;
     int ARC_NUMBER, MAX_BATCH;
-
-    /* Misc */
     char *xenviron[50];
     int questused[20];
     long last_time_c;
     long this_date;
     char *sp;
     JAMAPIREC JamRec;
-} system_t;
 
-extern system_t sys;
-void system_init(system_t *s);
+private:
+    System();
+};
 
 #endif /* _SYSTEM_H_ */

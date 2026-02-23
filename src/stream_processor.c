@@ -14,7 +14,10 @@
  */
 
 #include "io_ncurses.h"  /* MUST come before vars.h */
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "terminal_bridge.h"
 #include "stream_processor.h"
 
@@ -30,6 +33,9 @@ extern char MCISTR[161];
  ***********************************************************************/
 
 /* Pipe color: |nn */
+
+static auto& sys = System::instance();
+
 static int sp_pipe = 0;
 static char sp_pipestr[5];
 
@@ -341,7 +347,7 @@ void stream_putch(unsigned char c)
     /* --- ANSI accumulation (ansistr/ansiptr in io_session_t) --- */
     if (ansiptr) {
         if (outcom && c != 9)
-            outcomch(echo ? c : nifty.echochar);
+            outcomch(echo ? c : sys.nifty.echochar);
         ansistr[ansiptr++] = c;
         ansistr[ansiptr] = 0;
         if (((c < '0' || c > '9') && c != '[' && c != ';') ||
@@ -352,7 +358,7 @@ void stream_putch(unsigned char c)
 
     if (c == 27) {
         if (outcom)
-            outcomch(echo ? c : nifty.echochar);
+            outcomch(echo ? c : sys.nifty.echochar);
         ansistr[0] = 27;
         ansiptr = 1;
         ansistr[ansiptr] = 0;

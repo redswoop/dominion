@@ -1,6 +1,13 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void go(int x,int y)
 {
@@ -43,7 +50,7 @@ int check_name(char *nn)
     if (!ok)
         return(ok);
 
-    sprintf(s,"%strashcan.lst",syscfg.gfilesdir);
+    sprintf(s,"%strashcan.lst",sys.cfg.gfilesdir);
     f=open(s,O_RDWR | O_BINARY);
 
     if (f<0)
@@ -95,7 +102,7 @@ void input_comment(void)
     else
         outchr(':');
     inputl(s,35);
-    strcpy(thisuser.comment,s);
+    strcpy(sess.user.comment,s);
 }
 
 void input_name(char *namer)
@@ -110,10 +117,10 @@ void input_name(char *namer)
         outstr("0Enter a handle or your real name: ");
         if (withansi) goin(7,18);
         inputl(s,30);
-        strcpy(thisuser.name,s);
-        strcpy(namer,thisuser.name);
-        strupr(thisuser.name);
-        ok=check_name(thisuser.name);
+        strcpy(sess.user.name,s);
+        strcpy(namer,sess.user.name);
+        strupr(sess.user.name);
+        ok=check_name(sess.user.name);
         if (!ok) {
             nl();
             if(withansi) gotop();
@@ -135,17 +142,17 @@ void input_realname(char *namer)
         pl("0Enter your real name, or = if same as alias.");
         if(withansi) goin(8,18); 
         else outstr(": ");
-        inputl(thisuser.realname,20);
+        inputl(sess.user.realname,20);
 
-        if (thisuser.realname[0]==0) {
+        if (sess.user.realname[0]==0) {
             nl();
             if(withansi) gotop();
             pl("Sorry, you must enter your real name.");
         }
 
-        if (thisuser.realname[0]=='=') strcpy(thisuser.realname,namer);
+        if (sess.user.realname[0]=='=') strcpy(sess.user.realname,namer);
     } 
-    while ((thisuser.realname[0]==0) && (!hangup));
+    while ((sess.user.realname[0]==0) && (!hangup));
 }
 
 void input_city()
@@ -161,7 +168,7 @@ void input_city()
         inputl(s,35);
     } 
     while(!s[0] && !hangup);
-    strcpy(thisuser.street,s);
+    strcpy(sess.user.street,s);
 
     nl();
 
@@ -171,9 +178,9 @@ void input_city()
         if(withansi) goin(13,18);
         else outstr(": ");
         inputl(s,35);
-        strcpy(thisuser.city,s);
+        strcpy(sess.user.city,s);
     } 
-    while(!thisuser.city[0]&&!hangup);
+    while(!sess.user.city[0]&&!hangup);
 }
 
 void input_phone()
@@ -187,22 +194,22 @@ void input_phone()
         if(withansi) goin(11,18); 
         else
             outstr("3:0");
-        i=inputfone(thisuser.phone);
+        i=inputfone(sess.user.phone);
         if(i)
             ok=1;
         else {
 
             ok=1;
-            if ((syscfg.sysconfig & sysconfig_free_phone)==0) {
-                if (strlen(thisuser.phone)!=12)
+            if ((sys.cfg.sysconfig & sysconfig_free_phone)==0) {
+                if (strlen(sess.user.phone)!=12)
                     ok=0;
-                if ((thisuser.phone[3]!='-') || (thisuser.phone[7]!='-'))
+                if ((sess.user.phone[3]!='-') || (sess.user.phone[7]!='-'))
                     ok=0;
                 /* 1993 area code rule (second digit must be 0 or 1) removed —
                    no longer valid after mid-90s area code expansion */
                 for (i=0; i<12; i++)
                     if ((i!=3) && (i!=7))
-                        if ((thisuser.phone[i]<'0') || (thisuser.phone[i]>'9'))
+                        if ((sess.user.phone[i]<'0') || (sess.user.phone[i]>'9'))
                             ok=0;
             }
 
@@ -288,9 +295,9 @@ void input_comptype()
 
     } 
     while ((!ok) && (!hangup));
-    thisuser.comp_type=ct-1;
+    sess.user.comp_type=ct-1;
     if (hangup)
-        thisuser.comp_type=0;
+        sess.user.comp_type=0;
 }
 
 void input_screensize()
@@ -330,8 +337,8 @@ void input_screensize()
     } 
     while ((!ok) && (!hangup));
 
-    thisuser.screenchars=x;
-    thisuser.screenlines=y;
+    sess.user.screenchars=x;
+    sess.user.screenlines=y;
     screenlinest=y;
 }
 
@@ -355,7 +362,7 @@ void input_pw()
     } 
     while ((!ok) && (!hangup));
     if (ok)
-        strcpy(thisuser.pw,s);
+        strcpy(sess.user.pw,s);
     else
         pl("Password not changed.");
 }
@@ -372,21 +379,21 @@ void newuser()
     sprintf(s,"7!! 0New User 4%s 0at 5%s0, %s Baud",date(),times(),curspeed);
     sl1(0,"");
     sl1(0,s);
-    if (userdb_user_count()>=(int)syscfg.maxusers) {
+    if (userdb_user_count()>=(int)sys.cfg.maxusers) {
         nl();
         nl();
         pl("I'm sorry, but the system currently has the maximum number of users it can handle.");
         nl();
         hangup=1;
     }
-    if (syscfg.closedsystem) {
+    if (sys.cfg.closedsystem) {
         nl();
         nl();
         pl("I'm sorry, but the system is currently closed, and not accepting new users.");
         nl();
         hangup=1;
     }
-    if ((syscfg.newuserpw[0]!=0) && (incom)) {
+    if ((sys.cfg.newuserpw[0]!=0) && (incom)) {
         nl();
         nl();
         ok=0;
@@ -394,7 +401,7 @@ void newuser()
         do {
             outstr("New User Password :");
             input(s,20);
-            if (strcmp(s,syscfg.newuserpw)==0)
+            if (strcmp(s,sys.cfg.newuserpw)==0)
                 ok=1;
             else {
                 sprintf(s1,"Wrong newuser password: %s",s);
@@ -406,80 +413,80 @@ void newuser()
             hangup=1;
     }
 
-    strcpy(thisuser.firston,date());
-    strcpy(thisuser.laston,"Never.");
-    strcpy(&thisuser.macros[0][0],"Trust me, no.");
-    strcpy(&thisuser.macros[1][0],"Dominion=Good?");
-    strcpy(&thisuser.macros[2][0],"Glub Glub Glub...");
-    strcpy(&thisuser.macros[3][0],"Use the Force Luke!");
-    strcpy(thisuser.note,"");
-    strcpy(thisuser.pw,"");
+    strcpy(sess.user.firston,date());
+    strcpy(sess.user.laston,"Never.");
+    strcpy(&sess.user.macros[0][0],"Trust me, no.");
+    strcpy(&sess.user.macros[1][0],"Dominion=Good?");
+    strcpy(&sess.user.macros[2][0],"Glub Glub Glub...");
+    strcpy(&sess.user.macros[3][0],"Use the Force Luke!");
+    strcpy(sess.user.note,"");
+    strcpy(sess.user.pw,"");
 
-    thisuser.screenlines=25;
+    sess.user.screenlines=25;
     screenlinest=25;
 
-    thisuser.inact=0;
-    thisuser.defprot=0;
-    thisuser.defed=0;
-    thisuser.nuv=-1;
-    thisuser.sl=syscfg.newusersl;
-    thisuser.dsl=syscfg.newuserdsl;
-    thisuser.exempt=0;
-    for (i=0; i<20; i++) thisuser.votes[i]=0;
-    for (i=0; i<20; i++) thisuser.colors[i]=7;
-    thisuser.illegal=0;
-    thisuser.waiting=0;
-    thisuser.subop=255;
-    thisuser.ontoday=1;
-    thisuser.month=0;
-    thisuser.day=0;
-    thisuser.year=0;
-    thisuser.age=0;
-    thisuser.pcr=0;
-    thisuser.ratio=0;
+    sess.user.inact=0;
+    sess.user.defprot=0;
+    sess.user.defed=0;
+    sess.user.nuv=-1;
+    sess.user.sl=sys.cfg.newusersl;
+    sess.user.dsl=sys.cfg.newuserdsl;
+    sess.user.exempt=0;
+    for (i=0; i<20; i++) sess.user.votes[i]=0;
+    for (i=0; i<20; i++) sess.user.colors[i]=7;
+    sess.user.illegal=0;
+    sess.user.waiting=0;
+    sess.user.subop=255;
+    sess.user.ontoday=1;
+    sess.user.month=0;
+    sess.user.day=0;
+    sess.user.year=0;
+    sess.user.age=0;
+    sess.user.pcr=0;
+    sess.user.ratio=0;
 
-    thisuser.forwardusr=0;
-    thisuser.msgpost=0;
-    thisuser.emailsent=0;
-    thisuser.feedbacksent=0;
-    thisuser.posttoday=0;
-    thisuser.etoday=0;
-    thisuser.ar=0;
-    thisuser.dar=0;
-    thisuser.restrict=syscfg.newuser_restrict;
-    thisuser.uploaded=0;
-    thisuser.downloaded=0;
-    thisuser.lastrate=0;
-    thisuser.logons=0;
-    thisuser.msgread=0;
-    thisuser.uk=0;
-    thisuser.dk=0;
-    for(i=0;i<200;i++) thisuser.qscn[i]=0;
-    for(i=0;i<200;i++) thisuser.nscn[i]=0;
+    sess.user.forwardusr=0;
+    sess.user.msgpost=0;
+    sess.user.emailsent=0;
+    sess.user.feedbacksent=0;
+    sess.user.posttoday=0;
+    sess.user.etoday=0;
+    sess.user.ar=0;
+    sess.user.dar=0;
+    sess.user.restrict=sys.cfg.newuser_restrict;
+    sess.user.uploaded=0;
+    sess.user.downloaded=0;
+    sess.user.lastrate=0;
+    sess.user.logons=0;
+    sess.user.msgread=0;
+    sess.user.uk=0;
+    sess.user.dk=0;
+    for(i=0;i<200;i++) sess.user.qscn[i]=0;
+    for(i=0;i<200;i++) sess.user.nscn[i]=0;
 
 
-    setcolors(&thisuser);
-    thisuser.daten=0;
-    thisuser.sysstatus=0;
+    setcolors(&sess.user);
+    sess.user.daten=0;
+    sess.user.sysstatus=0;
 
-    thisuser.timeontoday=0.0;
-    thisuser.extratime=0.0;
-    thisuser.timeon=0.0;
-    thisuser.pos_account=0.0;
-    thisuser.neg_account=0.0;
-    thisuser.timebank=0;
-    thisuser.fpts=syscfg.newusergold;
-    thisuser.emailnet=0;
-    thisuser.postnet=0;
-    thisuser.fsenttoday1=0;
-    thisuser.lastrate=modem_speed;
-    set_autoval(nifty.nulevel);
+    sess.user.timeontoday=0.0;
+    sess.user.extratime=0.0;
+    sess.user.timeon=0.0;
+    sess.user.pos_account=0.0;
+    sess.user.neg_account=0.0;
+    sess.user.timebank=0;
+    sess.user.fpts=sys.cfg.newusergold;
+    sess.user.emailnet=0;
+    sess.user.postnet=0;
+    sess.user.fsenttoday1=0;
+    sess.user.lastrate=sess.modem_speed;
+    set_autoval(sys.nifty.nulevel);
 
-    actsl=thisuser.sl;
+    sess.actsl=sess.user.sl;
     /* Default to ANSI + color, skip Avatar/RIP questions */
-    thisuser.sysstatus |= sysstatus_ansi;
-    thisuser.sysstatus |= sysstatus_color;
-    setcolors(&thisuser);
+    sess.user.sysstatus |= sysstatus_ansi;
+    sess.user.sysstatus |= sysstatus_color;
+    setcolors(&sess.user);
     input_screensize();
 
     if (!hangup) {
@@ -490,7 +497,7 @@ void newuser()
             pausescr();
         }
         outchr(12);
-        withansi=thisuser.sysstatus & sysstatus_ansi;
+        withansi=sess.user.sysstatus & sysstatus_ansi;
         if(withansi) {
             int saved_incom = incom;
             mciok=0;
@@ -500,17 +507,17 @@ void newuser()
         }
         input_name(s);
         input_realname(s);
-        input_sex(&thisuser);
-        input_age(&thisuser);
+        input_sex(&sess.user);
+        input_age(&sess.user);
         input_phone();
         input_city();
         input_comment();
         input_comptype();
         input_pw();
-        thisuser.helplevel=2;
-        thisuser.lastconf=1;
-        thisuser.lastsub=0;
-        thisuser.lastdir=0;
+        sess.user.helplevel=2;
+        sess.user.lastconf=1;
+        sess.user.lastsub=0;
+        sess.user.lastdir=0;
     }
 
     if (!hangup)
@@ -518,15 +525,15 @@ void newuser()
         nl();
         if(!withansi) {
             outchr(12);
-            npr("<1> Name            %s\r\n",thisuser.name);
-            npr("<2> Real Name       %s\r\n",thisuser.realname);
-            npr("<3> Sex             %c\r\n",thisuser.sex);
-            npr("<4> Birthdate       %02d/%02d/%02d\r\n",(int) thisuser.month,(int) thisuser.day,(int) thisuser.year);
-            npr("<5> Phone Number    %s\r\n",thisuser.phone);
-            npr("<6> Address         %s\r\n%-20s%s\r\n",thisuser.street,"",thisuser.city);
-            npr("<7> Computer type   %s\r\n",ctype(thisuser.comp_type));
-            npr("<8> Comment         %s\r\n",thisuser.comment);
-            npr("<9> Password        %s\r\n",thisuser.pw);
+            npr("<1> Name            %s\r\n",sess.user.name);
+            npr("<2> Real Name       %s\r\n",sess.user.realname);
+            npr("<3> Sex             %c\r\n",sess.user.sex);
+            npr("<4> Birthdate       %02d/%02d/%02d\r\n",(int) sess.user.month,(int) sess.user.day,(int) sess.user.year);
+            npr("<5> Phone Number    %s\r\n",sess.user.phone);
+            npr("<6> Address         %s\r\n%-20s%s\r\n",sess.user.street,"",sess.user.city);
+            npr("<7> Computer type   %s\r\n",ctype(sess.user.comp_type));
+            npr("<8> Comment         %s\r\n",sess.user.comment);
+            npr("<9> Password        %s\r\n",sess.user.pw);
             npr("<Q> No changes.");
             nl();
             nl();
@@ -546,10 +553,10 @@ void newuser()
             input_realname(s); 
             break;
         case '3': 
-            input_sex(&thisuser); 
+            input_sex(&sess.user); 
             break;
         case '4': 
-            input_age(&thisuser); 
+            input_age(&sess.user); 
             break;
         case '5': 
             input_phone(); 
@@ -573,8 +580,8 @@ void newuser()
     outchr(12);
     /* Set sensible defaults — skip the barrage of post-reg questions.
        Users can change these later from the Options menu. */
-    thisuser.flisttype=1;
-    thisuser.helplevel=2;
+    sess.user.flisttype=1;
+    sess.user.helplevel=2;
 
 
     if (!hangup) {
@@ -583,33 +590,33 @@ void newuser()
 
         /* Assign next user number.  JSON users live in data/users/NNNN.json
            so we just take the highest existing number + 1. */
-        usernum = userdb_max_num() + 1;
+        sess.usernum = userdb_max_num() + 1;
 
-        userdb_save(usernum,&thisuser);
+        userdb_save(sess.usernum,&sess.user);
         pl(" Done...");
-        userdb_index_add(usernum,thisuser.name);
+        userdb_index_add(sess.usernum,sess.user.name);
         sys.status.users = userdb_user_count();
         save_status();
         ok=0;
         topscreen();
-        logpr("9!! 0Added New User 4%s0 to user list",nam(&thisuser,usernum));
+        logpr("9!! 0Added New User 4%s0 to user list",nam(&sess.user,sess.usernum));
         nl();
-        npr("0Your user number is 3%d0.\r\n",usernum);
-        npr("0Your password is '3%s0'\r\n",thisuser.pw);
+        npr("0Your user number is 3%d0.\r\n",sess.usernum);
+        npr("0Your password is '3%s0'\r\n",sess.user.pw);
         nl();
         pausescr();
-        sprintf(s,"7! 0Newuser 4%s 0at %s",thisuser.name,times());
+        sprintf(s,"7! 0Newuser 4%s 0at %s",sess.user.name,times());
         ssm(1,0,s);
         if(incom) {
-            infoform(nifty.nuinf,0);
+            infoform(sys.nifty.nuinf,0);
             if(printfile("feedback")) sl1(0,"9# 0Aborted Feedback Message!");
             email(1,"NewUser Validation Feedback",0);
-            if (syscfg.newuser_c[0]) ex("D1",syscfg.newuser_c);
+            if (sys.cfg.newuser_c[0]) ex("D1",sys.cfg.newuser_c);
         }
     }
 #ifdef NUV
-    if(nifty.nifstatus & nif_nuv)
-        thisuser.nuv=enter_nuv(thisuser,usernum,1);
+    if(sys.nifty.nifstatus & nif_nuv)
+        sess.user.nuv=enter_nuv(sess.user,sess.usernum,1);
 #endif
 
     menubatch("newuser");
@@ -621,7 +628,7 @@ void infoform(char fn[8],int once)
     FILE *fnin,*fno;
 
 
-    sprintf(s,"%s%s.inf",syscfg.gfilesdir,fn);
+    sprintf(s,"%s%s.inf",sys.cfg.gfilesdir,fn);
 
     if(!exist(s)) {
         pl("Infoform Not Found.");
@@ -636,7 +643,7 @@ void infoform(char fn[8],int once)
             if(s[0]=='~') {
                 filter(s,'\n');
                 strcpy(s1,s+1);
-                if(!strcmp(thisuser.name,s1)) {
+                if(!strcmp(sess.user.name,s1)) {
                     found=1;
                 }
             }
@@ -645,13 +652,13 @@ void infoform(char fn[8],int once)
         if(found) return;
     }
 
-    sprintf(s,"%s%s.ser",syscfg.gfilesdir,fn);
+    sprintf(s,"%s%s.ser",sys.cfg.gfilesdir,fn);
     fno=fopen(s,"a");
 
-    sprintf(s1,"%s%s.inf",syscfg.gfilesdir,fn);
+    sprintf(s1,"%s%s.inf",sys.cfg.gfilesdir,fn);
     fnin=fopen(s1,"rt");
 
-    sprintf(s,"~%s\n",thisuser.name);
+    sprintf(s,"~%s\n",sess.user.name);
     fputs(s,fno);
 
     while(fgets(s,255,fnin)!=NULL&&!hangup) {
@@ -706,7 +713,7 @@ void readform(char fn[8],char i[31])
     FILE *fnin;
     userrec u;
 
-    sprintf(s,"%s%s.ser",syscfg.gfilesdir,fn);
+    sprintf(s,"%s%s.ser",sys.cfg.gfilesdir,fn);
     if(!exist(s)) {
         pl("not found"); 
         return; 

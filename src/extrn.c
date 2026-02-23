@@ -1,9 +1,16 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 
 #pragma hdrstop
 
 #include <math.h>
 #include "swap.h"
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void cd_to(char *s)
 {
@@ -52,7 +59,7 @@ int do_it(char cl[MAX_PATH_LEN])
             ss[i++]=&(s[i1+1]);
         }
     ss[i]=NULL;
-    i=spawnvpe(P_WAIT,ss[0],ss,xenviron);
+    i=spawnvpe(P_WAIT,ss[0],ss,sys.xenviron);
 
     return(i);
 }
@@ -75,10 +82,10 @@ int runprog(char *s, int swp)
         sprintf(x,"%s /C %s", getenv("COMSPEC"), s);
         rc=do_it(x);
     }
-    initport(syscfg.primaryport);
+    initport(sys.cfg.primaryport);
     inkey();
     inkey();
-    cd_to(cdir);
+    cd_to(sys.cdir);
     return(rc);
 }
 
@@ -100,33 +107,33 @@ char *create_chain_file(char *fn)
     static char fpn[MAX_PATH_LEN];
     long l;
 
-    cd_to(syscfg.gfilesdir);
+    cd_to(sys.cfg.gfilesdir);
     get_dir(gd,1);
-    cd_to(cdir);
-    cd_to(syscfg.datadir);
+    cd_to(sys.cdir);
+    cd_to(sys.cfg.datadir);
     get_dir(dd,1);
-    cd_to(cdir);
+    cd_to(sys.cdir);
 
     unlink(fn);
     f=open(fn,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
-    itoa(usernum,s,10);
+    itoa(sess.usernum,s,10);
     alf(f,s);
-    alf(f,thisuser.name);
-    alf(f,thisuser.realname);
-    alf(f,thisuser.callsign);
-    itoa(thisuser.age,s,10);
+    alf(f,sess.user.name);
+    alf(f,sess.user.realname);
+    alf(f,sess.user.callsign);
+    itoa(sess.user.age,s,10);
     alf(f,s);
-    s[0]=thisuser.sex;
+    s[0]=sess.user.sex;
     s[1]=0;
     alf(f,s);
-    sprintf(s,"%10.2f",thisuser.fpts);
+    sprintf(s,"%10.2f",sess.user.fpts);
     alf(f,s);
-    alf(f,thisuser.laston);
-    itoa(thisuser.screenchars,s,10);
+    alf(f,sess.user.laston);
+    itoa(sess.user.screenchars,s,10);
     alf(f,s);
-    itoa(thisuser.screenlines,s,10);
+    itoa(sess.user.screenlines,s,10);
     alf(f,s);
-    itoa(thisuser.sl,s,10);
+    itoa(sess.user.sl,s,10);
     alf(f,s);
     if (cs())
         alf(f,"1");
@@ -150,36 +157,36 @@ char *create_chain_file(char *fn)
     alf(f,dd);
     sl1(3,s);
     alf(f,s);
-    sprintf(s,"%u",modem_speed);
+    sprintf(s,"%u",sess.modem_speed);
     if (!using_modem)
         strcpy(s,"KB");
     alf(f,s);
-    itoa(syscfg.primaryport,s,10);
+    itoa(sys.cfg.primaryport,s,10);
     alf(f,s);
-    alf(f,syscfg.systemname);
-    alf(f,syscfg.sysopname);
-    l=(long) (session.timeon);
+    alf(f,sys.cfg.systemname);
+    alf(f,sys.cfg.sysopname);
+    l=(long) (sess.timeon);
     if (l<0)
         l += 3600*24;
     ltoa(l,s,10);
     alf(f,s);
-    l=(long) (timer()-session.timeon);
+    l=(long) (timer()-sess.timeon);
     if (l<0)
         l += 3600*24;
     ltoa(l,s,10);
     alf(f,s);
-    ltoa(thisuser.uk,s,10);
+    ltoa(sess.user.uk,s,10);
     alf(f,s);
-    itoa(thisuser.uploaded,s,10);
+    itoa(sess.user.uploaded,s,10);
     alf(f,s);
-    ltoa(thisuser.dk,s,10);
+    ltoa(sess.user.dk,s,10);
     alf(f,s);
-    itoa(thisuser.downloaded,s,10);
+    itoa(sess.user.downloaded,s,10);
     alf(f,s);
     alf(f,"8N1");
-    sprintf(s,"%u",com_speed);
+    sprintf(s,"%u",sess.com_speed);
     alf(f,s);
-    sprintf(s,"%u",syscfg.systemnumber);
+    sprintf(s,"%u",sys.cfg.systemnumber);
     alf(f,s);
     close(f);
     get_dir(fpn,1);
@@ -192,7 +199,7 @@ char *create_chain_file(char *fn)
 
 #define WRITE(x) write(f,&(x),sizeof(x))
 
-/* menuat, mstack, mdepth now in vars.h (Phase B0) */
+/* sess.menuat, sess.mstack, sess.mdepth now in vars.h (Phase B0) */
 
 int restore_data(char *s)
 {
@@ -203,55 +210,55 @@ int restore_data(char *s)
         return(-1);
 
     READ(stat);
-    READ(oklevel);
-    READ(noklevel);
-    READ(ooneuser);
-    READ(no_hangup);
+    READ(sys.oklevel);
+    READ(sys.noklevel);
+    READ(sys.ooneuser);
+    READ(sys.no_hangup);
     READ(ok_modem_stuff);
-    READ(topdata);
-    READ(last_time_c);
-    READ(sysop_alert);
-    READ(do_event);
-    READ(usernum);
+    READ(sess.topdata);
+    READ(sys.last_time_c);
+    READ(sess.sysop_alert);
+    READ(sys.do_event);
+    READ(sess.usernum);
     READ(chatcall);
-    READ(chatreason);
-    READ(session.timeon);
-    READ(extratimecall);
+    READ(sess.chatreason);
+    READ(sess.timeon);
+    READ(sess.extratimecall);
     READ(curspeed);
-    READ(modem_speed);
-    READ(com_speed);
-    READ(cursub);
-    READ(curdir);
-    READ(msgreadlogon);
-    READ(nscandate);
-    READ(mailcheck);
-    READ(smwcheck);
-    READ(use_workspace);
+    READ(sess.modem_speed);
+    READ(sess.com_speed);
+    READ(sess.cursub);
+    READ(sess.curdir);
+    READ(sess.msgreadlogon);
+    READ(sess.nscandate);
+    READ(sess.mailcheck);
+    READ(sess.smwcheck);
+    READ(sess.use_workspace);
     READ(using_modem);
-    READ(last_time);
-    READ(fsenttoday);
-    READ(global_xx);
-    READ(xtime);
-    READ(xdate);
+    READ(sys.last_time);
+    READ(sess.fsenttoday);
+    READ(sys.global_xx);
+    READ(sys.xtime);
+    READ(sys.xdate);
     READ(incom);
     READ(outcom);
     READ(global_handle);
-    READ(actsl);
-    READ(numbatch);
-    READ(numbatchdl);
-    READ(batchtime);
-    READ(batchsize);
-    READ(menuat);
-    READ(mstack);
-    READ(mdepth);
+    READ(sess.actsl);
+    READ(sess.numbatch);
+    READ(sess.numbatchdl);
+    READ(sess.batchtime);
+    READ(sess.batchsize);
+    READ(sess.menuat);
+    READ(sess.mstack);
+    READ(sess.mdepth);
 
     if (global_handle) {
         global_handle=0;
         set_global_handle(1);
     }
 
-    userdb_load(usernum,&thisuser);
-    useron=1;
+    userdb_load(sess.usernum,&sess.user);
+    sess.useron=1;
     changedsl();
     topscreen();
 
@@ -273,47 +280,47 @@ void save_state(char *s, int state)
         return;
 
     WRITE(state);
-    WRITE(oklevel);
-    WRITE(noklevel);
-    WRITE(ooneuser);
-    WRITE(no_hangup);
+    WRITE(sys.oklevel);
+    WRITE(sys.noklevel);
+    WRITE(sys.ooneuser);
+    WRITE(sys.no_hangup);
     WRITE(ok_modem_stuff);
-    WRITE(topdata);
-    WRITE(last_time_c);
-    WRITE(sysop_alert);
-    WRITE(do_event);
-    WRITE(usernum);
+    WRITE(sess.topdata);
+    WRITE(sys.last_time_c);
+    WRITE(sess.sysop_alert);
+    WRITE(sys.do_event);
+    WRITE(sess.usernum);
     WRITE(chatcall);
-    WRITE(chatreason);
-    WRITE(session.timeon);
-    WRITE(extratimecall);
+    WRITE(sess.chatreason);
+    WRITE(sess.timeon);
+    WRITE(sess.extratimecall);
     WRITE(curspeed);
-    WRITE(modem_speed);
-    WRITE(com_speed);
-    WRITE(cursub);
-    WRITE(curdir);
-    WRITE(msgreadlogon);
-    WRITE(nscandate);
-    WRITE(mailcheck);
-    WRITE(smwcheck);
-    WRITE(use_workspace);
+    WRITE(sess.modem_speed);
+    WRITE(sess.com_speed);
+    WRITE(sess.cursub);
+    WRITE(sess.curdir);
+    WRITE(sess.msgreadlogon);
+    WRITE(sess.nscandate);
+    WRITE(sess.mailcheck);
+    WRITE(sess.smwcheck);
+    WRITE(sess.use_workspace);
     WRITE(using_modem);
-    WRITE(last_time);
-    WRITE(fsenttoday);
-    WRITE(global_xx);
-    WRITE(xtime);
-    WRITE(xdate);
+    WRITE(sys.last_time);
+    WRITE(sess.fsenttoday);
+    WRITE(sys.global_xx);
+    WRITE(sys.xtime);
+    WRITE(sys.xdate);
     WRITE(incom);
     WRITE(outcom);
     WRITE(global_handle);
-    WRITE(actsl);
-    WRITE(numbatch);
-    WRITE(numbatchdl);
-    WRITE(batchtime);
-    WRITE(batchsize);
-    WRITE(menuat);
-    WRITE(mstack);
-    WRITE(mdepth);
+    WRITE(sess.actsl);
+    WRITE(sess.numbatch);
+    WRITE(sess.numbatchdl);
+    WRITE(sess.batchtime);
+    WRITE(sess.batchsize);
+    WRITE(sess.menuat);
+    WRITE(sess.mstack);
+    WRITE(sess.mdepth);
 
     close(f);
 
@@ -327,21 +334,21 @@ void dorinfo_def(void)
     long l;
 
     f=open("dorinfo1.def",O_RDWR|O_CREAT|O_BINARY|O_TRUNC, S_IREAD|S_IWRITE);
-    alf(f,syscfg.systemname);
+    alf(f,sys.cfg.systemname);
     alf(f,"Dom");
     alf(f,"SysOp");
-    sprintf(s,"COM%d",outcom ? syscfg.primaryport:0);
+    sprintf(s,"COM%d",outcom ? sys.cfg.primaryport:0);
     alf(f,s);
-    sprintf(s,"%u BAUD,8,N,1",com_speed);
+    sprintf(s,"%u BAUD,8,N,1",sess.com_speed);
     alf(f,s);
     alf(f,"0");
-    alf(f,thisuser.name);
+    alf(f,sess.user.name);
     alf(f,"");
-    alf(f,thisuser.city);
+    alf(f,sess.user.city);
     alf(f,okansi()?"1":"0");
-    itoa(thisuser.sl,s,10);
+    itoa(sess.user.sl,s,10);
     alf(f,s);
-    l=(long) (session.timeon);
+    l=(long) (sess.timeon);
     if (l<0)
         l += 3600*24;
     ltoa(l,s,10);
@@ -358,9 +365,9 @@ void write_door_sys(int rname)
     fp=open("door.sys",O_BINARY|O_RDWR|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
     lseek(fp,0L,SEEK_SET);
 
-    sprintf(s,"COM%d:",outcom?syscfg.primaryport:0);
+    sprintf(s,"COM%d:",outcom?sys.cfg.primaryport:0);
     alf(fp,s);
-    sprintf(s,"%u",com_speed);
+    sprintf(s,"%u",sess.com_speed);
     alf(fp,s);
     alf(fp,"8");
     alf(fp,"1");
@@ -371,34 +378,34 @@ void write_door_sys(int rname)
     alf(fp,cs()?"Y":"N");
     alf(fp,"N");
 
-    alf(fp,rname?thisuser.realname:thisuser.name);
-    alf(fp,thisuser.city);
-    alf(fp,thisuser.phone);
-    alf(fp,thisuser.phone);
-    alf(fp,thisuser.pw);
-    sprintf(s,"%d",thisuser.sl); 
+    alf(fp,rname?sess.user.realname:sess.user.name);
+    alf(fp,sess.user.city);
+    alf(fp,sess.user.phone);
+    alf(fp,sess.user.phone);
+    alf(fp,sess.user.pw);
+    sprintf(s,"%d",sess.user.sl); 
     alf(fp,s);
     alf(fp,"0");
-    alf(fp,thisuser.laston);
+    alf(fp,sess.user.laston);
     sprintf(s,"%6.0f",nsl());
     alf(fp,s);
     sprintf(s,"%6.0f",nsl()/60.0);
     alf(fp,s);
     alf(fp,okansi()?"GR":"NG");
-    sprintf(s,"%d",thisuser.screenlines); 
+    sprintf(s,"%d",sess.user.screenlines); 
     alf(fp,s);
     alf(fp,"Y");
     alf(fp,"123456");
     alf(fp,"7");
     alf(fp,"12/31/99");
-    sprintf(s,"%d",usernum); 
+    sprintf(s,"%d",sess.usernum); 
     alf(fp,s);
     alf(fp,"X");
-    sprintf(s,"%d",thisuser.uploaded); 
+    sprintf(s,"%d",sess.user.uploaded); 
     alf(fp,s);
-    sprintf(s,"%d",thisuser.downloaded); 
+    sprintf(s,"%d",sess.user.downloaded); 
     alf(fp,s);
-    sprintf(s,"%d",thisuser.dk); 
+    sprintf(s,"%d",sess.user.dk); 
     alf(fp,s);
     alf(fp,"999999");
     close(fp);

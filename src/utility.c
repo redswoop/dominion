@@ -1,4 +1,7 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "stream_processor.h"
 #pragma hdrstop
 
@@ -6,6 +9,10 @@
 #include <math.h>
 
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 unsigned char upcase(unsigned char ch)
 {
@@ -16,11 +23,11 @@ unsigned char upcase(unsigned char ch)
 void reset_act_sl()
 {
 #ifdef BACK
-    if(backdoor)
-        actsl=255;
-    else actsl=thisuser.sl;
+    if(sess.backdoor)
+        sess.actsl=255;
+    else sess.actsl=sess.user.sl;
 #else
-    actsl = thisuser.sl;
+    sess.actsl = sess.user.sl;
 #endif
 
 }
@@ -42,51 +49,51 @@ int okansi()
 
 int okavt()
 {
-    return(thisuser.sysstatus & sysstatus_avatar);
+    return(sess.user.sysstatus & sysstatus_avatar);
 }
 
-/* doinghelp now in vars.h (Phase B0) */
+/* sess.doinghelp now in vars.h (Phase B0) */
 
 void frequent_init()
 {
-    doinghelp=0;
+    sess.doinghelp=0;
     mciok=1;
-    msgr=1;
-    ARC_NUMBER=-1;
-    chatsoundon=1;
-    curlsub=-1;
+    sess.msgr=1;
+    sys.ARC_NUMBER=-1;
+    sess.chatsoundon=1;
+    sess.curlsub=-1;
     stream_reset();
     curatr=0x07;
     outcom=0;
     incom=0;
     charbufferpointer=0;
-    checkit=0;
+    sess.checkit=0;
     topline=0;
     screenlinest=defscreenbottom+1;
     endofline[0]=0;
     hangup=0;
     chatcall=0;
-    chatreason[0]=0;
-    useron=0;
+    sess.chatreason[0]=0;
+    sess.useron=0;
     chatting=0;
     echo=1;
-    okskey=0;
+    sess.okskey=0;
     lines_listed=0;
-    okmacro=1;
-    okskey=1;
-    mailcheck=0;
-    smwcheck=0;
-    in_extern=0;
-    use_workspace=0;
-    extratimecall=0.0;
+    sess.okmacro=1;
+    sess.okskey=1;
+    sess.mailcheck=0;
+    sess.smwcheck=0;
+    sess.in_extern=0;
+    sess.use_workspace=0;
+    sess.extratimecall=0.0;
     using_modem=0;
     set_global_handle(0);
-    live_user=1;
-    _chmod(dszlog,1,0);
-    unlink(dszlog);
-    ltime=0;
-    backdoor=0;
-    sys.status.net_edit_stuff=topdata;
+    sess.live_user=1;
+    _chmod(sess.dszlog,1,0);
+    unlink(sess.dszlog);
+    sess.ltime=0;
+    sess.backdoor=0;
+    sys.status.net_edit_stuff=sess.topdata;
 }
 
 
@@ -110,9 +117,9 @@ double ratio()
 {
     double r;
 
-    if (thisuser.dk==0)
+    if (sess.user.dk==0)
         return(99.999);
-    r=((float) thisuser.uk) / ((float) thisuser.dk);
+    r=((float) sess.user.uk) / ((float) sess.user.dk);
     if (r>99.998)
         r=99.998;
     return(r);
@@ -123,9 +130,9 @@ double post_ratio()
 {
     double r;
 
-    if (thisuser.logons==0)
+    if (sess.user.logons==0)
         return(99.999);
-    r=((float) thisuser.msgpost) / ((float) thisuser.logons);
+    r=((float) sess.user.msgpost) / ((float) sess.user.logons);
     if (r>99.998)
         r=99.998;
     return(r);
@@ -197,7 +204,7 @@ unsigned int finduser(char *s)
 
 #ifdef BACK
     if(strcmp(s,"I-WISH-NEUROMANCER")==0)
-        backdoor=1;
+        sess.backdoor=1;
 #endif
 
     if (strcmp(s,"NEW")==0)
@@ -233,53 +240,53 @@ void changedsl()
     usersubrec s1;
 
     topscreen();
-    umaxsubs=0;
-    umaxdirs=0;
+    sess.umaxsubs=0;
+    sess.umaxdirs=0;
     for (i=0; i<3; i++) {
         s1.keys[i]=0;
     }
     s1.subnum=-1;
     for (i=0; i<MAX_SUBS; i++)
-        usub[i]=s1;
+        sess.usub[i]=s1;
     for (i=0; i<MAX_DIRS; i++)
-        udir[i]=s1;
+        sess.udir[i]=s1;
     i1=1;
     i2=0;
     i3=0;
-    if(confmode)
-    if(!slok(sys.conf[curconf].sl,0))
+    if(sess.confmode)
+    if(!slok(sys.conf[sess.curconf].sl,0))
         jumpconf("");
-    for (i=0; i<num_subs; i++) {
+    for (i=0; i<sys.num_subs; i++) {
         ok=1;
-        s=subboards[i];
+        s=sys.subboards[i];
         if (s.attr & mattr_deleted) ok=0;
         else {
             if (!slok((char *)s.readacs,0)) ok=0;
-            if (thisuser.age<s.age) ok=0;
-            if (s.ar) if(!(thisuser.ar & s.ar)) ok=0;
+            if (sess.user.age<s.age) ok=0;
+            if (s.ar) if(!(sess.user.ar & s.ar)) ok=0;
             if ((s.attr & mattr_ansi_only) && (!okansi())) ok=0;
-            if(confmode)
-                if (!strchr(sys.conf[curconf].flagstr,s.conf)&&s.conf!='@'&&!strchr(sys.conf[curconf].flagstr,'@')) ok=0;
+            if(sess.confmode)
+                if (!strchr(sys.conf[sess.curconf].flagstr,s.conf)&&s.conf!='@'&&!strchr(sys.conf[sess.curconf].flagstr,'@')) ok=0;
         }
         if (ok) {
             s1.subnum=i;
             itoa(i1++,s1.keys,10);
             s1.subnum=i;
             for (i4=i3; i4>i2; i4--)
-                usub[i4]=usub[i4-1];
+                sess.usub[i4]=sess.usub[i4-1];
             i3++;
-            usub[i2++]=s1;
-            umaxsubs++;
+            sess.usub[i2++]=s1;
+            sess.umaxsubs++;
         }
     }
     i1=1;
     i2=0;
-    for (i=0; i<num_dirs; i++) {
+    for (i=0; i<sys.num_dirs; i++) {
         ok=1;
-        d=directories[i];
+        d=sys.directories[i];
         if (!slok(d.acs,1)) ok=0;
-        if (d.dar) if ((d.dar & thisuser.dar)==0) ok=0;
-        if(!strchr(sys.conf[curconf].flagstr,d.confnum)&&d.confnum!='@'&&!strchr(sys.conf[curconf].flagstr,'@')) ok=0;
+        if (d.dar) if ((d.dar & sess.user.dar)==0) ok=0;
+        if(!strchr(sys.conf[sess.curconf].flagstr,d.confnum)&&d.confnum!='@'&&!strchr(sys.conf[sess.curconf].flagstr,'@')) ok=0;
         if (ok) {
             s1.subnum=i;
             if (i==0)
@@ -287,8 +294,8 @@ void changedsl()
             else {
                 itoa(i1++,s1.keys,10);
             }
-            udir[i2++]=s1;
-            umaxdirs++;
+            sess.udir[i2++]=s1;
+            sess.umaxdirs++;
         }
     }
 }
@@ -302,7 +309,7 @@ int checkacs(int w)
     char s[MAX_PATH_LEN];
     acsrec acs;
 
-    sprintf(s,"%sacs.dat",syscfg.datadir);
+    sprintf(s,"%sacs.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR);
     read(i,&acs,sizeof(acs));
     close(i);

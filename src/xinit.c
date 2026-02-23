@@ -1,5 +1,9 @@
 #include "io_ncurses.h"
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
+#include "version.h"
 
 #pragma hdrstop
 
@@ -10,10 +14,14 @@
 #include "menudb.h"
 #include "terminal_bridge.h"
 
-/* menuat now in vars.h (Phase B0) */
+/* sess.menuat now in vars.h (Phase B0) */
 
 
 #define GODOWN(x,y) gotoxy(y+1,x+1);
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void bargraph1(int percent)
 {
@@ -80,27 +88,27 @@ void init(int show)
      * After this, both sides share the same memory — no sync needed. */
     term_bind_state(&curatr, &topline, &screenbottom);
 
-    if(!exist("exitdata.dom")) restoring_shrink=0; 
-    else restoring_shrink=1;
-    if (!restoring_shrink&&!show) {
+    if(!exist("exitdata.dom")) sys.restoring_shrink=0; 
+    else sys.restoring_shrink=1;
+    if (!sys.restoring_shrink&&!show) {
         clrscr();
         memmove(scrn,ANSIHEADER,4000);
         term_render_scrn(0, 25);
         gotoxy(1,12);
     }
-    getcwd(cdir, sizeof(cdir));
-    configfile=-1;
-    statusfile=-1;
-    dlf=-1;
-    curlsub=-1;
-    curldir=-1;
+    getcwd(sys.cdir, sizeof(sys.cdir));
+    sys.configfile=-1;
+    sys.statusfile=-1;
+    sess.dlf=-1;
+    sess.curlsub=-1;
+    sess.curldir=-1;
     oldx=0;
     oldy=0;
     itimer();
-    use_workspace=0;
+    sess.use_workspace=0;
     chat_file=0;
-    do_event=0;
-    sysop_alert=0;
+    sys.do_event=0;
+    sess.sysop_alert=0;
     global_handle=0;
 
 
@@ -110,7 +118,7 @@ void init(int show)
         err(7,"","In Init()");
     }
 
-    if(!restoring_shrink&&!show) {
+    if(!sys.restoring_shrink&&!show) {
         //      GODOWN(2,3);
         //      bargraph(0);
         dotopinit("config.json",10);
@@ -122,14 +130,14 @@ void init(int show)
             printf("\n\nconfig.json, Main Configuration File, Not Found!!.\n");
             err(1,"config.json","In Init()");
         }
-        json_to_configrec(cfg_root, &syscfg, &nifty);
+        json_to_configrec(cfg_root, &sys.cfg, &sys.nifty);
         cJSON_Delete(cfg_root);
     }
 
-    if (!syscfg.primaryport && !tcp_port)
+    if (!sys.cfg.primaryport && !sys.tcp_port)
         ok_modem_stuff=0;
 
-    if(!restoring_shrink&&!show)
+    if(!sys.restoring_shrink&&!show)
         dotopinit("Checking Directories",15);
 
 
@@ -137,27 +145,27 @@ void init(int show)
         switch(i) {
         case 0: 
             strcpy(s2,"Data"); 
-            strcpy(s,syscfg.datadir); 
+            strcpy(s,sys.cfg.datadir); 
             break;
         case 1: 
             strcpy(s2,"Afiles"); 
-            strcpy(s,syscfg.gfilesdir); 
+            strcpy(s,sys.cfg.gfilesdir); 
             break;
         case 2: 
             strcpy(s2,"Temp"); 
-            strcpy(s,syscfg.tempdir); 
+            strcpy(s,sys.cfg.tempdir); 
             break;
         case 3: 
             strcpy(s2,"Msgs"); 
-            strcpy(s,syscfg.msgsdir); 
+            strcpy(s,sys.cfg.msgsdir); 
             break;
         case 4: 
             strcpy(s2,"Batch"); 
-            strcpy(s,syscfg.batchdir); 
+            strcpy(s,sys.cfg.batchdir); 
             break;
         case 5: 
             strcpy(s2,"Menus"); 
-            strcpy(s,syscfg.menudir); 
+            strcpy(s,sys.cfg.menudir); 
             break;
         }
 
@@ -181,22 +189,22 @@ void init(int show)
             }
             switch(i) {
             case 0: 
-                strcpy(syscfg.datadir,s); 
+                strcpy(sys.cfg.datadir,s); 
                 break;
             case 1: 
-                strcpy(syscfg.gfilesdir,s); 
+                strcpy(sys.cfg.gfilesdir,s); 
                 break;
             case 2: 
-                strcpy(syscfg.tempdir,s); 
+                strcpy(sys.cfg.tempdir,s); 
                 break;
             case 3: 
-                strcpy(syscfg.msgsdir,s); 
+                strcpy(sys.cfg.msgsdir,s); 
                 break;
             case 4: 
-                strcpy(syscfg.batchdir,s); 
+                strcpy(sys.cfg.batchdir,s); 
                 break;
             case 5: 
-                strcpy(syscfg.menudir,s); 
+                strcpy(sys.cfg.menudir,s); 
                 break;
             }
             resaveconfig=1;
@@ -204,117 +212,117 @@ void init(int show)
     }
 
     if(resaveconfig) {
-        cJSON *cfg_root = configrec_to_json(&syscfg, &nifty);
+        cJSON *cfg_root = configrec_to_json(&sys.cfg, &sys.nifty);
         write_json_file("config.json", cfg_root);
         cJSON_Delete(cfg_root);
     }
 
 
-    if(!restoring_shrink&&!show)
+    if(!sys.restoring_shrink&&!show)
         dotopinit("Status.dat",20);
 
-    sprintf(s,"%sstatus.json",syscfg.datadir);
+    sprintf(s,"%sstatus.json",sys.cfg.datadir);
     {
         cJSON *st_root = read_json_file(s);
         if (!st_root) {
-            printf("\n\n\n%sstatus.json not found!\n\n",syscfg.datadir);
+            printf("\n\n\n%sstatus.json not found!\n\n",sys.cfg.datadir);
             err(1,s,"In Init()");
         }
         json_to_statusrec(st_root, &sys.status);
         cJSON_Delete(st_root);
     }
     sys.status.wwiv_version=wwiv_num_version;
-    userdb_init(syscfg.datadir, syscfg.maxusers);
-    menudb_init(syscfg.menudir);
+    userdb_init(sys.cfg.datadir, sys.cfg.maxusers);
+    menudb_init(sys.cfg.menudir);
     sys.status.users = userdb_user_count();
 
-    screensave.scrn1=(char *)mallocx(screenlen);
+    sess.screensave.scrn1=(char *)mallocx(screenlen);
 
-    read_in_file("mnudata.dat",(menus),50);
+    read_in_file("mnudata.dat",(sys.menus),50);
 
-    subboards=(subboardrec *) mallocx(200*sizeof(subboardrec));
-    directories=(directoryrec *)mallocx(200*sizeof(directoryrec));
-    if(!restoring_shrink&&!show)
+    sys.subboards=(subboardrec *) mallocx(200*sizeof(subboardrec));
+    sys.directories=(directoryrec *)mallocx(200*sizeof(directoryrec));
+    if(!sys.restoring_shrink&&!show)
         dotopinit("config.dat",40);
 
-    sprintf(s,"%ssubs.dat",syscfg.datadir);
+    sprintf(s,"%ssubs.dat",sys.cfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if (i<0) {
-        printf("\n\n%ssubs.dat not found!",syscfg.datadir);
+        printf("\n\n%ssubs.dat not found!",sys.cfg.datadir);
         err(1,s,"In Init()");
     }
-    num_subs=(read(i,subboards, (200*sizeof(subboardrec))))/
+    sys.num_subs=(read(i,sys.subboards, (200*sizeof(subboardrec))))/
         sizeof(subboardrec);
-    if(subboards[0].postacs[0])
-        subboards[0].postacs[0]=0;
-    if(subboards[0].readacs[0])
-        subboards[0].readacs[0]=0;
-    if(!(subboards[0].attr & mattr_private)) {
-        togglebit((long *)&subboards[0].attr,mattr_private);
-        strcpy(subboards[0].name,"Private Mail");
-        strcpy(subboards[0].filename,"email");
-        subboards[0].conf='@';
+    if(sys.subboards[0].postacs[0])
+        sys.subboards[0].postacs[0]=0;
+    if(sys.subboards[0].readacs[0])
+        sys.subboards[0].readacs[0]=0;
+    if(!(sys.subboards[0].attr & mattr_private)) {
+        togglebit((long *)&sys.subboards[0].attr,mattr_private);
+        strcpy(sys.subboards[0].name,"Private Mail");
+        strcpy(sys.subboards[0].filename,"email");
+        sys.subboards[0].conf='@';
     }
     lseek(i,0L,SEEK_SET);
-    write(i,&subboards[0],sizeof(subboardrec));
+    write(i,&sys.subboards[0],sizeof(subboardrec));
     close(i);
 
-    if(!restoring_shrink&&!show) {
+    if(!sys.restoring_shrink&&!show) {
         dotopinit("Subs.dat",50);
     }
 
-    sprintf(s,"%sdirs.dat",syscfg.datadir);
+    sprintf(s,"%sdirs.dat",sys.cfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if (i<0) {
-        printf("\n\n%sdirs.dat not found!\n\n",syscfg.datadir);
+        printf("\n\n%sdirs.dat not found!\n\n",sys.cfg.datadir);
         err(1,s,"In Init()");
     }
 
-    num_dirs=(read(i,directories, (200*sizeof(directoryrec))))/
+    sys.num_dirs=(read(i,sys.directories, (200*sizeof(directoryrec))))/
         sizeof(directoryrec);
     close(i);
 
-    if(!restoring_shrink&&!show)
+    if(!sys.restoring_shrink&&!show)
         dotopinit("Protocol.dat",60);
 
-    sprintf(s,"%sprotocol.dat",syscfg.datadir);
+    sprintf(s,"%sprotocol.dat",sys.cfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if(i<0) {
-        printf("\n\n%sProtocol.dat Not Found\n",syscfg.datadir);
+        printf("\n\n%sProtocol.dat Not Found\n",sys.cfg.datadir);
         err(1,s,"In Init()");
     }
-    numextrn=(read(i,(void *)&proto,20*sizeof(protocolrec)))/
+    sys.numextrn=(read(i,(void *)&sys.proto,20*sizeof(protocolrec)))/
         sizeof(protocolrec);
     close(i);
 
 
-    if(!restoring_shrink&&!show) {
+    if(!sys.restoring_shrink&&!show) {
         dotopinit("Conf.dat",70);
     }
 
-    sprintf(s,"%sconf.dat",syscfg.datadir);
+    sprintf(s,"%sconf.dat",sys.cfg.datadir);
     i=open(s,O_RDWR | O_BINARY);
     if(i<0) {
-        printf("\n\n%sConf.dat Not Found!\n\n",syscfg.datadir);
+        printf("\n\n%sConf.dat Not Found!\n\n",sys.cfg.datadir);
         err(1,s,"In Init()");
     }
-    num_conf=(read(i,(void *)&sys.conf[0],20*sizeof(confrec)))/ sizeof(confrec);
+    sys.num_conf=(read(i,(void *)&sys.conf[0],20*sizeof(confrec)))/ sizeof(confrec);
     if(sys.conf[0].sl[0])
         sys.conf[0].sl[0]=0;
     close(i);
 
-    sprintf(s,"%sarchive.dat",syscfg.datadir);
+    sprintf(s,"%sarchive.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR);
     if(i<0) {
-        printf("\n\n%sArchive.dat Not Found\n",syscfg.datadir);
+        printf("\n\n%sArchive.dat Not Found\n",sys.cfg.datadir);
         err(1,s,"In Init()");
     }
-    read(i,&xarc[0],8*sizeof(xarc[0]));
+    read(i,&sys.xarc[0],8*sizeof(sys.xarc[0]));
     close(i);
 
 
 
-    /*  sprintf(s,"%sVOTING.DAT",syscfg.datadir);
+    /*  sprintf(s,"%sVOTING.DAT",sys.cfg.datadir);
           f=open(s,O_RDWR | O_BINARY);
           if (f>0) {
             n=(int) (filelength(f) / sizeof(votingrec)) -1;
@@ -322,87 +330,87 @@ void init(int show)
               lseek(f,(long) i * sizeof(votingrec),SEEK_SET);
               read(f,(void *)&v,sizeof(votingrec));
               if (v.numanswers)
-                questused[i]=1;
+                sys.questused[i]=1;
             }
             close(f);
           }*/
 
-    userdb_load(1,&thisuser);
-    cursub=0;
-    fwaiting=numwaiting(&thisuser);
+    userdb_load(1,&sess.user);
+    sess.cursub=0;
+    sess.fwaiting=numwaiting(&sess.user);
 
     sl1(2,sys.status.date1);
 
     if (ok_modem_stuff)
-        initport(syscfg.primaryport);
-    if (syscfg.sysconfig & sysconfig_no_local)
-        topdata=0;
+        initport(sys.cfg.primaryport);
+    if (sys.cfg.sysconfig & sysconfig_no_local)
+        sess.topdata=0;
     else
-        topdata=sys.status.net_edit_stuff;
+        sess.topdata=sys.status.net_edit_stuff;
 
     ss=getenv("PROMPT");
-    strcpy(newprompt,"PROMPT=BBS: ");
+    strcpy(sess.newprompt,"PROMPT=BBS: ");
     if (ss)
-        strcat(newprompt,ss);
+        strcat(sess.newprompt,ss);
     else
-        strcat(newprompt,"$P$G");
-    sprintf(dszlog,"%s\\BBSDSZ.LOG",cdir);
-    sprintf(s,"DSZLOG=%s",dszlog);
+        strcat(sess.newprompt,"$P$G");
+    sprintf(sess.dszlog,"%s\\BBSDSZ.LOG",sys.cdir);
+    sprintf(s,"DSZLOG=%s",sess.dszlog);
     i=i1=0;
     while (environ[i]!=NULL) {
         if (strncmp(environ[i],"PROMPT=",7)==0)
-            xenviron[i1++]=newprompt;
+            sys.xenviron[i1++]=sess.newprompt;
         else
             if (strncmp(environ[i],"DSZLOG=",7)==0)
-            xenviron[i1++]=strdup(s);
+            sys.xenviron[i1++]=strdup(s);
         else {
             if (strncmp(environ[i],"BBS=",4) && (strncmp(environ[i],"WWIV_FP=",8)))
-                xenviron[i1++]=environ[i];
+                sys.xenviron[i1++]=environ[i];
         }
         ++i;
     }
     if (!getenv("DSZLOG"))
-        xenviron[i1++]=strdup(s);
+        sys.xenviron[i1++]=strdup(s);
     if (!ss)
-        xenviron[i1++]=newprompt;
+        sys.xenviron[i1++]=sess.newprompt;
 
     sprintf(s,"BBS=%s",wwiv_version);
-    xenviron[i1++]=s;
+    sys.xenviron[i1++]=s;
 
-    xenviron[i1]=NULL;
+    sys.xenviron[i1]=NULL;
 
     for (i=0; i<20; i++)
-        questused[i]=0;
+        sys.questused[i]=0;
 
-    if(!restoring_shrink&&!show)
+    if(!sys.restoring_shrink&&!show)
         dotopinit("Final Data",95);
 
 
-    time_event=((double)syscfg.executetime)*60.0;
-    last_time=time_event-timer();
-    if (last_time<0.0)
-        last_time+=24.0*3600.0;
-    do_event=0;
+    sys.time_event=((double)sys.cfg.executetime)*60.0;
+    sys.last_time=sys.time_event-timer();
+    if (sys.last_time<0.0)
+        sys.last_time+=24.0*3600.0;
+    sys.do_event=0;
     if (sys.status.callernum!=65535) {
         sys.status.callernum1=(long)sys.status.callernum;
         sys.status.callernum=65535;
         save_status();
     }
     frequent_init();
-    if (!restoring_shrink&&!show && !already_on) {
-        remove_from_temp("*.*",syscfg.tempdir,0);
-        remove_from_temp("*.*",syscfg.batchdir,0);
+    if (!sys.restoring_shrink&&!show && !sess.already_on) {
+        remove_from_temp("*.*",sys.cfg.tempdir,0);
+        remove_from_temp("*.*",sys.cfg.batchdir,0);
     }
-    if(!restoring_shrink&&!show) menuat[0]=0;
+    if(!sys.restoring_shrink&&!show) sess.menuat[0]=0;
     lecho=ok_local();
-    quote=NULL;
-    bquote=0;
-    equote=0;
+    sess.quote=NULL;
+    sess.bquote=0;
+    sess.equote=0;
 
     daylight=0;
 
 
-    if (!restoring_shrink&&!show) {
+    if (!sys.restoring_shrink&&!show) {
         /*      GODOWN(2,3);
                       bargraph(100);
                       GODOWN(1,3);*/

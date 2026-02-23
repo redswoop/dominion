@@ -1,4 +1,7 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "terminal_bridge.h"
 #pragma hdrstop
 
@@ -9,10 +12,13 @@
  * Remote I/O (output, input, telnet, IAC) delegates to Terminal via bridge.
  * Listen socket management stays here.
  *
- * listen_fd = server socket (listens for incoming connections)
+ * sys.listen_fd = server socket (listens for incoming connections)
  * client_fd = connected client socket (macro → io.stream[IO_REMOTE].fd_out)
  */
 
+
+
+static auto& sys = System::instance();
 
 void dtr(int i)
 /* dtr(0) = hang up (close client socket), dtr(1) = ready */
@@ -111,7 +117,7 @@ void set_baud(unsigned int rate)
 
 void initport(int port_num)
 /* Initialize the TCP listening socket.
- * If tcp_port is set, listen on that port.
+ * If sys.tcp_port is set, listen on that port.
  * Otherwise this is a no-op (local-only mode). */
 {
     struct sockaddr_in addr;
@@ -119,35 +125,35 @@ void initport(int port_num)
     int port;
 
     if (!ok_modem_stuff) return;
-    if (!tcp_port) return;  /* no TCP port configured */
-    if (listen_fd >= 0) return;  /* already listening */
+    if (!sys.tcp_port) return;  /* no TCP port configured */
+    if (sys.listen_fd >= 0) return;  /* already listening */
 
-    port = tcp_port;
+    port = sys.tcp_port;
 
-    listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (listen_fd < 0) {
+    sys.listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sys.listen_fd < 0) {
         printf("\n\nFailed to create TCP socket!\n\n");
         return;
     }
 
-    setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(sys.listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(port);
 
-    if (bind(listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+    if (bind(sys.listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         printf("\n\nFailed to bind to port %d: %s\n\n", port, strerror(errno));
-        close(listen_fd);
-        listen_fd = -1;
+        close(sys.listen_fd);
+        sys.listen_fd = -1;
         return;
     }
 
-    if (listen(listen_fd, 1) < 0) {
+    if (listen(sys.listen_fd, 1) < 0) {
         printf("\n\nFailed to listen on port %d: %s\n\n", port, strerror(errno));
-        close(listen_fd);
-        listen_fd = -1;
+        close(sys.listen_fd);
+        sys.listen_fd = -1;
         return;
     }
 
@@ -166,9 +172,9 @@ void closeport()
         close(client_fd);
         client_fd = -1;
     }
-    if (listen_fd >= 0) {
-        close(listen_fd);
-        listen_fd = -1;
+    if (sys.listen_fd >= 0) {
+        close(sys.listen_fd);
+        sys.listen_fd = -1;
     }
 }
 

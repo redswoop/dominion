@@ -1,13 +1,19 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
+
+
+static auto& sys = System::instance();
 
 void dirdata(int n, char *s)
 {
     char s1[MAX_PATH_LEN];
     directoryrec r;
 
-    r=directories[n];
+    r=sys.directories[n];
     noc(s1,r.name);
     sprintf(s,"3%2d  3%-40s  3%-8s 3%-7s 3%-4d 3%-9.9s",
     n,s1,r.filename,r.acs,r.maxfiles,r.dpath);
@@ -22,7 +28,7 @@ void showdirs()
     abort=0;
     pla("0NN2Ä0Name2ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ0Filename2Ä0Dsl2Ä0AGE2Ä0Max2ÄÄ0Path2ÄÄÄ",
     &abort);
-    for (i=0; (i<num_dirs) && (!abort); i++) {
+    for (i=0; (i<sys.num_dirs) && (!abort); i++) {
         dirdata(i,s);
         pla(s,&abort);
     }
@@ -37,7 +43,7 @@ void modify_dir(int n)
     int i,i1,done;
 
     done=0;
-    r=directories[n];
+    r=sys.directories[n];
     do {
         outchr(12);
         npr("31. Name       :0 %s\r\n",r.name);
@@ -101,15 +107,15 @@ void modify_dir(int n)
             done=1; 
             break;
         case ']': 
-            if((n>=0) && (n<num_dirs-1))  { 
-                directories[n++]=r; 
-                r=directories[n];
+            if((n>=0) && (n<sys.num_dirs-1))  { 
+                sys.directories[n++]=r; 
+                r=sys.directories[n];
             }
             break;
         case '[': 
             if(n>0 ){ 
-                directories[n--]=r; 
-                r=directories[n];
+                sys.directories[n--]=r; 
+                r=sys.directories[n];
             } 
             break;
         case 'J': 
@@ -118,8 +124,8 @@ void modify_dir(int n)
             input(s,4); 
             if(s[0]) {
                 i=atoi(s);
-                directories[n]=r;
-                r=directories[i];
+                sys.directories[n]=r;
+                r=sys.directories[i];
             }
             break;
         case '1':
@@ -146,7 +152,7 @@ void modify_dir(int n)
             inputdat("FULL Pathname to Desired Directory",s,75,0);
             if (s[0]) {
                 if (chdir(s)) {
-                    chdir(cdir);
+                    chdir(sys.cdir);
                     if (mkdir(s)) {
                         pl("Error Creating/Changing to directory");
                         pausescr();
@@ -154,7 +160,7 @@ void modify_dir(int n)
                     }
                 } 
                 else {
-                    chdir(cdir);
+                    chdir(sys.cdir);
                 }
                 if (s[0]) {
                     if(s[strlen(s)-1]!='\\')
@@ -197,8 +203,8 @@ void modify_dir(int n)
         }
     } 
     while ((!done) && (!hangup));
-    directories[n]=r;
-    if (!wfc)
+    sys.directories[n]=r;
+    if (!sys.wfc)
         changedsl();
 }
 
@@ -207,9 +213,9 @@ void swap_dirs(int dir1, int dir2)
     int i,i1,i2,nu;
     directoryrec drt;
 
-    drt=directories[dir1];
-    directories[dir1]=directories[dir2];
-    directories[dir2]=drt;
+    drt=sys.directories[dir1];
+    sys.directories[dir1]=sys.directories[dir2];
+    sys.directories[dir2]=drt;
 }
 
 
@@ -221,8 +227,8 @@ void insert_dir(int n,char path[60], int temp,int config)
     long l1,l2,l3;
 
     if(!temp) {
-        for (i=num_dirs-1; i>=n; i--)
-            directories[i+1]=directories[i];
+        for (i=sys.num_dirs-1; i>=n; i--)
+            sys.directories[i+1]=sys.directories[i];
     }
     if(temp) strcpy(r.name,"<< Temporary >>");
     else strcpy(r.name,"Ä> New Directory <Ä");
@@ -237,9 +243,9 @@ void insert_dir(int n,char path[60], int temp,int config)
     r.type=temp;
     r.mask=0;
     r.confnum='@';
-    directories[n]=r;
+    sys.directories[n]=r;
     if(!temp) {
-        ++num_dirs;
+        ++sys.num_dirs;
         userdb_load(1,&u);
         nu=userdb_max_num() + 1;
         for (i=1; i<nu; i++) {
@@ -261,9 +267,9 @@ void delete_dir(int n)
     userrec u;
     long l1,l2;
 
-    for (i=n; i<num_dirs; i++)
-        directories[i]=directories[i+1];
-    --num_dirs;
+    for (i=n; i<sys.num_dirs; i++)
+        sys.directories[i]=sys.directories[i+1];
+    --sys.num_dirs;
     userdb_load(1,&u);
     nu=userdb_max_num() + 1;
 
@@ -274,7 +280,7 @@ void delete_dir(int n)
         userdb_save(i,&u);
     }
 
-    if (!wfc)
+    if (!sys.wfc)
         changedsl();
 }
 
@@ -301,23 +307,23 @@ void diredit()
             break;
 
         case 'P':
-            if (num_dirs<MAX_DIRS) {
+            if (sys.num_dirs<MAX_DIRS) {
                 nl();
                 prt(2,"Move which Area? ");
                 input(s,3);
                 i1=atoi(s);
-                if ((!s[0]) || (i1<0) || (i1>num_dirs))
+                if ((!s[0]) || (i1<0) || (i1>sys.num_dirs))
                     break;
                 nl();
                 prt(2,"Place before which area? ");
                 input(s,3);
                 i2=atoi(s);
-                if ((!s[0]) || (i2<0) || (i2%32==0) || (i2>num_dirs) || (i1==i2))
+                if ((!s[0]) || (i2<0) || (i2%32==0) || (i2>sys.num_dirs) || (i1==i2))
                     break;
                 nl();
                 if (i2<i1)
                     i1++;
-                insert_dir(i2,syscfg.dloadsdir,0,0);
+                insert_dir(i2,sys.cfg.dloadsdir,0,0);
                 swap_dirs(i1,i2); 
                 delete_dir(i1);   
                 showdirs();
@@ -335,17 +341,17 @@ void diredit()
             prt(2,"Dir number? ");
             input(s,2);
             i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<num_dirs))
+            if ((s[0]!=0) && (i>=0) && (i<sys.num_dirs))
                 modify_dir(i);
             break;
         case 'I':
-            if (num_dirs<200) {
+            if (sys.num_dirs<200) {
                 nl();
                 prt(2,"Insert before which dir? ");
                 input(s,2);
                 i=atoi(s);
-                if ((s[0]!=0) && (i>=0) && (i<=num_dirs))
-                    insert_dir(i,syscfg.dloadsdir,0,0);
+                if ((s[0]!=0) && (i>=0) && (i<=sys.num_dirs))
+                    insert_dir(i,sys.cfg.dloadsdir,0,0);
             }
             break;
         case 'D':
@@ -353,9 +359,9 @@ void diredit()
             prt(2,"Delete which dir? ");
             input(s,2);
             i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<num_dirs)) {
+            if ((s[0]!=0) && (i>=0) && (i<sys.num_dirs)) {
                 nl();
-                sprintf(s1,"Delete %s? ",directories[i].name);
+                sprintf(s1,"Delete %s? ",sys.directories[i].name);
                 prt(5,s1);
                 if (yn())
                     delete_dir(i);
@@ -364,9 +370,9 @@ void diredit()
         }
     } 
     while ((!done) && (!hangup));
-    sprintf(s,"%sdirs.dat",syscfg.datadir);
+    sprintf(s,"%sdirs.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
-    write(f,(void *)&directories[0], num_dirs * sizeof(directoryrec));
+    write(f,(void *)&sys.directories[0], sys.num_dirs * sizeof(directoryrec));
     close(f);
 }
 
@@ -375,7 +381,7 @@ void protdata(int n, char *s)
 {
     protocolrec r;
 
-    r=proto[n];
+    r=sys.proto[n];
     sprintf(s,"3%-2d  3  %c    3%-59s",n,r.singleok?'Y':'N',r.description);
 }
 
@@ -387,7 +393,7 @@ void showprots()
     outchr(12);
     abort=0;
     pla("0NN2ÄÄ0Single2ÄÄ0Description2ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ",&abort);
-    for (i=0; (i<numextrn) && (!abort); i++) {
+    for (i=0; (i<sys.numextrn) && (!abort); i++) {
         protdata(i,s);
         pla(s,&abort);
     }
@@ -402,7 +408,7 @@ void modify_prot(int n)
     int i,i1,done;
 
     done=0;
-    r=proto[n];
+    r=sys.proto[n];
     do {
         outchr(12);
         npr("01. Descrition        : 3%s\r\n",r.description);
@@ -441,15 +447,15 @@ void modify_prot(int n)
             r.key=toupper(getkey()); 
             break;
         case ']': 
-            if((n>=0) && (n<numextrn-1))  { 
-                proto[n++]=r; 
-                r=proto[n];
+            if((n>=0) && (n<sys.numextrn-1))  { 
+                sys.proto[n++]=r; 
+                r=sys.proto[n];
             }
             break;
         case '[': 
             if(n>0){ 
-                proto[n--]=r; 
-                r=proto[n];
+                sys.proto[n--]=r; 
+                r=sys.proto[n];
             } 
             break;
         case 'J': 
@@ -458,8 +464,8 @@ void modify_prot(int n)
             input(s,4); 
             if(s[0]) {
                 i=atoi(s);
-                proto[n]=r;
-                r=proto[i];
+                sys.proto[n]=r;
+                r=sys.proto[i];
             }
             break;
         case '1': 
@@ -513,7 +519,7 @@ void modify_prot(int n)
         }
     } 
     while ((!done) && (!hangup));
-    proto[n]=r;
+    sys.proto[n]=r;
 }
 
 
@@ -525,9 +531,9 @@ void insert_prot(int n)
     char s[MAX_PATH_LEN];
 
 
-    for (i=numextrn-1; i>=n; i--)
-        proto[i+1]=proto[i];
-    numextrn++;
+    for (i=sys.numextrn-1; i>=n; i--)
+        sys.proto[i+1]=sys.proto[i];
+    sys.numextrn++;
 
     strcpy(r.description,"** New Protocol **");
     strcpy(r.receivefn,"");
@@ -537,7 +543,7 @@ void insert_prot(int n)
     r.singleok=0;
     strcpy(r.sendbatch,"");
     strcpy(r.receivebatch,"");
-    proto[n]=r;
+    sys.proto[n]=r;
     modify_prot(n);
 }
 
@@ -546,9 +552,9 @@ void delete_prot(int n)
 {
     int i;
 
-    for (i=n; i<numextrn; i++)
-        proto[i]=proto[i+1];
-    --numextrn;
+    for (i=n; i<sys.numextrn; i++)
+        sys.proto[i]=sys.proto[i+1];
+    --sys.numextrn;
 }
 
 
@@ -577,16 +583,16 @@ void protedit()
             prt(2,"Prot number? ");
             input(s,2);
             i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<numextrn))
+            if ((s[0]!=0) && (i>=0) && (i<sys.numextrn))
                 modify_prot(i);
             break;
         case 'I':
-            if (numextrn<200) {
+            if (sys.numextrn<200) {
                 nl();
                 prt(2,"Insert before which prot? ");
                 input(s,2);
                 i=atoi(s);
-                if ((s[0]!=0) && (i>=0) && (i<=numextrn))
+                if ((s[0]!=0) && (i>=0) && (i<=sys.numextrn))
                     insert_prot(i);
             }
             break;
@@ -595,9 +601,9 @@ void protedit()
             prt(2,"Delete which prot? ");
             input(s,2);
             i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<numextrn)) {
+            if ((s[0]!=0) && (i>=0) && (i<sys.numextrn)) {
                 nl();
-                sprintf(s1,"Delete %s? ",proto[i].description);
+                sprintf(s1,"Delete %s? ",sys.proto[i].description);
                 prt(5,s1);
                 if (yn())
                     delete_prot(i);
@@ -606,9 +612,9 @@ void protedit()
         }
     } 
     while ((!done) && (!hangup));
-    sprintf(s,"%sprotocol.dat",syscfg.datadir);
+    sprintf(s,"%sprotocol.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
-    write(f,(void *)&proto[0], numextrn * sizeof(protocolrec));
+    write(f,(void *)&sys.proto[0], sys.numextrn * sizeof(protocolrec));
     close(f);
 }
 

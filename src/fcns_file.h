@@ -64,7 +64,7 @@ void ascii_send(char *fn, int *sent, double *percent);
 void send_file(char *fn, int *sent, int *abort, char *ft);
 void receive_file(char *fn, int *received, char *ft, int okbatch);
 int get_batchprotocol(int dl,int *hang);
-int get_protocol(int batch);
+int get_protocol(int is_batch);
 int extern_prot(int pn, char *fn1, int sending);
 void stuff_in2(char *s, char *s1, char f1[63],int l1,char f2[63],int l2, char f3[63],int l3,char f4[63],int l4, char f5[63],int l5);
 int dirlist(char type);

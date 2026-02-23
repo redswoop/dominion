@@ -1,9 +1,16 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 #include <time.h>
 
-#define SETREC(i)  lseek(dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+#define SETREC(i)  lseek(sess.dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 int getrec(char *spec,int *type)
 {
@@ -29,8 +36,8 @@ int getrec(char *spec,int *type)
             break;
         SETREC(i);
         if(*type==1) {
-            read(dlf,&u,sizeof(uploadsrec));
-            strcpy(s,directories[udir[curdir].subnum].dpath);
+            read(sess.dlf,&u,sizeof(uploadsrec));
+            strcpy(s,sys.directories[sess.udir[sess.curdir].subnum].dpath);
             strcat(s,u.filename);
             if(exist(s))
                 i1=0;
@@ -67,8 +74,8 @@ void getnextrec(char *spec,int *cp,int type)
             break;
         SETREC(*cp);
         if(type==1) {
-            read(dlf,&u,sizeof(uploadsrec));
-            strcpy(s,directories[udir[curdir].subnum].dpath);
+            read(sess.dlf,&u,sizeof(uploadsrec));
+            strcpy(s,sys.directories[sess.udir[sess.curdir].subnum].dpath);
             strcat(s,u.filename);
             if(exist(s))
                 i1=0;
@@ -123,26 +130,26 @@ void quicksort(int l,int r,int type)
     i=l; 
     j=r;
     SETREC(((l+r)/2));
-    read(dlf, (void *)&x,sizeof(uploadsrec));
+    read(sess.dlf, (void *)&x,sizeof(uploadsrec));
     do {
         SETREC(i);
-        read(dlf, (void *)&a,sizeof(uploadsrec));
+        read(sess.dlf, (void *)&a,sizeof(uploadsrec));
         while (comparedl(&a,&x,type)<0) {
             SETREC(++i);
-            read(dlf, (void *)&a,sizeof(uploadsrec));
+            read(sess.dlf, (void *)&a,sizeof(uploadsrec));
         }
         SETREC(j);
-        read(dlf, (void *)&a2,sizeof(uploadsrec));
+        read(sess.dlf, (void *)&a2,sizeof(uploadsrec));
         while (comparedl(&a2,&x,type)>0) {
             SETREC(--j);
-            read(dlf, (void *)&a2,sizeof(uploadsrec));
+            read(sess.dlf, (void *)&a2,sizeof(uploadsrec));
         }
         if (i<=j) {
             if (i!=j) {
                 SETREC(i);
-                write(dlf,(void *)&a2,sizeof(uploadsrec));
+                write(sess.dlf,(void *)&a2,sizeof(uploadsrec));
                 SETREC(j);
-                write(dlf,(void *)&a,sizeof(uploadsrec));
+                write(sess.dlf,(void *)&a,sizeof(uploadsrec));
             }
             i++;
             j--;
@@ -159,8 +166,8 @@ void quicksort(int l,int r,int type)
 void sortdir(int dn, int type)
 {
     dliscan1(dn);
-    if (numf>1)
-        quicksort(1,numf,type);
+    if (sess.numf>1)
+        quicksort(1,sess.numf,type);
     closedl();
 }
 
@@ -186,12 +193,12 @@ void sort_all(char ms[MAX_PATH_LEN])
     }
 
     if(!all)
-        sortdir(udir[curdir].subnum,type);
+        sortdir(sess.udir[sess.curdir].subnum,type);
     else
-        for (i=0; (i<64) && (udir[i].subnum!=-1) && (!abort); i++) {
+        for (i=0; (i<64) && (sess.udir[i].subnum!=-1) && (!abort); i++) {
         dliscan1(i);
         if(!ms[0]) {
-            npr("5Sorting 0%-40s 3(3%d Files3)\r\n",directories[udir[i].subnum].name,numf);
+            npr("5Sorting 0%-40s 3(3%d Files3)\r\n",sys.directories[sess.udir[i].subnum].name,sess.numf);
             checka(&abort,&next,0);
         }
         sortdir(i,type);
@@ -215,14 +222,14 @@ void valfiles()
     while (i>0&&!done) {
         cp=i;
         SETREC(i);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
         if(!u.ats[0]) {
             nl();
             nl();
             if(valall) {
                 u.ats[0]=1;
                 SETREC(i);
-                write(dlf,(void *)&u,sizeof(uploadsrec));
+                write(sess.dlf,(void *)&u,sizeof(uploadsrec));
                 sprintf(s2,"%s was Validated on %s",u.filename,date());
                 ssm(u.ownerusr,0,s2);
                 userdb_load(u.ownerusr,&uu);
@@ -232,7 +239,7 @@ void valfiles()
                 logtypes(3,"Validated file 4%s0 to 4%d0 points",u.filename,u.points);
             } 
             else {
-                printfileinfo(&u,udir[curdir].subnum);
+                printfileinfo(&u,sess.udir[sess.curdir].subnum);
                 outstr("7Validate 0(2Y/N/P/Q/All0)7? ");
                 ch=onek("YNQPA\r");
                 switch(ch) {
@@ -252,7 +259,7 @@ void valfiles()
                     else
                         u.points=((u.numbytes+1023)/10240);
                     SETREC(i);
-                    write(dlf,(void *)&u,sizeof(uploadsrec));
+                    write(sess.dlf,(void *)&u,sizeof(uploadsrec));
                     sprintf(s2,"%s was Validated on %s",u.filename,date());
                     ssm(u.ownerusr,0,s2);
                     userdb_load(u.ownerusr,&uu);
@@ -283,11 +290,11 @@ int upload_file(char *fn, int dn,int *ato)
     long l,len;
     double ti;
 
-    d=directories[dn];
+    d=sys.directories[dn];
     strcpy(s,fn);
     align(s);
     strcpy(u.filename,s);
-    u.ownerusr=usernum;
+    u.ownerusr=sess.usernum;
     u.ownersys=0;
     u.numdloads=0;
     u.filetype=0;
@@ -300,7 +307,7 @@ int upload_file(char *fn, int dn,int *ato)
     l=filelength(f);
     u.numbytes=l;
     close(f);
-    strcpy(u.upby,nam(&thisuser,usernum));
+    strcpy(u.upby,nam(&sess.user,sess.usernum));
     strcpy(u.date,date());
     npr("0%s5:3 %4ldk 5:2 ",u.filename,(u.numbytes+1023)/1024);
     if(!*ato) {
@@ -336,8 +343,8 @@ int upload_file(char *fn, int dn,int *ato)
     if (u.description[0]==0)
         strcpy(u.description,get_string(85));
     if(ok) {
-        thisuser.fpts+=(u.numbytes+1023)/10240;
-        ++thisuser.uploaded;
+        sess.user.fpts+=(u.numbytes+1023)/10240;
+        ++sess.user.uploaded;
         if (strstr(u.filename,".GIF"))
             addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
@@ -345,21 +352,21 @@ int upload_file(char *fn, int dn,int *ato)
         strcat(ff,stripfn(u.filename));
         adddiz(ff,&u);
         u.points=((l+1023)/10240);
-        thisuser.uk += ((l+1023)/1024);
+        sess.user.uk += ((l+1023)/1024);
         time(&l);
         u.daten=l;
-        for (i=numf; i>=1; i--) {
+        for (i=sess.numf; i>=1; i--) {
             SETREC(i);
-            read(dlf,(void *)&u1,sizeof(uploadsrec));
+            read(sess.dlf,(void *)&u1,sizeof(uploadsrec));
             SETREC(i+1);
-            write(dlf,(void *)&u1,sizeof(uploadsrec));
+            write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
         }
         SETREC(1);
-        write(dlf,(void *)&u,sizeof(uploadsrec));
-        ++numf;
-        u1.numbytes=numf;
+        write(sess.dlf,(void *)&u,sizeof(uploadsrec));
+        ++sess.numf;
+        u1.numbytes=sess.numf;
         SETREC(0);
-        write(dlf,(void *)&u1,sizeof(uploadsrec));
+        write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
         ++sys.status.uptoday;
         save_status();
         logpr("3+ 2Locally uploaded %s on %s",u.filename,d.name);
@@ -376,17 +383,17 @@ int uploadall(int dn, char s[20])
     uploadsrec u;
 
     dliscan1(dn);
-    ocd=curdir;
-    curdir=dn;
+    ocd=sess.curdir;
+    sess.curdir=dn;
     nl();
     if(!stricmp(s,"????????.???"))
         strcpy(s,"*.*");
-    strcpy(s1,(directories[dn].dpath));
-    maxf=directories[dn].maxfiles;
+    strcpy(s1,(sys.directories[dn].dpath));
+    maxf=sys.directories[dn].maxfiles;
     strcat(s1,s);
     f1=findfirst(s1,&ff,0);
     ok=1;
-    while ((f1==0) && (!hangup) && (numf<maxf) && (ok)) {
+    while ((f1==0) && (!hangup) && (sess.numf<maxf) && (ok)) {
         strcpy(s,(ff.ff_name));
         align(s);
         i=recno(s);
@@ -406,15 +413,15 @@ int uploadall(int dn, char s[20])
         } 
         else {
             SETREC(i);
-            read(dlf,(void *)&u, sizeof(uploadsrec));
+            read(sess.dlf,(void *)&u, sizeof(uploadsrec));
         }
         f1=findnext(&ff);
     }
-    curdir=ocd;
+    sess.curdir=ocd;
     closedl();
     if (!ok)
         pl("Aborted.");
-    if (numf>=maxf)
+    if (sess.numf>=maxf)
         pl("directory full.");
     return(i1);
 }
@@ -436,10 +443,10 @@ void removefile(void)
     abort=0;
     while ((!hangup) && (i!=-1) && (!abort)) {
         SETREC(i);
-        read(dlf,&u,sizeof(uploadsrec));
-        if (dcs() || (u.ownerusr==usernum) ) {
+        read(sess.dlf,&u,sizeof(uploadsrec));
+        if (dcs() || (u.ownerusr==sess.usernum) ) {
             nl();
-            printfileinfo(&u,udir[curdir].subnum);
+            printfileinfo(&u,sess.udir[sess.curdir].subnum);
             prt(5,"Remove? (Y/N/Q) ");
             ch=onek("QNY");
             if (ch=='Q')
@@ -457,7 +464,7 @@ void removefile(void)
                 else
                     rm=1;
                 if (rm) {
-                    strcpy(s1,(directories[udir[curdir].subnum].dpath));
+                    strcpy(s1,(sys.directories[sess.udir[sess.curdir].subnum].dpath));
                     strcat(s1,u.filename);
                     unlink(s1);
                     if ((rdlp) && (u.ownersys==0)) {
@@ -473,18 +480,18 @@ void removefile(void)
                 if (u.mask & mask_extended)
                     delete_extended_description(u.filename);
                 logtypes(3,"4%s 0Removed off of 4%s",u.filename,
-                directories[udir[curdir].subnum].name);
-                for (i1=i; i1<numf; i1++) {
+                sys.directories[sess.udir[sess.curdir].subnum].name);
+                for (i1=i; i1<sess.numf; i1++) {
                     SETREC(i1+1);
-                    read(dlf,(void *)&u,sizeof(uploadsrec));
+                    read(sess.dlf,(void *)&u,sizeof(uploadsrec));
                     SETREC(i1);
-                    write(dlf,(void *)&u,sizeof(uploadsrec));
+                    write(sess.dlf,(void *)&u,sizeof(uploadsrec));
                 }
                 --i;
-                --numf;
-                u.numbytes=numf;
+                --sess.numf;
+                u.numbytes=sess.numf;
                 SETREC(0);
-                write(dlf,(void *)&u,sizeof(uploadsrec));
+                write(sess.dlf,(void *)&u,sizeof(uploadsrec));
             }
         }
 
@@ -517,11 +524,11 @@ void editfile()
     while (done!=2&&cp!=-1) {
         done=0;
         SETREC(cp);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
         nl();
         changed=0;
         while (!done) {
-            printfileinfo(&u,udir[curdir].subnum);
+            printfileinfo(&u,sess.udir[sess.curdir].subnum);
             nl();
             npr("5File Information Editor (?=Help) ");
             ch=onek("DQNGFVEUPS!?BX\r");
@@ -599,7 +606,7 @@ void editfile()
                 if (s[0]) {
                     align(s);
                     if (strcmp(s,"        .   ")) {
-                        strcpy(s1,directories[udir[curdir].subnum].dpath);
+                        strcpy(s1,sys.directories[sess.udir[sess.curdir].subnum].dpath);
                         strcpy(s2,s1);
                         strcat(s1,s);
                         if (exist(s1))
@@ -689,7 +696,7 @@ void editfile()
         if(changed)
             logtypes(3,"Edited file information for 4%s",u.filename);
         SETREC(cp);
-        write(dlf,(void *)&u,sizeof(uploadsrec));
+        write(sess.dlf,(void *)&u,sizeof(uploadsrec));
         getnextrec(s3,(int *)&cp,type);
     }
     closedl();
@@ -706,21 +713,21 @@ void localupload()
     if(yn()) {
         while(!done) {
             strcpy(s1,s);
-            if(i1>num_dirs) {
+            if(i1>sys.num_dirs) {
                 done=1;
                 continue;
             }
-            if(udir[i1].subnum<0) {
+            if(sess.udir[i1].subnum<0) {
                 done=1;
                 continue;
             }
-            npr("5Local Uploading: 0 %s\r\n",directories[udir[i1].subnum].name);
-            i=uploadall(udir[i1].subnum,s1);
+            npr("5Local Uploading: 0 %s\r\n",sys.directories[sess.udir[i1].subnum].name);
+            i=uploadall(sess.udir[i1].subnum,s1);
             if(i==-2) return;
             i1++;
         }
     } 
-    else uploadall(udir[curdir].subnum,s);
+    else uploadall(sess.udir[sess.curdir].subnum,s);
 }
 
 void create_file()
@@ -732,13 +739,13 @@ void create_file()
     long l,len;
     double ti;
 
-    d=directories[udir[curdir].subnum];
+    d=sys.directories[sess.udir[sess.curdir].subnum];
 
     if(file_mask(u.filename)==-1)
         return;
 
     dliscan();
-    u.ownerusr=usernum;
+    u.ownerusr=sess.usernum;
     u.ownersys=0;
     u.numdloads=0;
     u.filetype=0;
@@ -758,7 +765,7 @@ void create_file()
         u.numbytes=l;
         close(f);
     }
-    strcpy(u.upby,nam(&thisuser,usernum));
+    strcpy(u.upby,nam(&sess.user,sess.usernum));
     strcpy(u.date,date());
     npr("0%s5:3 %4ldk 5:2 ",u.filename,(u.numbytes+1023)/1024);
     mpl(39);
@@ -777,8 +784,8 @@ void create_file()
     npr("5Create this file? ");
     ok=yn();
     if(ok) {
-        thisuser.fpts+=(u.numbytes+1023)/10240;
-        ++thisuser.uploaded;
+        sess.user.fpts+=(u.numbytes+1023)/10240;
+        ++sess.user.uploaded;
         if (strstr(u.filename,".GIF"))
             addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
@@ -786,21 +793,21 @@ void create_file()
         strcat(ff,stripfn(u.filename));
         adddiz(ff,&u);
         u.points=((l+1023)/10240);
-        thisuser.uk += ((l+1023)/1024);
+        sess.user.uk += ((l+1023)/1024);
         time(&l);
         u.daten=l;
-        for (i=numf; i>=1; i--) {
+        for (i=sess.numf; i>=1; i--) {
             SETREC(i);
-            read(dlf,(void *)&u1,sizeof(uploadsrec));
+            read(sess.dlf,(void *)&u1,sizeof(uploadsrec));
             SETREC(i+1);
-            write(dlf,(void *)&u1,sizeof(uploadsrec));
+            write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
         }
         SETREC(1);
-        write(dlf,(void *)&u,sizeof(uploadsrec));
-        ++numf;
-        u1.numbytes=numf;
+        write(sess.dlf,(void *)&u,sizeof(uploadsrec));
+        ++sess.numf;
+        u1.numbytes=sess.numf;
         SETREC(0);
-        write(dlf,(void *)&u1,sizeof(uploadsrec));
+        write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
         ++sys.status.uptoday;
         save_status();
         logtypes(3,"Created File %s on %s",u.filename,d.name);
@@ -813,13 +820,13 @@ void del_entry(int which)
     int i;
     uploadsrec u;
 
-    for (i=which; i<numf; i++) {
+    for (i=which; i<sess.numf; i++) {
         SETREC(i+1);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
         SETREC(i);
-        write(dlf,(void *)&u,sizeof(uploadsrec));
+        write(sess.dlf,(void *)&u,sizeof(uploadsrec));
     }
-    numf--;
+    sess.numf--;
 }
 
 void move_file(void)
@@ -843,7 +850,7 @@ void move_file(void)
         cp=i;
         dliscan();
         SETREC(i);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
         nl();
         printinfo(&u,&abort,0);
         nl();
@@ -853,7 +860,7 @@ void move_file(void)
         if (ch=='Q')
             done=1;
         if (ch=='Y') {
-            strcpy(s1,directories[udir[curdir].subnum].dpath);
+            strcpy(s1,sys.directories[sess.udir[sess.curdir].subnum].dpath);
             strcat(s1,u.filename);
             d1=-1;
             do {
@@ -865,14 +872,14 @@ void move_file(void)
             }
             while ((!hangup) && (type[0]=='?'));
             if (type[0])
-                for (i1=0; (i1<64) && (udir[i1].subnum!=-1); i1++)
-                    if (strcmp(udir[i1].keys,type)==0)
+                for (i1=0; (i1<64) && (sess.udir[i1].subnum!=-1); i1++)
+                    if (strcmp(sess.udir[i1].keys,type)==0)
                         d1=i1;
-            if(i1<64&&udir[i1].subnum!=-1)
+            if(i1<64&&sess.udir[i1].subnum!=-1)
                 d1=i1;
             if (d1!=-1) {
                 ok=1;
-                d1=udir[d1].subnum;
+                d1=sess.udir[d1].subnum;
                 dest=d1;
                 dliscan1(d1);
                 if (recno(u.filename)>0) {
@@ -880,12 +887,12 @@ void move_file(void)
                     nl();
                     pl("Filename already in use in that directory.");
                 }
-                if (numf>=directories[d1].maxfiles) {
+                if (sess.numf>=sys.directories[d1].maxfiles) {
                     ok=0;
                     nl();
                     pl("Too many files in that directory.");
                 }
-                if (freek1(directories[d1].dpath)<((double)(u.numbytes/1024L)+3)) {
+                if (freek1(sys.directories[d1].dpath)<((double)(u.numbytes/1024L)+3)) {
                     ok=0;
                     nl();
                     pl("Not enough disk space to move it.");
@@ -900,31 +907,31 @@ void move_file(void)
 
         if (ok) {
             --cp;
-            logtypes(3,"Moved file 4%s0 to 2%s",u.filename,directories[d1].name);
+            logtypes(3,"Moved file 4%s0 to 2%s",u.filename,sys.directories[d1].name);
             del_entry(i);
-            u1.numbytes=numf;
+            u1.numbytes=sess.numf;
             SETREC(0);
-            write(dlf,(void *)&u1,sizeof(uploadsrec));
+            write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
             ss=read_extended_description(u.filename);
             if (ss)
                 delete_extended_description(u.filename);
             closedl();
 
-            strcpy(s2,directories[d1].dpath);
+            strcpy(s2,sys.directories[d1].dpath);
             strcat(s2,u.filename);
             dliscan1(d1);
-            for (i=numf; i>=1; i--) {
+            for (i=sess.numf; i>=1; i--) {
                 SETREC(i);
-                read(dlf,(void *)&u1,sizeof(uploadsrec));
+                read(sess.dlf,(void *)&u1,sizeof(uploadsrec));
                 SETREC(i+1);
-                write(dlf,(void *)&u1,sizeof(uploadsrec));
+                write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
             }
             SETREC(1);
-            write(dlf,(void *)&u,sizeof(uploadsrec));
-            ++numf;
-            u1.numbytes=numf;
+            write(sess.dlf,(void *)&u,sizeof(uploadsrec));
+            ++sess.numf;
+            u1.numbytes=sess.numf;
             SETREC(0);
-            write(dlf,(void *)&u1,sizeof(uploadsrec));
+            write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
             if (ss) {
                 add_extended_description(u.filename,ss);
                 farfree(ss);
@@ -959,7 +966,7 @@ void move_file(void)
                 }
             }
             nl();
-            npr("File Moved to %s\r\n",directories[dest].name);
+            npr("File Moved to %s\r\n",sys.directories[dest].name);
         }
 
         getnextrec(sx,(int *)&cp,ttype);

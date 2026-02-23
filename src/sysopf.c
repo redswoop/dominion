@@ -1,4 +1,7 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 
 #pragma hdrstop
 
@@ -6,6 +9,10 @@
 
 extern char commstr[41];
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void reset_files(int show)
 {
@@ -21,7 +28,7 @@ void get_status()
     char s[MAX_PATH_LEN];
     cJSON *st_root;
 
-    sprintf(s,"%sstatus.json",syscfg.datadir);
+    sprintf(s,"%sstatus.json",sys.cfg.datadir);
     st_root = read_json_file(s);
     if (st_root) {
         json_to_statusrec(st_root, &sys.status);
@@ -36,7 +43,7 @@ void read_new_stuff()
     int i;
     char s[MAX_PATH_LEN];
 
-    read_in_file("mnudata.dat",(menus),50);
+    read_in_file("mnudata.dat",(sys.menus),50);
 }
 
 
@@ -51,11 +58,11 @@ void chuser()
     input(s,30);
     i=finduser1(s);
     if (i>0) {
-        userdb_save(usernum,&thisuser);
-        userdb_load(i,&thisuser);
-        usernum=i;
-        actsl=255;
-        logtypes(3,"Changed to 4%s",nam(&thisuser,usernum));
+        userdb_save(sess.usernum,&sess.user);
+        userdb_load(i,&sess.user);
+        sess.usernum=i;
+        sess.actsl=255;
+        logtypes(3,"Changed to 4%s",nam(&sess.user,sess.usernum));
         topscreen();
     } 
     else
@@ -68,7 +75,7 @@ void zlog()
     char s[MAX_PATH_LEN];
     int abort,f,i,i1;
 
-    sprintf(s,"%shistory.dat",syscfg.datadir);
+    sprintf(s,"%shistory.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY);
     if (f<0)
         return;
@@ -122,9 +129,9 @@ void beginday()
     z.fback=sys.status.fbacktoday;
     z.up=sys.status.uptoday;
     z.dl=sys.status.dltoday;
-    sprintf(s,"%shistory.dat",syscfg.datadir);
+    sprintf(s,"%shistory.dat",sys.cfg.datadir);
     f=open(s,O_RDWR|O_BINARY);
-    lseek(f,(nifty.systemtype-1)*sizeof(zlogrec),SEEK_SET);
+    lseek(f,(sys.nifty.systemtype-1)*sizeof(zlogrec),SEEK_SET);
     read(f,&z1,sizeof(z1));
     close(f);
     s[0]=z1.date[6];
@@ -134,7 +141,7 @@ void beginday()
     s[4]=z1.date[3];
     s[5]=z1.date[4];
     s[6]=0;
-    sprintf(s1,"%s%s.log",syscfg.gfilesdir,s);
+    sprintf(s1,"%s%s.log",sys.cfg.gfilesdir,s);
     unlink(s1);
 
     sys.status.callstoday=0;
@@ -146,10 +153,10 @@ void beginday()
     sys.status.activetoday=0;
     strcpy(sys.status.date1,date());
     sl1(2,date());
-    sprintf(s,"%suser.log",syscfg.gfilesdir);
+    sprintf(s,"%suser.log",sys.cfg.gfilesdir);
     unlink(s);
     save_status();
-    sprintf(s,"%shistory.dat",syscfg.datadir);
+    sprintf(s,"%shistory.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY);
     if (f<0) {
         f=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
@@ -180,13 +187,13 @@ void beginday()
     pl("Sorting File Areas");
     sort_all("GA");
 
-    if (syscfg.beginday_c[0]) {
-        stuff_in(s,syscfg.beginday_c,create_chain_file("CHAIN.TXT"),"","","","");
+    if (sys.cfg.beginday_c[0]) {
+        stuff_in(s,sys.cfg.beginday_c,create_chain_file("CHAIN.TXT"),"","","","");
         runprog(s,0);
     }
 
-    fk=freek1(syscfg.datadir);
-    nus=syscfg.maxusers-userdb_user_count();
+    fk=freek1(sys.cfg.datadir);
+    nus=sys.cfg.maxusers-userdb_user_count();
 
     if (fk<512.0) {
         sprintf(s,"2! 0Only %dk free in data directory.",(int) fk);
@@ -194,7 +201,7 @@ void beginday()
         logpr(s);
     }
 
-    fk=freek1(syscfg.batchdir);
+    fk=freek1(sys.cfg.batchdir);
 
     if (fk<2048.0) {
         sprintf(s,"2! 0Only %dk free in batch directory.",(int) fk);
@@ -202,7 +209,7 @@ void beginday()
         logpr(s);
     }
 
-    if ((!syscfg.closedsystem) && (nus<15)){
+    if ((!sys.cfg.closedsystem) && (nus<15)){
         sprintf(s,"7!!>0Only %d new user slots left.",nus);
         ssm(1,0,s);
         logpr(s);
@@ -216,11 +223,11 @@ void print_local_file(char ss[MAX_PATH_LEN])
 {
     char s[MAX_PATH_LEN];
 
-    if ((syscfg.sysconfig & sysconfig_list) &&!incom) {
-        sprintf(s,"LST %s%s",syscfg.gfilesdir,ss);
+    if ((sys.cfg.sysconfig & sysconfig_list) &&!incom) {
+        sprintf(s,"LST %s%s",sys.cfg.gfilesdir,ss);
         if(searchpath("LST.EXE")!=NULL) {
             runprog(s,0);
-            if(!wfc)
+            if(!sys.wfc)
                 topscreen();
             return;
         }
@@ -261,7 +268,7 @@ void viewlog()
         print_local_file(s1);
     } 
     else {
-        sprintf(s1,"%shistory.dat",syscfg.datadir);
+        sprintf(s1,"%shistory.dat",sys.cfg.datadir);
         f=open(s1,O_BINARY|O_RDWR);
         i-=1;
         lseek(f,(i*sizeof(zlogrec)),SEEK_SET);
@@ -312,7 +319,7 @@ void glocolor(void)
     outstr("5Continue? "); 
     if(!yn()) return;
 
-    userdb_save(usernum,&thisuser);
+    userdb_save(sess.usernum,&sess.user);
 
     dtitle("Setting Users to: ");
     if(sl!=-1)     npr("Sl    : %d\r\n",sl);
@@ -359,7 +366,7 @@ void glocolor(void)
         userdb_save(x,&u);
     }
 
-    userdb_load(usernum,&thisuser);
+    userdb_load(sess.usernum,&sess.user);
 
     reset_files(1);
 }

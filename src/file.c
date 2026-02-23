@@ -1,9 +1,16 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 #define FDEC
 
-#define SETREC(i)  lseek(dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+#define SETREC(i)  lseek(sess.dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 int INDENTION=30;
 #define MAX_LINES 15
 
@@ -12,7 +19,7 @@ char *getfhead(int bot)
     static char s[161];
     FILE *ff;
 
-    sprintf(s,"%sfile%d.fmt",syscfg.gfilesdir,thisuser.flisttype);
+    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype);
     ff=fopen(s,"rt");
     if (!ff) { strcpy(s,""); return(s); }
 
@@ -34,11 +41,11 @@ int ratio_ok()
     int ok=1;
     char s[101];
 
-    if (!(thisuser.exempt & exempt_ratio)&&!checkacs(1))
+    if (!(sess.user.exempt & exempt_ratio)&&!checkacs(1))
         ok=filer_ok();
 
     if(ok)
-        if (!(thisuser.exempt & exempt_post)&&checkacs(0))
+        if (!(sess.user.exempt & exempt_post)&&checkacs(0))
             ok=postr_ok();
 
     return(ok);
@@ -49,25 +56,25 @@ int postr_ok()
     int ok=1;
     char s[101];
 
-    if(!thisuser.pcr) {
+    if(!sess.user.pcr) {
 
-        if (!(thisuser.exempt & exempt_post))
-            if ((syscfg.post_call_ratio>0.0001) && (post_ratio()<syscfg.post_call_ratio)) {
+        if (!(sess.user.exempt & exempt_post))
+            if ((sys.cfg.post_call_ratio>0.0001) && (post_ratio()<sys.cfg.post_call_ratio)) {
                 ok=0;
                 nl();
                 sprintf(s,"Your post/call ratio is %-5.3f.  You need a ratio of %-5.3f to download.",
-                post_ratio(), syscfg.post_call_ratio);
+                post_ratio(), sys.cfg.post_call_ratio);
                 pl(s);
                 nl();
             }
     } 
     else {
-        if (!(thisuser.exempt & exempt_post))
-            if ((thisuser.pcr>0.0001) && (post_ratio()<thisuser.pcr)) {
+        if (!(sess.user.exempt & exempt_post))
+            if ((sess.user.pcr>0.0001) && (post_ratio()<sess.user.pcr)) {
                 ok=0;
                 nl();
                 sprintf(s,"Your post/call ratio is %-5.3f.  You need a ratio of %-5.3f to download.",
-                post_ratio(), thisuser.pcr);
+                post_ratio(), sess.user.pcr);
                 pl(s);
                 nl();
             }
@@ -78,21 +85,21 @@ int postr_ok()
 
 int filer_ok()
 {
-    if(!thisuser.ratio) {
-        if ((syscfg.req_ratio>0.0001) && (ratio()<syscfg.req_ratio)) {
+    if(!sess.user.ratio) {
+        if ((sys.cfg.req_ratio>0.0001) && (ratio()<sys.cfg.req_ratio)) {
             nl();
             npr("Your File ratio is %-5.3f.  You need a ratio of %-5.3f to download.\r\n",
-            ratio(), syscfg.req_ratio);
+            ratio(), sys.cfg.req_ratio);
             nl();
             return 0;
         }
         return 1;
     } 
     else {
-        if ((thisuser.ratio>0.0001) && (ratio()<thisuser.ratio)) {
+        if ((sess.user.ratio>0.0001) && (ratio()<sess.user.ratio)) {
             nl();
             npr("Your File ratio is %-5.3f.  You need a ratio of %-5.3f to download.\r\n",
-            ratio(), thisuser.ratio);
+            ratio(), sess.user.ratio);
             nl();
             return 0;
         }
@@ -103,7 +110,7 @@ int filer_ok()
 
 
 int dcs() {
-    if (thisuser.dsl>=100)
+    if (sess.user.dsl>=100)
         return(1);
     else
         return(0);
@@ -117,43 +124,43 @@ void dliscan1(int dn)
     uploadsrec u;
 
     closedl();
-    if(directories[dn].type==99)
-        sprintf(s,"%sTEMPDIR.dir",directories[dn].dpath);
+    if(sys.directories[dn].type==99)
+        sprintf(s,"%sTEMPDIR.dir",sys.directories[dn].dpath);
     else
-        sprintf(s,"%sdir\\%s.DIR",syscfg.datadir,directories[dn].filename);
-    dlf=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
-    i=filelength(dlf)/sizeof(uploadsrec);
+        sprintf(s,"%sdir\\%s.DIR",sys.cfg.datadir,sys.directories[dn].filename);
+    sess.dlf=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
+    i=filelength(sess.dlf)/sizeof(uploadsrec);
     if (i==0) {
         u.numbytes=0;
         SETREC(0);
-        write(dlf,(void *)&u,sizeof(uploadsrec));
+        write(sess.dlf,(void *)&u,sizeof(uploadsrec));
     } 
     else {
         SETREC(0);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
     }
-    numf=u.numbytes;
+    sess.numf=u.numbytes;
 
-    sprintf(s,"%sdir\\%s.EXT",syscfg.datadir,directories[dn].filename);
-    edlf=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
+    sprintf(s,"%sdir\\%s.EXT",sys.cfg.datadir,sys.directories[dn].filename);
+    sess.edlf=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
 }
 
 
 void dliscan()
 {
-    dliscan1(udir[curdir].subnum);
+    dliscan1(sess.udir[sess.curdir].subnum);
 }
 
 
 void closedl()
 {
-    if (dlf>0) {
-        close(dlf);
-        dlf=-1;
+    if (sess.dlf>0) {
+        close(sess.dlf);
+        sess.dlf=-1;
     }
-    if (edlf>0) {
-        close(edlf);
-        edlf=-1;
+    if (sess.edlf>0) {
+        close(sess.edlf);
+        sess.edlf=-1;
     }
 }
 
@@ -243,8 +250,8 @@ int printinfo(uploadsrec *u, int *abort,int number)
     strcpy(fn,u->filename);
     //  strrev(fn);
 
-    if(modem_speed)
-        t=((double) (((u->numbytes)+127)/128)) * (1620.0)/((double) (modem_speed));
+    if(sess.modem_speed)
+        t=((double) (((u->numbytes)+127)/128)) * (1620.0)/((double) (sess.modem_speed));
 
     i=(u->numbytes+1023)/1024;
     sprintf(s1,"%4d",i);
@@ -253,24 +260,24 @@ int printinfo(uploadsrec *u, int *abort,int number)
     sprintf(ss,"%-39.39s",u->description);
     sprintf(s4,"%3d",u->numdloads);
 
-    sprintf(f,"%s%s",directories[udir[curdir].subnum].dpath,u->filename);
+    sprintf(f,"%s%s",sys.directories[sess.udir[sess.curdir].subnum].dpath,u->filename);
 
     if(!(u->ats[0]))
-        stuff_in1(s,filelistformat3,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
+        stuff_in1(s,sess.filelistformat3,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
 
     else if(exist(f))
-        stuff_in1(s,filelistformat,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
+        stuff_in1(s,sess.filelistformat,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
     else
-        stuff_in1(s,filelistformat2,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
+        stuff_in1(s,sess.filelistformat2,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
 
     outstr(s);
 
     if ((!*abort) && (u->mask & mask_extended))
-        num_listed+=print_extended(u->filename,abort,15,1);
+        sess.num_listed+=print_extended(u->filename,abort,15,1);
     else nl();
     if (!(*abort))
-        ++num_listed;
-    if(strstr(s,"`M")&&!(*abort)) ++num_listed;
+        ++sess.num_listed;
+    if(strstr(s,"`M")&&!(*abort)) ++sess.num_listed;
     return(1);
 }
 
@@ -351,7 +358,7 @@ int pauseline(int line,int *abort)
             dliscan(); 
             break;
         case 'D': 
-            newdl(curdir); 
+            newdl(sess.curdir); 
             dliscan(); 
             break;
         case 'V': 
@@ -371,7 +378,7 @@ int pauseline(int line,int *abort)
             cont=1; 
             break;
         case 'M': 
-            mark(curdir); 
+            mark(sess.curdir); 
             dliscan(); 
             break;
         case '\r': 
@@ -406,24 +413,24 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
 
 
     dliscan();
-    if(!slok(directories[udir[curdir].subnum].vacs,0)) {
+    if(!slok(sys.directories[sess.udir[sess.curdir].subnum].vacs,0)) {
         pl(get_string(82));
         return 0;
     }
     listing=1;
-    num_listed=0;
+    sess.num_listed=0;
     prtitle=0;
 
     setformat();
     topofpage=1;
 
-    for (i=val; (i<=numf) && (! (*abort)) && (!hangup); i++) {
+    for (i=val; (i<=sess.numf) && (! (*abort)) && (!hangup); i++) {
         SETREC(i);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
         ok=1;
 
         if(isnew)
-            if ((u.daten>=nscandate)||(!u.ats[0]));
+            if ((u.daten>=sess.nscandate)||(!u.ats[0]));
         else ok=0;
         if(u.ats[1]==100&&isnew) ok=1;
 
@@ -447,12 +454,12 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
         }
 
         if(ok)
-            if((num_listed+count_extended(u.filename))>thisuser.screenlines-6) {
+            if((sess.num_listed+count_extended(u.filename))>sess.user.screenlines-6) {
                 if(!nonstop) {
                     if(!pauseline(1,abort))
                         topofpage=i+1;
                     else i=topofpage-1;
-                    num_listed=0;
+                    sess.num_listed=0;
                     prtitle=0;
                 }
             }
@@ -470,18 +477,18 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
                 if(!pauseline(1,abort))
                     topofpage=i+1;
                 else i=topofpage-1;
-                num_listed=0;
+                sess.num_listed=0;
                 prtitle=0;
             }
         }
 
         if(!nonstop)
-        if(num_listed>thisuser.screenlines-6) {
+        if(sess.num_listed>sess.user.screenlines-6) {
             if(!pauseline(1,abort))
                 topofpage=i+1;
             else
                 i=topofpage-1;
-            num_listed=0;
+            sess.num_listed=0;
             prtitle=0;
         }
     }
@@ -505,9 +512,9 @@ int changefarea(void)
         if(s[0]=='?')
             dirlist(0);
         else if(s[0]) {
-            for(i=0;udir[i].subnum>=0&&i<num_dirs;i++) {
-                if(strcmp(s,udir[i].keys)==0)
-                    curdir=udir[i].subnum;
+            for(i=0;sess.udir[i].subnum>=0&&i<sys.num_dirs;i++) {
+                if(strcmp(s,sess.udir[i].keys)==0)
+                    sess.curdir=sess.udir[i].subnum;
             }
             done=1;
         } 
@@ -527,7 +534,7 @@ void listfiles(char ms[40])
         if(!changefarea()) return;
     else if(ms[0])
         dn=atoi(ms);
-    if(dn) curdir=dn;
+    if(dn) sess.curdir=dn;
     file_mask(s);
     nonstop=0;
     nl();
@@ -543,8 +550,8 @@ int nscandir(int d, int *abort, int title,int *next)
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
     long len=0;
 
-    od=curdir;
-    curdir=d;
+    od=sess.curdir;
+    sess.curdir=d;
     nonstop=0;
     listing=1;
     *next=0;
@@ -552,7 +559,7 @@ int nscandir(int d, int *abort, int title,int *next)
         pl(get_string(44));
     }
     num=lfs("????????.???","",abort,&len,1);
-    curdir=od;
+    sess.curdir=od;
     if(did&&!(*abort)&&!(*next)&&!hangup) pauseline(1,abort);
     if(*next) *abort=0;
     listing=0;
@@ -566,13 +573,13 @@ void nscanall()
     char s[MAX_PATH_LEN];
 
     abort=0;
-    num_listed=0;
-    save=curdir;
+    sess.num_listed=0;
+    save=sess.curdir;
     setformat();
-    for (curdir=0; (curdir<200) && (!abort) && (udir[curdir].subnum!=-1) && !hangup; curdir++) {
-        i1=udir[curdir].subnum;
-        if (thisuser.nscn[i1]>=0)
-            num+=nscandir(curdir,&abort,1,&next);
+    for (sess.curdir=0; (sess.curdir<200) && (!abort) && (sess.udir[sess.curdir].subnum!=-1) && !hangup; sess.curdir++) {
+        i1=sess.udir[sess.curdir].subnum;
+        if (sess.user.nscn[i1]>=0)
+            num+=nscandir(sess.curdir,&abort,1,&next);
     }
     if (!abort) {
         nl();
@@ -580,7 +587,7 @@ void nscanall()
         npr("%d Files listed",num);
         nl();
     }
-    curdir=save;
+    sess.curdir=save;
 }
 
 
@@ -590,14 +597,14 @@ int recno(char s[15])
     uploadsrec u;
 
     i=1;
-    if (numf<1)
+    if (sess.numf<1)
         return(-1);
     SETREC(i);
-    read(dlf,(void *)&u,sizeof(uploadsrec));
-    while ((i<numf) && (compare(s,u.filename)==0)) {
+    read(sess.dlf,(void *)&u,sizeof(uploadsrec));
+    while ((i<sess.numf) && (compare(s,u.filename)==0)) {
         ++i;
         SETREC(i);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
     }
     if (compare(s,u.filename))
         return(i);
@@ -612,15 +619,15 @@ int nrecno(char s[15],int i1)
     uploadsrec u;
 
     i=i1+1;
-    if ((numf<1) || (i1>=numf))
+    if ((sess.numf<1) || (i1>=sess.numf))
         return(-1);
 
     SETREC(i);
-    read(dlf,(void *)&u,sizeof(uploadsrec));
-    while ((i<numf) && (compare(s,u.filename)==0)) {
+    read(sess.dlf,(void *)&u,sizeof(uploadsrec));
+    while ((i<sess.numf) && (compare(s,u.filename)==0)) {
         ++i;
         SETREC(i);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
     }
     if (compare(s,u.filename))
         return(i);
@@ -638,21 +645,21 @@ int checkdl(uploadsrec u,int dn)
 
     tleft(1);
 
-    if(u.ownersys!=usernum&&u.ownersys!=0) {
+    if(u.ownersys!=sess.usernum&&u.ownersys!=0) {
         pl(get_string(86));
         return(0);
     }
 
-    if(modem_speed)
-        t=((double) (((u.numbytes)+127)/128)) * (1620.0)/((double) (modem_speed));
+    if(sess.modem_speed)
+        t=((double) (((u.numbytes)+127)/128)) * (1620.0)/((double) (sess.modem_speed));
 
-    if(t>nsl()&&!dcs()&&!(thisuser.exempt & exempt_time)&&!checkacs(3)) {
+    if(t>nsl()&&!dcs()&&!(sess.user.exempt & exempt_time)&&!checkacs(3)) {
         pl(get_string(87));
         printfile("nodl");
         return 0;
     }
 
-    sprintf(s,"%s%s",directories[dn].dpath,u.filename);
+    sprintf(s,"%s%s",sys.directories[dn].dpath,u.filename);
     if(!exist(s)) {
         pl("File is OffLine");
         if(printfile("offline"))
@@ -660,7 +667,7 @@ int checkdl(uploadsrec u,int dn)
         return 0;
     }
 
-    if(!u.ats[0] && !dcs() /*&& !(thisuser.exempt & exempt_dlvalfile)*/&&!checkacs(11)) {
+    if(!u.ats[0] && !dcs() /*&& !(sess.user.exempt & exempt_dlvalfile)*/&&!checkacs(11)) {
         npr("%s",get_string(43));
         return 0;
     }
@@ -671,10 +678,10 @@ int checkdl(uploadsrec u,int dn)
     }
 
 
-    if(!(directories[dn].mask & mask_no_ratio)) {
-        if(!dcs()&&!(thisuser.exempt & exempt_ratio)&&!checkacs(2)) {
-            if(nifty.nifstatus & nif_fpts)
-                if(thisuser.fpts*nifty.fptsratio<u.points) {
+    if(!(sys.directories[dn].mask & mask_no_ratio)) {
+        if(!dcs()&&!(sess.user.exempt & exempt_ratio)&&!checkacs(2)) {
+            if(sys.nifty.nifstatus & nif_fpts)
+                if(sess.user.fpts*sys.nifty.fptsratio<u.points) {
                     nl();
                     npr("%s",get_string(27));
                     printfile("nodl");
@@ -719,9 +726,9 @@ void finddescription(char ms[41])
     if(!(strcmp(s,"????????.???"))&&!s1[0]) return;
 
     logtypes(4,"Scanned for %s in %s",s1,s);
-    ocd=curdir;
+    ocd=sess.curdir;
     abort=0;
-    num_listed=0;
+    sess.num_listed=0;
 
     wh[0]=0;
     do {
@@ -735,8 +742,8 @@ void finddescription(char ms[41])
     while (p&&!abort&&!hangup) {
         checka(&abort,&next,0);
         if(strcmp(p,"A")==0) {
-            for (i=0; (i<64) && (!abort) && (!hangup) && (udir[i].subnum!=-1); i++) {
-                curdir=i;
+            for (i=0; (i<64) && (!abort) && (!hangup) && (sess.udir[i].subnum!=-1); i++) {
+                sess.curdir=i;
                 num+=lfs(s,s1,&abort,&len,0);
             }
             break;
@@ -747,20 +754,20 @@ void finddescription(char ms[41])
         }
         sp_found=0;
         i=0;
-        while(!sp_found&&i<64 && !abort && !hangup &&udir[i].subnum!=-1) {
-            if(strcmp(p,udir[i].keys)==0)
+        while(!sp_found&&i<64 && !abort && !hangup &&sess.udir[i].subnum!=-1) {
+            if(strcmp(p,sess.udir[i].keys)==0)
                 sp_found=1;
             else
                 i++;
         }
         if(sp_found) {
-            curdir=i;
+            sess.curdir=i;
             num+=lfs(s,s1,&abort,&len,0);
         }
         p=strtok(NULL," ,;");
     }
 
-    curdir=ocd;
+    sess.curdir=ocd;
     if (num && (!abort)) {
         nl();
         npr("5%d0 Files Found, 5%ld0 bytes\r\n",num,len);
@@ -775,19 +782,19 @@ void setformat()
     char s[161],s1[161];
     int i=0;
 
-    sprintf(s,"%sfile%d.fmt",syscfg.gfilesdir,thisuser.flisttype);
+    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype);
     ff=fopen(s,"rt");
-    fgets(filelistformat,99,ff);
-    filter(filelistformat,'\n');
+    fgets(sess.filelistformat,99,ff);
+    filter(sess.filelistformat,'\n');
 
-    fgets(filelistformat2,99,ff);
-    filter(filelistformat2,'\n');
+    fgets(sess.filelistformat2,99,ff);
+    filter(sess.filelistformat2,'\n');
 
-    fgets(filelistformat3,99,ff);
-    filter(filelistformat3,'\n');
+    fgets(sess.filelistformat3,99,ff);
+    filter(sess.filelistformat3,'\n');
 
 
-    stuff_in1(s,filelistformat,"Dom30   .Zip","\xAE"," 300","   0","  1","Fallen Angel","01/01/92","100","","");
+    stuff_in1(s,sess.filelistformat,"Dom30   .Zip","\xAE"," 300","   0","  1","Fallen Angel","01/01/92","100","","");
     strcpy(s1,noc2(s));
     for(i=0;i<strlen(s1);i++) {
         if(s1[i]==(char)0xAE) INDENTION=i;
@@ -886,13 +893,13 @@ void nnscan(char ms[41])
         ex("FP","");
 
     if(global) {
-        strcpy(s,sys.conf[curconf].flagstr);
-        strcpy(sys.conf[curconf].flagstr,"");
+        strcpy(s,sys.conf[sess.curconf].flagstr);
+        strcpy(sys.conf[sess.curconf].flagstr,"");
         changedsl();
         nscanall();
-        strcpy(sys.conf[curconf].flagstr,s);
+        strcpy(sys.conf[sess.curconf].flagstr,s);
         changedsl();
     } 
     else
-        nscandir(curdir,&abort,0,&i);
+        nscandir(sess.curdir,&abort,0,&i);
 }

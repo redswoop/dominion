@@ -1,7 +1,10 @@
 #pragma hdrstop
 
-#define _DEFINE_GLOBALS_
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
+#include "version.h"
 #include <math.h>
 #include "menudb.h"
 #include "mci_bbs.h"
@@ -9,7 +12,11 @@
 #define modem_time 3.5
 /* extern unsigned _stklen=30000U; — DOS stack size, not needed on macOS */
 extern double thing;
-/* menuat now in vars.h (Phase B0) */
+/* sess.menuat now in vars.h (Phase B0) */
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 int node=0,SYSTEMDEBUG=0;
 
 
@@ -27,22 +34,22 @@ int main(int argc, char *argv[])
         cd_to(searchpath("config.json"));
     }
 
-    session_init(&session);
+    /* Singletons self-initialize via constructors */
     mci_bbs_init();
-    already_on=0;
-    endday=0;
-    oklevel=0;
-    noklevel=255;
-    ooneuser=0;
-    no_hangup=0;
+    sess.already_on=0;
+    sys.endday=0;
+    sys.oklevel=0;
+    sys.noklevel=255;
+    sys.ooneuser=0;
+    sys.no_hangup=0;
     ok_modem_stuff=1;
-    tcp_port=0;
-    listen_fd=-1;
+    sys.tcp_port=0;
+    sys.listen_fd=-1;
     term_raw_mode=0;
     if (exist("exitdata.dom"))
-        restoring_shrink=1;
+        sys.restoring_shrink=1;
     else
-        restoring_shrink=0;
+        sys.restoring_shrink=0;
 
     port=0;
 
@@ -71,28 +78,28 @@ int main(int argc, char *argv[])
                 SYSTEMDEBUG=1; 
                 break;
             case 'L': 
-                already_on=2; 
+                sess.already_on=2; 
                 ui=19200; 
                 us=19200; 
                 break;
             case 'E':
-                oklevel=atoi(&(s[2]));
+                sys.oklevel=atoi(&(s[2]));
                 break;
             case 'N':
                 node=atoi(s+2);
                 break;
             case 'P':
                 if (s[2] >= '0' && s[2] <= '9' && atoi(s+2) > 255) {
-                    tcp_port=atoi(s+2);
+                    sys.tcp_port=atoi(s+2);
                 } else {
                     port=atoi(s+2);
                 }
                 break;
             case 'Q':
-                ooneuser=1;
+                sys.ooneuser=1;
                 break;
             case 'H':
-                no_hangup=1;
+                sys.no_hangup=1;
                 break;
             case 'I':
                 show=opp(show);
@@ -108,11 +115,11 @@ int main(int argc, char *argv[])
     }
 
     init(show);
-    if(port!=0) syscfg.primaryport=port;
+    if(port!=0) sys.cfg.primaryport=port;
 
     if (_OvrInitExt(0,0)==0)
         cprintf("\nXMS Memory Found, Will Be Used for Overlay Swapping.\n");
-    if(node) cprintf("System is Node %d using port %d",node,syscfg.primaryport);
+    if(node) cprintf("System is Node %d using port %d",node,sys.cfg.primaryport);
 
     if(exist("critical")) {
         pl("8Cirtical Errors have occured!  Read Error.log!");
@@ -128,8 +135,8 @@ int main(int argc, char *argv[])
         getchar();
     }
 
-    if (restoring_shrink) {
-        restoring_shrink=0;
+    if (sys.restoring_shrink) {
+        sys.restoring_shrink=0;
         _setcursortype(2);
         switch(restore_data("exitdata.dom")) {
         case 0: /* WFC */
@@ -137,7 +144,7 @@ int main(int argc, char *argv[])
             goto wfc_label;
         case 1: /* main menu */
         case 2:
-            read_menu(menuat,0);
+            read_menu(sess.menuat,0);
             goto main_menu_label;
         }
     } 
@@ -146,7 +153,7 @@ int main(int argc, char *argv[])
 
     do {
         bbsCRC();
-        if (already_on)
+        if (sess.already_on)
             gotcaller(ui, us);
         else
              getcaller();
@@ -156,9 +163,9 @@ int main(int argc, char *argv[])
         } 
         else {
                 using_modem=0;
-            checkit=0;
-            okmacro=1;
-            usernum=1;
+            sess.checkit=0;
+            sess.okmacro=1;
+            sess.usernum=1;
             reset_act_sl();
             changedsl();
         }
@@ -167,15 +174,15 @@ int main(int argc, char *argv[])
 
         if (!hangup) {
             logon();
-            if(!menudb_exists(nifty.firstmenu)) {
+            if(!menudb_exists(sys.nifty.firstmenu)) {
                 pl("8Main Menu is missing!!  System cannot Continue!  If Possible, Inform SysOp!");
                 logpr("7!0 MAIN MENU MISSING.  Hanging up on User");
                 pausescr();
                 hangup=1;
             } 
             else {
-                if(actsl<=syscfg.newusersl) readmenu(nifty.newusermenu);
-                else readmenu(nifty.firstmenu);
+                if(sess.actsl<=sys.cfg.newusersl) readmenu(sys.nifty.newusermenu);
+                else readmenu(sys.nifty.firstmenu);
             }
 main_menu_label:
             while (!hangup) menuman();
@@ -185,15 +192,15 @@ main_menu_label:
 hanging_up:
         if (client_fd >= 0)
             send_terminal_restore(client_fd);
-        if (!no_hangup && ok_modem_stuff)
+        if (!sys.no_hangup && ok_modem_stuff)
             dtr(0);
 
         frequent_init();
 wfc_label:
-        if ((!no_hangup) && ok_modem_stuff)
+        if ((!sys.no_hangup) && ok_modem_stuff)
             dtr(0);
-        already_on=0;
-        if (sysop_alert && (!kbhitb())) {
+        sess.already_on=0;
+        if (sess.sysop_alert && (!kbhitb())) {
             dt=timer();
             nl();
             pl("User Has Logged Off");
@@ -206,12 +213,12 @@ wfc_label:
             }
             clrscrb();
         }
-        sysop_alert=0;
+        sess.sysop_alert=0;
     } 
-    while ((!endday) && (!ooneuser));
+    while ((!sys.endday) && (!sys.ooneuser));
 
     bbsCRC();
     outs("\x0c");
-    end_bbs(oklevel);
+    end_bbs(sys.oklevel);
 
 }

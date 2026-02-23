@@ -1,4 +1,7 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 
@@ -6,6 +9,10 @@
 
 #define hdr_private 1
 #define hdr_netmail 2
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 int readms=0;
 
@@ -34,7 +41,7 @@ void quote_jam(char *buf,long len,hdrinfo *hdr);
 
 void errorjam(void)
 {
-    switch(JamRec.APImsg) {
+    switch(sys.JamRec.APImsg) {
     case JAMAPIMSG_ISNOTOPEN: 
         pl("Files not open"); 
         break;
@@ -42,7 +49,7 @@ void errorjam(void)
         pl("Files not locked"); 
         break;
     default: 
-        npr("Error type %d\r\n",JamRec.APImsg); 
+        npr("Error type %d\r\n",sys.JamRec.APImsg); 
         break;
     }
     pausescr();
@@ -52,54 +59,54 @@ void getjamhdr(hdrinfo *hdr1)
 {
     hdrinfo hdr;
 
-    UINT32  SubFldLen = JamRec.Hdr.SubfieldLen,
+    UINT32  SubFldLen = sys.JamRec.Hdr.SubfieldLen,
     Len;
 
     memset(&hdr.subject[0],0L,sizeof(hdrinfo));
 
-    if( !JAMmbFetchMsgHdr( &JamRec, JamRec.Hdr.MsgNum, 1 ))
+    if( !JAMmbFetchMsgHdr( &sys.JamRec, sys.JamRec.Hdr.MsgNum, 1 ))
     {
-        printf( "Error reading message header, code: %d, errno: %d\n", JamRec.APImsg, JamRec.Errno );
+        printf( "Error reading message header, code: %d, errno: %d\n", sys.JamRec.APImsg, sys.JamRec.Errno );
         return;
     }
 
 
-    if( SubFldLen > JamRec.WorkLen )
-        SubFldLen = JamRec.WorkLen;
+    if( SubFldLen > sys.JamRec.WorkLen )
+        SubFldLen = sys.JamRec.WorkLen;
 
 
-    for(  JamRec.SubFieldPtr = ( JAMSUBFIELD * ) JamRec.WorkBuf;
+    for(  sys.JamRec.SubFieldPtr = ( JAMSUBFIELD * ) sys.JamRec.WorkBuf;
 
-        JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD ) <= SubFldLen;
+        sys.JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD ) <= SubFldLen;
 
-        Len = JAMsysAlign( JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD )),
+        Len = JAMsysAlign( sys.JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD )),
         SubFldLen -= Len,
-        JamRec.SubFieldPtr = (JAMSUBFIELD *)JAMsysAddPtr( JamRec.SubFieldPtr, Len ))
+        sys.JamRec.SubFieldPtr = (JAMSUBFIELD *)JAMsysAddPtr( sys.JamRec.SubFieldPtr, Len ))
         {
-        switch(JamRec.SubFieldPtr->LoID) {
+        switch(sys.JamRec.SubFieldPtr->LoID) {
         case 2: 
-            strcpy(hdr.who_from,GetSubFldStr(JamRec.SubFieldPtr));
+            strcpy(hdr.who_from,GetSubFldStr(sys.JamRec.SubFieldPtr));
             break;
         case 3: 
-            strcpy(hdr.who_to,GetSubFldStr(JamRec.SubFieldPtr));
+            strcpy(hdr.who_to,GetSubFldStr(sys.JamRec.SubFieldPtr));
             break;
         case 4:
-            strcpy(hdr.msgid,GetSubFldStr(JamRec.SubFieldPtr));
+            strcpy(hdr.msgid,GetSubFldStr(sys.JamRec.SubFieldPtr));
             break;
         case 5:
-            strcpy(hdr.replyid,GetSubFldStr(JamRec.SubFieldPtr));
+            strcpy(hdr.replyid,GetSubFldStr(sys.JamRec.SubFieldPtr));
             break;
         case 6:
-            strcpy(hdr.subject,GetSubFldStr(JamRec.SubFieldPtr));
+            strcpy(hdr.subject,GetSubFldStr(sys.JamRec.SubFieldPtr));
             break;
         case 666:
-            strcpy(hdr.comment,GetSubFldStr(JamRec.SubFieldPtr));
+            strcpy(hdr.comment,GetSubFldStr(sys.JamRec.SubFieldPtr));
             break;
         }
     }
 
-    hdr.attr=JamRec.Hdr.Attribute;
-    hdr.date=JamRec.Hdr.DateWritten;
+    hdr.attr=sys.JamRec.Hdr.Attribute;
+    hdr.date=sys.JamRec.Hdr.DateWritten;
 
     *hdr1=hdr;
 }
@@ -160,12 +167,12 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
             if ((printit) || (ansi) || (p>=80)) {
                 printit=0;
                 if (centre ) {
-                    i1=(thisuser.screenchars-wherex()-p1)/2;
+                    i1=(sess.user.screenchars-wherex()-p1)/2;
                     for (i=0; (i<i1) && (!abort) && (!hangup); i++)
                         osan(" ",&abort,next);
                 }
                 if (p) {
-                    if ((wherex() + p1 >= thisuser.screenchars) && (!centre) && (!ansi))
+                    if ((wherex() + p1 >= sess.user.screenchars) && (!centre) && (!ansi))
                         nl();
                     s[p]=0;
                     outstr(s);
@@ -197,7 +204,7 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
     }
 
     nl();
-    if ((ansi) && (topdata) && (useron))
+    if ((ansi) && (sess.topdata) && (sess.useron))
         topscreen();
 
     mciok=1;
@@ -208,15 +215,15 @@ void read_msg(long recnr,int *next)
     int abort=0;
     hdrinfo hdr;
 
-    JAMmbFetchMsgHdr( &JamRec, recnr, 0 );
+    JAMmbFetchMsgHdr( &sys.JamRec, recnr, 0 );
     getjamhdr(&hdr);
-    JAMmbFetchMsgTxt(&JamRec,1);
+    JAMmbFetchMsgTxt(&sys.JamRec,1);
 
     readms=1;
     { time_t _dt = (time_t)hdr.date;
-    showmsgheader(0,hdr.subject,hdr.who_from,ctime(&_dt),hdr.who_to,msgr,nummsgs,hdr.comment,0,&abort); }
+    showmsgheader(0,hdr.subject,hdr.who_from,ctime(&_dt),hdr.who_to,sess.msgr,sys.nummsgs,hdr.comment,0,&abort); }
     if(!abort)
-        show_message(next,abort,JamRec.WorkBuf,JamRec.Hdr.TxtLen);
+        show_message(next,abort,sys.JamRec.WorkBuf,sys.JamRec.Hdr.TxtLen);
     if(abort)
         *next=0;
     else
@@ -228,40 +235,40 @@ void read_msg(long recnr,int *next)
 
 int DisplayMsgSubFld( void )
 {
-    UINT32  SubFldLen = JamRec.Hdr.SubfieldLen,
+    UINT32  SubFldLen = sys.JamRec.Hdr.SubfieldLen,
     Len;
 
-    printf( "Message number: %lu\n\n", JamRec.Hdr.MsgNum );
+    printf( "Message number: %lu\n\n", sys.JamRec.Hdr.MsgNum );
 
 
-    if( !JAMmbFetchMsgHdr( &JamRec, JamRec.Hdr.MsgNum, 1 ))
+    if( !JAMmbFetchMsgHdr( &sys.JamRec, sys.JamRec.Hdr.MsgNum, 1 ))
     {
-        printf( "Error reading message header, code: %d, errno: %d\n", JamRec.APImsg, JamRec.Errno );
+        printf( "Error reading message header, code: %d, errno: %d\n", sys.JamRec.APImsg, sys.JamRec.Errno );
         return( 0 );
     }
 
 
-    if( SubFldLen > JamRec.WorkLen )
-        SubFldLen = JamRec.WorkLen;
+    if( SubFldLen > sys.JamRec.WorkLen )
+        SubFldLen = sys.JamRec.WorkLen;
 
 
 
     puts( " HiID LoID Name             Len Data\n"
         " ---- ---- ----             --- ----" );
 
-    for(  JamRec.SubFieldPtr = ( JAMSUBFIELD * ) JamRec.WorkBuf;
+    for(  sys.JamRec.SubFieldPtr = ( JAMSUBFIELD * ) sys.JamRec.WorkBuf;
 
-        JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD ) <= SubFldLen;
+        sys.JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD ) <= SubFldLen;
 
-        Len = JAMsysAlign( JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD )),
+        Len = JAMsysAlign( sys.JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD )),
         SubFldLen -= Len,
-        JamRec.SubFieldPtr = (JAMSUBFIELD *)JAMsysAddPtr( JamRec.SubFieldPtr, Len ))
+        sys.JamRec.SubFieldPtr = (JAMSUBFIELD *)JAMsysAddPtr( sys.JamRec.SubFieldPtr, Len ))
         {
         printf( "%5u%5u %6lu \"%s\"\n",
-        JamRec.SubFieldPtr->HiID, JamRec.SubFieldPtr->LoID,
-        //GetSubFldName( JamRec.SubFieldPtr ),
-        JamRec.SubFieldPtr->DatLen,
-        GetSubFldStr( JamRec.SubFieldPtr ));
+        sys.JamRec.SubFieldPtr->HiID, sys.JamRec.SubFieldPtr->LoID,
+        //GetSubFldName( sys.JamRec.SubFieldPtr ),
+        sys.JamRec.SubFieldPtr->DatLen,
+        GetSubFldStr( sys.JamRec.SubFieldPtr ));
     }
 
     return( 1 );
@@ -279,25 +286,25 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
     hdrinfo hdr;
 
     findtitle[0]=0;
-    sprintf(s,"%s%s",syscfg.msgsdir,subboards[usub[sb].subnum].filename);
+    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
 
     JAMOpen(s);
 
-    if(!JAMmbFetchLastRead(&JamRec,usernum)) {
-        if(JamRec.APImsg==JAMAPIMSG_CANTFINDUSER) {
-            addLastRead(usernum);
-            if(!JAMmbFetchLastRead(&JamRec,usernum))
+    if(!JAMmbFetchLastRead(&sys.JamRec,sess.usernum)) {
+        if(sys.JamRec.APImsg==JAMAPIMSG_CANTFINDUSER) {
+            addLastRead(sess.usernum);
+            if(!JAMmbFetchLastRead(&sys.JamRec,sess.usernum))
                 errorjam();
         }
     }
 
-    curlsub=usub[sb].subnum;
+    sess.curlsub=sess.usub[sb].subnum;
 
-    strcpy(s,thisuser.realname);
+    strcpy(s,sess.user.realname);
     strlwr(s);
     ucrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
-    strcpy(s,pnam(&thisuser));
+    strcpy(s,pnam(&sess.user));
     strlwr(s);
     hcrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
@@ -305,7 +312,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
         if(fd)
             disp=0;
 
-        if(msgnum>=nummsgs) {
+        if(msgnum>=sys.nummsgs) {
             if(titleorigin) {
                 findtitle[0]=0;
                 titleorigin=0;
@@ -314,18 +321,18 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
                     msgnum=titleorigin;
             }
 
-            if(msgnum>nummsgs) {
+            if(msgnum>sys.nummsgs) {
                 done=1;
                 continue;
             }
         }
 
-        msgr=msgnum;
+        sess.msgr=msgnum;
 
         if(is_private&&disp) {
             f=0;
-            JAMmbFetchMsgIdx(&JamRec,msgnum);
-            if(ucrc==JamRec.Idx.UserCRC||hcrc==JamRec.Idx.UserCRC)
+            JAMmbFetchMsgIdx(&sys.JamRec,msgnum);
+            if(ucrc==sys.JamRec.Idx.UserCRC||hcrc==sys.JamRec.Idx.UserCRC)
                 f=1;
             if(!f)
                 disp=0;
@@ -333,7 +340,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
 
         if(findtitle[0]) {
             if(disp) {
-                JAMmbFetchMsgHdr(&JamRec, msgnum,0);
+                JAMmbFetchMsgHdr(&sys.JamRec, msgnum,0);
                 getjamhdr(&hdr);
                 if(stristr(hdr.subject,findtitle)==NULL)
                     disp=0;
@@ -343,26 +350,26 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
         }
 
         if(disp) {
-            if(subboards[curlsub].attr & mattr_nomci)
+            if(sys.subboards[sess.curlsub].attr & mattr_nomci)
                 mciok=0;
-            JAMmbFetchMsgHdr(&JamRec,msgnum,0);
+            JAMmbFetchMsgHdr(&sys.JamRec,msgnum,0);
 
-            if(JamRec.Hdr.Attribute & MSG_DELETED)
+            if(sys.JamRec.Hdr.Attribute & MSG_DELETED)
                 pl("7- 0Message Deleted");
             else
                 read_msg(msgnum,&next);
 
             if(is_private) {
-                JAMmbLockMsgBase(&JamRec,1);
-                JamRec.Hdr.Attribute |= MSG_READ;
-                JAMmbStoreMsgHdr(&JamRec,msgnum);
-                JAMmbUnLockMsgBase(&JamRec,1);
+                JAMmbLockMsgBase(&sys.JamRec,1);
+                sys.JamRec.Hdr.Attribute |= MSG_READ;
+                JAMmbStoreMsgHdr(&sys.JamRec,msgnum);
+                JAMmbUnLockMsgBase(&sys.JamRec,1);
             }
 
-            JamRec.LastRead.UserID=usernum;
-            JamRec.LastRead.LastReadMsg=msgnum;
-            if(JamRec.LastRead.LastReadMsg>JamRec.LastRead.HighReadMsg)
-                JamRec.LastRead.HighReadMsg=msgnum;
+            sys.JamRec.LastRead.UserID=sess.usernum;
+            sys.JamRec.LastRead.LastReadMsg=msgnum;
+            if(sys.JamRec.LastRead.LastReadMsg>sys.JamRec.LastRead.HighReadMsg)
+                sys.JamRec.LastRead.HighReadMsg=msgnum;
 
             saveLastRead();
             disp=0;
@@ -375,14 +382,14 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
 
 
         nl();
-        JAMmbFetchMsgHdr(&JamRec, msgnum,0);
+        JAMmbFetchMsgHdr(&sys.JamRec, msgnum,0);
         getjamhdr(&hdr);
         strcpy(s,get_string(14));
         outstr(s);
         strcpy(s,"Q[]FRP!VALFB?-CDH@$Z");
         if(cs())
             strcat(s,"UKXBME");
-        if(msgnum<nummsgs)
+        if(msgnum<sys.nummsgs)
             strcat(s,"T");
         ss1=smkey(s,1,1,1,0);
         strcpy(s,ss1);
@@ -391,14 +398,14 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             if(!is_private)
                 msgnum++;
             else
-                msgnum=findnextwaiting(msgnum,1,&thisuser);
+                msgnum=findnextwaiting(msgnum,1,&sess.user);
             if(!msgnum)
                 done=1;
             disp=1;
         } 
         else if(atoi(s)) {
             i=atoi(s);
-            if(i<=nummsgs) {
+            if(i<=sys.nummsgs) {
                 msgnum=i;
                 disp=1;
             }
@@ -413,7 +420,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
                 pl("No more messages found in this thread.");
         }
         else if(s[0]=='!') {
-            if(!(subboards[sb].attr & mattr_private)||cs())
+            if(!(sys.subboards[sb].attr & mattr_private)||cs())
                 is_private=opp(is_private);
         }
         else if(s[0]=='Q') {
@@ -421,13 +428,13 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             *nextsub=0;
         }
         else if(s[0]=='Z') {
-            i=inscan(sb,&thisuser);
+            i=inscan(sb,&sess.user);
             if(i) {
                 pl("Removing `B from Newscan");
-                togglenws(sb,&thisuser,0);
+                togglenws(sb,&sess.user,0);
             } else {
                 pl("Adding `B to Newscan");
-                togglenws(sb,&thisuser,1);
+                togglenws(sb,&sess.user,1);
             }
         } 
         else if(s[0]=='@') {
@@ -440,8 +447,8 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             if(s[0]=='R') {
                 f=1;
                 if(is_private) {
-                    JAMmbFetchMsgIdx(&JamRec,msgnum);
-                        if(ucrc!=JamRec.Idx.UserCRC&&hcrc!=JamRec.Idx.UserCRC)
+                    JAMmbFetchMsgIdx(&sys.JamRec,msgnum);
+                        if(ucrc!=sys.JamRec.Idx.UserCRC&&hcrc!=sys.JamRec.Idx.UserCRC)
                             f=0;
                 }
                 if(f)
@@ -449,60 +456,60 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             }
             else
                 post(sb);
-            if(!JamRec.isOpen) {
-                sprintf(s,"%s%s",syscfg.msgsdir,subboards[usub[sb].subnum].filename);
+            if(!sys.JamRec.isOpen) {
+                sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
                 JAMOpen(s);
             }
         }
         else if(s[0]=='X') {
-            JAMmbFetchMsgTxt(&JamRec,0);
+            JAMmbFetchMsgTxt(&sys.JamRec,0);
             getjamhdr(&hdr);
-            extract_out(JamRec.WorkBuf,JamRec.Hdr.TxtLen,&hdr);
+            extract_out(sys.JamRec.WorkBuf,sys.JamRec.Hdr.TxtLen,&hdr);
         } 
         else if(s[0]=='E') {
-            JAMmbFetchMsgHdr(&JamRec,msgnum,0);
-            editpost(&JamRec.Hdr.Attribute);
+            JAMmbFetchMsgHdr(&sys.JamRec,msgnum,0);
+            editpost(&sys.JamRec.Hdr.Attribute);
 
-            JAMmbLockMsgBase(&JamRec,1);
-            JAMmbStoreMsgHdr(&JamRec,msgnum);
-            JAMmbUnLockMsgBase(&JamRec,1);
+            JAMmbLockMsgBase(&sys.JamRec,1);
+            JAMmbStoreMsgHdr(&sys.JamRec,msgnum);
+            JAMmbUnLockMsgBase(&sys.JamRec,1);
         }
         else if(s[0]=='A')
             disp=1;
         else if(s[0]=='S') {
      /*       nl();
             done=1;
-            npr("5Kill %s from Newscan? ",subboards[curlsub].name);
+            npr("5Kill %s from Newscan? ",sys.subboards[sess.curlsub].name);
             if(yn())
-                thisuser.qscn[curlsub]=-1;*/
+                sess.user.qscn[sess.curlsub]=-1;*/
             pl("This command is temporarily disabled cause glenn keeps crashing my board");
         }
         else if(s[0]=='K') {
-            JAMmbFetchMsgHdr(&JamRec,msgnum,0);
-            if(JamRec.Hdr.Attribute & MSG_DELETED)
-                togglebit((long *)&JamRec.Hdr.Attribute,MSG_DELETED);
+            JAMmbFetchMsgHdr(&sys.JamRec,msgnum,0);
+            if(sys.JamRec.Hdr.Attribute & MSG_DELETED)
+                togglebit((long *)&sys.JamRec.Hdr.Attribute,MSG_DELETED);
             else {
                 nl();
                 npr("5Kill this Message? ");
                 if(yn())
-                    togglebit((long *)&JamRec.Hdr.Attribute,MSG_DELETED);
+                    togglebit((long *)&sys.JamRec.Hdr.Attribute,MSG_DELETED);
             }
-            JamRec.Hdr.Attribute |= MSG_DELETED;
-            JAMmbLockMsgBase(&JamRec,1);
-            JAMmbStoreMsgHdr(&JamRec,msgnum);
-            JAMmbUnLockMsgBase(&JamRec,1);
+            sys.JamRec.Hdr.Attribute |= MSG_DELETED;
+            JAMmbLockMsgBase(&sys.JamRec,1);
+            JAMmbStoreMsgHdr(&sys.JamRec,msgnum);
+            JAMmbUnLockMsgBase(&sys.JamRec,1);
         }
         else if(s[0]=='?')
             printmenu(1);
         else if(s[0]=='B')
             boardedit();
         else if(s[0]=='-') {
-            if(msgnum>JamRec.HdrInfo.BaseMsgNum)
+            if(msgnum>sys.JamRec.HdrInfo.BaseMsgNum)
                 msgnum--;
             disp=1;
         } 
         else if(s[0]=='L') {
-            msgnum=JamRec.HdrInfo.BaseMsgNum+JamRec.HdrInfo.ActiveMsgs;
+            msgnum=sys.JamRec.HdrInfo.BaseMsgNum+sys.JamRec.HdrInfo.ActiveMsgs;
             msgnum--;
             disp=1;
         } 
@@ -520,14 +527,14 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
         }
         else if(s[0]=='T'||(s[0]=='/'&&s[1]=='T')) {
             abort=0;
-            for(i=0;i<10&&!hangup&&!abort&&msgnum<nummsgs;i++) {
+            for(i=0;i<10&&!hangup&&!abort&&msgnum<sys.nummsgs;i++) {
                 msgnum++;
-                JAMmbFetchMsgHdr(&JamRec, msgnum,0);
+                JAMmbFetchMsgHdr(&sys.JamRec, msgnum,0);
                 getjamhdr(&hdr);
 
-                if(!stricmp(thisuser.name,hdr.who_from)||!stricmp(thisuser.realname,hdr.who_from))
+                if(!stricmp(sess.user.name,hdr.who_from)||!stricmp(sess.user.realname,hdr.who_from))
                     sprintf(s,"3[3%d3] ",msgnum);
-                else if(!stricmp(thisuser.name,hdr.who_to)||!stricmp(thisuser.realname,hdr.who_to))
+                else if(!stricmp(sess.user.name,hdr.who_to)||!stricmp(sess.user.realname,hdr.who_to))
                     sprintf(s,"6[2%d6] ",msgnum);
                 else
                     sprintf(s,"1(1%d1) ",msgnum);
@@ -565,12 +572,12 @@ void rscanj(void)
     int i,board,next,isnew;
     char s[MAX_PATH_LEN];
 
-    if(subboards[usub[cursub].subnum].attr & mattr_private) {
-        readmailj(1,cursub);
+    if(sys.subboards[sess.usub[sess.cursub].subnum].attr & mattr_private) {
+        readmailj(1,sess.cursub);
         return;
     }
 
-    sprintf(s,"%s%s",syscfg.msgsdir,subboards[usub[cursub].subnum].filename);
+    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);
     JAMOpen(s);
 
     outstr(get_string2(9));
@@ -582,11 +589,11 @@ void rscanj(void)
     i=atoi(s);
     if(!i)
         i=1;
-    if (i>=nummsgs)
-        i=nummsgs;
+    if (i>=sys.nummsgs)
+        i=sys.nummsgs;
     nl();
     JAMClose();
-    scanj(i,&next,cursub,0);
+    scanj(i,&next,sess.cursub,0);
 }
 
 #define LEN 161
@@ -609,12 +616,12 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     hdr= *hdr1;
     if ((fsed!=0) && (!okfsed()))
         fsed=0;
-    sprintf(fnx,"%sMSGtmp",syscfg.tempdir);
+    sprintf(fnx,"%sMSGtmp",sys.cfg.tempdir);
     if (fsed)
         fsed=1;
-    if (use_workspace) {
+    if (sess.use_workspace) {
         if (!exist(fnx))
-            use_workspace=0;
+            sess.use_workspace=0;
         else
             fsed=2;
     }
@@ -624,13 +631,13 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     curli=0;
     b=NULL;
 
-    if (actsl<45)
+    if (sess.actsl<45)
         maxli=30;
     else
-        if (actsl<60)
+        if (sess.actsl<60)
         maxli=50;
     else
-        if (actsl<80)
+        if (sess.actsl<80)
         maxli=60;
     else
         maxli=80;
@@ -662,8 +669,8 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
                     if(result==2)
                         outstr("[A\r");
                     strcpy(ro,&(lin[(curli)*LEN]));
-                    if(strlen(ro)>thisuser.screenchars-1)
-                        ro[thisuser.screenchars-2]=0;
+                    if(strlen(ro)>sess.user.screenchars-1)
+                        ro[sess.user.screenchars-2]=0;
                 }
             }
 
@@ -679,7 +686,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
             if (s[0]=='/') {
                 if (stricmp(s,"/Q")==0) {
                     savel=0;
-                    if (quote!=NULL)
+                    if (sess.quote!=NULL)
                         get_quote();
                 }
                 if (!stricmp(s,"/M")) {
@@ -706,7 +713,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
                                     --i5;
                                 else
                                     ++i5;
-                            for (i4=0; (i4<(thisuser.screenchars-i5)/2) && (!i2); i4++)
+                            for (i4=0; (i4<(sess.user.screenchars-i5)/2) && (!i2); i4++)
                                 osan(" ",&i2,&i1);
                         }
                         pla(s1,&i2);
@@ -762,17 +769,17 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     } 
     else {
         if (fsed==1) {
-            *save=external_edit("MSGtmp",syscfg.tempdir,maxli);
+            *save=external_edit("MSGtmp",sys.cfg.tempdir,maxli);
         } 
         else {
             *save=exist(fnx);
-            use_workspace=0;
+            sess.use_workspace=0;
         }
     }
 
-    if(quote!=NULL)
-        farfree(quote);
-    quote=NULL;
+    if(sess.quote!=NULL)
+        farfree(sess.quote);
+    sess.quote=NULL;
 
     if(abort||!(*save)) {
         farfree(lin);
@@ -783,7 +790,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
         return NULL;
     }
 
-    anony=subboards[usub[sb].subnum].anony;
+    anony=sys.subboards[sess.usub[sb].subnum].anony;
 
     switch(anony) {
     case 0:
@@ -847,14 +854,14 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
 
 
     if(real_name)
-        strcpy(hdr.who_from,thisuser.realname);
+        strcpy(hdr.who_from,sess.user.realname);
     else if(anony)
         strcpy(hdr.who_from,"Anonymous");
     else
-        strcpy(hdr.who_from,pnam(&thisuser));
+        strcpy(hdr.who_from,pnam(&sess.user));
 
     if(!anony)
-        strcpy(hdr.comment,thisuser.comment);
+        strcpy(hdr.comment,sess.user.comment);
     else
         strcpy(hdr.comment,"I am Ambiguous");
 
@@ -880,15 +887,15 @@ void replyj(int sb,int msgnum)
     char *buf;
     long len;
 
-    JAMmbFetchMsgHdr( &JamRec, msgnum, 0 );
+    JAMmbFetchMsgHdr( &sys.JamRec, msgnum, 0 );
     getjamhdr(&hdr);
 
-    JAMmbFetchMsgTxt( &JamRec, 1 );
-    quote_jam(JamRec.WorkBuf,JamRec.Hdr.TxtLen,&hdr);
+    JAMmbFetchMsgTxt( &sys.JamRec, 1 );
+    quote_jam(sys.JamRec.WorkBuf,sys.JamRec.Hdr.TxtLen,&hdr);
 
     postjam(sb,&hdr,1);
-    if(quote!=NULL)
-        farfree(quote);
+    if(sess.quote!=NULL)
+        farfree(sess.quote);
 }
 
 void post(int sb)
@@ -901,29 +908,29 @@ void post(int sb)
 
 int okpost(void)
 {
-    if (freek1(syscfg.msgsdir)<10.0) {
+    if (freek1(sys.cfg.msgsdir)<10.0) {
         nl();
         pl("Sorry, not enough disk space left.");
         nl();
         return 0;
     }
 
-    if ((restrict_post & thisuser.restrict) || (thisuser.posttoday>=syscfg.sl[actsl].posts)) {
+    if ((restrict_post & sess.user.restrict) || (sess.user.posttoday>=sys.cfg.sl[sess.actsl].posts)) {
         nl();
         pl("Too many messages posted today.");
         nl();
         return 0;
     }
 
-    if (!slok((char *)subboards[curlsub].postacs,1)) {
+    if (!slok((char *)sys.subboards[sess.curlsub].postacs,1)) {
         nl();
         pl("You can't post here.");
         nl();
         return 0;
     }
 
-    if (subboards[curlsub].attr & mattr_fidonet) {
-        if (thisuser.restrict & restrict_net) {
+    if (sys.subboards[sess.curlsub].attr & mattr_fidonet) {
+        if (sess.user.restrict & restrict_net) {
             nl();
             pl("You can't post on networked message areas.");
             nl();
@@ -942,32 +949,32 @@ void SaveJamMsg(hdrinfo *hdr,long len, char *b,int sb)
     char s[MAX_PATH_LEN];
     UINT32 SubFldPos=0;
 
-    sprintf(s,"%s%s",syscfg.msgsdir,subboards[usub[sb].subnum].filename);
+    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
     JAMOpen(s);
 
 
-    JamMsgInit(&JamRec);
+    JamMsgInit(&sys.JamRec);
 
-    JamMsgAddSFldStr(&JamRec, JAMSFLD_SUBJECT, hdr->subject, &SubFldPos );
-    JamMsgAddSFldStr(&JamRec, JAMSFLD_SENDERNAME, hdr->who_from, &SubFldPos );
-    JamMsgAddSFldStr(&JamRec, JAMSFLD_RECVRNAME, hdr->who_to, &SubFldPos );
-    JamMsgAddSFldStr(&JamRec, 666, hdr->comment, &SubFldPos );
+    JamMsgAddSFldStr(&sys.JamRec, JAMSFLD_SUBJECT, hdr->subject, &SubFldPos );
+    JamMsgAddSFldStr(&sys.JamRec, JAMSFLD_SENDERNAME, hdr->who_from, &SubFldPos );
+    JamMsgAddSFldStr(&sys.JamRec, JAMSFLD_RECVRNAME, hdr->who_to, &SubFldPos );
+    JamMsgAddSFldStr(&sys.JamRec, 666, hdr->comment, &SubFldPos );
 
-    if(subboards[curlsub].attr & mattr_netmail) {
+    if(sys.subboards[sess.curlsub].attr & mattr_netmail) {
         sprintf(s,"%d:%d/%d.%d",hdr->f.zone,hdr->f.net,hdr->f.node,hdr->f.point);
-        JamMsgAddSFldStr(&JamRec, JAMSFLD_OADDRESS, s, &SubFldPos );
+        JamMsgAddSFldStr(&sys.JamRec, JAMSFLD_OADDRESS, s, &SubFldPos );
 
         sprintf(s,"%d:%d/%d.%d",hdr->t.zone,hdr->t.net,hdr->t.node,hdr->t.point);
-        JamMsgAddSFldStr(&JamRec, JAMSFLD_DADDRESS, s, &SubFldPos );
+        JamMsgAddSFldStr(&sys.JamRec, JAMSFLD_DADDRESS, s, &SubFldPos );
     }
 
-    JamRec.Hdr.SubfieldLen=SubFldPos;
-    JamRec.Hdr.TxtLen=len;
-    JamRec.Hdr.Attribute |= MSG_LOCAL;
-    { time_t _now; time(&_now); JamRec.Hdr.DateWritten = (UINT32)_now; }
+    sys.JamRec.Hdr.SubfieldLen=SubFldPos;
+    sys.JamRec.Hdr.TxtLen=len;
+    sys.JamRec.Hdr.Attribute |= MSG_LOCAL;
+    { time_t _now; time(&_now); sys.JamRec.Hdr.DateWritten = (UINT32)_now; }
 
-    JamMsgWrite(&JamRec,b);
-    JamMsgDeinit(&JamRec);
+    JamMsgWrite(&sys.JamRec,b);
+    JamMsgDeinit(&sys.JamRec);
 
     JAMClose();
 }
@@ -1056,7 +1063,7 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
     int i,save;
     userrec u;
 
-    curlsub=usub[sb].subnum;
+    sess.curlsub=sess.usub[sb].subnum;
 
     if(!okpost())
         return;
@@ -1065,10 +1072,10 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
 
     hdr.attr=0;
 
-    if(subboards[curlsub].attr & mattr_private)
+    if(sys.subboards[sess.curlsub].attr & mattr_private)
         hdr.attr |= hdr_private;
 
-    if(subboards[curlsub].attr & mattr_netmail)
+    if(sys.subboards[sess.curlsub].attr & mattr_netmail)
         hdr.attr |= hdr_netmail;
 
     upload_post();
@@ -1086,8 +1093,8 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
 
     b=ninmsg(&hdr,&len,&save,sb);
 
-    if(quote!=NULL)
-        farfree(quote);
+    if(sess.quote!=NULL)
+        farfree(sess.quote);
 
     if(!save)
         return;
@@ -1099,18 +1106,18 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
 
     farfree(b);
 
-    ++thisuser.msgpost;
-    ++thisuser.posttoday;
+    ++sess.user.msgpost;
+    ++sess.user.posttoday;
     ++sys.status.msgposttoday;
     save_status();
     topscreen();
 
-    logtypes(0,"Posted on 4%s 2[2%s2]",subboards[curlsub].name,hdr.subject);
-    npr("Posted on %s\r\n",subboards[curlsub].name);
+    logtypes(0,"Posted on 4%s 2[2%s2]",sys.subboards[sess.curlsub].name,hdr.subject);
+    npr("Posted on %s\r\n",sys.subboards[sess.curlsub].name);
 
     save_status();
-    if ((subboards[curlsub].attr & mattr_fidonet)|| (subboards[curlsub].attr & mattr_netmail) ) {
-        ++thisuser.postnet;
+    if ((sys.subboards[sess.curlsub].attr & mattr_fidonet)|| (sys.subboards[sess.curlsub].attr & mattr_netmail) ) {
+        ++sess.user.postnet;
         i = open("DMRESCAN.NOW", O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
         close(i);
     }
@@ -1298,43 +1305,43 @@ int JamMsgAddSFldStr( JAMAPIREC * pJam, UINT16 SubFld, CHAR8 * Str, UINT32 * pSu
 void JAMOpen(char *fn)
 {
 
-    if(JamRec.isOpen)
+    if(sys.JamRec.isOpen)
         JAMClose();
 
 
 
-    if( !JAMsysInitApiRec( &JamRec, fn, WORKBUFSIZE ))
+    if( !JAMsysInitApiRec( &sys.JamRec, fn, WORKBUFSIZE ))
     {
         puts( "Not enough memory" );
         return;
     }
 
-    if( !JAMmbOpen( &JamRec ))
+    if( !JAMmbOpen( &sys.JamRec ))
     {
-        if( JamRec.Errno != ENOENT )
+        if( sys.JamRec.Errno != ENOENT )
         {
             perror( "Unable to open the JAM messagebase" );
-            JAMsysDeinitApiRec( &JamRec );
+            JAMsysDeinitApiRec( &sys.JamRec );
             return;
         }
 
-        if( !JAMmbCreate( &JamRec ))
+        if( !JAMmbCreate( &sys.JamRec ))
         {
             perror( "Unable to create the JAM messagebase" );
-            JAMsysDeinitApiRec( &JamRec );
+            JAMsysDeinitApiRec( &sys.JamRec );
             return;
         }
     }
 
-    nummsgs=filelength( JamRec.IdxHandle )/sizeof(JAMIDXREC);
+    sys.nummsgs=filelength( sys.JamRec.IdxHandle )/sizeof(JAMIDXREC);
 }
 
 
 void JAMClose(void)
 {
-    if(!JAMsysDeinitApiRec(&JamRec))
+    if(!JAMsysDeinitApiRec(&sys.JamRec))
         pl("Deinit error");
-    if(JamRec.isOpen)
+    if(sys.JamRec.isOpen)
         pl("still open");
 }
 
@@ -1345,7 +1352,7 @@ void readmailj(int msgnum,int sb)
     if(!msgnum)
         msgnum++;
 
-    msgnum=findnextwaiting(msgnum,1,&thisuser);
+    msgnum=findnextwaiting(msgnum,1,&sess.user);
 
     scanj(msgnum,&i,sb,1);
 }
@@ -1354,21 +1361,21 @@ void addLastRead(int num)
 {
     int i;
 
-    JAMmbLockMsgBase(&JamRec, 1 );
-    lseek(JamRec.LrdHandle,0L,SEEK_END);
-    JamRec.LastRead.HighReadMsg=0;
-    JamRec.LastRead.LastReadMsg=0;
-    JamRec.LastRead.UserID=num;
-    write(JamRec.LrdHandle,&JamRec.LastRead,sizeof(JAMLREAD));
-    JAMmbUnLockMsgBase(&JamRec, 1 );
-    JamRec.LastLRDnum=filelength(JamRec.LrdHandle)/sizeof(JAMLREAD);
+    JAMmbLockMsgBase(&sys.JamRec, 1 );
+    lseek(sys.JamRec.LrdHandle,0L,SEEK_END);
+    sys.JamRec.LastRead.HighReadMsg=0;
+    sys.JamRec.LastRead.LastReadMsg=0;
+    sys.JamRec.LastRead.UserID=num;
+    write(sys.JamRec.LrdHandle,&sys.JamRec.LastRead,sizeof(JAMLREAD));
+    JAMmbUnLockMsgBase(&sys.JamRec, 1 );
+    sys.JamRec.LastLRDnum=filelength(sys.JamRec.LrdHandle)/sizeof(JAMLREAD);
 }
 
 void saveLastRead(void)
 {
-    JAMmbLockMsgBase(&JamRec, 1 );
-    JAMmbStoreLastRead(&JamRec,1);
-    JAMmbUnLockMsgBase(&JamRec, 1 );
+    JAMmbLockMsgBase(&sys.JamRec, 1 );
+    JAMmbStoreLastRead(&sys.JamRec,1);
+    JAMmbUnLockMsgBase(&sys.JamRec, 1 );
 }
 
 void nscan(int sb,int *next)
@@ -1376,21 +1383,21 @@ void nscan(int sb,int *next)
     int num;
     char s[MAX_PATH_LEN];
 
-    sprintf(s,"%s%s",syscfg.msgsdir,subboards[usub[sb].subnum].filename);
+    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
 
     JAMOpen(s);
 
-    if(!JAMmbFetchLastRead(&JamRec,usernum))
+    if(!JAMmbFetchLastRead(&sys.JamRec,sess.usernum))
         num=1;
     else
-        num=JamRec.LastRead.HighReadMsg;
+        num=sys.JamRec.LastRead.HighReadMsg;
 
     JAMClose();
 
-    if(nummsgs>num) {
+    if(sys.nummsgs>num) {
         pl(get_string((18)));
         num++;
-        if(subboards[usub[sb].subnum].attr & mattr_private)
+        if(sys.subboards[sess.usub[sb].subnum].attr & mattr_private)
             readmailj(num,sb);
         else
             scanj(num,next,sb,0);
@@ -1408,9 +1415,9 @@ void gnscan(void)
     int i,next=1;
 
     pl(get_string(15));
-    for(i=0;i<200&&usub[i].subnum!=-1&&i<umaxsubs&&!hangup&&next;i++) {
-        if(inscan(i,&thisuser)&&!(subboards[usub[i].subnum].attr & mattr_private))
-            nscan(cursub=usub[i].subnum,&next);
+    for(i=0;i<200&&sess.usub[i].subnum!=-1&&i<sess.umaxsubs&&!hangup&&next;i++) {
+        if(inscan(i,&sess.user)&&!(sys.subboards[sess.usub[i].subnum].attr & mattr_private))
+            nscan(sess.cursub=sess.usub[i].subnum,&next);
     }
     pl(get_string(16));
 }
@@ -1436,7 +1443,7 @@ void email(int u,char subject[MAX_PATH_LEN],int ask)
         hdr.subject[0]=0;
     strcpy(hdr.who_from,pnam(&ur));
 
-    postjam(cursub,&hdr,1);
+    postjam(sess.cursub,&hdr,1);
 }
 
 void smail(char ms[MAX_PATH_LEN])
@@ -1458,7 +1465,7 @@ void smail(char ms[MAX_PATH_LEN])
     if(un)
         email(un,subject,1);
     else
-        post(cursub);
+        post(sess.cursub);
 }
 
 int findnextwaiting(int msgnum,int old,userrec *u)
@@ -1476,14 +1483,14 @@ int findnextwaiting(int msgnum,int old,userrec *u)
     hcrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
     msgnum++;
-    while(msgnum<=nummsgs&&!found) {
-        JAMmbFetchMsgIdx(&JamRec,msgnum);
-        if(ucrc==JamRec.Idx.UserCRC||hcrc==JamRec.Idx.UserCRC) {
+    while(msgnum<=sys.nummsgs&&!found) {
+        JAMmbFetchMsgIdx(&sys.JamRec,msgnum);
+        if(ucrc==sys.JamRec.Idx.UserCRC||hcrc==sys.JamRec.Idx.UserCRC) {
             if(old)
                 found=1;
             else {
-                JAMmbFetchMsgHdr(&JamRec,msgnum,0);
-                if(!(JamRec.Hdr.Attribute & MSG_READ))
+                JAMmbFetchMsgHdr(&sys.JamRec,msgnum,0);
+                if(!(sys.JamRec.Hdr.Attribute & MSG_READ))
                     found=1;
             }
         }
@@ -1502,10 +1509,10 @@ int findwaiting(void)
     char s[MAX_PATH_LEN];
     int i;
 
-    sprintf(s,"%s%s",syscfg.msgsdir,subboards[usub[cursub].subnum].filename);
+    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);
 
     JAMOpen(s);
-    i=findnextwaiting(0,0,&thisuser);
+    i=findnextwaiting(0,0,&sess.user);
     JAMClose();
     return i;
 }
@@ -1518,7 +1525,7 @@ int numwaiting(userrec *u)
     if(u->inact & inact_deleted)
         return 0;
 
-    sprintf(s,"%s%s",syscfg.msgsdir,subboards[usub[cursub].subnum].filename);
+    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);
 
     JAMOpen(s);
 
@@ -1560,8 +1567,8 @@ void quote_jam(char *buf,long len,hdrinfo *hdr)
     long pos=0,nlen=0;
     int ret,justwrap=0,added=0,done=0;
 
-    if(quote!=NULL)
-        farfree(quote);
+    if(sess.quote!=NULL)
+        farfree(sess.quote);
 
     nb=(char *)malloca(len+1000L);
 
@@ -1599,7 +1606,7 @@ void quote_jam(char *buf,long len,hdrinfo *hdr)
 
     nb[nlen+1]=0;
 
-    quote=nb;
+    sess.quote=nb;
 }
 
 
@@ -1609,19 +1616,19 @@ int findnextthread(int msgnum)
     long msgid,replyid;
     hdrinfo h,r;
 
-    JAMmbFetchMsgHdr(&JamRec,msgnum,0);
+    JAMmbFetchMsgHdr(&sys.JamRec,msgnum,0);
     getjamhdr(&h);
     npr("m=%s\r\n",h.msgid);
     pausescr();
 
-    /*    msgid=JamRec.Hdr.MsgIdCRC;
+    /*    msgid=sys.JamRec.Hdr.MsgIdCRC;
         if(msgid==0)
             return 0;*/
     if(!h.msgid[0])
         return 0;
 
-    while(i<nummsgs) {
-        JAMmbFetchMsgHdr(&JamRec,i,0);
+    while(i<sys.nummsgs) {
+        JAMmbFetchMsgHdr(&sys.JamRec,i,0);
         getjamhdr(&r);
         npr("r=%s\r\n",r.replyid);
         if(!stricmp(h.msgid,r.replyid))

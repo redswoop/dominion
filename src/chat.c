@@ -1,5 +1,12 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void playmod(void);
 #define TWO_WAY 1
@@ -109,18 +116,18 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
         if ((ch>=32)) {
             if (side==0)
             {
-                if ((wherex()<(thisuser.screenchars-1)) && (cp0<maxlen))
+                if ((wherex()<(sess.user.screenchars-1)) && (cp0<maxlen))
                 {
                     if (wherey() < 11)
                     {
                         side0[wherey()][cp0++]=ch;
-                        if(nifty.chatcolor==1) {
-                            if (okansi()) makeansi(scfilt[ch],s2,curatr); else s2[0]=0;
+                        if(sys.nifty.chatcolor==1) {
+                            if (okansi()) makeansi(sys.scfilt[ch],s2,curatr); else s2[0]=0;
                             outstr(s2);
                         }
-                        if(nifty.chatcolor==2) {
+                        if(sys.nifty.chatcolor==2) {
                             if(ch==13) ronum=0;
-                            ansic(nifty.rotate[ronum++]);
+                            ansic(sys.nifty.rotate[ronum++]);
                             if(ronum==5) ronum=0;
                         }
                         outchr(ch);
@@ -147,28 +154,28 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                         outstr(s2);
                         s2[0]=0;
                     }
-                    if (wherex()==(thisuser.screenchars-1))
+                    if (wherex()==(sess.user.screenchars-1))
                         done=1;
                 } 
                 else {
-                    if (wherex()>=(thisuser.screenchars-1))
+                    if (wherex()>=(sess.user.screenchars-1))
                         done=1;
                 }
             }
             else
             {
-                if ((wherex()<(thisuser.screenchars-1)) && (cp1<maxlen) )
+                if ((wherex()<(sess.user.screenchars-1)) && (cp1<maxlen) )
                 {
                     if (wherey() < 23)
                     {
                         side1[wherey()-13][cp1++]=ch;
-                        if(nifty.chatcolor==1) {
-                            if (okansi()) makeansi(cfilt[ch],s2,curatr); else s2[0]=0;
+                        if(sys.nifty.chatcolor==1) {
+                            if (okansi()) makeansi(sys.cfilt[ch],s2,curatr); else s2[0]=0;
                             outstr(s2);
                         }
-                        if(nifty.chatcolor==2) {
+                        if(sys.nifty.chatcolor==2) {
                             if(ch==13) ronum2=0;
-                            ansic(syscfg.dszbatchdl[ronum2++]);
+                            ansic(sys.cfg.dszbatchdl[ronum2++]);
                             if(ronum2==5) ronum2=0;
                         }
                         outchr(ch);
@@ -195,11 +202,11 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                         outstr(s2);
                         s2[0]=0;
                     }
-                    if (wherex()==(thisuser.screenchars-1))
+                    if (wherex()==(sess.user.screenchars-1))
                         done=1;
                 } 
                 else {
-                    if (wherex()>=(thisuser.screenchars-1))
+                    if (wherex()>=(sess.user.screenchars-1))
                         done=1;
                 }
             }
@@ -367,7 +374,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                 if (side==0)
                 {
                     i=5-(cp0 % 5);
-                    if (((cp0+i)<maxlen) && ((wherex()+i)<thisuser.screenchars))
+                    if (((cp0+i)<maxlen) && ((wherex()+i)<sess.user.screenchars))
                     {
                         i=5-((wherex()+1) % 5);
                         for (i1=0; i1<i; i1++)
@@ -380,7 +387,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                 else
                     {
                     i=5-(cp1 % 5);
-                    if (((cp1+i)<maxlen) && ((wherex()+i)<thisuser.screenchars))
+                    if (((cp1+i)<maxlen) && ((wherex()+i)<sess.user.screenchars))
                     {
                         i=5-((wherex()+1) % 5);
                         for (i1=0; i1<i; i1++)
@@ -473,10 +480,10 @@ void chat1(char *chatline, int two_way)
     echo=1;
     nl();
     nl();
-    tempdata=topdata;
+    tempdata=sess.topdata;
     if (!okansi())
         two_way=0;
-    if (modem_speed==300)
+    if (sess.modem_speed==300)
         two_way=0;
 
 #ifndef TWO_WAY
@@ -491,7 +498,7 @@ void chat1(char *chatline, int two_way)
         cp0=0;
         cp1=0;
         if (defscreenbottom==24) {
-            topdata=0;
+            sess.topdata=0;
             topscreen();
         }
         outstr("\x1b[2J");
@@ -516,7 +523,7 @@ void chat1(char *chatline, int two_way)
     readfilter("user.flt","sysop.flt");
 
     if(!two_way)
-        chat_file=nifty.nifstatus & nif_autochat;
+        chat_file=sys.nifty.nifstatus & nif_autochat;
 
     do {
 #ifdef TWO_WAY
@@ -557,15 +564,15 @@ void chat1(char *chatline, int two_way)
             if (cf==0) {
                 if (!two_way)
                     outs("-] Chat file opened.\r\n");
-                sprintf(s2,"%sCHAT.TXT",syscfg.gfilesdir);
+                sprintf(s2,"%sCHAT.TXT",sys.cfg.gfilesdir);
                 cf=open(s2,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
                 lseek(cf,0L,SEEK_END);
                 sprintf(s2,"\r\n\r\nChat file opened %s %s\r\n",date(),times());
                 write(cf,(void *)s2,strlen(s2));
-                sprintf(s2,"User: %s\r\n",nam(&thisuser,usernum));
+                sprintf(s2,"User: %s\r\n",nam(&sess.user,sess.usernum));
                 write(cf,(void *)s2,strlen(s2));
-                if(chatreason[0]) {
-                    sprintf(s2,"%s\r\n",chatreason);
+                if(sess.chatreason[0]) {
+                    sprintf(s2,"%s\r\n",sess.chatreason);
                     write(cf,&s2,strlen(s2));
                 }
 
@@ -605,9 +612,9 @@ void chat1(char *chatline, int two_way)
     tc=timer()-tc;
     if (tc<0)
         tc += 86400.0;
-    extratimecall += tc;
-    topdata=tempdata;
-    if (useron)
+    sess.extratimecall += tc;
+    sess.topdata=tempdata;
+    if (sess.useron)
         topscreen();
     echo=oe;
     restorel(cl,atr,xl,&cc);
@@ -625,7 +632,7 @@ void reqchat1(char reason[MAX_PATH_LEN])
     nl();
     ok=sysop2();
     if(checkacs(10)) ok=1;
-    if (restrict_chat & thisuser.restrict)
+    if (restrict_chat & sess.user.restrict)
         ok=0;
     if (ok) {
         if (chatcall) {
@@ -637,12 +644,12 @@ void reqchat1(char reason[MAX_PATH_LEN])
             inputdat(reason,s,70,1);
             if (s[0]) {
                 chatcall=1;
-                strcpy(chatreason,s);
+                strcpy(sess.chatreason,s);
                 nl();
-                sysoplog(chatreason);
-                for (ok=strlen(chatreason); ok<80; ok++)
-                    chatreason[ok]=32;
-                chatreason[80]=0;
+                sysoplog(sess.chatreason);
+                for (ok=strlen(sess.chatreason); ok<80; ok++)
+                    sess.chatreason[ok]=32;
+                sess.chatreason[80]=0;
                 topscreen();
                 pl("Chat call Activated");
                 nl();
@@ -653,10 +660,10 @@ void reqchat1(char reason[MAX_PATH_LEN])
         pl("Sysop not available.");
         nl();
         printfile("nosysop");
-        logtypes(3,"Chat 2[2%s2]",chatreason);
-        if(usernum) {
+        logtypes(3,"Chat 2[2%s2]",sess.chatreason);
+        if(sess.usernum) {
             pl("Use feedback instead.");
-            cursub=0;
+            sess.cursub=0;
             email(1,"Chat Request",1);
         }
     }
@@ -668,7 +675,7 @@ void chatsound()
     int i;
 
     for(i=100;i<2000;i+=200) {
-        if(chatsoundon)
+        if(sess.chatsoundon)
             sound(i);
         delay(30);
     }
@@ -684,13 +691,13 @@ void reqchat(char reason[MAX_PATH_LEN])
 
     nl();
     nl();
-    inputdat(reason,chatreason,70,1);
-    if(!chatreason[0]) return;
+    inputdat(reason,sess.chatreason,70,1);
+    if(!sess.chatreason[0]) return;
     topscreen();
     nl();
 
     ok=sysop2();
-    if (restrict_chat & thisuser.restrict)
+    if (restrict_chat & sess.user.restrict)
         ok=0;
 #ifdef MOD
     playmod();
@@ -702,11 +709,11 @@ void reqchat(char reason[MAX_PATH_LEN])
             outstr(get_string(17));
             if(kbhitb()) {
                 s[0]=getch();
-                if(s[0]==13) chatsoundon=0;
+                if(s[0]==13) sess.chatsoundon=0;
                 else if(s[0]==32) {
-                    chatreason[0]=0;
+                    sess.chatreason[0]=0;
                     topscreen();
-                    chat1("",syscfg.sysconfig & sysconfig_2_way);
+                    chat1("",sys.cfg.sysconfig & sysconfig_2_way);
                     return;
                 }
             }
@@ -715,14 +722,14 @@ void reqchat(char reason[MAX_PATH_LEN])
     }
 #endif
     if(!ok||i>9) {
-        logtypes(3,"Chat 2[2%s2]",chatreason);
+        logtypes(3,"Chat 2[2%s2]",sess.chatreason);
         printfile("nosysop");
         if(!ok) {
             chatcall=0;
             topscreen();
         }
-        if(usernum) {
-            cursub=0;
+        if(sess.usernum) {
+            sess.cursub=0;
             email(1,"Chat Request",1);
         }
     }
@@ -732,13 +739,13 @@ void readfilter(char fn[15],char fn2[15])
 {
     char s[100];
     int i;
-    sprintf(s,"%s%s",syscfg.gfilesdir,fn);
+    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
     i=open(s,O_RDONLY|O_BINARY);
-    read(i,cfilt,255);
+    read(i,sys.cfilt,255);
     close(i);
-    sprintf(s,"%s%s",syscfg.gfilesdir,fn2);
+    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn2);
     i=open(s,O_RDONLY|O_BINARY);
-    read(i,scfilt,255);
+    read(i,sys.scfilt,255);
     close(i);
 }
 
@@ -779,14 +786,14 @@ void playmod(void)
         if(kbhitb()) {
             dev=getch();
             if(dev==13) {
-                chatsoundon=0;
+                sess.chatsoundon=0;
                 modstop();
             }
             else if(dev==32) {
-                chatreason[0]=0;
+                sess.chatreason[0]=0;
                 topscreen();
                 modstop();
-                chat1("",syscfg.sysconfig & sysconfig_2_way);
+                chat1("",sys.cfg.sysconfig & sysconfig_2_way);
                 return;
             }
         }

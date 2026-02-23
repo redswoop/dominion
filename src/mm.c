@@ -1,9 +1,17 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
+#include "version.h"
 #pragma hdrstop
 
 #include "menudb.h"
 
 extern int SYSTEMDEBUG;
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 struct mmfmt_t {
     char         fmt[41],
@@ -31,7 +39,7 @@ extern int fastlogon;
 
 void packm(void);
 
-/* maxcmd, menuat, mstack, mdepth moved to vars.h (Phase B0) */
+/* sess.maxcmd, sess.menuat, sess.mstack, sess.mdepth moved to vars.h (Phase B0) */
 
 void conv(void);
 
@@ -40,7 +48,7 @@ int slok(char val[31],char menu)
     char ok=1,neg=0,*p,s1[MAX_PATH_LEN],s[MAX_PATH_LEN],curok=1;
     int i;
 
-    if(backdoor) return 1;
+    if(sess.backdoor) return 1;
 
     strcpy(s,val);
 
@@ -61,10 +69,10 @@ int slok(char val[31],char menu)
         }
         switch(toupper(s[0])) {
         case 'A': 
-            if(!(thisuser.ar & (1 << toupper(s[1])-'A'))) curok=0; 
+            if(!(sess.user.ar & (1 << toupper(s[1])-'A'))) curok=0; 
             break;
         case 'B': 
-            if((modem_speed/100)<atoi(s+1)) curok=0; 
+            if((sess.modem_speed/100)<atoi(s+1)) curok=0; 
             break;
         case 'C': 
             if(!menu) { 
@@ -74,25 +82,25 @@ int slok(char val[31],char menu)
             } 
             break;
         case 'D': 
-            if(thisuser.dsl<atoi(s+1)) curok=0; 
+            if(sess.user.dsl<atoi(s+1)) curok=0; 
             break;
         case 'G': 
-            if(thisuser.age<atoi(s+1)) curok=0; 
+            if(sess.user.age<atoi(s+1)) curok=0; 
             break;
         case 'I': 
-            if(!(thisuser.dar & (1 << toupper(s[1])-'A'))) curok=0;
+            if(!(sess.user.dar & (1 << toupper(s[1])-'A'))) curok=0;
             break;
         case 'S': 
-            if(actsl<atoi(s+1)) curok=0; 
+            if(sess.actsl<atoi(s+1)) curok=0; 
             break;
         case 'U': 
-            if(atoi(s+1)!=usernum) curok=0; 
+            if(atoi(s+1)!=sess.usernum) curok=0; 
             break;
         case 'V':
             curok=0;
             break;
         case '@': 
-            if(!strchr(sys.conf[curconf].flagstr,s[1])) curok=0; 
+            if(!strchr(sys.conf[sess.curconf].flagstr,s[1])) curok=0; 
             break;
         case '#': 
             if(!sysop2()) curok=0; 
@@ -126,7 +134,7 @@ void msgcommand(char type,char ms[40])
 #endif
         break;
     case 'P': 
-        post(cursub); 
+        post(sess.cursub); 
         break;
     case 'N':
         if(ms[1]=='?') {
@@ -143,16 +151,16 @@ void msgcommand(char type,char ms[40])
             gnscan();
         } 
         else if (ms[0]=='C') {
-            nscan(usub[cursub].subnum,&i);
-            logtypes(1,"NewScaned Message Area 4%s",subboards[usub[cursub].subnum].name);
+            nscan(sess.usub[sess.cursub].subnum,&i);
+            logtypes(1,"NewScaned Message Area 4%s",sys.subboards[sess.usub[sess.cursub].subnum].name);
         } 
         else if(ms[0]=='A') {
-            strcpy(s,sys.conf[curconf].flagstr);
-            strcpy(sys.conf[curconf].flagstr,"@");
+            strcpy(s,sys.conf[sess.curconf].flagstr);
+            strcpy(sys.conf[sess.curconf].flagstr,"@");
             changedsl();
             logtypes(1,"NewScaned All Conferences");
             gnscan();
-            strcpy(sys.conf[curconf].flagstr,s);
+            strcpy(sys.conf[sess.curconf].flagstr,s);
             changedsl();
         }
         else if(!ms[0]) {
@@ -161,12 +169,12 @@ void msgcommand(char type,char ms[40])
             c=onek("\rYNA");
             switch(c) {
             case 'A': 
-                strcpy(s,sys.conf[curconf].flagstr);
-                strcpy(sys.conf[curconf].flagstr,"@");
+                strcpy(s,sys.conf[sess.curconf].flagstr);
+                strcpy(sys.conf[sess.curconf].flagstr,"@");
                 changedsl();
                 logtypes(1,"NewScaned Messages All Conferences");
                 gnscan();
-                strcpy(sys.conf[curconf].flagstr,s);
+                strcpy(sys.conf[sess.curconf].flagstr,s);
                 changedsl();
                 break;
             case 'Y':
@@ -175,8 +183,8 @@ void msgcommand(char type,char ms[40])
                 gnscan(); 
                 break;
             case 'N':  
-                logtypes(1,"NewScaned Message Area 4%s",subboards[usub[cursub].subnum].name);
-                nscan(usub[cursub].subnum,&i); 
+                logtypes(1,"NewScaned Message Area 4%s",sys.subboards[sess.usub[sess.cursub].subnum].name);
+                nscan(sess.usub[sess.cursub].subnum,&i); 
                 break;
             }
         }
@@ -188,7 +196,7 @@ void msgcommand(char type,char ms[40])
         readmailj(atoi(ms),0); 
         break;
     case 'E': 
-        cursub=0; 
+        sess.cursub=0; 
         smail(ms);
         break;
     case 'U': 
@@ -249,7 +257,7 @@ void othercmd(char type,char ms[40])
         if(s[0]) readform(ms,s); 
         break;
     case 'C': 
-        if(!(nifty.nifstatus & nif_chattype)) reqchat(ms);
+        if(!(sys.nifty.nifstatus & nif_chattype)) reqchat(ms);
         else reqchat1(ms); 
         break;
     case 'U': 
@@ -312,15 +320,15 @@ void othercmd(char type,char ms[40])
             input_ansistat(); 
             break;
         case '3': 
-            if (thisuser.sysstatus & sysstatus_pause_on_page)
-                thisuser.sysstatus ^= sysstatus_pause_on_page;
+            if (sess.user.sysstatus & sysstatus_pause_on_page)
+                sess.user.sysstatus ^= sysstatus_pause_on_page;
             prt(5,"Pause each screenfull? ");
-            if (yn()) thisuser.sysstatus |= sysstatus_pause_on_page;
+            if (yn()) sess.user.sysstatus |= sysstatus_pause_on_page;
             nl();
-            if (thisuser.sysstatus & sysstatus_pause_on_message)
-                thisuser.sysstatus ^= sysstatus_pause_on_message;
+            if (sess.user.sysstatus & sysstatus_pause_on_message)
+                sess.user.sysstatus ^= sysstatus_pause_on_message;
             prt(5,"Pause each screenfull while reading messages? ");
-            if (yn()) thisuser.sysstatus |= sysstatus_pause_on_message;
+            if (yn()) sess.user.sysstatus |= sysstatus_pause_on_message;
             break;
         case '4': 
             modify_mailbox(); 
@@ -339,7 +347,7 @@ void othercmd(char type,char ms[40])
             break;
         case '9': 
             outstr("5Use the FullScreen Editor? ");
-            thisuser.defed=yn();
+            sess.user.defed=yn();
             break;
         case '0': 
             getmsgformat(); 
@@ -347,7 +355,7 @@ void othercmd(char type,char ms[40])
         case 'A': 
             pl("Enter your Default Protocol, 0 for none.");
             i=get_protocol(1); 
-            if(i>=0||i==-2) thisuser.defprot=i;
+            if(i>=0||i==-2) sess.user.defprot=i;
             break;
         case 'B': 
             configpldn(0); 
@@ -368,18 +376,18 @@ void othercmd(char type,char ms[40])
 #endif
             break;
         case 'G': 
-            change_colors(&thisuser);  
+            change_colors(&sess.user);  
             break;
         case 'H': 
-            inputdat("Enter your Comment",s,sizeof(thisuser.comment),1);
-            if(s[0]) strcpy(thisuser.comment,s);
+            inputdat("Enter your Comment",s,sizeof(sess.user.comment),1);
+            if(s[0]) strcpy(sess.user.comment,s);
             break;
         case 'J': 
-            if(thisuser.sysstatus & sysstatus_fullline)
-                thisuser.sysstatus ^= sysstatus_fullline;
+            if(sess.user.sysstatus & sysstatus_fullline)
+                sess.user.sysstatus ^= sysstatus_fullline;
             npr("5Would you like Hotkey Input? ");
             if(!ny())
-                thisuser.sysstatus |= sysstatus_fullline;
+                sess.user.sysstatus |= sysstatus_fullline;
             nl();
             break;
         }
@@ -413,13 +421,13 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
         switch(type[1]) {
         case 'Z': 
             inputdat("Enter Path to Use (Include Trailing Backslash)",s,60,1);
-            insert_dir(umaxdirs,s,99,0);
-            udir[umaxdirs].subnum=umaxdirs;
-            curdir=umaxdirs;
+            insert_dir(sess.umaxdirs,s,99,0);
+            sess.udir[sess.umaxdirs].subnum=sess.umaxdirs;
+            sess.curdir=sess.umaxdirs;
             logtypes(3,"Created temporary path in 3%s",s);
             break;
         case 'M': 
-            mark(curdir); 
+            mark(sess.curdir); 
             break;
         case 'L': 
             listfiles(ms); 
@@ -441,7 +449,7 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
             break;
         case 'D': 
             if(ms[0]) newdl(atoi(ms)); 
-            else newdl(curdir); 
+            else newdl(sess.curdir); 
             break;
         case 'V': 
             arc_cl(1); 
@@ -465,10 +473,10 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
             nl();
             outstr("5Validate Globally? ");
             if(yn()) {
-                i=curdir;
-                for(curdir=0;curdir<num_dirs&&udir[curdir].subnum>=0;curdir++)
+                i=sess.curdir;
+                for(sess.curdir=0;sess.curdir<sys.num_dirs&&sess.udir[sess.curdir].subnum>=0;sess.curdir++)
                     valfiles();
-                curdir=i;
+                sess.curdir=i;
             } 
             else valfiles();
             break;
@@ -515,8 +523,8 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
             abort=0;
             if(ms[0]=='C') {
                 setformat();
-                nscandir(curdir,&abort,0,&i);
-                logtypes(1,"NewScaned File Area %s",directories[udir[curdir].subnum].name);
+                nscandir(sess.curdir,&abort,0,&i);
+                logtypes(1,"NewScaned File Area %s",sys.directories[sess.udir[sess.curdir].subnum].name);
                 break;
             }
             if(ms[0]=='G') {
@@ -525,12 +533,12 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
                 break;
             } 
             else if(ms[0]=='A') {
-                strcpy(s,sys.conf[curconf].flagstr);
-                strcpy(sys.conf[curconf].flagstr,"@");
+                strcpy(s,sys.conf[sess.curconf].flagstr);
+                strcpy(sys.conf[sess.curconf].flagstr,"@");
                 changedsl();
                 logtypes(1,"NewScaned File Areas on All Conferences");
                 nscanall();
-                strcpy(sys.conf[curconf].flagstr,s);
+                strcpy(sys.conf[sess.curconf].flagstr,s);
                 changedsl();
             }
             else if(!ms[0]) {
@@ -539,12 +547,12 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
                 c=onek("\rYNA");
                 switch(c) {
                 case 'A': 
-                    strcpy(s,sys.conf[curconf].flagstr);
-                    strcpy(sys.conf[curconf].flagstr,"@");
+                    strcpy(s,sys.conf[sess.curconf].flagstr);
+                    strcpy(sys.conf[sess.curconf].flagstr,"@");
                     changedsl();
                     logtypes(1,"NewScaned File Areas on All Conferences");
                     nscanall();
-                    strcpy(sys.conf[curconf].flagstr,s);
+                    strcpy(sys.conf[sess.curconf].flagstr,s);
                     changedsl();
                     break;
                 case 'Y':
@@ -553,8 +561,8 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
                     nscanall(); 
                     break;
                 case 'N':  
-                    nscandir(curdir,&abort,0,&i);
-                    logtypes(1,"NewScaned File Area %s",directories[udir[curdir].subnum].name);
+                    nscandir(sess.curdir,&abort,0,&i);
+                    logtypes(1,"NewScaned File Area %s",sys.directories[sess.udir[sess.curdir].subnum].name);
                 }
             }
             break;
@@ -596,8 +604,8 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
         switch(type[1])
         {
         case 'F': 
-            if(ms[0]) strcpy(pp.format,ms);
-            readmnufmt(pp);
+            if(ms[0]) strcpy(sess.pp.format,ms);
+            readmnufmt(sess.pp);
             break;
         case 'G': 
             p=strtok(ms,",;");
@@ -615,83 +623,83 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
             jumpconf(ms); 
             break;
         case ']': 
-            curconf++; 
-            if(curconf>=num_conf) curconf=0;
+            sess.curconf++; 
+            if(sess.curconf>=sys.num_conf) sess.curconf=0;
             changedsl();
             break;
         case '[': 
-            curconf--; 
-            if(curconf<0) curconf=num_conf-1;
+            sess.curconf--; 
+            if(sess.curconf<0) sess.curconf=sys.num_conf-1;
             changedsl();
             break;
         case '/': 
             nl();
-            if(mdepth+1>9) {
-                mdepth=2;
-                strcpy(mstack[0],nifty.firstmenu);
-                strcpy(mstack[1],menuat);
+            if(sess.mdepth+1>9) {
+                sess.mdepth=2;
+                strcpy(sess.mstack[0],sys.nifty.firstmenu);
+                strcpy(sess.mstack[1],sess.menuat);
             } 
             else
-                strcpy(mstack[mdepth++],menuat);
+                strcpy(sess.mstack[sess.mdepth++],sess.menuat);
             if(!readmenu(ms))
-                readmenu(mstack[--mdepth]);
+                readmenu(sess.mstack[--sess.mdepth]);
             return 0;
         case '\\': 
             nl();
-            if(mdepth) {
-                if(!read_menu(mstack[--mdepth],0))
-                    readmenu(nifty.firstmenu);
+            if(sess.mdepth) {
+                if(!read_menu(sess.mstack[--sess.mdepth],0))
+                    readmenu(sys.nifty.firstmenu);
             } 
             else {
-                mdepth=0;
-                strcpy(mstack[0],nifty.firstmenu);
-                readmenu(nifty.firstmenu);
+                sess.mdepth=0;
+                strcpy(sess.mstack[0],sys.nifty.firstmenu);
+                readmenu(sys.nifty.firstmenu);
             }
             return 0;
         case '^': 
             nl();
-            mdepth=0;
+            sess.mdepth=0;
             if(!readmenu(ms))
-                readmenu(nifty.firstmenu);
+                readmenu(sys.nifty.firstmenu);
             return 0;
         case '*': 
-            if(ms[0]=='M') cursub=sublist(ms[1]);
-            else if(ms[0]=='F') curdir=dirlist(ms[1]);
+            if(ms[0]=='M') sess.cursub=sublist(ms[1]);
+            else if(ms[0]=='F') sess.curdir=dirlist(ms[1]);
 #ifdef PD
             if(usepldns) pausescr();
 #endif
             break;
         case '+': 
             if(ms[0]=='M') {
-                if(cursub<64 && usub[cursub+1].subnum>=0) {
-                    ++cursub;
-                    msgr++;
+                if(sess.cursub<64 && sess.usub[sess.cursub+1].subnum>=0) {
+                    ++sess.cursub;
+                    sess.msgr++;
                 }
-                else cursub=0;
-                msgr=1;
+                else sess.cursub=0;
+                sess.msgr=1;
             }
             else if(ms[0]=='F') {
-                if(directories[udir[curdir].subnum].type)
+                if(sys.directories[sess.udir[sess.curdir].subnum].type)
                     changedsl();
-                if(curdir<64 && udir[curdir+1].subnum>=0) ++curdir;
-                else curdir=0;
+                if(sess.curdir<64 && sess.udir[sess.curdir+1].subnum>=0) ++sess.curdir;
+                else sess.curdir=0;
             }
             break;
         case '-': 
             if(ms[0]=='M') {
-                if (cursub>0)
-                    --cursub;
+                if (sess.cursub>0)
+                    --sess.cursub;
                 else
-                    while ((usub[cursub+1].subnum>=0) && (cursub<64))
-                    ++cursub;
-                msgr=1;
+                    while ((sess.usub[sess.cursub+1].subnum>=0) && (sess.cursub<64))
+                    ++sess.cursub;
+                sess.msgr=1;
             } 
             else if(ms[0]=='F') {
-                if(directories[udir[curdir].subnum].type)
+                if(sys.directories[sess.udir[sess.curdir].subnum].type)
                     changedsl();
-                if (curdir>0) curdir--;
+                if (sess.curdir>0) sess.curdir--;
                 else
-                    while ((udir[curdir+1].subnum>=0) && (curdir<63)) ++curdir;
+                    while ((sess.udir[sess.curdir+1].subnum>=0) && (sess.curdir<63)) ++sess.curdir;
             }
             break;
         default: 
@@ -716,18 +724,18 @@ void menuman(void)
     char avail[61];
     FILE *ff;
 
-    if(!usepldns&&!(pp.attr & menu_popup)&&!charbufferpointer) {
+    if(!usepldns&&!(sess.pp.attr & menu_popup)&&!charbufferpointer) {
         nl();
         nl();
     }
 
     tleft(1);
 
-    if(usub[cursub].subnum==-1) cursub=0;
-    helpl=thisuser.helplevel;
-    if(pp.helplevel) helpl=pp.helplevel-1;
+    if(sess.usub[sess.cursub].subnum==-1) sess.cursub=0;
+    helpl=sess.user.helplevel;
+    if(sess.pp.helplevel) helpl=sess.pp.helplevel-1;
 #ifdef PD
-    if(!usepldns&&!(pp.attr & menu_popup)&&!charbufferpointer)
+    if(!usepldns&&!(sess.pp.attr & menu_popup)&&!charbufferpointer)
 #endif PD
         switch(helpl) {
         case 0: 
@@ -737,21 +745,21 @@ void menuman(void)
         case 1: 
             ansic(13);
             npr("[0");
-            for(i=0;i<maxcmd;i++)
-                if(!(tg[i].attr==command_pulldown)&&
-                    !(tg[i].attr==command_title)&&
-                    !(tg[i].attr==command_hidden))
-                    npr("%s,",tg[i].key);
+            for(i=0;i<sess.maxcmd;i++)
+                if(!(sess.tg[i].attr==command_pulldown)&&
+                    !(sess.tg[i].attr==command_title)&&
+                    !(sess.tg[i].attr==command_hidden))
+                    npr("%s,",sess.tg[i].key);
             backspace();
             ansic(13);
             npr("]\r\n");
             break;
         }
 
-    if(chatcall&&chatsoundon) chatsound();
+    if(chatcall&&sess.chatsoundon) chatsound();
     memset(s,0,40);
 #ifdef PD
-    if((pp.attr & menu_popup)&&okansi()) {
+    if((sess.pp.attr & menu_popup)&&okansi()) {
         popup("popup");
         strcpy(s,retfrompldn);
     } 
@@ -761,10 +769,10 @@ void menuman(void)
     } 
     else {
 #endif
-        sprintf(s,"%s%s.prm",syscfg.menudir,mmfmt.promptfn);
-        if(exist(s)&&(pp.attr & menu_extprompt)) {
-            if(pp.attr & menu_promptappend)
-                pl(pp.prompt);
+        sprintf(s,"%s%s.prm",sys.cfg.menudir,mmfmt.promptfn);
+        if(exist(s)&&(sess.pp.attr & menu_extprompt)) {
+            if(sess.pp.attr & menu_promptappend)
+                pl(sess.pp.prompt);
             ff=fopen(s,"rt");
             while(fgets(s,161,ff)!=NULL) {
                 filter(s,'\n');
@@ -773,28 +781,28 @@ void menuman(void)
             fclose(ff);
         } 
         else
-            outstr(pp.prompt);
+            outstr(sess.pp.prompt);
         begx=wherex();
         i1=c=0;
-        for(i=0;i<maxcmd;i++) {
-            if(tg[i].key[0]=='#') i1=1;
+        for(i=0;i<sess.maxcmd;i++) {
+            if(sess.tg[i].key[0]=='#') i1=1;
             else {
-                if(strlen(tg[i].key)==1)
-                    avail[c++]=tg[i].key[0];
-                else if(strlen(tg[i].key)==2&&tg[i].key[0]=='/')
-                    avail[c++]=tg[i].key[1];
+                if(strlen(sess.tg[i].key)==1)
+                    avail[c++]=sess.tg[i].key[0];
+                else if(strlen(sess.tg[i].key)==2&&sess.tg[i].key[0]=='/')
+                    avail[c++]=sess.tg[i].key[1];
             }
         }
         avail[c++]='?';
         avail[c]=0;
 
-        if(pp.boarder==0) {
-            if(thisuser.sysstatus & sysstatus_fullline)
+        if(sess.pp.boarder==0) {
+            if(sess.user.sysstatus & sysstatus_fullline)
                 ss=smkey(avail,i1,1,1,1);
             else
                 ss=smkey(avail,i1,1,0,0);
         } 
-        else if(pp.boarder==1)
+        else if(sess.pp.boarder==1)
             ss=smkey(avail,i1,1,0,0);
         else
             input(ss,51);
@@ -807,13 +815,13 @@ void menuman(void)
 #endif
 
     if(!s[0]) {
-        for(cmd=0;cmd<maxcmd;cmd++) {
-            if(tg[cmd].attr==command_default)
-                if(!ex(tg[cmd].type,tg[cmd].ms)) cmd=maxcmd;
+        for(cmd=0;cmd<sess.maxcmd;cmd++) {
+            if(sess.tg[cmd].attr==command_default)
+                if(!ex(sess.tg[cmd].type,sess.tg[cmd].ms)) cmd=sess.maxcmd;
         }
     } 
     else if((!strcmp(s,"AVAIL"))) {
-        for(i=0;i<maxcmd;i++) if(slok(tg[i].sl,1)) npr("2%s0,",tg[i].key);
+        for(i=0;i<sess.maxcmd;i++) if(slok(sess.tg[i].sl,1)) npr("2%s0,",sess.tg[i].key);
         backspace();
         nl();
     } 
@@ -821,7 +829,7 @@ void menuman(void)
         if((!strcmp(s,"HELP"))) {
             printmenu(7);
 #ifdef PD
-            if(usepldns||(pp.attr & menu_popup)) pausescr();
+            if(usepldns||(sess.pp.attr & menu_popup)) pausescr();
 #endif
         } 
     else
@@ -832,13 +840,13 @@ void menuman(void)
     } 
     else
 #endif
-        if((!strcmp(s,"SPEED"))) npr("ComSpeed=%d, ModemSpeed=%d\r\n",com_speed,modem_speed); 
+        if((!strcmp(s,"SPEED"))) npr("ComSpeed=%d, ModemSpeed=%d\r\n",sess.com_speed,sess.modem_speed); 
     else
         if((!strcmp(s,"RELOAD"))) {
-            if(actsl<=syscfg.newusersl)
-                readmenu(nifty.newusermenu);
+            if(sess.actsl<=sys.cfg.newusersl)
+                readmenu(sys.nifty.newusermenu);
             else
-                readmenu(nifty.firstmenu);
+                readmenu(sys.nifty.firstmenu);
         }  
     else if((!strcmp(s,"VER"))) {
         nl();
@@ -891,33 +899,33 @@ void handleinput(char *s,int begx)
 {
     int i,i1,c;
 
-    for(i=0;i<maxcmd&&!hangup;i++) {
-        c=slok(tg[i].sl,0);
+    for(i=0;i<sess.maxcmd&&!hangup;i++) {
+        c=slok(sess.tg[i].sl,0);
         if(!c)
             continue;
 
-        if(!strcmp(tg[i].key,s)||!strcmp(tg[i].key,"@")) {
-            if(!usepldns&&!(pp.attr & menu_popup)) {
+        if(!strcmp(sess.tg[i].key,s)||!strcmp(sess.tg[i].key,"@")) {
+            if(!usepldns&&!(sess.pp.attr & menu_popup)) {
                 while(wherex()>begx)
                     backspace();
-                pl(tg[i].line);
+                pl(sess.tg[i].line);
             }
 
-            if(!ex(tg[i].type,tg[i].ms))
+            if(!ex(sess.tg[i].type,sess.tg[i].ms))
                 return;
 
         } 
-        else if(!strcmp(tg[i].key,"#")) {
+        else if(!strcmp(sess.tg[i].key,"#")) {
 
-            if(tg[i].ms[0]=='M') {
+            if(sess.tg[i].ms[0]=='M') {
                 for(i1=0; i1<MAX_SUBS; i1++)
-                    if(!strcmp(usub[i1].keys,s))
-                        cursub=i1;
+                    if(!strcmp(sess.usub[i1].keys,s))
+                        sess.cursub=i1;
             } 
-            else if(tg[i].ms[0]=='F') {
+            else if(sess.tg[i].ms[0]=='F') {
                 for(i1=0; i1<MAX_DIRS; i1++)
-                    if(!strcmp(udir[i1].keys,s))
-                        curdir=i1;
+                    if(!strcmp(sess.udir[i1].keys,s))
+                        sess.curdir=i1;
             }
         }
     }

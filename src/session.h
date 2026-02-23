@@ -1,9 +1,9 @@
 /*
- * session.h — Per-session state struct (Phase B)
+ * session.h — Per-session state singleton (Phase C: kill vars.h)
  *
  * Every per-session global lives here. System-wide config/state stays
- * in vars.h. Existing code compiles unchanged via compatibility macros
- * in vars.h (#define thisuser session.user, etc.).
+ * in System. Previously accessed via compatibility macros in vars.h
+ * (#define thisuser session.user, etc.) — now accessed directly.
  *
  * Layer 3: depends on io_stream.h, vardec_user.h, vardec_ui.h
  */
@@ -17,7 +17,10 @@
 #include "vardec_ui.h"
 #include "io_stream.h"
 
-typedef struct {
+class Session {
+public:
+    static Session& instance();
+
     io_session_t io;            /* I/O, screen, parser, capabilities */
 
     /* User identity */
@@ -82,15 +85,14 @@ typedef struct {
 
     /* Misc */
     unsigned short com_speed, modem_speed;
-} session_t;
 
-extern session_t session;
-void session_init(session_t *s);
+private:
+    Session();
+};
 
-/* Compatibility: 'io' now lives inside session.
- * io_stream.h macros like #define hangup io.hangup chain through this:
- *   hangup -> io.hangup -> session.io.hangup
+/* Compatibility: io_stream.h macros like #define hangup io.hangup chain through:
+ *   hangup -> io.hangup -> Session::instance().io.hangup
  */
-#define io session.io
+#define io Session::instance().io
 
 #endif /* _SESSION_H_ */

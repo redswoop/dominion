@@ -1,10 +1,18 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
+#include "version.h"
 #pragma hdrstop
 
 #define frequency 500
 
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 int begxx,begyy;
-/* menuat now in vars.h (Phase B0) */
+/* sess.menuat now in vars.h (Phase B0) */
 
 void bbsCRC(void)
 {
@@ -35,7 +43,7 @@ int cs()
 {
     slrec ss;
 
-    ss=syscfg.sl[actsl];
+    ss=sys.cfg.sl[sess.actsl];
     if (so())
         return(1);
     if ((ss.ability & ability_cosysop)||checkacs(8))
@@ -49,13 +57,13 @@ int lcs()
 {
     slrec ss;
 
-    ss=syscfg.sl[actsl];
+    ss=sys.cfg.sl[sess.actsl];
     if (cs())
         return(1);
     if (ss.ability & ability_limited_cosysop) {
-        if (thisuser.subop==255)
+        if (sess.user.subop==255)
             return(1);
-        if (thisuser.subop==usub[cursub].subnum)
+        if (sess.user.subop==sess.usub[sess.cursub].subnum)
             return(1);
         else
             return(0);
@@ -367,13 +375,13 @@ void set_autoval(int n)
 {
     valrec v;
 
-    v=syscfg.autoval[n];
+    v=sys.cfg.autoval[n];
 
-    thisuser.sl=v.sl;
-    thisuser.dsl=v.dsl;
-    thisuser.ar=v.ar;
-    thisuser.dar=v.dar;
-    thisuser.restrict=v.restrict;
+    sess.user.sl=v.sl;
+    sess.user.dsl=v.dsl;
+    sess.user.ar=v.ar;
+    sess.user.dar=v.dar;
+    sess.user.restrict=v.restrict;
     reset_act_sl();
     changedsl();
 }
@@ -462,36 +470,36 @@ void val_cur_user(int wait)
     char nsave[41];
 
 
-    strcpy(nsave,thisuser.name);
+    strcpy(nsave,sess.user.name);
 
     if(wait) pr_wait(1);
-    thisuser.sl=actsl;
-    savescreen(&screensave);
+    sess.user.sl=sess.actsl;
+    savescreen(&sess.screensave);
     curatr=11;
     ansic(3);
     fastscreen("top.bin");
-    itoa((int)thisuser.sl,sl,10);
-    itoa((int)thisuser.dsl,dsl,10);
-    itoa((int)thisuser.dk,dk,10);
-    itoa((int)thisuser.uk,uk,10);
-    itoa((int)thisuser.downloaded,ndl,10);
-    itoa((int)thisuser.uploaded,nul,10);
-    itoa((int)thisuser.fpts,fpts,10);
-    itoa((int)thisuser.msgpost,psts,10);
-    itoa((int)thisuser.logons,lgns,10);
-    itoa((int)thisuser.timebank,timebank,10);
+    itoa((int)sess.user.sl,sl,10);
+    itoa((int)sess.user.dsl,dsl,10);
+    itoa((int)sess.user.dk,dk,10);
+    itoa((int)sess.user.uk,uk,10);
+    itoa((int)sess.user.downloaded,ndl,10);
+    itoa((int)sess.user.uploaded,nul,10);
+    itoa((int)sess.user.fpts,fpts,10);
+    itoa((int)sess.user.msgpost,psts,10);
+    itoa((int)sess.user.logons,lgns,10);
+    itoa((int)sess.user.timebank,timebank,10);
     strcpy(ex,"");
 
     for (i=0; i<=15; i++) {
-        if (thisuser.ar & (1 << i))
+        if (sess.user.ar & (1 << i))
             ar[i]='A'+i;
         else
             ar[i]=32;
-        if (thisuser.dar & (1 << i))
+        if (sess.user.dar & (1 << i))
             dar[i]='A'+i;
         else
             dar[i]=32;
-        if (thisuser.restrict & (1 << i))
+        if (sess.user.restrict & (1 << i))
             restrict[i]=restrict_string[i];
         else
             restrict[i]=32;
@@ -505,13 +513,13 @@ void val_cur_user(int wait)
 
     curatr=15;
 
-    outsat(thisuser.name,16,2);
-    outsat(thisuser.realname,53,2);
+    outsat(sess.user.name,16,2);
+    outsat(sess.user.realname,53,2);
     outsat(sl,16,3);
     outsat(dsl,53,3);
     outsat(ar,16,4);
     outsat(dar,53,4);
-    outsat(thisuser.phone,16,5);
+    outsat(sess.user.phone,16,5);
     outsat(restrict,53,5);
     outsat(nul,16,6);
     outsat(ndl,53,6);
@@ -522,134 +530,134 @@ void val_cur_user(int wait)
     outsat(fpts,16,9);
     outsat(timebank,53,9);
 
-    outsat(thisuser.city,16,15);
-    outsat(thisuser.street,16,16);
-    outsat(thisuser.comment,16,17);
-    outsat(thisuser.note,16,18);
+    outsat(sess.user.city,16,15);
+    outsat(sess.user.street,16,16);
+    outsat(sess.user.comment,16,17);
+    outsat(sess.user.note,16,18);
 
-    clickat(thisuser.inact,inact_deleted,25,11);
-    clickat(thisuser.inact,inact_deleted,41,11);
+    clickat(sess.user.inact,inact_deleted,25,11);
+    clickat(sess.user.inact,inact_deleted,41,11);
 
-    clickat(thisuser.sysstatus,sysstatus_ansi,22,12);
-    clickat(thisuser.sysstatus,sysstatus_avatar,34,12);
-    clickat(thisuser.sysstatus,sysstatus_color,45,12);
-    clickat(thisuser.sysstatus,sysstatus_rip,54,12);
+    clickat(sess.user.sysstatus,sysstatus_ansi,22,12);
+    clickat(sess.user.sysstatus,sysstatus_avatar,34,12);
+    clickat(sess.user.sysstatus,sysstatus_color,45,12);
+    clickat(sess.user.sysstatus,sysstatus_rip,54,12);
 
-    clickat(thisuser.exempt,exempt_time,22,13);
-    clickat(thisuser.exempt,exempt_ratio,32,13);
-    clickat(thisuser.exempt,exempt_post,41,13);
-    clickat(thisuser.exempt,exempt_userlist,54,13);
+    clickat(sess.user.exempt,exempt_time,22,13);
+    clickat(sess.user.exempt,exempt_ratio,32,13);
+    clickat(sess.user.exempt,exempt_post,41,13);
+    clickat(sess.user.exempt,exempt_userlist,54,13);
 
     while (done==0) {
         switch(cp) {
         case 1: 
-            editdata(thisuser.name,25,16,2);
-            strupr(thisuser.name);
+            editdata(sess.user.name,25,16,2);
+            strupr(sess.user.name);
             break;
         case 2: 
-            editdata(thisuser.realname,25,53,2);
+            editdata(sess.user.realname,25,53,2);
             break;
         case 3: 
-            thisuser.sl=editdig(sl,3,16,3);
-            actsl=thisuser.sl; 
+            sess.user.sl=editdig(sl,3,16,3);
+            sess.actsl=sess.user.sl; 
             break;
         case 4: 
-            thisuser.dsl=editdig(dsl,3,53,3);
+            sess.user.dsl=editdig(dsl,3,53,3);
             break;
         case 5: 
             movecsr(16-1,4-1);
             editline(ar,16,SET,&rc,"ABCDEFGHIJKLMNOP");
-            thisuser.ar=0;
+            sess.user.ar=0;
             for (i=0; i<=15; i++)
-                if (ar[i]!=' ') thisuser.ar |= (1 << i);
+                if (ar[i]!=' ') sess.user.ar |= (1 << i);
             break;
         case 6: 
             movecsr(53-1,4-1);
             editline(dar,16,SET,&rc,"ABCDEFGHIJKLMNOP");
-            thisuser.dar=0;
+            sess.user.dar=0;
             for (i=0; i<=15; i++)
-                if (dar[i]!=' ') thisuser.dar |= (1 << i);
+                if (dar[i]!=' ') sess.user.dar |= (1 << i);
             break;
         case 7:
-            editdata(thisuser.phone,12,16,5);
+            editdata(sess.user.phone,12,16,5);
             break;
         case 8: 
             movecsr(53-1,5-1);
             editline(restrict,16,SET,&rc,restrict_string);
-            thisuser.restrict=0;
+            sess.user.restrict=0;
             for (i=0; i<=15; i++)
-                if (restrict[i]!=' ') thisuser.restrict |= (1 << i);
+                if (restrict[i]!=' ') sess.user.restrict |= (1 << i);
             break;
         case 9: 
-            thisuser.uploaded=editdig(nul,5,16,6);
+            sess.user.uploaded=editdig(nul,5,16,6);
             break;
         case 10: 
-            thisuser.downloaded=editdig(ndl,5,53,6);
+            sess.user.downloaded=editdig(ndl,5,53,6);
             break;
         case 11: 
-            thisuser.uk=editdig(uk,5,16,7);
+            sess.user.uk=editdig(uk,5,16,7);
             break;
         case 12: 
-            thisuser.dk=editdig(dk,5,53,7);
+            sess.user.dk=editdig(dk,5,53,7);
             break;
         case 13: 
-            thisuser.logons=editdig(lgns,5,16,8);
+            sess.user.logons=editdig(lgns,5,16,8);
             break;
         case 14: 
-            thisuser.msgpost=editdig(psts,5,53,8);
+            sess.user.msgpost=editdig(psts,5,53,8);
             break;
         case 15: 
-            thisuser.fpts=editdig(fpts,5,16,9);
+            sess.user.fpts=editdig(fpts,5,16,9);
             break;
         case 16: 
-            thisuser.timebank=editdig(timebank,3,53,9);
+            sess.user.timebank=editdig(timebank,3,53,9);
             break;
 
         case 17:
-            rc=click((long *)&thisuser.inact,inact_deleted,25,11);
+            rc=click((long *)&sess.user.inact,inact_deleted,25,11);
             break;
         case 18:
-            rc=click((long *)&thisuser.inact,inact_deleted,41,11);
+            rc=click((long *)&sess.user.inact,inact_deleted,41,11);
             break;
 
         case 19:
-            rc=click((long *)&thisuser.sysstatus,sysstatus_ansi,22,12);
+            rc=click((long *)&sess.user.sysstatus,sysstatus_ansi,22,12);
             break;
         case 20:
-            rc=click((long *)&thisuser.sysstatus,sysstatus_avatar,34,12);
+            rc=click((long *)&sess.user.sysstatus,sysstatus_avatar,34,12);
             break;
         case 21:
-            rc=click((long *)&thisuser.sysstatus,sysstatus_color,45,12);
+            rc=click((long *)&sess.user.sysstatus,sysstatus_color,45,12);
             break;
         case 22:
-            rc=click((long *)&thisuser.sysstatus,sysstatus_rip,54,12);
+            rc=click((long *)&sess.user.sysstatus,sysstatus_rip,54,12);
             break;
 
 
         case 23:
-            rc=click((long *)&thisuser.exempt,exempt_time,22,13);
+            rc=click((long *)&sess.user.exempt,exempt_time,22,13);
             break;
         case 24:
-            rc=click((long *)&thisuser.exempt,exempt_ratio,32,13);
+            rc=click((long *)&sess.user.exempt,exempt_ratio,32,13);
             break;
         case 25:
-            rc=click((long *)&thisuser.exempt,exempt_post,41,13);
+            rc=click((long *)&sess.user.exempt,exempt_post,41,13);
             break;
         case 26:
-            rc=click((long *)&thisuser.exempt,exempt_userlist,54,13);
+            rc=click((long *)&sess.user.exempt,exempt_userlist,54,13);
             break;
 
         case 27:
-            editdata(thisuser.city,53,16,15);
+            editdata(sess.user.city,53,16,15);
             break;
         case 28:
-            editdata(thisuser.street,53,16,16);
+            editdata(sess.user.street,53,16,16);
             break;
         case 29:
-            editdata(thisuser.comment,53,16,17);
+            editdata(sess.user.comment,53,16,17);
             break;
         case 30:
-            editdata(thisuser.note,53,16,18);
+            editdata(sess.user.note,53,16,18);
             break;
         }
         switch(rc) {
@@ -668,10 +676,10 @@ void val_cur_user(int wait)
         }
     }
 
-    restorescreen(&screensave);
+    restorescreen(&sess.screensave);
     changedsl();
 
-    if(strcmp(nsave,thisuser.name))
+    if(strcmp(nsave,sess.user.name))
         reset_files(0);
 
     if(wait) pr_wait(0);

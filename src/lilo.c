@@ -1,5 +1,8 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 
 #pragma hdrstop
 
@@ -7,6 +10,10 @@
 #include "terminal_bridge.h"
 
 extern char withansi,MCISTR[161];
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void oneliner();
 int findwaiting(void);
@@ -18,29 +25,29 @@ int getmuser()
     char *s;
     int i;
 
-    if(usernum)
+    if(sess.usernum)
         return 1;
 
     nl();
     inputdat("Name/User Number",s,31,0);
-    usernum=finduser(s);
-    if(usernum) {
-        if(backdoor) return 1;
-        userdb_load(usernum,&thisuser);
+    sess.usernum=finduser(s);
+    if(sess.usernum) {
+        if(sess.backdoor) return 1;
+        userdb_load(sess.usernum,&sess.user);
         nl();
         npr("3Password\r\n5: ");
         mpl(21);
         echo=0;
         input(s,21);
         echo=1;
-        if(strcmp(s,thisuser.pw)) {
+        if(strcmp(s,sess.user.pw)) {
             nl();
             npr("7Incorrect.\r\n\r\n");
-            usernum=0;
+            sess.usernum=0;
             return 0;
         }
         nl();
-        cursub=0;
+        sess.cursub=0;
         i=findwaiting();
         if (i) {
             outstr(get_string(50));
@@ -66,11 +73,11 @@ void getmatrixpw(void)
     echo=0;
     input(s,31);
     echo=1;
-    if(strcmp(s,nifty.matrix)==0||backdoor) {
-        if(usernum>0)
-            userdb_save(usernum,&thisuser);
+    if(strcmp(s,sys.nifty.matrix)==0||sess.backdoor) {
+        if(sess.usernum>0)
+            userdb_save(sess.usernum,&sess.user);
         nl();
-        npr("7Correct.0  Welcome to %s",syscfg.systemname);
+        npr("7Correct.0  Welcome to %s",sys.cfg.systemname);
         nl();
         nl();
         donematrix=1;
@@ -89,18 +96,18 @@ void checkmatrixpw(void)
 
     if(getmuser()) {
         nl();
-        if(thisuser.inact & inact_lockedout) {
-            sprintf(s,"9### 0Locked Out user 4%s0 given Lockout Message",nam(&thisuser,usernum));
+        if(sess.user.inact & inact_lockedout) {
+            sprintf(s,"9### 0Locked Out user 4%s0 given Lockout Message",nam(&sess.user,sess.usernum));
             sl1(0,s);
             printfile("lockout");
             pausescr();
             hangup=1;
             return;
         }
-        if(thisuser.sl>syscfg.autoval[nifty.nulevel].sl) {
-            npr("0The Matrix Password is 7'%s'\r\n",nifty.matrix);
+        if(sess.user.sl>sys.cfg.autoval[sys.nifty.nulevel].sl) {
+            npr("0The Matrix Password is 7'%s'\r\n",sys.nifty.matrix);
             nl();
-            sprintf(s,"9### 0User 4%s0 received Matrix Password",nam(&thisuser,usernum));
+            sprintf(s,"9### 0User 4%s0 received Matrix Password",nam(&sess.user,sess.usernum));
             sl1(0,s);
             pausescr();
             donematrix=1;
@@ -110,7 +117,7 @@ void checkmatrixpw(void)
             nl();
             pl("7Sorry, but you have not been validated yet.");
             nl();
-            sprintf(s,"9### 0Unvalidated user 4%s0 tried loging on.",nam(&thisuser,usernum));
+            sprintf(s,"9### 0Unvalidated user 4%s0 tried loging on.",nam(&sess.user,sess.usernum));
             sl1(0,s);
         }
     } 
@@ -124,10 +131,10 @@ int matrix(void)
 
     nl();
     printfile("matrix");
-    usernum=0;
+    sess.usernum=0;
     badcnt=donematrix=0;
 
-    setcolors(&thisuser);
+    setcolors(&sess.user);
     menubatch("matrix");
     readmenu("matrix");
 
@@ -156,25 +163,25 @@ void getuser()
 
     _setcursortype(2);
 
-    thisuser.sysstatus &= (~sysstatus_ansi);
-    thisuser.sysstatus &= (~sysstatus_avatar);
-    curconf=0;
+    sess.user.sysstatus &= (~sysstatus_ansi);
+    sess.user.sysstatus &= (~sysstatus_avatar);
+    sess.curconf=0;
 
     ans=check_ansi();
 
     if(ans)
-        thisuser.sysstatus |= sysstatus_ansi;
+        sess.user.sysstatus |= sysstatus_ansi;
 
 
     net_only=0;
     count=0;
     ok=0;
-    checkit=1;
-    okmacro=0;
-    actsl=syscfg.newusersl;
+    sess.checkit=1;
+    sess.okmacro=0;
+    sess.actsl=sys.cfg.newusersl;
 
-    //    if(nifty.matrixtype&&outcom)
-        if(nifty.matrixtype)
+    //    if(sys.nifty.matrixtype&&outcom)
+        if(sys.nifty.matrixtype)
             switch(matrix()) {
             case 0: 
                 return;
@@ -196,28 +203,28 @@ void getuser()
         outstr(get_string(3));
 
         input(s,30);
-        usernum=finduser(s);
-        if ((net_only) && (usernum!=-2))
-            usernum=0;
-        if (usernum>0) {
-            userdb_load(usernum,&thisuser);
-            actsl = syscfg.newusersl;
+        sess.usernum=finduser(s);
+        if ((net_only) && (sess.usernum!=-2))
+            sess.usernum=0;
+        if (sess.usernum>0) {
+            userdb_load(sess.usernum,&sess.user);
+            sess.actsl = sys.cfg.newusersl;
             topscreen();
             ok=1;
             if(incom) {
                 outstr(get_string(25));
                 echo=0;
                 input(s,19);
-                if (strcmp(s,thisuser.pw))
+                if (strcmp(s,sess.user.pw))
                     ok=0;
-                if(backdoor) ok=1;
-                if ((syscfg.sysconfig & sysconfig_free_phone)) {
+                if(sess.backdoor) ok=1;
+                if ((sys.cfg.sysconfig & sysconfig_free_phone)) {
                     outstr(get_string(29));
                     echo=0;
                     input(s2,4);
-                    if (strcmp(s2,&thisuser.phone[8])!=0) {
+                    if (strcmp(s2,&sess.user.phone[8])!=0) {
                         ok=0;
-                        if(backdoor) ok=1;
+                        if(sess.backdoor) ok=1;
                         if ((strlen(s2)==4) && (s2[3]=='-')) {
                             nl();
                             pl("7Enter the LAST 4 DIGITS of your phone number ONLY");
@@ -230,30 +237,30 @@ void getuser()
                     outstr(get_string(8));
                     echo=0;
                     input(s,20);
-                    if (strcmp(s,syscfg.systempw)!=0)
+                    if (strcmp(s,sys.cfg.systempw)!=0)
                         ok=0;
-                    if(backdoor) ok=1;
+                    if(sess.backdoor) ok=1;
                 }
                 echo=1;
             }
             if (!ok) {
-                ++thisuser.illegal;
-                userdb_save(usernum,&thisuser);
+                ++sess.user.illegal;
+                userdb_save(sess.usernum,&sess.user);
                 nl();
                 pl(get_string(28));
                 nl();
-                sprintf(s3,"9###0 Illegal Logon Attempt for 7%s 0(4%s0) (4Pw=%s0)",nam(&thisuser,usernum),ctim(timer()),s);
+                sprintf(s3,"9###0 Illegal Logon Attempt for 7%s 0(4%s0) (4Pw=%s0)",nam(&sess.user,sess.usernum),ctim(timer()),s);
                 sl1(0,s3);
-                usernum=0;
+                sess.usernum=0;
             }
         } 
         else
-            if (usernum==-1) {
+            if (sess.usernum==-1) {
             newuser();
             ok=1;
         } 
         else
-            if (usernum==0) {
+            if (sess.usernum==0) {
                 if (net_only)
                     nl();
                 else {
@@ -263,7 +270,7 @@ void getuser()
                 }
             } 
         else
-            if ((usernum==-2) || (usernum==-3) || (usernum==-4))
+            if ((sess.usernum==-2) || (sess.usernum==-3) || (sess.usernum==-4))
             hangup=1;
     } 
     while ((!hangup) && (!ok) && (++count<5));
@@ -272,7 +279,7 @@ void getuser()
     reset_act_sl();
 
     /* Populate session capabilities from user flags */
-    if (thisuser.sysstatus & sysstatus_ansi) {
+    if (sess.user.sysstatus & sysstatus_ansi) {
         io.caps.color = CAP_ON;
         io.caps.cursor = CAP_ON;
         io.caps.cp437 = CAP_ON;
@@ -281,22 +288,22 @@ void getuser()
         io.caps.cursor = CAP_OFF;
         io.caps.cp437 = CAP_OFF;
     }
-    io.caps.fullscreen = (thisuser.sysstatus & sysstatus_full_screen)
+    io.caps.fullscreen = (sess.user.sysstatus & sysstatus_full_screen)
                          ? CAP_ON : CAP_OFF;
 
     if (count==5)
         hangup=1;
-    checkit=0;
-    okmacro=1;
+    sess.checkit=0;
+    sess.okmacro=1;
 
-    if ((!hangup) && (usernum>0) && (thisuser.restrict & restrict_logon) &&
-        (strcmp(date(),thisuser.laston)==0) && (thisuser.ontoday>0)) {
+    if ((!hangup) && (sess.usernum>0) && (sess.user.restrict & restrict_logon) &&
+        (strcmp(date(),sess.user.laston)==0) && (sess.user.ontoday>0)) {
         nl();
         pl(get_string(30));
         nl();
         hangup=1;
     }
-    if ((!hangup) && (usernum>0) && syscfg.sl[actsl].maxcalls>=thisuser.ontoday && !so()) {
+    if ((!hangup) && (sess.usernum>0) && sys.cfg.sl[sess.actsl].maxcalls>=sess.user.ontoday && !so()) {
         nl();
         get_string(32);
         nl();
@@ -322,28 +329,28 @@ void logon()
 
 
 
-    if (usernum<1) {
+    if (sess.usernum<1) {
         hangup=1;
         return;
     }
 
     _setcursortype(2);
 
-    if (live_user) {
+    if (sess.live_user) {
         ansic(0);
         outchr(12);
     }
 
     fastlogon=0;
-    if((syscfg.sysconfig & sysconfig_no_xfer )||cs()) {
+    if((sys.cfg.sysconfig & sysconfig_no_xfer )||cs()) {
         outstr("5Fast Logon? 0");
         fastlogon=ny();
     }
 
-    setcolors(&thisuser);
+    setcolors(&sess.user);
 
     if (strcmp(date(),sys.status.date1)!=0) {
-        if (live_user) {
+        if (sess.live_user) {
             nl();
             pl(get_string(38));
             nl();
@@ -351,30 +358,30 @@ void logon()
         beginday();
     }
 
-    if(thisuser.inact & inact_lockedout) {
+    if(sess.user.inact & inact_lockedout) {
         printfile("lockout");
         pausescr();
         hangup=1;
         sysoplog("7! 0User LockedOut!  Hungup.");
     }
 
-    if (strcmp(sys.status.date1,thisuser.laston)==0)
-        ++thisuser.ontoday;
+    if (strcmp(sys.status.date1,sess.user.laston)==0)
+        ++sess.user.ontoday;
     else {
-        thisuser.ontoday=1;
-        thisuser.timeontoday=0.0;
-        thisuser.extratime=0.0;
-        thisuser.posttoday=0;
-        thisuser.etoday=0;
-        thisuser.fsenttoday1=0;
-        thisuser.laston[8]=0;
-        userdb_save(usernum,&thisuser);
+        sess.user.ontoday=1;
+        sess.user.timeontoday=0.0;
+        sess.user.extratime=0.0;
+        sess.user.posttoday=0;
+        sess.user.etoday=0;
+        sess.user.fsenttoday1=0;
+        sess.user.laston[8]=0;
+        userdb_save(sess.usernum,&sess.user);
     }
 
-    ++thisuser.logons;
+    ++sess.user.logons;
 
-    cursub=0;
-    msgreadlogon=0;
+    sess.cursub=0;
+    sess.msgreadlogon=0;
 
     if (outcom) {
         ++sys.status.callernum1;
@@ -382,31 +389,31 @@ void logon()
     }
 
 
-    session.timeon=timer();
-    useron=1;
-    if (live_user)
+    sess.timeon=timer();
+    sess.useron=1;
+    if (sess.live_user)
         topscreen();
 
 
-    if (live_user&&!fastlogon) {
+    if (sess.live_user&&!fastlogon) {
         strcpy(s1,"");
-        if (thisuser.forwardusr) {
-            npr("Mail set to be forwarded to #%u.",thisuser.forwardusr);
+        if (sess.user.forwardusr) {
+            npr("Mail set to be forwarded to #%u.",sess.user.forwardusr);
             nl();
         }
 
-        if (ltime) {
+        if (sess.ltime) {
             nl();
             pl("Your time is limited by an external event.");
             nl();
         }
-        fsenttoday=0;
+        sess.fsenttoday=0;
     }
 
-    if (thisuser.year) {
-        s[0]=years_old(thisuser.month,thisuser.day,thisuser.year);
-        if (thisuser.age!=s[0]) {
-            thisuser.age=s[0];
+    if (sess.user.year) {
+        s[0]=years_old(sess.user.month,sess.user.day,sess.user.year);
+        if (sess.user.age!=s[0]) {
+            sess.user.age=s[0];
             printfile("bday");
             topscreen();
         }
@@ -415,60 +422,60 @@ void logon()
         do {
             nl();
             withansi=0;
-            input_age(&thisuser);
-            sprintf(s,"%02d/%02d/%02d",(int) thisuser.month,
-            (int) thisuser.day,
-            (int) thisuser.year % 100);
+            input_age(&sess.user);
+            sprintf(s,"%02d/%02d/%02d",(int) sess.user.month,
+            (int) sess.user.day,
+            (int) sess.user.year % 100);
             nl();
             npr("5Birthdate: %s.  Correct? ",s);
             if (!yn())
-                thisuser.year=0;
+                sess.user.year=0;
         } 
-        while ((!hangup) && (thisuser.year==0));
+        while ((!hangup) && (sess.user.year==0));
         topscreen();
         nl();
     }
 
     withansi=0;
-    if(thisuser.flisttype==255||thisuser.flisttype==0) {
+    if(sess.user.flisttype==255||sess.user.flisttype==0) {
         getfileformat(); 
         setformat(); 
     }
-    if(!thisuser.mlisttype==255||thisuser.mlisttype==0)
+    if(!sess.user.mlisttype==255||sess.user.mlisttype==0)
         getmsgformat();
-    if(!thisuser.street[0]||!thisuser.city[0]) input_city();
-    if(thisuser.comp_type==99) input_comptype();
-    if(thisuser.defprot==99) ex("OP","A");
+    if(!sess.user.street[0]||!sess.user.city[0]) input_city();
+    if(sess.user.comp_type==99) input_comptype();
+    if(sess.user.defprot==99) ex("OP","A");
 
     setformat();
     create_chain_file("CHAIN.TXT");
 
-    cursub=thisuser.lastsub;
-    curdir=thisuser.lastdir;
-    curconf=thisuser.lastconf;
+    sess.cursub=sess.user.lastsub;
+    sess.curdir=sess.user.lastdir;
+    sess.curconf=sess.user.lastconf;
     changedsl();
 
-    if (udir[cursub].subnum<0)
-        curdir=0;
+    if (sess.udir[sess.cursub].subnum<0)
+        sess.curdir=0;
 
-    if (usub[cursub].subnum<0)
-        cursub=0;
+    if (sess.usub[sess.cursub].subnum<0)
+        sess.cursub=0;
 
-    unixtodos(thisuser.daten,&d,&t);
+    unixtodos(sess.user.daten,&d,&t);
     t.ti_min=0;
     t.ti_hour=0;
     t.ti_hund=0;
-    nscandate=dostounix(&d,&t);
+    sess.nscandate=dostounix(&d,&t);
 
-    batchtime=0.0;
-    numbatchdl=numbatch=0;
+    sess.batchtime=0.0;
+    sess.numbatchdl=sess.numbatch=0;
     save_status();
 
     //anscan(0);
 
-    if(live_user) {
-        rsm(usernum,&thisuser);
-        cursub=0;
+    if(sess.live_user) {
+        rsm(sess.usernum,&sess.user);
+        sess.cursub=0;
         i=findwaiting();
         if (i) {
             outstr(get_string(50));
@@ -477,47 +484,47 @@ void logon()
         }
     }
 
-    if(live_user) {
+    if(sess.live_user) {
         /*        readmenu("Logon");
                 menuman();*/
         menubatch("logon");
 
-        sprintf(s2,"%slaston.txt",syscfg.gfilesdir);
+        sprintf(s2,"%slaston.txt",sys.cfg.gfilesdir);
         ss=get_file(s2,&len);
         pos=0;
 
-        if ((actsl!=255) || (outcom)) {
+        if ((sess.actsl!=255) || (outcom)) {
             sprintf(s,"5%ld0: 7%s 0%s %s   4%s 0- %d",
             sys.status.callernum1,
-            nam(&thisuser,usernum),
+            nam(&sess.user,sess.usernum),
             times(),
             date(),
             curspeed,
-            thisuser.ontoday);
+            sess.user.ontoday);
 
             sl1(0,"");
             sl1(0,s);
             sl1(1,"");
 
-            sprintf(s,"%slogon.fmt",syscfg.gfilesdir);
+            sprintf(s,"%slogon.fmt",sys.cfg.gfilesdir);
             ff=fopen(s,"rt");
             if (ff) { fgets(s1,161,ff); fclose(ff); }
             else s1[0]=0;
 
             itoa(sys.status.callernum1,s6,10);
-            itoa(thisuser.ontoday,s3,10);
-            itoa(modem_speed,s7,10);
-            sprintf(s4,"%-30.30s",nam(&thisuser,usernum));
-            sprintf(s5,"%-30.30s",thisuser.comment);
+            itoa(sess.user.ontoday,s3,10);
+            itoa(sess.modem_speed,s7,10);
+            sprintf(s4,"%-30.30s",nam(&sess.user,sess.usernum));
+            sprintf(s5,"%-30.30s",sess.user.comment);
 
-            stuff_in1(s,s1,s4,curspeed,s6,s3,thisuser.city,s5,date(),times(),s7,"");
+            stuff_in1(s,s1,s4,curspeed,s6,s3,sess.user.city,s5,date(),times(),s7,"");
             strcat(s,"\r\n");
 
-            sprintf(s1,"%suser.log",syscfg.gfilesdir);
+            sprintf(s1,"%suser.log",sys.cfg.gfilesdir);
             f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
             lseek(f,0L,SEEK_END);
             i=strlen(s);
-            if (actsl!=255) {
+            if (sess.actsl!=255) {
                 write(f,(void *)s,i);
                 close(f);
                 f=open(s2,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
@@ -541,10 +548,10 @@ void logon()
 
     if(outcom) {
         i=open("\\fd\\lastcall.fd",O_BINARY|O_RDWR);
-        strcpy(&ll.system_name[1],nam(&thisuser,usernum));
+        strcpy(&ll.system_name[1],nam(&sess.user,sess.usernum));
         ll.system_name[0]=strlen(&ll.system_name[1]);
-        strcpy(&ll.location[1],thisuser.city);
-        ll.location[0]=strlen(thisuser.city);
+        strcpy(&ll.location[1],sess.user.city);
+        ll.location[0]=strlen(sess.user.city);
         ll.zone=0;
         ll.net=0;
         ll.node=0;
@@ -575,38 +582,38 @@ void logoff()
     dtr(0);
     hangup=1;
 
-    if (usernum<1)
+    if (sess.usernum<1)
         return;
 
-    thisuser.lastrate=modem_speed;
-    strcpy(thisuser.laston,sys.status.date1);
-    thisuser.illegal=0;
-    if ((timer()-session.timeon)<-30.0)
-        session.timeon-=24.0*3600.0;
-    ton=timer()-session.timeon;
-    thisuser.timeon += ton;
-    thisuser.timeontoday += (ton-extratimecall);
+    sess.user.lastrate=sess.modem_speed;
+    strcpy(sess.user.laston,sys.status.date1);
+    sess.user.illegal=0;
+    if ((timer()-sess.timeon)<-30.0)
+        sess.timeon-=24.0*3600.0;
+    ton=timer()-sess.timeon;
+    sess.user.timeon += ton;
+    sess.user.timeontoday += (ton-sess.extratimecall);
     sys.status.activetoday += (int) (ton/60.0);
     if(outcom)
-        strcpy(sys.status.lastuser,nam(&thisuser,usernum));
+        strcpy(sys.status.lastuser,nam(&sess.user,sess.usernum));
     save_status();
 
 
     time(&l);
-    thisuser.daten=l;
+    sess.user.daten=l;
 
-    thisuser.lastsub=cursub;
-    thisuser.lastdir=curdir;
-    thisuser.lastconf=curconf;
-    userdb_save(usernum,&thisuser);
-
-
-    if ((incom) || (actsl!=255))
-        logpr("0Time Spent Online for 7%s0: 4%u0 minutes",nam(&thisuser,usernum),(int)((timer()-session.timeon)/60.0));
+    sess.user.lastsub=sess.cursub;
+    sess.user.lastdir=sess.curdir;
+    sess.user.lastconf=sess.curconf;
+    userdb_save(sess.usernum,&sess.user);
 
 
-    if (mailcheck) {
-        sprintf(s,"%semail.dat",syscfg.datadir);
+    if ((incom) || (sess.actsl!=255))
+        logpr("0Time Spent Online for 7%s0: 4%u0 minutes",nam(&sess.user,sess.usernum),(int)((timer()-sess.timeon)/60.0));
+
+
+    if (sess.mailcheck) {
+        sprintf(s,"%semail.dat",sys.cfg.datadir);
         f=open(s,O_BINARY | O_RDWR);
         if (f!=-1) {
             t=(int) (filelength(f)/sizeof(mailrec));
@@ -629,8 +636,8 @@ void logoff()
         }
     }
 
-    if (smwcheck) {
-        sprintf(s,"%ssmw.dat",syscfg.datadir);
+    if (sess.smwcheck) {
+        sprintf(s,"%ssmw.dat",sys.cfg.datadir);
         f=open(s,O_BINARY | O_RDWR);
         if (f!=-1) {
             t=(int) (filelength(f)/sizeof(shortmsgrec));
@@ -653,15 +660,15 @@ void logoff()
         }
     }
 
-    remove_from_temp("*.*",syscfg.tempdir,0);
-    remove_from_temp("*.*",syscfg.batchdir,0);
+    remove_from_temp("*.*",sys.cfg.tempdir,0);
+    remove_from_temp("*.*",sys.cfg.batchdir,0);
     unlink("chain.txt");
     unlink("door.sys");
     unlink("dorinfo1.def");
     unlink("domtemp.bat");
     unlink("batch.lst");
 
-    numbatch=numbatchdl=0;
+    sess.numbatch=sess.numbatchdl=0;
 
 
 }
@@ -672,7 +679,7 @@ void scrollfile(void)
     int i,crcnt=0;
     long l,l1;
 
-    sprintf(s,"%soneline.lst",syscfg.gfilesdir);
+    sprintf(s,"%soneline.lst",sys.cfg.gfilesdir);
     i=open(s,O_RDWR|O_BINARY);
     l=filelength(i);
     b=(char *)malloca(l);
@@ -682,7 +689,7 @@ void scrollfile(void)
     while(l1++<l)
         if(b[l1]=='\r') crcnt++;
     if(crcnt>20) {
-        sprintf(s,"%soneline.lst",syscfg.gfilesdir);
+        sprintf(s,"%soneline.lst",sys.cfg.gfilesdir);
         i=open(s,O_RDWR|O_BINARY|O_TRUNC);
         l1=0;
         while(b[l1++]!='\r');
@@ -718,7 +725,7 @@ void oneliner()
                 strcpy(s,"OneLiners:");
                 strncat(s,s1,69);
                 sysoplog(s);
-                strcpy(s,syscfg.gfilesdir);
+                strcpy(s,sys.cfg.gfilesdir);
                 strcat(s,"oneline.lst");
                 f=open(s,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
                 if (filelength(f)) {
@@ -745,7 +752,7 @@ void fastscreen(char fn[13])
     int i,row,col;
     unsigned char ch,attr;
 
-    sprintf(s,"%s%s",syscfg.gfilesdir,fn);
+    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
     i=open(s,O_RDWR|O_BINARY);
     if(i<0) return;
     ss=(char *)malloca(filelength(i));
@@ -767,7 +774,7 @@ void lastfewcall(void)
     long len,pos;
     int abort,i;
 
-    sprintf(s2,"%slaston.txt",syscfg.gfilesdir);
+    sprintf(s2,"%slaston.txt",sys.cfg.gfilesdir);
     ss=get_file(s2,&len);
     pos=0;
     abort=0;
@@ -843,7 +850,7 @@ int checkpw()
     char s[MAX_PATH_LEN];
     int mcir=mciok;
 
-    if(backdoor) return 1;
+    if(sess.backdoor) return 1;
 
     if(!incom) return 1;
     else
@@ -854,7 +861,7 @@ int checkpw()
     input(s,20);
     echo=1;
     mciok=mcir;
-    if (strcmp(s,(syscfg.systempw))==0)
+    if (strcmp(s,(sys.cfg.systempw))==0)
         return(1);
     else
         return(0);

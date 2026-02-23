@@ -1,8 +1,15 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 
 #pragma hdrstop
 
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 int external_edit(char *fn1, char *direc, int numlines)
 {
@@ -25,7 +32,7 @@ int okfsed()
 
     if (!okansi())
         ok=0;
-    if (!thisuser.defed)
+    if (!sess.user.defed)
         ok=0;
     return(ok);
 }
@@ -51,10 +58,10 @@ void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],c
     int mcir=mciok;
 
     mciok=1;
-    if(subboards[usub[subnum].subnum].attr & mattr_fidonet)
-        sprintf(s,"%smsgnet%d.fmt",syscfg.gfilesdir,thisuser.mlisttype);
+    if(sys.subboards[sess.usub[subnum].subnum].attr & mattr_fidonet)
+        sprintf(s,"%smsgnet%d.fmt",sys.cfg.gfilesdir,sess.user.mlisttype);
     else
-        sprintf(s,"%smsg%d.fmt",syscfg.gfilesdir,thisuser.mlisttype);
+        sprintf(s,"%smsg%d.fmt",sys.cfg.gfilesdir,sess.user.mlisttype);
 
     if(!exist(s)) {
         npr("By: %-30s, To:%s\r\n",name,to);
@@ -83,7 +90,7 @@ void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],c
             strcat(name,"t");
         }
 
-        strcpy(s4,noc2(subboards[usub[subnum].subnum].name));
+        strcpy(s4,noc2(sys.subboards[sess.usub[subnum].subnum].name));
         sprintf(s2,"%3d",reading);
         sprintf(s3,"%3d",msg_total);
 
@@ -117,7 +124,7 @@ void getorigin(int origin, originrec *orig)
     int i;
     char s[MAX_PATH_LEN];
 
-    sprintf(s,"%sorigin.dat",syscfg.datadir);
+    sprintf(s,"%sorigin.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR);
     lseek(i,sizeof(originrec)*origin,0);
     read(i,orig,sizeof(originrec));
@@ -144,7 +151,7 @@ void upload_post()
         return;
     } 
 
-    sprintf(s,"%smsgtmp",syscfg.tempdir);
+    sprintf(s,"%smsgtmp",sys.cfg.tempdir);
 
     nl();
     npr("You may now upload a message.");
@@ -153,7 +160,7 @@ void upload_post()
     f=open(s,O_RDWR | O_BINARY);
     if (f>0) {
         close(f);
-        use_workspace=1;
+        sess.use_workspace=1;
         nl();
     } 
     else {
@@ -173,7 +180,7 @@ void extract_out(char *b, long len, hdrinfo *hdr)
     do {
         inputdat("Filename to save as",s1,12,0);
         if (s1[0]) {
-            sprintf(s2,"%s%s",syscfg.gfilesdir,s1);
+            sprintf(s2,"%s%s",sys.cfg.gfilesdir,s1);
             if (exist(s2)) {
                 nl();
                 pl("Filename already in use.");
@@ -256,15 +263,15 @@ void load_workspace(char *fnx, int no_edit)
     close(i5);
     if (b[l-1]!=26)
         b[l++]=26;
-    sprintf(s,"%smsgtmp",syscfg.tempdir);
+    sprintf(s,"%smsgtmp",sys.cfg.tempdir);
     i5=open(s,O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
     write(i5, (void *)b,l);
     close(i5);
     farfree(b);
     if ((no_edit))
-        use_workspace=1;
+        sess.use_workspace=1;
     else
-        use_workspace=0;
+        sess.use_workspace=0;
     nl();
     pl("File loaded into workspace.");
     nl();
@@ -276,14 +283,14 @@ void yourinfomsg()
 {
     nl();
     dtitle("Your Message Status");
-    npr("0Total Posts   5: 4%d\r\n",thisuser.msgpost);
-    npr("0Posts Today   5: 4%d\r\n",thisuser.posttoday);
-    npr("0FeedBack      5: 4%d\r\n",thisuser.feedbacksent);
-    npr("0Email Sent    5: 4%d\r\n",thisuser.emailsent);
-    npr("0Messages Read 5: 4%d\r\n",thisuser.msgread);
-    npr("0Mail Waiting  5: 4%d\r\n",thisuser.waiting);
+    npr("0Total Posts   5: 4%d\r\n",sess.user.msgpost);
+    npr("0Posts Today   5: 4%d\r\n",sess.user.posttoday);
+    npr("0FeedBack      5: 4%d\r\n",sess.user.feedbacksent);
+    npr("0Email Sent    5: 4%d\r\n",sess.user.emailsent);
+    npr("0Messages Read 5: 4%d\r\n",sess.user.msgread);
+    npr("0Mail Waiting  5: 4%d\r\n",sess.user.waiting);
     npr("0Your PCR      5: 4%.0f%%\r\n",post_ratio()*100);
-    npr("0Required PCR  5: 4%.0f%%\r\n",syscfg.post_call_ratio*100);
+    npr("0Required PCR  5: 4%.0f%%\r\n",sys.cfg.post_call_ratio*100);
     nl();
     nl();
 }
@@ -297,7 +304,7 @@ int sublist(char type)
     int i,i1,abort=0;
     if(type);
 
-    sprintf(s,"%ssublist.fmt",syscfg.gfilesdir);
+    sprintf(s,"%ssublist.fmt",sys.cfg.gfilesdir);
     f=fopen(s,"rt");
     if (!f) return;
 
@@ -314,19 +321,19 @@ int sublist(char type)
     fgets(s4,163,f); 
     filter(s4,'\n');
 
-    for(i=0;i<umaxsubs&&usub[i].subnum!=-1&&!abort; i++) {
+    for(i=0;i<sess.umaxsubs&&sess.usub[i].subnum!=-1&&!abort; i++) {
         //        iscan(i);
-        d=subboards[usub[i].subnum];
-        itoa(nummsgs,s2,10);
+        d=sys.subboards[sess.usub[i].subnum];
+        itoa(sys.nummsgs,s2,10);
 
         i1=0;
-        if(inscan(i,&thisuser))
+        if(inscan(i,&sess.user))
             i1=1;
 
         if(i1)
-            stuff_in2(s,s1,noc2(d.name),40,usub[i].keys,2,s2,3,"",0,"",0);
+            stuff_in2(s,s1,noc2(d.name),40,sess.usub[i].keys,2,s2,3,"",0,"",0);
         else
-            stuff_in2(s,s4,noc2(d.name),40,usub[i].keys,2,s2,3,"",0,"",0);
+            stuff_in2(s,s4,noc2(d.name),40,sess.usub[i].keys,2,s2,3,"",0,"",0);
         plfmta(s,&abort);
     }
     fgets(s1,163,f); 
@@ -356,21 +363,21 @@ void get_quote()
                     do {
                         i2++;
                     } 
-                    while ((quote[i2]!=13) && (quote[i2]!=0));
+                    while ((sess.quote[i2]!=13) && (sess.quote[i2]!=0));
                 } 
                 else {
                     do {
-                        s[i1++]=quote[i2++];
+                        s[i1++]=sess.quote[i2++];
                     } 
-                    while ((quote[i2]!=13) && (quote[i2]!=0));
+                    while ((sess.quote[i2]!=13) && (sess.quote[i2]!=0));
                 }
-                if (quote[i2]) {
+                if (sess.quote[i2]) {
                     i2+=2;
                     s[i1]=0;
                 }
                 pla(s,&abort);
             } 
-            while (quote[i2]!=0);
+            while (sess.quote[i2]!=0);
             --i;
         }
         nl();
@@ -383,10 +390,10 @@ void get_quote()
             input(s,3);
         }
         if (s[0]=='A') {
-            quoting=0;
+            sess.quoting=0;
             charbufferpointer=0;
-            bquote=1;
-            equote=i;
+            sess.bquote=1;
+            sess.equote=i;
             return;
         }
         if (s[0]=='Q')
@@ -416,11 +423,11 @@ void get_quote()
         }
     } 
     while ((!abort) && (!hangup) && (rl) && (!i2));
-    quoting=0;
+    sess.quoting=0;
     charbufferpointer=0;
     if ((i1>0) && (i2>=i1) && (i2<=i) && (i2-i1<50) && (rl)) {
-        bquote=i1;
-        equote=i2;
+        sess.bquote=i1;
+        sess.equote=i2;
     }
 }
 
@@ -483,7 +490,7 @@ int inscan(int sb,userrec *u)
     long num;
     UINT32 ucrc;
 
-    sprintf(s,"%s%s.nws",syscfg.msgsdir,subboards[sb].filename);
+    sprintf(s,"%s%s.nws",sys.cfg.msgsdir,sys.subboards[sb].filename);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
 //    i=sopen(s,O_BINARY|O_RDWR|O_CREAT,SH_DENYRW|SH_DENYWR,S_IREAD|S_IWRITE);
 
@@ -516,7 +523,7 @@ void togglenws(int sb,userrec *u,int scan)
     long num;
     UINT32 ucrc;
 
-    sprintf(s,"%s%s.nws",syscfg.msgsdir,subboards[sb].filename);
+    sprintf(s,"%s%s.nws",sys.cfg.msgsdir,sys.subboards[sb].filename);
 //    i=sopen(s,O_BINARY|O_RDWR|O_CREAT,SH_DENYRW|SH_DENYWR,S_IREAD|S_IWRITE);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     num=filelength(i)/sizeof(nws);

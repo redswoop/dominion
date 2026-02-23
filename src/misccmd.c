@@ -1,6 +1,14 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
+#include "version.h"
 
 #pragma hdrstop
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void read_automessage()
 {
@@ -9,7 +17,7 @@ void read_automessage()
     FILE *f;
     char s[161];
 
-    sprintf(s,"%sauto.fmt",syscfg.gfilesdir);
+    sprintf(s,"%sauto.fmt",sys.cfg.gfilesdir);
     f=fopen(s,"rt");
     if (!f) return;
     fgets(s,161,f); 
@@ -33,7 +41,7 @@ void write_automessage()
     long len;
     char *b,s[MAX_PATH_LEN];
 
-    if(thisuser.restrict & restrict_automessage) {
+    if(sess.user.restrict & restrict_automessage) {
         pl("7You are restricted from changing the AutoMessage");
         pausescr();
         return;
@@ -43,9 +51,9 @@ void write_automessage()
     b=ninmsg(&hdr,&len,&save,0);
     if(save) {
         sys.status.amsganon=0;
-        sys.status.amsguser=usernum;
+        sys.status.amsguser=sess.usernum;
         logtypes(2,"Changed Automessage");
-        sprintf(s,"%sauto.msg",syscfg.gfilesdir);
+        sprintf(s,"%sauto.msg",sys.cfg.gfilesdir);
         unlink(s);
         i=open(s,O_BINARY|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
         write(i,b,len);
@@ -62,7 +70,7 @@ void addbbs(char *fn)
     long l,l1;
     FILE *format;
 
-    if(thisuser.restrict & restrict_bbslist) {
+    if(sess.user.restrict & restrict_bbslist) {
         pl("7You are restricted from adding to the BBSlist");
         pausescr();
         return;
@@ -78,7 +86,7 @@ void addbbs(char *fn)
 
     if (strlen(s)==12) {
         ok=1;
-        sprintf(s1,"%s%s",syscfg.gfilesdir,fn);
+        sprintf(s1,"%s%s",sys.cfg.gfilesdir,fn);
 
         f=open(s1,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
         if (f>0) {
@@ -123,7 +131,7 @@ void addbbs(char *fn)
             inputdat("Enter BBS type (Dominion)",s3,8,1);
             nl();
 
-            sprintf(form,"%sbbslist.fmt",syscfg.gfilesdir);
+            sprintf(form,"%sbbslist.fmt",sys.cfg.gfilesdir);
             format=fopen(form,"rt");
             fgets(form,41,format);
             fclose(format);
@@ -143,7 +151,7 @@ void addbbs(char *fn)
             if (yn()) {
                 logtypes(2,"Added to BBSlist:0 %s, %s",s,s1);
                 strcat(final,"\r\n");
-                sprintf(s1,"%s%s",syscfg.gfilesdir,fn);
+                sprintf(s1,"%s%s",sys.cfg.gfilesdir,fn);
                 f=open(s1,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
                 if (filelength(f)) {
                     lseek(f,-1L,SEEK_END);
@@ -174,7 +182,7 @@ void searchbbs(char *fn)
     inputdat("Enter Text to Search For",s1,20,0);
     if(!s1[0]) return;
 
-    sprintf(s,"%s%s",syscfg.gfilesdir,fn);
+    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
     f=fopen(s,"rt");
     while((fgets(s2,150,f))!=NULL) {
         filter(s2,'\n');
@@ -197,13 +205,13 @@ void list_users()
     int i,nu,abort,ok,num;
     char st[161];
 
-    if (usub[cursub].subnum==-1||(thisuser.restrict & restrict_userlist)) {
+    if (sess.usub[sess.cursub].subnum==-1||(sess.user.restrict & restrict_userlist)) {
         nl();
         pl("Sorry, you cannot currently view the user list");
         nl();
         return;
     }
-    s=subboards[usub[cursub].subnum];
+    s=sys.subboards[sess.usub[sess.cursub].subnum];
     nl();
     pl("Users with access to current sub:");
     nl();
@@ -244,22 +252,22 @@ void yourinfo()
     outchr(12);
     dtitle("Your Information");
 
-    npr("0Your Handle is 5%s0, Your Voice Phone Number is 5%s0\r\n",nam(&thisuser,usernum),thisuser.phone);
-    npr("Your Acting Security Level is 5%d0, And Your Transfer Level is 5%d0\r\n",actsl,thisuser.dsl);
+    npr("0Your Handle is 5%s0, Your Voice Phone Number is 5%s0\r\n",nam(&sess.user,sess.usernum),sess.user.phone);
+    npr("Your Acting Security Level is 5%d0, And Your Transfer Level is 5%d0\r\n",sess.actsl,sess.user.dsl);
     nl();
-    npr("You have Downloaded 5%d0 files, And Uploaded 5%d0 files\r\n",thisuser.downloaded,thisuser.uploaded);
-    npr("You have posted 5%d0 times, and Called 5%d0 times\r\n",thisuser.msgpost,thisuser.logons);
+    npr("You have Downloaded 5%d0 files, And Uploaded 5%d0 files\r\n",sess.user.downloaded,sess.user.uploaded);
+    npr("You have posted 5%d0 times, and Called 5%d0 times\r\n",sess.user.msgpost,sess.user.logons);
     nl();
     npr("You have 5%d0 minutes left for this call\r\n",(int)((nsl()+30)/60.0));
-    sprintf(s,"0, And have been on 5%d0 times today.",thisuser.ontoday);
-    npr("You last called 5%s%s0\r\n",thisuser.laston,thisuser.ontoday?s:"");
+    sprintf(s,"0, And have been on 5%d0 times today.",sess.user.ontoday);
+    npr("You last called 5%s%s0\r\n",sess.user.laston,sess.user.ontoday?s:"");
     nl();
     npr("System is 5%s\r\n",wwiv_version);
-    getorigin(subboards[usub[cursub].subnum].origin,&orig);
+    getorigin(sys.subboards[sess.usub[sess.cursub].subnum].origin,&orig);
     if(orig.add.zone)
         npr("Network is %s, Address %d:%d/%d\r\n",orig.netname,orig.add.zone,orig.add.net,orig.add.node);
     nl();
-    if(thisuser.helplevel==2)
+    if(sess.user.helplevel==2)
         pausescr();
 }
 
@@ -271,7 +279,7 @@ void jumpconf(char ms[41])
 
     if(atoi(ms)) {
         if(slok(sys.conf[atoi(ms)].sl,0)) {
-            curconf=atoi(ms);
+            sess.curconf=atoi(ms);
             changedsl();
             return;
         }
@@ -279,7 +287,7 @@ void jumpconf(char ms[41])
     else if(ms[0]) type=ms[0];
 
     dtitle("Conferences Available: ");
-    for(c=0;c<num_conf;c++) {
+    for(c=0;c<sys.num_conf;c++) {
         ok=1;
         if(!slok(sys.conf[c].sl,0)) ok=0;
         if(type=='M'||type=='F')
@@ -295,11 +303,11 @@ void jumpconf(char ms[41])
     i=atoi(s);
     if(i==0) return;
     i--;
-    if(i>num_conf) return;
-    if(slok(sys.conf[i].sl,0)) curconf=i;
+    if(i>sys.num_conf) return;
+    if(slok(sys.conf[i].sl,0)) sess.curconf=i;
     else {
         pl("Unavailable Conference");
-        curconf=0;
+        sess.curconf=0;
         return;
     }
     changedsl();
@@ -312,7 +320,7 @@ void add_time(int limit)
     double nsln;
 
     nsln=nsl();
-    npr("0Time in Bank: 5%d\r\n",thisuser.timebank);
+    npr("0Time in Bank: 5%d\r\n",sess.user.timebank);
     npr("0Bank Limit  : 5%d\r\n",limit);
     nl();
     npr("5%.0f0 minutes left online.\r\n",nsln/60.0);
@@ -330,29 +338,29 @@ void add_time(int limit)
         pausescr();
         return;
     }
-    if ((minutes + thisuser.timebank) > limit) {
+    if ((minutes + sess.user.timebank) > limit) {
         nl();
         npr("7You may only have up to %d minutes in your account at once.\r\n", limit);
         nl();
         pausescr();
         return;
     }
-    thisuser.timebank += minutes;
-    userdb_save(usernum,&thisuser);
+    sess.user.timebank += minutes;
+    userdb_save(sess.usernum,&sess.user);
     logtypes(2,"Deposit 3%d0 minutes.", minutes);
     nl();
     npr("%d minute%c deposited.", minutes,((minutes > 1) ? 's' : 0));
     nl();
 
-    if (extratimecall > 0) {
-        if (extratimecall >= (double)(minutes * 60)) {
-            extratimecall -= (double)(minutes * 60);
+    if (sess.extratimecall > 0) {
+        if (sess.extratimecall >= (double)(minutes * 60)) {
+            sess.extratimecall -= (double)(minutes * 60);
             return;
         }
-        minutes -= (int)(extratimecall / 60.0);
-        extratimecall = 0.0;
+        minutes -= (int)(sess.extratimecall / 60.0);
+        sess.extratimecall = 0.0;
     }
-    thisuser.extratime -= (float)(minutes * 60);
+    sess.user.extratime -= (float)(minutes * 60);
     pausescr();
 }
 
@@ -363,7 +371,7 @@ void remove_time()
 
     nl(); 
     nl();
-    npr( "Time in account: %d minutes.\r\n", thisuser.timebank);
+    npr( "Time in account: %d minutes.\r\n", sess.user.timebank);
     nl();
     ansic(0);
     outstr("How many minutes would you like to withdraw? ");
@@ -373,7 +381,7 @@ void remove_time()
     if (minutes<1) return;
 
     if (hangup) return;
-    if (minutes > thisuser.timebank) {
+    if (minutes > sess.user.timebank) {
         nl(); 
         nl();
         prt(7, "You don't have that much time in the account!");
@@ -383,8 +391,8 @@ void remove_time()
         return;
     }
     logtypes(2,"Withdrew 3%d0 minutes.", minutes);
-    thisuser.extratime += (float)(minutes * 60);
-    thisuser.timebank -= minutes;
+    sess.user.extratime += (float)(minutes * 60);
+    sess.user.timebank -= minutes;
     nl(); 
     nl();
     npr("4%d minute%c withdrawn.", minutes,((minutes > 1) ? 's' :0));
@@ -402,7 +410,7 @@ void bank2(int limit)
         dtitle("Dominion Time Bank");
         nl();
         tleft(0);
-        npr("0Time in Bank: 5%d\r\n",thisuser.timebank);
+        npr("0Time in Bank: 5%d\r\n",sess.user.timebank);
         npr("0Bank Limit  : 5%d\r\n",limit);
         nl();
         outstr(get_string(72));
@@ -416,7 +424,7 @@ void bank2(int limit)
             add_time(limit); 
             break;
         case 'W': 
-            if(thisuser.restrict & restrict_timebank) {
+            if(sess.user.restrict & restrict_timebank) {
                 nl();
                 pl(get_string(53));
                 nl();
@@ -577,7 +585,7 @@ void updtopten(void)
         }
     }
 
-    sprintf(s1,"%stopten.dat",syscfg.datadir);
+    sprintf(s1,"%stopten.dat",sys.cfg.datadir);
     i=open(s1,O_BINARY|O_RDWR|O_TRUNC|O_CREAT,S_IREAD|S_IWRITE);
     write(i,&s[0],5*10*31);
     write(i,&posts_per_user[0],10*sizeof(posts_per_user[0]));
@@ -611,7 +619,7 @@ char *topten(int type)
     timeon_per_user[10];
 
 
-    sprintf(s1,"%stopten.dat",syscfg.datadir);
+    sprintf(s1,"%stopten.dat",sys.cfg.datadir);
     i=open(s1,O_BINARY|O_RDWR);
     if(i<0) {
         updtopten();
@@ -673,7 +681,7 @@ char *get_date_filename()
 
     getdate(&today);
 
-    sprintf(s,"%stoday.%s",syscfg.gfilesdir,dats[today.da_mon-1]);
+    sprintf(s,"%stoday.%s",sys.cfg.gfilesdir,dats[today.da_mon-1]);
     return(s);
 }
 
@@ -754,7 +762,7 @@ void dtitle(char msg[MAX_PATH_LEN])
     char msg_stripped[MAX_PATH_LEN];
     int i;
 
-    sprintf(s,"%sbox.fmt",syscfg.gfilesdir);
+    sprintf(s,"%sbox.fmt",sys.cfg.gfilesdir);
     f=fopen(s,"rt");
     if (!f) { pl(msg); return; }
     noc(msg_stripped,msg);
@@ -808,7 +816,7 @@ char *ctype(int which)
     FILE *f;
     int i=0;
 
-    sprintf(s1,"%sctype.txt",syscfg.gfilesdir);
+    sprintf(s1,"%sctype.txt",sys.cfg.gfilesdir);
     f=fopen(s1,"rt");
     if (!f) { strcpy(s, "Unknown"); return(s); }
     while(fgets(s,81,f)!=NULL&&i++<which);
@@ -823,7 +831,7 @@ int numctypes(void)
     FILE *f;
     int i=0;
 
-    sprintf(s1,"%sctype.txt",syscfg.gfilesdir);
+    sprintf(s1,"%sctype.txt",sys.cfg.gfilesdir);
     f=fopen(s1,"rt");
     if (!f) return(0);
     while(fgets(s1,81,f)!=NULL) i++;

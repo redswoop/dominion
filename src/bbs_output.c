@@ -6,7 +6,10 @@
  */
 
 #include "io_ncurses.h"  /* MUST come before vars.h */
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "terminal_bridge.h"
 #include "stream_processor.h"
 #include "ansi_attr.h"
@@ -28,6 +31,10 @@ extern int readms;
 /***********************************************************************
  * 1. STRING LENGTH
  ***********************************************************************/
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 int strlenc(char *s)
 {
@@ -59,16 +66,16 @@ void ansic(int n)
     char c,s[10];
 
     if(colblock)
-        c=nifty.defaultcol[n];
+        c=sys.nifty.defaultcol[n];
     else
-        c = thisuser.colors[n];
+        c = sess.user.colors[n];
 
     if (c == curatr) return;
 
     setc(c);
 
     if (okansi())
-        makeansi(thisuser.colors[0],endofline, curatr);
+        makeansi(sess.user.colors[0],endofline, curatr);
     else
         endofline[0] = 0;
 }
@@ -94,7 +101,7 @@ void stream_emit_char(unsigned char c)
              * Raw 0x0C is unreliable on modern terminals. */
             term_remote_write_raw("\x1b[2J\x1b[H");
         } else {
-            outcomch(echo ? c : nifty.echochar);
+            outcomch(echo ? c : sys.nifty.echochar);
         }
     }
 
@@ -109,12 +116,12 @@ void stream_emit_char(unsigned char c)
         if (c == 12 && okansi()) outstrm("\x1b[0;1m");
         if (c == 10) {
             ++lines_listed;
-            if (((sysstatus_pause_on_page & thisuser.sysstatus)) &&
+            if (((sysstatus_pause_on_page & sess.user.sysstatus)) &&
                 (lines_listed >= screenlinest - 1) && !listing) {
                 pausescr();
                 lines_listed = 0;
             }
-            else if (((sysstatus_pause_on_message & thisuser.sysstatus)) &&
+            else if (((sysstatus_pause_on_message & sess.user.sysstatus)) &&
                 (lines_listed >= screenlinest - 1) && readms) {
                 pausescr();
                 lines_listed = 0;
@@ -122,7 +129,7 @@ void stream_emit_char(unsigned char c)
         }
     }
     else
-        out1ch(nifty.echochar);
+        out1ch(sys.nifty.echochar);
 }
 
 
@@ -131,7 +138,7 @@ void outchr(unsigned char c)
     if (global_handle && echo)
         global_char(c);
 
-    if (chatcall && !x_only && !(syscfg.sysconfig & sysconfig_no_beep))
+    if (chatcall && !x_only && !(sys.cfg.sysconfig & sysconfig_no_beep))
         setbeep(1);
 
     stream_putch(c);

@@ -1,7 +1,14 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
-#define SETREC(i)  lseek(dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+#define SETREC(i)  lseek(sess.dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void selectarc(void)
 {
@@ -9,31 +16,31 @@ void selectarc(void)
     int done=0;
     int i;
 
-    if(ARC_NUMBER==-1) {
+    if(sys.ARC_NUMBER==-1) {
         nl();
         do {
             pl("Please Select Format");
-            for(i=0;i<4&&xarc[i].extension[0];i++)
-                npr("5[5%d5]0 %s\r\n",i+1,xarc[i].extension);
+            for(i=0;i<4&&sys.xarc[i].extension[0];i++)
+                npr("5[5%d5]0 %s\r\n",i+1,sys.xarc[i].extension);
             nl();
             outstr("Select: ");
             c=onek("1234Q\r");
             switch(c) {
             case '1':
             case '\r': 
-                ARC_NUMBER=0; 
+                sys.ARC_NUMBER=0; 
                 done=1; 
                 break;
             case '2':  
-                ARC_NUMBER=1; 
+                sys.ARC_NUMBER=1; 
                 done=1; 
                 break;
             case '3':  
-                ARC_NUMBER=2; 
+                sys.ARC_NUMBER=2; 
                 done=1; 
                 break;
             case '4':  
-                ARC_NUMBER=3; 
+                sys.ARC_NUMBER=3; 
                 done=1; 
                 break;
             case 'Q': 
@@ -59,10 +66,10 @@ int list_arc_out(char *fn, char *dir)
     if (exist(s1) && (s[0]!=0)) {
         nl();
         npr("5Manipulating Archive 3%s\r\n",fn);
-        sprintf(s1,"%s>%sarctemp",s,syscfg.gfilesdir);
-        savescreen(&screensave);
+        sprintf(s1,"%s>%sarctemp",s,sys.cfg.gfilesdir);
+        savescreen(&sess.screensave);
         system(s1);
-        restorescreen(&screensave);
+        restorescreen(&sess.screensave);
         printfile("arctemp.");
         nl();
         do {
@@ -88,23 +95,23 @@ int list_arc_out(char *fn, char *dir)
                 swapi=get_arc_cmd(s,s1,1,s3);
                 if(s[0]) {
                     topscreen();
-                    cd_to(syscfg.tempdir);
-                    savescreen(&screensave);
+                    cd_to(sys.cfg.tempdir);
+                    savescreen(&sess.screensave);
                     runprog(s,swapi);
-                    restorescreen(&screensave);
-                    cd_to(cdir);
+                    restorescreen(&sess.screensave);
+                    cd_to(sys.cdir);
                 } 
                 else { 
                     npr("Bad Pathname, %s\r\n",s); 
                 }
-                sprintf(s,"%s%s",syscfg.tempdir,s3);
+                sprintf(s,"%s%s",sys.cfg.tempdir,s3);
                 if(exist(s)) {
-                    s1[0]=topdata; 
-                    topdata=0;
+                    s1[0]=sess.topdata; 
+                    sess.topdata=0;
                     topscreen();
                     ascii_send(s,&i,&p);
                     unlink(s);
-                    topdata=s1[0];
+                    sess.topdata=s1[0];
                     topscreen();
                 }
                 break;
@@ -113,7 +120,7 @@ int list_arc_out(char *fn, char *dir)
                 strcat(s1,fn);
                 arcex(s1);
                 nl();
-                npr("7Your Files are now in Temp.%s, and have been added to your batch queue.\r\n",xarc[ARC_NUMBER].extension);
+                npr("7Your Files are now in Temp.%s, and have been added to your batch queue.\r\n",sys.xarc[sys.ARC_NUMBER].extension);
                 nl();
                 break;
             }
@@ -138,13 +145,13 @@ void add_arc(char *arc, char *fn)
 
     nl();
     dtitle("Dominion Demon Tasker - Compressing");
-    if(ARC_NUMBER==-1) ARC_NUMBER=0;
-    sprintf(s1,"%s.%s",arc, xarc[ARC_NUMBER].extension);
+    if(sys.ARC_NUMBER==-1) sys.ARC_NUMBER=0;
+    sprintf(s1,"%s.%s",arc, sys.xarc[sys.ARC_NUMBER].extension);
     swapi=get_arc_cmd(s,s1,2,fn);
     if (s[0]) {
-        savescreen(&screensave);
+        savescreen(&sess.screensave);
         runprog(s,swapi);
-        restorescreen(&screensave);
+        restorescreen(&sess.screensave);
         logtypes(0,"Added 4%s0 to 4%s0",fn, s1);
     } 
     else
@@ -158,10 +165,10 @@ void arcex(char *fn)
     uploadsrec u;
 
     nl();
-    ARC_NUMBER=-1;
+    sys.ARC_NUMBER=-1;
     for(i=0;i<4;i++) {
-        sprintf(s1,"%sTEMP.%s",syscfg.tempdir,xarc[i].extension);
-        if(exist(s1)) ARC_NUMBER=i;
+        sprintf(s1,"%sTEMP.%s",sys.cfg.tempdir,sys.xarc[i].extension);
+        if(exist(s1)) sys.ARC_NUMBER=i;
     }
     selectarc();
     npr("3Enter filename to add to temporary archive file\r\n");
@@ -181,26 +188,26 @@ void arcex(char *fn)
     if(!strcmp(s2,"*.*")) return;
 
     swapi=get_arc_cmd(s,fn,1,s2);
-    cd_to(syscfg.tempdir);
-    savescreen(&screensave);
+    cd_to(sys.cfg.tempdir);
+    savescreen(&sess.screensave);
     runprog(s,swapi);
-    restorescreen(&screensave);
-    cd_to(cdir);
+    restorescreen(&sess.screensave);
+    cd_to(sys.cdir);
 
 
-    sprintf(s1,"%s%s",syscfg.tempdir,s2);
-    sprintf(s2,"%sTEMP",syscfg.tempdir);
+    sprintf(s1,"%s%s",sys.cfg.tempdir,s2);
+    sprintf(s2,"%sTEMP",sys.cfg.tempdir);
     add_arc(s2, s1);
-    sprintf(s2,"%sTEMP.%s",syscfg.tempdir,xarc[ARC_NUMBER].extension);
+    sprintf(s2,"%sTEMP.%s",sys.cfg.tempdir,sys.xarc[sys.ARC_NUMBER].extension);
     if(exist(s2)) {
         i=open(s2,O_BINARY|O_RDWR);
         u.numbytes=filelength(i);
         u.points=(filelength(i)+1023L)/10240L;
-        sprintf(u.filename,"TEMP    .%s",xarc[ARC_NUMBER].extension);
+        sprintf(u.filename,"TEMP    .%s",sys.xarc[sys.ARC_NUMBER].extension);
         addtobatch(u,-2,1);
         close(i);
     }
-    remove_from_temp(s1,syscfg.tempdir,0);
+    remove_from_temp(s1,sys.cfg.tempdir,0);
 }
 
 
@@ -227,28 +234,28 @@ void arc_cl(int type)
     do {
         if (i>0) {
             SETREC(i);
-            read(dlf,(void *)&u,sizeof(uploadsrec));
+            read(sess.dlf,(void *)&u,sizeof(uploadsrec));
             if(type==1) {
                 logtypes(0,"Viewed Archive 4%s",u.filename);
-                i1=list_arc_out(stripfn(u.filename),directories[udir[curdir].subnum].dpath);
+                i1=list_arc_out(stripfn(u.filename),sys.directories[sess.udir[sess.curdir].subnum].dpath);
             }
             else if(type==0) {
                 npr("7Commenting: 0%s\r\n",u.filename);
-                i1=comment_arc(stripfn(u.filename),directories[udir[curdir].subnum].dpath,directories[udir[curdir].subnum].upath);
+                i1=comment_arc(stripfn(u.filename),sys.directories[sess.udir[sess.curdir].subnum].dpath,sys.directories[sess.udir[sess.curdir].subnum].upath);
             } 
             else if(type==2) {
-                strcpy(s1,directories[udir[curdir].subnum].dpath);
+                strcpy(s1,sys.directories[sess.udir[sess.curdir].subnum].dpath);
                 addgif(&u,s1);
                 SETREC(i);
-                write(dlf,(void *)&u,sizeof(uploadsrec));
+                write(sess.dlf,(void *)&u,sizeof(uploadsrec));
                 i1=0;
             } 
             else if(type==3) {
-                strcpy(s1,directories[udir[curdir].subnum].dpath);
+                strcpy(s1,sys.directories[sess.udir[sess.curdir].subnum].dpath);
                 strcat(s1,stripfn(u.filename));
                 adddiz(s1,&u);
                 SETREC(i);
-                write(dlf,(void *)&u,sizeof(uploadsrec));
+                write(sess.dlf,(void *)&u,sizeof(uploadsrec));
             }
             if (i1)
                 abort=1;
@@ -274,9 +281,9 @@ int testarc(char *fn, char *dir)
         s[0]=0;
     if ((s[0]!=0)) {
         set_protect(0);
-        savescreen(&screensave);
+        savescreen(&sess.screensave);
         i=runprog(s,swapi);
-        restorescreen(&screensave);
+        restorescreen(&sess.screensave);
         topscreen();
     } 
     else {
@@ -299,9 +306,9 @@ int comment_arc(char *fn, char *dir,char *cmntfn)
     if(exist(s1) && (s[0]!=0)) {
         set_protect(0);
         printf("[0m");
-        savescreen(&screensave);
+        savescreen(&sess.screensave);
         runprog(s,swapi);
-        restorescreen(&screensave);
+        restorescreen(&sess.screensave);
         topscreen();
     } 
     else {
@@ -327,32 +334,32 @@ int get_arc_cmd(char *out, char *arcfn, int cmd, char *ofn)
         ss1=strchr(ss,'.');
     }
     if(!stricmp(ss,"QWK"))
-        strcpy(ss,xarc[ARC_NUMBER].extension);
+        strcpy(ss,sys.xarc[sys.ARC_NUMBER].extension);
     for (i=0; i<8; i++)
-        if (stricmp(ss,xarc[i].extension)==0) {
+        if (stricmp(ss,sys.xarc[i].extension)==0) {
             switch(cmd) {
             case 0: 
-                strcpy(s,xarc[i].arcl); 
+                strcpy(s,sys.xarc[i].arcl); 
                 break;
             case 1: 
-                strcpy(s,xarc[i].arce); 
+                strcpy(s,sys.xarc[i].arce); 
                 break;
             case 2: 
-                strcpy(s,xarc[i].arca); 
+                strcpy(s,sys.xarc[i].arca); 
                 break;
             case 3: 
-                strcpy(s,xarc[i].arct); 
+                strcpy(s,sys.xarc[i].arct); 
                 break;
             case 4: 
-                strcpy(s,xarc[i].arcc); 
+                strcpy(s,sys.xarc[i].arcc); 
                 break;
             }
             if (s[0]==0)
                 return 0;
             if(cmd==4)
-                sprintf(s1,"%s%s",syscfg.gfilesdir,ofn);
+                sprintf(s1,"%s%s",sys.cfg.gfilesdir,ofn);
             stuff_in(out,s,arcfn,ofn,"","",s1);
-            if(xarc[i].attr & xarc_swap)
+            if(sys.xarc[i].attr & xarc_swap)
                 return 1;
             else
                 return 0;
@@ -376,9 +383,9 @@ int adddiz(char *fn,uploadsrec *u)
     unlink("file_id.diz");
     get_arc_cmd(s,fn,1,"file_id.diz");
     if(s[0]) {
-        savescreen(&screensave);
+        savescreen(&sess.screensave);
         runprog(s,0);
-        restorescreen(&screensave);
+        restorescreen(&sess.screensave);
         if(!exist("file_id.diz")) return 0;
         npr("2�0 Description File Found in 7%s0, Adding\r\n",u1.filename);
         i=open("file_Id.diz",O_BINARY|O_RDWR);
@@ -403,19 +410,19 @@ void unarc(char *arc, char *fn)
 
     char s[255], s1[MAX_PATH_LEN],swapi;
 
-    ARC_NUMBER=-1;
+    sys.ARC_NUMBER=-1;
     selectarc();
 
     nl();
     dtitle("Dominion Demon Tasker - Extracting");
-    if(ARC_NUMBER==-1) ARC_NUMBER=0;
-    sprintf(s1,"%s.%s",arc, xarc[ARC_NUMBER].extension);
-    stuff_in(s,xarc[ARC_NUMBER].arce,arc,fn,"","","");
-    swapi=(xarc[ARC_NUMBER].attr & xarc_swap);
+    if(sys.ARC_NUMBER==-1) sys.ARC_NUMBER=0;
+    sprintf(s1,"%s.%s",arc, sys.xarc[sys.ARC_NUMBER].extension);
+    stuff_in(s,sys.xarc[sys.ARC_NUMBER].arce,arc,fn,"","","");
+    swapi=(sys.xarc[sys.ARC_NUMBER].attr & xarc_swap);
     if (s[0]) {
-        savescreen(&screensave);
+        savescreen(&sess.screensave);
         runprog(s,swapi);
-        restorescreen(&screensave);
+        restorescreen(&sess.screensave);
         logtypes(0,"Extracted 4%s0 from 4%s0",fn, s1);
     } 
     else

@@ -1,4 +1,7 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 #include <time.h>
@@ -9,7 +12,11 @@ extern int INDENTION;
 #define CHECK_FOR_EXISTANCE
 
 
-#define SETREC(i)  lseek(dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+#define SETREC(i)  lseek(sess.dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void add_extended_description(char *fn, char *desc)
 {
@@ -17,9 +24,9 @@ void add_extended_description(char *fn, char *desc)
 
     strcpy(ed.name,fn);
     ed.len=strlen(desc);
-    lseek(edlf,0L,SEEK_END);
-    write(edlf,&ed,sizeof(ext_desc_type));
-    write(edlf,desc,ed.len);
+    lseek(sess.edlf,0L,SEEK_END);
+    write(sess.edlf,&ed,sizeof(ext_desc_type));
+    write(sess.edlf,desc,ed.len);
 }
 
 
@@ -32,17 +39,17 @@ void delete_extended_description(char *fn)
     r=w=0;
     if ((ss=(char *)malloca(10240L))==NULL)
         return;
-    l1=filelength(edlf);
+    l1=filelength(sess.edlf);
     while (r<l1) {
-        lseek(edlf,r,SEEK_SET);
-        read(edlf,&ed,sizeof(ext_desc_type));
+        lseek(sess.edlf,r,SEEK_SET);
+        read(sess.edlf,&ed,sizeof(ext_desc_type));
         if (ed.len<10000) {
-            read(edlf,ss,ed.len);
+            read(sess.edlf,ss,ed.len);
             if (strcmp(fn,ed.name)) {
                 if (r!=w) {
-                    lseek(edlf,w,SEEK_SET);
-                    write(edlf,&ed,sizeof(ext_desc_type));
-                    write(edlf,ss,ed.len);
+                    lseek(sess.edlf,w,SEEK_SET);
+                    write(sess.edlf,&ed,sizeof(ext_desc_type));
+                    write(sess.edlf,ss,ed.len);
                 }
                 w +=(sizeof(ext_desc_type) + ed.len);
             }
@@ -50,7 +57,7 @@ void delete_extended_description(char *fn)
         r += (sizeof(ext_desc_type) + ed.len);
     }
     farfree(ss);
-    chsize(edlf,w);
+    chsize(sess.edlf,w);
 }
 
 
@@ -61,14 +68,14 @@ char *read_extended_description(char *fn)
     char *ss=NULL;
 
     l=0;
-    l1=filelength(edlf);
+    l1=filelength(sess.edlf);
     while (l<l1) {
-        lseek(edlf,l,SEEK_SET);
-        l += (long) read(edlf,&ed,sizeof(ext_desc_type));
+        lseek(sess.edlf,l,SEEK_SET);
+        l += (long) read(sess.edlf,&ed,sizeof(ext_desc_type));
         if (strcmp(fn,ed.name)==0) {
             ss=(char *)malloca((long) ed.len+10);
             if (ss) {
-                read(edlf,ss,ed.len);
+                read(sess.edlf,ss,ed.len);
                 ss[ed.len]=0;
             }
             return(ss);
@@ -186,9 +193,9 @@ void modify_extended_description(char **sss)
             pl(s);
             nl();
             s[0]=0;
-            i1=thisuser.screenchars;
-            if (thisuser.screenchars>(76-INDENTION))
-                thisuser.screenchars=76-INDENTION;
+            i1=sess.user.screenchars;
+            if (sess.user.screenchars>(76-INDENTION))
+                sess.user.screenchars=76-INDENTION;
             do {
                 ansic(2);
                 npr("%d: ",i);
@@ -204,7 +211,7 @@ void modify_extended_description(char **sss)
                 }
             } 
             while ((i++<MAX_LINES) && (s1[0]));
-            thisuser.screenchars=i1;
+            sess.user.screenchars=i1;
             if (*sss[0]==0) {
                 farfree(*sss);
                 *sss=NULL;
@@ -297,11 +304,11 @@ int finddup(char *fn,int quiet)
         nl();
     }
     closedl();
-    for (i=0; (i<num_dirs) && (!hangup);i++) {
+    for (i=0; (i<sys.num_dirs) && (!hangup);i++) {
         dliscan1(i);
-        for(i1=1;i1<=numf;i1++) {
+        for(i1=1;i1<=sess.numf;i1++) {
             SETREC(i1);
-            read(dlf,&u,sizeof(uploadsrec));
+            read(sess.dlf,&u,sizeof(uploadsrec));
             if(stricmp(u.filename,fn)==0)
                 return 1;
         }
@@ -336,22 +343,22 @@ void listbatch()
     abort=0;
     nl();
     sprintf(s,"Files - %d, Size - %-1.0fk, Time - %s",
-    numbatch,batchsize,ctim(batchtime));
+    sess.numbatch,sess.batchsize,ctim(sess.batchtime));
     dtitle(s);
     nl();
-    for (i=0; (i<numbatch) && (!abort) && (!hangup); i++) {
-        batch.batchdesc[0]=0;
+    for (i=0; (i<sess.numbatch) && (!abort) && (!hangup); i++) {
+        sess.batch.batchdesc[0]=0;
         batrec(1,i);
-        if (batch.sending) {
-            sprintf(s1,"%5.0fk  %s",batch.size,ctim(batch.time));
-            if(batch.dir==-2)
-                npr("5<5%d5>0 %-13s: 9%-30s 1[%s]\r\n",i+1,batch.filename,s1,"Flagged Files");
+        if (sess.batch.sending) {
+            sprintf(s1,"%5.0fk  %s",sess.batch.size,ctim(sess.batch.time));
+            if(sess.batch.dir==-2)
+                npr("5<5%d5>0 %-13s: 9%-30s 1[%s]\r\n",i+1,sess.batch.filename,s1,"Flagged Files");
             else
-                npr("5<5%d5>0 %-13s: 9%-30s 1[%s]\r\n",i+1,batch.filename,s1,directories[batch.dir].name);
+                npr("5<5%d5>0 %-13s: 9%-30s 1[%s]\r\n",i+1,sess.batch.filename,s1,sys.directories[sess.batch.dir].name);
         } 
         else {
-            npr("3<3%d3>0 %-13s: 5%-30.30s 1[%s]\r\n",i+1,batch.filename,
-            batch.batchdesc,directories[batch.dir].name);
+            npr("3<3%d3>0 %-13s: 5%-30.30s 1[%s]\r\n",i+1,sess.batch.filename,
+            sess.batch.batchdesc,sys.directories[sess.batch.dir].name);
         }
     }
 }
@@ -375,32 +382,32 @@ void batchdled(int stay)
             break;
         case 'R':
             nl();
-            if (numbatch==0)
+            if (sess.numbatch==0)
                 pl("No files in batch queue.");
             else {
                 prt(5,"Remove which? ");
                 input(s,2);
                 i=atoi(s);
-                if ((i>0) && (i<=numbatch))
+                if ((i>0) && (i<=sess.numbatch))
                     delbatch(i-1);
             }
             break;
         case 'C':
             prt(5,"Clear queue? ");
             if (yn()) {
-                while (numbatch>0)
+                while (sess.numbatch>0)
                     delbatch(0);
                 nl();
                 pl("Queue cleared.");
-                batchtime=0.0;
-                numbatch=numbatchdl=0;
+                sess.batchtime=0.0;
+                sess.numbatch=sess.numbatchdl=0;
             }
         }
         if(!stay) done=1;
     } 
     while(!done);
 
-    if(thisuser.helplevel==2) pausescr();
+    if(sess.user.helplevel==2) pausescr();
 }
 
 void copyupfile(char fn[12],char todir[MAX_PATH_LEN],char fdir[MAX_PATH_LEN])
@@ -515,7 +522,7 @@ int upload_file2(char *fn, int dn, char *desc)
     long l;
     double ti;
 
-    d=directories[dn];
+    d=sys.directories[dn];
     strcpy(s,fn);
     align(s);
     strcpy(u.filename,s);
@@ -563,21 +570,21 @@ int upload_file2(char *fn, int dn, char *desc)
         strcat(ff,stripfn(u.filename));
         adddiz(ff,&u);
 
-        for (i=numf; i>=1; i--) {
+        for (i=sess.numf; i>=1; i--) {
             SETREC(i);
-            read(dlf,(void *)&u1,sizeof(uploadsrec));
+            read(sess.dlf,(void *)&u1,sizeof(uploadsrec));
             SETREC(i+1);
-            write(dlf,(void *)&u1,sizeof(uploadsrec));
+            write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
         }
         SETREC(1);
-        write(dlf,(void *)&u,sizeof(uploadsrec));
-        ++numf;
+        write(sess.dlf,(void *)&u,sizeof(uploadsrec));
+        ++sess.numf;
         SETREC(0);
-        read(dlf, &u1, sizeof(uploadsrec));
-        u1.numbytes=numf;
+        read(sess.dlf, &u1, sizeof(uploadsrec));
+        u1.numbytes=sess.numf;
         u1.daten=l;
         SETREC(0);
-        write(dlf,(void *)&u1,sizeof(uploadsrec));
+        write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
     }
     return(1);
 }

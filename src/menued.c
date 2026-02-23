@@ -1,10 +1,17 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 #include "menudb.h"
 
-/* tg, pp, menuat, maxcmd now in vars.h (Phase B0) */
+/* sess.tg, sess.pp, sess.menuat, sess.maxcmd now in vars.h (Phase B0) */
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void menuinfoed(char fn[15])
 {
@@ -13,31 +20,31 @@ void menuinfoed(char fn[15])
     outchr(12);
     npr("3Menu File Name: %s\r\n",fn);
     nl();
-    npr("31. Prompt       : 0%s\r\n",pp.prompt);
-    npr("32. Titles       : 0%s\r\n",pp.title1);
-    if(pp.title2[0]) npr("3                :0 %s\r\n",pp.title2);
-    npr("33. Ansi Menu    : 0%s\r\n",pp.altmenu[0]?pp.altmenu:"\"\"");
-    npr("34. Security     : 0%s\r\n",pp.slneed[0]?pp.slneed:"None");
-    npr("35. Change Style : 0%d,%d,%d - %d Columns\r\n",pp.col[0],pp.col[1],pp.col[2],pp.columns);
-    npr("36. Help Level   : 0%d\r\n",pp.helplevel-1);
-    npr("37. Format File  : 0%s\r\n",pp.format);
-    npr("38. MCI Name     : 0%s\r\n",pp.pausefile);
-    npr("39. Extended Help: 0%s\r\n",pp.helpfile);
+    npr("31. Prompt       : 0%s\r\n",sess.pp.prompt);
+    npr("32. Titles       : 0%s\r\n",sess.pp.title1);
+    if(sess.pp.title2[0]) npr("3                :0 %s\r\n",sess.pp.title2);
+    npr("33. Ansi Menu    : 0%s\r\n",sess.pp.altmenu[0]?sess.pp.altmenu:"\"\"");
+    npr("34. Security     : 0%s\r\n",sess.pp.slneed[0]?sess.pp.slneed:"None");
+    npr("35. Change Style : 0%d,%d,%d - %d Columns\r\n",sess.pp.col[0],sess.pp.col[1],sess.pp.col[2],sess.pp.columns);
+    npr("36. Help Level   : 0%d\r\n",sess.pp.helplevel-1);
+    npr("37. Format File  : 0%s\r\n",sess.pp.format);
+    npr("38. MCI Name     : 0%s\r\n",sess.pp.pausefile);
+    npr("39. Extended Help: 0%s\r\n",sess.pp.helpfile);
 #ifdef PD
-    npr("30. Pldn Prompt  : 0%s\r\n",pp.prompt2);
+    npr("30. Pldn Prompt  : 0%s\r\n",sess.pp.prompt2);
 #endif
     npr("3A. HotKeys      : 0");
-    if(pp.boarder==1)
+    if(sess.pp.boarder==1)
         pl("Forced");
-    else if(pp.boarder==2)
+    else if(sess.pp.boarder==2)
         pl("Off");
-    else if(!pp.boarder)
+    else if(!sess.pp.boarder)
         pl("Normal");
-    npr("3B. Ext. Prompt  : 0%s\r\n",(pp.attr & menu_extprompt)?"Okay":"Internal Only");
-    npr("3C. Pulldown Ok  : 0%s\r\n",(pp.attr & menu_pulldown)?"Yes":"No");
-    npr("3F. Append Prmpt : 0%s\r\n",(pp.attr & menu_promptappend)?"Yes":"No");
-    npr("3G. PopUp        : 0%s\r\n",(pp.attr & menu_popup)?"Yes":"No");
-    npr("3H. Use Global   : 0%s\r\n",(pp.attr & menu_noglobal)?"No":"Yes");
+    npr("3B. Ext. Prompt  : 0%s\r\n",(sess.pp.attr & menu_extprompt)?"Okay":"Internal Only");
+    npr("3C. Pulldown Ok  : 0%s\r\n",(sess.pp.attr & menu_pulldown)?"Yes":"No");
+    npr("3F. Append Prmpt : 0%s\r\n",(sess.pp.attr & menu_promptappend)?"Yes":"No");
+    npr("3G. PopUp        : 0%s\r\n",(sess.pp.attr & menu_popup)?"Yes":"No");
+    npr("3H. Use Global   : 0%s\r\n",(sess.pp.attr & menu_noglobal)?"No":"Yes");
     nl();
     mciok=1;
 }
@@ -52,27 +59,27 @@ void edmenu (int x)
         outchr(12);
         npr("Editing Command #%d\r\n",x); 
         nl();
-        npr("1. Desc     : %s\r\n",tg[x].desc);
-        npr("2. Key      : %s\r\n",tg[x].key);
-        npr("3. Type     : %.2s\r\n",tg[x].type);
+        npr("1. Desc     : %s\r\n",sess.tg[x].desc);
+        npr("2. Key      : %s\r\n",sess.tg[x].key);
+        npr("3. Type     : %.2s\r\n",sess.tg[x].type);
         npr("4. Attirbute: ");
-        if(tg[x].attr==command_hidden) npr("Hidden ");
+        if(sess.tg[x].attr==command_hidden) npr("Hidden ");
         else
-            if(tg[x].attr==command_unhidden) npr("Unhidden ");
+            if(sess.tg[x].attr==command_unhidden) npr("Unhidden ");
             else
-                if(tg[x].attr==command_forced) npr("Forced ");
+                if(sess.tg[x].attr==command_forced) npr("Forced ");
                 else
-                    if(tg[x].attr==command_title) npr("Sub-Section Title ");
+                    if(sess.tg[x].attr==command_title) npr("Sub-Section Title ");
                     else
-                        if(tg[x].attr==command_pulldown) npr("Pull Down Seperator ");
+                        if(sess.tg[x].attr==command_pulldown) npr("Pull Down Seperator ");
                         else
-                            if(tg[x].attr==command_default) npr("Default ");
+                            if(sess.tg[x].attr==command_default) npr("Default ");
                             else
                                 npr("None");
         nl();
-        npr("5. Security : %s\r\n",tg[x].sl);
-        npr("6. Line     : %s\r\n",tg[x].line);
-        npr("7. Parameter: %s\r\n",tg[x].ms);
+        npr("5. Security : %s\r\n",sess.tg[x].sl);
+        npr("6. Line     : %s\r\n",sess.tg[x].line);
+        npr("7. Parameter: %s\r\n",sess.tg[x].ms);
         nl();
         outstr("5Command Editor (Q=Quit, V=View, J=Jump, [,]) ");
         ch=onek("1234567QV?[]J");
@@ -81,14 +88,14 @@ void edmenu (int x)
         {
         case 'J': 
             inputdat("To Which Command",s,2,0);
-            if(s[0]&&(atoi(s)<maxcmd)) x=atoi(s);
+            if(s[0]&&(atoi(s)<sess.maxcmd)) x=atoi(s);
             break;
         case 'V': 
             showmenucol();
             pausescr(); 
             break;
         case ']': 
-            if(x<maxcmd-1) x++; 
+            if(x<sess.maxcmd-1) x++; 
             break;
         case '[': 
             if(x>0) x--; 
@@ -98,20 +105,20 @@ void edmenu (int x)
             break;
         case '1': 
             npr("3Description\r\n5: ");
-            inli(s,tg[x].desc,50,1);
-            if(s[0]) strcpy(tg[x].desc,s); 
+            inli(s,sess.tg[x].desc,50,1);
+            if(s[0]) strcpy(sess.tg[x].desc,s); 
             break;
         case '3': 
             inputdat("Type",s,2,0);
             if(s[0]) {
-                tg[x].type[0]=s[0];
-                tg[x].type[1]=s[1];
+                sess.tg[x].type[0]=s[0];
+                sess.tg[x].type[1]=s[1];
             }
             break;
         case '2': 
             inputdat("Key",s,8,0);
             if(s[0]) {
-                strcpy(tg[x].key,s);
+                strcpy(sess.tg[x].key,s);
             }
             break;
         case '5': 
@@ -121,41 +128,41 @@ thespot:
                 printmenu(27);
                 goto thespot;
             }
-            if(s[0]) strcpy(tg[x].sl,s); 
+            if(s[0]) strcpy(sess.tg[x].sl,s); 
             break;
         case '6': 
             npr("3Command Line\r\n5: ");
-            inli(s,tg[x].line,50,1);
-            if(s[0]) strcpy(tg[x].line,s); 
+            inli(s,sess.tg[x].line,50,1);
+            if(s[0]) strcpy(sess.tg[x].line,s); 
             break;
         case '7': 
             npr("3Command Parameters\r\n5: ");
-            inli(s,tg[x].ms,80,1);
-            strcpy(tg[x].ms,s); 
+            inli(s,sess.tg[x].ms,80,1);
+            strcpy(sess.tg[x].ms,s); 
             break;
         case '4': 
             npr("%s\r\n: ",get_string2(10));
-            tg[x].attr=0;
+            sess.tg[x].attr=0;
             s[0]=onek("\rHUDFTP");
             if(s[0]=='\r'); 
             else switch(s[0]) {
             case 'H': 
-                tg[x].attr=command_hidden; 
+                sess.tg[x].attr=command_hidden; 
                 break;
             case 'U': 
-                tg[x].attr=command_unhidden; 
+                sess.tg[x].attr=command_unhidden; 
                 break;
             case 'T': 
-                tg[x].attr=command_title; 
+                sess.tg[x].attr=command_title; 
                 break;
             case 'P': 
-                tg[x].attr=command_pulldown; 
+                sess.tg[x].attr=command_pulldown; 
                 break;
             case 'F': 
-                tg[x].attr=command_forced; 
+                sess.tg[x].attr=command_forced; 
                 break;
             case 'D': 
-                tg[x].attr=command_default; 
+                sess.tg[x].attr=command_default; 
                 break;
             }
             break;
@@ -175,8 +182,8 @@ void top(char fn[15])
     pl("2##. Type5�2Keys    5�2SL      ##. Type5�2Keys    5�2SL     �##. Type5�2Keys    5�2SL");
     pl("5������������������������������������������������������������������������������");
 
-    for(x=0;x<maxcmd;x++) {
-        npr("0%2d. %-2.2s  5�0%-8.8s5�0%-7.7s ",x,tg[x].type,tg[x].key,tg[x].sl);
+    for(x=0;x<sess.maxcmd;x++) {
+        npr("0%2d. %-2.2s  5�0%-8.8s5�0%-7.7s ",x,sess.tg[x].type,sess.tg[x].key,sess.tg[x].sl);
         n++;
         if(n==3) { 
             nl(); 
@@ -284,19 +291,19 @@ void extractheader()
     f=fopen(s,"wb");
     strcpy(fn,s);
 
-    fputs(pp.prompt,f); 
+    fputs(sess.pp.prompt,f); 
     fputs("\n",f);
 #ifdef PD
-    fputs(pp.prompt2,f); 
+    fputs(sess.pp.prompt2,f); 
     fputs("\n",f);
 #endif
-    fputs(pp.title1,f); 
+    fputs(sess.pp.title1,f); 
     fputs("\n",f);
-    fputs(pp.title2,f); 
+    fputs(sess.pp.title2,f); 
     fputs("\n",f);
-    fputs(pp.format,f); 
+    fputs(sess.pp.format,f); 
     fputs("\n",f);
-    itoa(pp.columns,s,10);
+    itoa(sess.pp.columns,s,10);
     fputs(s,f); 
     fputs("\n",f);
 
@@ -318,24 +325,24 @@ void readheader()
 
     fgets(s,161,f); 
     filter(s,'\n'); 
-    strcpy(pp.prompt,s);
+    strcpy(sess.pp.prompt,s);
 #ifdef PD
     fgets(s,161,f); 
     filter(s,'\n'); 
-    strcpy(pp.prompt2,s);
+    strcpy(sess.pp.prompt2,s);
 #endif
     fgets(s,161,f); 
     filter(s,'\n'); 
-    strcpy(pp.title1,s);
+    strcpy(sess.pp.title1,s);
     fgets(s,161,f); 
     filter(s,'\n'); 
-    strcpy(pp.title2,s);
+    strcpy(sess.pp.title2,s);
     fgets(s,161,f); 
     filter(s,'\n'); 
-    strcpy(pp.format,s);
+    strcpy(sess.pp.format,s);
     fgets(s,161,f); 
     filter(s,'\n'); 
-    pp.columns=atoi(s);
+    sess.pp.columns=atoi(s);
 
     fclose(f);
 
@@ -348,7 +355,7 @@ void listmform(void)
     struct ffblk f;
     char s[MAX_PATH_LEN];
 
-    sprintf(s,"%s*.fmt",syscfg.menudir);
+    sprintf(s,"%s*.fmt",sys.cfg.menudir);
     findfirst(s,&f,0);
     nl();
     pl("5Available Format Files");
@@ -370,10 +377,10 @@ void menued(char fn[15])
         npr("4Error loading menu %s\r\n", fn);
         return;
     }
-    pp = data.header;
-    memcpy(tg, data.commands, sizeof(menurec) * data.count);
-    maxcmd = data.count;
-    readmnufmt(pp);
+    sess.pp = data.header;
+    memcpy(sess.tg, data.commands, sizeof(menurec) * data.count);
+    sess.maxcmd = data.count;
+    readmnufmt(sess.pp);
 
     if(type) top(fn); 
     else menuinfoed(fn);
@@ -399,76 +406,76 @@ void menued(char fn[15])
             pl("Prompt:");
 #ifdef PD
             outstr(": "); 
-            inli(s,pp.prompt,99,1);
+            inli(s,sess.pp.prompt,99,1);
 #else
             outstr(": "); 
-            inli(s,pp.prompt,192,1);
+            inli(s,sess.pp.prompt,192,1);
 #endif
-            if(s[0]) strcpy(pp.prompt,s);
+            if(s[0]) strcpy(sess.pp.prompt,s);
             break;
 #ifdef PD
         case '0': 
             pl("PullDown Prompt:");
             outstr(": "); 
-            inli(s,pp.prompt2,99,1);
-            if(s[0]) strcpy(pp.prompt2,s);
+            inli(s,sess.pp.prompt2,99,1);
+            if(s[0]) strcpy(sess.pp.prompt2,s);
             break;
 #endif
         case '2': 
             pl("Title 1:");
             outstr(": "); 
-            inli(s,pp.title1,51,1);
-            if(s[0]) strcpy(pp.title1,s);
+            inli(s,sess.pp.title1,51,1);
+            if(s[0]) strcpy(sess.pp.title1,s);
             pl("Title 2:");
             outstr(": "); 
-            inli(s,pp.title2,51,1);
-            if(s[0]) strcpy(pp.title2,s);  
+            inli(s,sess.pp.title2,51,1);
+            if(s[0]) strcpy(sess.pp.title2,s);  
             break;
         case '3': 
             inputdat("External Menu",s,8,0);
-            if(s[0]) strcpy(pp.altmenu,s);
+            if(s[0]) strcpy(sess.pp.altmenu,s);
             break;
         case '4': 
-            inputdat("Security",pp.slneed,sizeof(pp.slneed),1);
+            inputdat("Security",sess.pp.slneed,sizeof(sess.pp.slneed),1);
             break;
         case '6': 
             nl();
             printmenu(25);
             inputdat("Forced Help Level for Menu, -1 Disables",s,2,0);
-            if(s[0]) pp.helplevel=atoi(s)+1;
+            if(s[0]) sess.pp.helplevel=atoi(s)+1;
             break;
         case '7': 
             listmform(); 
-            inputdat("Format File",pp.format,8,0); 
+            inputdat("Format File",sess.pp.format,8,0); 
             break;
         case '8': 
-            inputdat("Menu's MCI Name",pp.pausefile,9,1); 
+            inputdat("Menu's MCI Name",sess.pp.pausefile,9,1); 
             break;
         case '9': 
-            inputdat("External Help File .HLP",pp.helpfile,8,0); 
+            inputdat("External Help File .HLP",sess.pp.helpfile,8,0); 
             break;
         case 'A': 
             nl();
             npr("3Hotkeys: 0F5orced, 0O5ff, 0N5ormal: ");
             ch=onek("\rNOF");
-            if(ch=='N'||ch=='\r') pp.boarder=0;
-            else if(ch=='F') pp.boarder=1;
-            else if(ch=='O') pp.boarder=2;
+            if(ch=='N'||ch=='\r') sess.pp.boarder=0;
+            else if(ch=='F') sess.pp.boarder=1;
+            else if(ch=='O') sess.pp.boarder=2;
             break;
         case 'B': 
-            togglebit((long *)&pp.attr,menu_extprompt); 
+            togglebit((long *)&sess.pp.attr,menu_extprompt); 
             break;
         case 'C': 
-            togglebit((long *)&pp.attr,menu_pulldown); 
+            togglebit((long *)&sess.pp.attr,menu_pulldown); 
             break;
         case 'F': 
-            togglebit((long *)&pp.attr,menu_promptappend); 
+            togglebit((long *)&sess.pp.attr,menu_promptappend); 
             break;
         case 'G': 
-            togglebit((long *)&pp.attr,menu_popup); 
+            togglebit((long *)&sess.pp.attr,menu_popup); 
             break;
         case 'H': 
-            togglebit((long *)&pp.attr,menu_noglobal); 
+            togglebit((long *)&sess.pp.attr,menu_noglobal); 
             break;
         case '5': 
             d1=0;
@@ -476,29 +483,29 @@ void menued(char fn[15])
                 outchr(12);
                 npr("0Menu Style Editor\r\n"); 
                 nl();
-                npr("1. Brackets    : %d\r\n",pp.col[0]);
-                npr("2. Commands    : %d\r\n",pp.col[1]);
-                npr("3. Description : %d\r\n",pp.col[2]);
-                npr("4. Columns     : %d\r\n",pp.columns);
+                npr("1. Brackets    : %d\r\n",sess.pp.col[0]);
+                npr("2. Commands    : %d\r\n",sess.pp.col[1]);
+                npr("3. Description : %d\r\n",sess.pp.col[2]);
+                npr("4. Columns     : %d\r\n",sess.pp.columns);
                 nl();
                 outstr("Select: ");
                 ch=onek("1234VQ\r");
                 switch(ch) {
                 case '4':  
                     inputdat("Enter Number of Columns (1,2,3,4,5)",s,2,0);
-                    if(s[0]) pp.columns=atoi(s);
+                    if(s[0]) sess.pp.columns=atoi(s);
                     break;
                 case '1':  
                     inputdat("Bracket Attr",s,2,0);
-                    if(s[0]) pp.col[0]=atoi(s);
+                    if(s[0]) sess.pp.col[0]=atoi(s);
                     break;
                 case '2':  
                     inputdat("Command Key Attr",s,2,0);
-                    if(s[0]) pp.col[1]=atoi(s);
+                    if(s[0]) sess.pp.col[1]=atoi(s);
                     break;
                 case '3':  
                     inputdat("Description Attr",s,2,0);
-                    if(s[0]) pp.col[2]=atoi(s);
+                    if(s[0]) sess.pp.col[2]=atoi(s);
                     break;
                 case 'V':  
                     showmenucol();
@@ -527,7 +534,7 @@ void menued(char fn[15])
             edmenu(x); 
             break;
         case 'I': 
-            if(maxcmd<50)
+            if(sess.maxcmd<50)
                 nl();
             inputdat("Insert before which command",s,2,0);
             if(!s[0]) break;
@@ -538,39 +545,39 @@ void menued(char fn[15])
             else
                 i=atoi(s);
             for(x=0;x<i;x++) {
-                maxcmd++;
-                for(z=maxcmd-1;z>=y; z--)
-                    tg[z+1]=tg[z];
-                strcpy(tg[y].desc,"<NEW> Command");
-                strcpy(tg[y].key,"NEW");
-                strcpy(tg[y].line,"");
-                strcpy(tg[y].sl,"");
-                strcpy(tg[y].type,"OL");
-                strcpy(tg[y].ms,"");
-                tg[y].attr=0;
+                sess.maxcmd++;
+                for(z=sess.maxcmd-1;z>=y; z--)
+                    sess.tg[z+1]=sess.tg[z];
+                strcpy(sess.tg[y].desc,"<NEW> Command");
+                strcpy(sess.tg[y].key,"NEW");
+                strcpy(sess.tg[y].line,"");
+                strcpy(sess.tg[y].sl,"");
+                strcpy(sess.tg[y].type,"OL");
+                strcpy(sess.tg[y].ms,"");
+                sess.tg[y].attr=0;
             }
             break;
         case 'D': 
             inputdat("Delete which command",s,2,0);
             if(!s[0]) break;
             y=atoi(s);
-            for(x=y;x<maxcmd;x++)
-                tg[x]=tg[x+1];
-            maxcmd--;
+            for(x=y;x<sess.maxcmd;x++)
+                sess.tg[x]=sess.tg[x+1];
+            sess.maxcmd--;
             break;
         case 'P': 
             inputdat("Posistion which command",s,2,0);
             if(!s[0]) break;
             y=atoi(s);
-            back=tg[y];
-            for(x=y;x<maxcmd;x++)
-                tg[x]=tg[x+1];
+            back=sess.tg[y];
+            for(x=y;x<sess.maxcmd;x++)
+                sess.tg[x]=sess.tg[x+1];
             inputdat("Posistion where",s,2,0);
             if(!s[0]) break;
             y=atoi(s);
-            for(z=maxcmd-1;z>=y; z--)
-                tg[z+1]=tg[z];
-            tg[y]=back;
+            for(z=sess.maxcmd-1;z>=y; z--)
+                sess.tg[z+1]=sess.tg[z];
+            sess.tg[y]=back;
             break;
         case 'V': 
             showmenucol();
@@ -579,13 +586,13 @@ void menued(char fn[15])
         }
     } 
     while(!done&&!hangup);
-    data.header = pp;
-    memcpy(data.commands, tg, sizeof(menurec) * maxcmd);
-    data.count = maxcmd;
+    data.header = sess.pp;
+    memcpy(data.commands, sess.tg, sizeof(menurec) * sess.maxcmd);
+    data.count = sess.maxcmd;
     menudb_save(fn, &data);
 
-    if(!wfc)
-        read_menu(menuat,0);
+    if(!sys.wfc)
+        read_menu(sess.menuat,0);
 
     sys.status.net_version=type;
     save_status();

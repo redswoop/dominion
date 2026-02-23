@@ -1,5 +1,12 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 typedef struct {
     char thestring[161];
@@ -21,7 +28,7 @@ char *disk_string(int whichstring,char *fn)
     int i;
     stringrec astring;
 
-    sprintf(s1,"%s%s",syscfg.datadir,fn);
+    sprintf(s1,"%s%s",sys.cfg.datadir,fn);
     i=open(s1,O_RDONLY|O_BINARY);
 
     if (i<0) {
@@ -99,7 +106,7 @@ char *get_say(int which)
     rumourrec arum;
     userrec u;
 
-    sprintf(s1,"%srumours.dat",syscfg.datadir);
+    sprintf(s1,"%srumours.dat",sys.cfg.datadir);
     if(!exist(s1)) return("Sorry, I have Nothing To Say.  Add a Rumor.");
     i=open(s1,O_RDWR | O_BINARY);
 
@@ -141,7 +148,7 @@ void addsay(void)
     rumourrec astring;
 
     s[0]=0;
-    if(thisuser.restrict & restrict_rumours) {
+    if(sess.user.restrict & restrict_rumours) {
         pl("Sorry, You are Restricted from Posting Rumours");
         return;
     }
@@ -150,11 +157,11 @@ void addsay(void)
     if(!s[0]) return;
     logpr("5�> Added Rumor 0: %s",s);
     strcpy(astring.rumour,s);
-    strcpy(astring.by,nam(&thisuser,usernum));
+    strcpy(astring.by,nam(&sess.user,sess.usernum));
     nl();
     npr("5Anonymous? ");
     astring.an=yn();
-    sprintf(s1,"%srumours.dat",syscfg.datadir);
+    sprintf(s1,"%srumours.dat",sys.cfg.datadir);
     i=open(s1,O_RDWR|O_CREAT|O_BINARY, S_IREAD|S_IWRITE);
     lseek(i,0L,SEEK_END);
     write(i,(void *)&astring,sizeof(rumourrec));
@@ -169,13 +176,13 @@ void readstring(int which)
 
     switch(which) {
     case 0: 
-        sprintf(s,"%sstrings.dat",syscfg.datadir); 
+        sprintf(s,"%sstrings.dat",sys.cfg.datadir); 
         break;
     case 1: 
-        sprintf(s,"%ssysstr.dat",syscfg.datadir); 
+        sprintf(s,"%ssysstr.dat",sys.cfg.datadir); 
         break;
     case 2: 
-        sprintf(s,"%ssdesc.dat",syscfg.datadir); 
+        sprintf(s,"%ssdesc.dat",sys.cfg.datadir); 
         break;
     }
 
@@ -226,7 +233,7 @@ void extractstring(int which)
     }
 
     f=fopen(s,"wt");
-    sprintf(s,which?"%ssysstr.dat":"%sstrings.dat",syscfg.datadir);
+    sprintf(s,which?"%ssysstr.dat":"%sstrings.dat",sys.cfg.datadir);
     i=open(s,O_RDWR|O_BINARY);
 
     while(!done) {
@@ -251,10 +258,10 @@ void liststring(int type,int where)
 
     mciok=0;
     if(type==1)
-        sprintf(s1,"%ssysstr.dat",syscfg.datadir);
+        sprintf(s1,"%ssysstr.dat",sys.cfg.datadir);
     else if(type==2)
-        sprintf(s1,"%ssdesc.dat",syscfg.datadir);
-    else sprintf(s1,"%sstrings.dat",syscfg.datadir);
+        sprintf(s1,"%ssdesc.dat",sys.cfg.datadir);
+    else sprintf(s1,"%sstrings.dat",sys.cfg.datadir);
     i=open(s1,O_RDWR | O_BINARY);
 
     lseek(i,((long)(where*9))*(sizeof(astring)),SEEK_SET);
@@ -315,11 +322,11 @@ void edstring(int type)
         case '8':
         case '9':
             if(type==1)
-                sprintf(s1,"%ssysstr.dat",syscfg.datadir);
+                sprintf(s1,"%ssysstr.dat",sys.cfg.datadir);
             else if(type==2)
-                sprintf(s1,"%ssdesc.dat",syscfg.datadir);
+                sprintf(s1,"%ssdesc.dat",sys.cfg.datadir);
             else
-                sprintf(s1,"%sstrings.dat",syscfg.datadir);
+                sprintf(s1,"%sstrings.dat",sys.cfg.datadir);
             ednum=(set*9)+c-'0'-1;
             i=open(s1,O_RDWR | O_CREAT |O_BINARY | S_IREAD | S_IWRITE );
             if(i<0) pl("Unable to open`P");
@@ -361,7 +368,7 @@ void searchrum(void)
     nl();
     inputdat("Text to Scan For",scan,20,1);
     if(!scan[0]) return;
-    sprintf(s,"%srumours.dat",syscfg.datadir);
+    sprintf(s,"%srumours.dat",sys.cfg.datadir);
     i=open(s,O_RDWR|O_BINARY);
     l=filelength(i);
     num=l/sizeof(rumourrec);

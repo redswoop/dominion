@@ -1,6 +1,13 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 
 #pragma hdrstop
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void change_colors(userrec *u1)
 {
@@ -63,7 +70,7 @@ void change_colors(userrec *u1)
             if (yn()) {
                 pl("Color saved.");
                 if(colblock)
-                    nifty.defaultcol[i]=nc;
+                    sys.nifty.defaultcol[i]=nc;
                 else {
                     u.colors[i]=nc;
                 }
@@ -89,19 +96,19 @@ void print_cur_stat()
     dtitle("Preferences");
 
     npr("0Screen size       : %d X %d\r\n",
-    thisuser.screenchars,
-    thisuser.screenlines);
+    sess.user.screenchars,
+    sess.user.screenlines);
 
-    if(thisuser.sysstatus & sysstatus_avatar) strcpy(s,"Avatar ");
+    if(sess.user.sysstatus & sysstatus_avatar) strcpy(s,"Avatar ");
     else
-        if(thisuser.sysstatus & sysstatus_ansi) strcpy(s,"Ansi ");
+        if(sess.user.sysstatus & sysstatus_ansi) strcpy(s,"Ansi ");
     else strcpy(s,"Ascii");
-    if(thisuser.sysstatus & sysstatus_color) strcat(s,"Colour");
+    if(sess.user.sysstatus & sysstatus_color) strcat(s,"Colour");
     else strcat(s,"Mono");
 
     npr("Graphics          : %s\r\n",s);
     npr("Help Level        : ");
-    switch(thisuser.helplevel) {
+    switch(sess.user.helplevel) {
     case 0: 
         pl("Expert"); 
         break;
@@ -112,36 +119,36 @@ void print_cur_stat()
         pl("Idiot"); 
         break;
     }
-    npr("Comment           : %s\r\n",thisuser.comment);
+    npr("Comment           : %s\r\n",sess.user.comment);
     npr("Pause on screen   : %s\r\n",
-    (thisuser.sysstatus & sysstatus_pause_on_page)?"On":"Off");
+    (sess.user.sysstatus & sysstatus_pause_on_page)?"On":"Off");
     outstr("Mailbox           : ");
-    if ((thisuser.forwardusr==0))
+    if ((sess.user.forwardusr==0))
         pl("Normal");
     else {
         {
-            if (thisuser.forwardusr==255) {
+            if (sess.user.forwardusr==255) {
                 pl("Closed");
             } 
             else {
-                userdb_load(thisuser.forwardusr,&ur);
+                userdb_load(sess.user.forwardusr,&ur);
                 if (ur.inact & inact_deleted) {
-                    thisuser.forwardusr=0;
+                    sess.user.forwardusr=0;
                     pl("Normal");
                 } 
                 else {
-                    sprintf(s,"Forward to %s",nam(&ur,thisuser.forwardusr));
+                    sprintf(s,"Forward to %s",nam(&ur,sess.user.forwardusr));
                     pl(s);
                 }
             }
         }
     }
-    npr("Default Protocol  : %s\r\n",proto[thisuser.defprot].description);
-    npr("File List Format  : Type %d\r\n",thisuser.flisttype);
-    npr("Hotkeys           : %s\r\n",(thisuser.sysstatus & sysstatus_fullline)?"No":"Yes");
+    npr("Default Protocol  : %s\r\n",sys.proto[sess.user.defprot].description);
+    npr("File List Format  : Type %d\r\n",sess.user.flisttype);
+    npr("Hotkeys           : %s\r\n",(sess.user.sysstatus & sysstatus_fullline)?"No":"Yes");
 
     nl();
-    if(thisuser.helplevel==2) pausescr();
+    if(sess.user.helplevel==2) pausescr();
 }
 
 
@@ -175,7 +182,7 @@ char *describe(char col)
     char s1[MAX_PATH_LEN];
 
 
-    if (thisuser.sysstatus & sysstatus_color) {
+    if (sess.user.sysstatus & sysstatus_color) {
         strcpy(s1,cn(col&0x07));
         sprintf(s,"%s on %s", s1, cn((col>>4)&0x07));
     } 
@@ -241,24 +248,24 @@ void config_qscan(int dl)
             on=1;
             if(onek("OF\r")=='F')
                 on=-1;
-            for (i=0; dl?udir[i].subnum!=-1:usub[i].subnum!=-1; i++)
+            for (i=0; dl?sess.udir[i].subnum!=-1:sess.usub[i].subnum!=-1; i++)
                 if(!dl)
-                    togglenws(i,&thisuser,on);
+                    togglenws(i,&sess.user,on);
                 else
-                    thisuser.nscn[i]=on;
+                    sess.user.nscn[i]=on;
         } else if (atoi(s))
             for (i=0; dl?i<MAX_DIRS:i<MAX_SUBS; i++) {
                 if(!dl) {
-                    if (strcmp(usub[i].keys,s)==0) {
-                        on=inscan(i,&thisuser);
-                        togglenws(i,&thisuser,!on);
+                    if (strcmp(sess.usub[i].keys,s)==0) {
+                        on=inscan(i,&sess.user);
+                        togglenws(i,&sess.user,!on);
                     }
                 } else {
-                    if (strcmp(udir[i].keys,s)==0) {
-                        if(thisuser.nscn[udir[i].subnum]<0)
-                            thisuser.nscn[udir[i].subnum]=0;
+                    if (strcmp(sess.udir[i].keys,s)==0) {
+                        if(sess.user.nscn[sess.udir[i].subnum]<0)
+                            sess.user.nscn[sess.udir[i].subnum]=0;
                         else
-                            thisuser.nscn[udir[i].subnum]=-1;
+                            sess.user.nscn[sess.udir[i].subnum]=-1;
                     }
                 }
             }
@@ -297,16 +304,16 @@ void make_macros()
     do {
         outchr(12);
         pl("Ctrl-A macro: ");
-        list_macro(&(thisuser.macros[2][0]));
+        list_macro(&(sess.user.macros[2][0]));
         nl();
         pl("Ctrl-D macro: ");
-        list_macro(&(thisuser.macros[0][0]));
+        list_macro(&(sess.user.macros[0][0]));
         nl();
         pl("Ctrl-F macro: ");
-        list_macro(&(thisuser.macros[1][0]));
+        list_macro(&(sess.user.macros[1][0]));
         nl();
         pl("Ctrl-Y macro: ");
-        list_macro(&(thisuser.macros[3][0]));
+        list_macro(&(sess.user.macros[3][0]));
         nl();
         outstr("5Macro Editor 0(3A,D,F,Y,Q=Quit0)5 : ");
         ch=onek("QADFY");
@@ -316,14 +323,14 @@ void make_macros()
             else if(ch=='A') i1=2;
             else if(ch=='D') i1=0;
             else if(ch=='F') i1=1;
-            strcpy(s,&(thisuser.macros[i1][0]));
-            thisuser.macros[i1][0]=0;
+            strcpy(s,&(sess.user.macros[i1][0]));
+            sess.user.macros[i1][0]=0;
             done1=0;
             i=0;
             nl();
             pl("Enter your macro now, hit ctrl-Z when done.");
             nl();
-            okskey=0;
+            sess.okskey=0;
             do {
                 ch1=getkey();
                 if (ch1==26)
@@ -352,7 +359,7 @@ void make_macros()
                     done1=1;
             } 
             while ((!done1) && (!hangup));
-            okskey=1;
+            sess.okskey=1;
             tempmac[i]=0;
             nl();
             pl("You entered:");
@@ -362,13 +369,13 @@ void make_macros()
             nl();
             prt(5,"Is this OK? ");
             if (yn()) {
-                strcpy(&(thisuser.macros[i1][0]),tempmac);
+                strcpy(&(sess.user.macros[i1][0]),tempmac);
                 nl();
                 pl("Macro saved.");
             } 
             else {
                 nl();
-                strcpy(&(thisuser.macros[i1][0]),s);
+                strcpy(&(sess.user.macros[i1][0]),s);
                 pl("Nothing saved.");
             }
         }
@@ -390,7 +397,7 @@ void input_pw1()
         outstr(": ");
         echo=0;
         input(s,19);
-        if (strcmp(s,thisuser.pw)) {
+        if (strcmp(s,sess.user.pw)) {
             nl();
             pl("Incorrect.");
             nl();
@@ -416,7 +423,7 @@ void input_pw1()
                 nl();
             } 
             else {
-                strcpy(thisuser.pw,s);
+                strcpy(sess.user.pw,s);
                 nl();
                 pl("Password changed.");
                 nl();
@@ -444,13 +451,13 @@ void modify_mailbox()
     if (yn()) {
         prt(5,"Are you sure? ");
         if (yn()) {
-            thisuser.forwardusr=-1;
+            sess.user.forwardusr=-1;
             return;
         }
     }
     prt(5,"Do you want to forward your mail? ");
     if (!yn()) {
-        thisuser.forwardusr=0;
+        sess.user.forwardusr=0;
         return;
     }
     nl();
@@ -459,15 +466,15 @@ void modify_mailbox()
     prt(2,"Forward to which user? ");
     input(s,40);
     i=finduser1(s);
-    if (i==usernum) {
-        thisuser.forwardusr=0;
+    if (i==sess.usernum) {
+        sess.user.forwardusr=0;
         nl();
         pl("Forwarding reset.");
         nl();
         return;
     }
     if (i>0) {
-        thisuser.forwardusr=i;
+        sess.user.forwardusr=i;
         nl();
         pl("Saved.");
         nl();
@@ -488,7 +495,7 @@ void getfileformat()
 
     logtypes(2,"Changed File List Format");
     do {
-        sprintf(s,"%sfile%d.fmt",syscfg.gfilesdir,c);
+        sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,c);
         f=fopen(s,"rt");
         if(f!=NULL) {
             fgets(s,81,f);
@@ -506,9 +513,9 @@ void getfileformat()
     nl();
     outstr(get_string(79));
     input(s,3);
-    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')&&!strchr(s,'A')) thisuser.flisttype=atoi(s);
+    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')&&!strchr(s,'A')) sess.user.flisttype=atoi(s);
     else if(!s[0]) { 
-        thisuser.flisttype=1; 
+        sess.user.flisttype=1; 
         return; 
     }
     else if(strchr(s,'A')) {
@@ -518,7 +525,7 @@ void getfileformat()
         npr("3Enter Your File Format\r\n5:0 ");
         inli(s,s1,81,1);
         if(s[0]) {
-            stuff_in1(s1,s,"Dom30a  .Zip","Dominion BBS 3.0"," 300","   0","  1",nam(&thisuser,usernum),date(),"100","00:14:26","");
+            stuff_in1(s1,s,"Dom30a  .Zip","Dominion BBS 3.0"," 300","   0","  1",nam(&sess.user,sess.usernum),date(),"100","00:14:26","");
             npr("%s\r\n\r\n",s1);
             outstr("5Is this what you want? ");
             if(ny()) {
@@ -529,7 +536,7 @@ void getfileformat()
                 outstr("5What color would you like the footer to be? ");
                 input(s2,2);
                 i1=atoi(s2);
-                sprintf(s1,"%sfile%d.fmt",syscfg.gfilesdir,c);
+                sprintf(s1,"%sfile%d.fmt",sys.cfg.gfilesdir,c);
                 f=fopen(s1,"wt");
                 fputs(s,f);
                 fputs("\n",f);
@@ -542,15 +549,15 @@ void getfileformat()
                 s1[ch]=0;
                 fprintf(f,"%c%s\n",i+1,s1);
                 fprintf(f,"%c%s\n",i1+1,s1);
-                sprintf(s,"Added by: %s on %s\n",nam(&thisuser,usernum),date());
+                sprintf(s,"Added by: %s on %s\n",nam(&sess.user,sess.usernum),date());
                 fputs(s,f);
                 fclose(f);
-                thisuser.flisttype=c;
+                sess.user.flisttype=c;
                 logtypes(2,"Added File Format: 4%d",c);
             }
         }
     }
-    if(!thisuser.flisttype) thisuser.flisttype=1;
+    if(!sess.user.flisttype) sess.user.flisttype=1;
 }
 
 void setcolors(userrec *uu)
@@ -561,7 +568,7 @@ void setcolors(userrec *uu)
     u=*uu;
     if(u.sysstatus &  sysstatus_color) {
         for(i=0;i<20;i++)
-            u.colors[i]=nifty.defaultcol[i];
+            u.colors[i]=sys.nifty.defaultcol[i];
     } 
     else {
         u.colors[0]=15;
@@ -595,17 +602,17 @@ void input_ansistat()
     int i,c,c2;
     char ch;
 
-    if(thisuser.sysstatus & sysstatus_ansi)
-        togglebit((long *)&thisuser.sysstatus,sysstatus_ansi);
+    if(sess.user.sysstatus & sysstatus_ansi)
+        togglebit((long *)&sess.user.sysstatus,sysstatus_ansi);
 
-    if(thisuser.sysstatus & sysstatus_color)
-        togglebit((long *)&thisuser.sysstatus,sysstatus_color);
+    if(sess.user.sysstatus & sysstatus_color)
+        togglebit((long *)&sess.user.sysstatus,sysstatus_color);
 
-    if(thisuser.sysstatus & sysstatus_avatar)
-        togglebit((long *)&thisuser.sysstatus,sysstatus_avatar);
+    if(sess.user.sysstatus & sysstatus_avatar)
+        togglebit((long *)&sess.user.sysstatus,sysstatus_avatar);
 
-    if(thisuser.sysstatus & sysstatus_rip)
-        togglebit((long *)&thisuser.sysstatus,sysstatus_rip);
+    if(sess.user.sysstatus & sysstatus_rip)
+        togglebit((long *)&sess.user.sysstatus,sysstatus_rip);
 
     nl();
 
@@ -621,21 +628,21 @@ void input_ansistat()
 
     if (yn()) {
         nl();
-        thisuser.sysstatus |= sysstatus_ansi;
+        sess.user.sysstatus |= sysstatus_ansi;
         outstr("Do you want color? ");
         if (ny())
-            togglebit((long *)&thisuser.sysstatus,sysstatus_color);
+            togglebit((long *)&sess.user.sysstatus,sysstatus_color);
         ansic(0);
         nl();
         outstr("Do you want Avatar? (No if unsure): ");
         if(yn())
-            togglebit((long *)&thisuser.sysstatus,sysstatus_avatar);
+            togglebit((long *)&sess.user.sysstatus,sysstatus_avatar);
         nl();
         outstr("Do you want RIPscript support? ");
         if(yn())
-            togglebit((long *)&thisuser.sysstatus,sysstatus_rip);
+            togglebit((long *)&sess.user.sysstatus,sysstatus_rip);
     }
-    setcolors(&thisuser);
+    setcolors(&sess.user);
 }
 
 void selecthelplevel()
@@ -649,13 +656,13 @@ void selecthelplevel()
     switch(c) {
     case 'R':
     case '\r': 
-        thisuser.helplevel=1; 
+        sess.user.helplevel=1; 
         break;
     case 'E': 
-        thisuser.helplevel=0; 
+        sess.user.helplevel=0; 
         break;
     case 'I': 
-        thisuser.helplevel=2; 
+        sess.user.helplevel=2; 
         break;
     }
     ansic(0);
@@ -676,7 +683,7 @@ void getmsgformat()
 
     logtypes(2,"Changed Msg List Format");
     do {
-        sprintf(s,"%smsg%d.fmt",syscfg.gfilesdir,c);
+        sprintf(s,"%smsg%d.fmt",sys.cfg.gfilesdir,c);
         f=fopen(s,"rt");
         if(f!=NULL) {
             fgets(s1,81,f);
@@ -693,11 +700,11 @@ void getmsgformat()
     nl();
     outstr(get_string(79));
     input(s,3);
-    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')) thisuser.mlisttype=atoi(s);
+    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')) sess.user.mlisttype=atoi(s);
     else if(!s[0]) { 
-        thisuser.mlisttype=1;
+        sess.user.mlisttype=1;
         return; 
     }
 
-    if(!thisuser.mlisttype) thisuser.mlisttype=1;
+    if(!sess.user.mlisttype) sess.user.mlisttype=1;
 }

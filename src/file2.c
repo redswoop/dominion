@@ -1,15 +1,21 @@
-#include "vars.h"
-#undef batch     /* used as function parameter name */
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 
 #pragma hdrstop
 
 #include <time.h>
 
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 int printfileinfo(uploadsrec *u, int dn);
 #define MAX_LINES 10
 #define FSED_OK ((0))
 
-#define SETREC(i)  lseek(dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET)
+#define SETREC(i)  lseek(sess.dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET)
 
 void yourinfodl()
 {
@@ -17,22 +23,22 @@ void yourinfodl()
 
     nl();
     dtitle("Your Transfer Status");
-    npr("0Downloads     5: 4%ldk in %d files\r\n",thisuser.dk, thisuser.downloaded);
-    npr("0Uploads       5: 4%ldk in %d files\r\n",thisuser.uk, thisuser.uploaded);
-    npr("0File Points   5: 4%d\r\n",thisuser.fpts);
+    npr("0Downloads     5: 4%ldk in %d files\r\n",sess.user.dk, sess.user.downloaded);
+    npr("0Uploads       5: 4%ldk in %d files\r\n",sess.user.uk, sess.user.uploaded);
+    npr("0File Points   5: 4%d\r\n",sess.user.fpts);
     npr("0Your KB Ratio 5: 4%.0f%%\r\n",ratio()*100);
-    npr("0Required Ratio5: 4%.0f%%\r\n",syscfg.req_ratio*100);
+    npr("0Required Ratio5: 4%.0f%%\r\n",sys.cfg.req_ratio*100);
     nl();
     strcpy(s,"0Special Flags: 7 ");
-    if(thisuser.exempt & exempt_ratio)
+    if(sess.user.exempt & exempt_ratio)
         npr("%sNo Ratio/File Point Check!\r\n",s);
-    if(thisuser.exempt & exempt_post)
+    if(sess.user.exempt & exempt_post)
         npr("%sNo Post Call Ratio Check!\r\n",s);
-    if(thisuser.exempt & exempt_time)
+    if(sess.user.exempt & exempt_time)
         npr("%sNo Time Check!\r\n",s);
     nl();
 
-    if(thisuser.helplevel==2) pausescr();
+    if(sess.user.helplevel==2) pausescr();
 }
 
 
@@ -45,7 +51,7 @@ void setldate()
     int m,dd,y;
 
     nl();
-    unixtodos(nscandate,&d,&t);
+    unixtodos(sess.nscandate,&d,&t);
     npr("Current limiting date = %02d/%02d/%02d\r\n",d.da_mon,d.da_day,(d.da_year-1900)%100);
     npr("3Enter NewScan Date\r\n5: ");
     mpl(8);
@@ -66,7 +72,7 @@ void setldate()
         nl();
         pl(s);
         nl();
-        nscandate=dostounix(&d,&t);
+        sess.nscandate=dostounix(&d,&t);
     }
 }
 
@@ -106,8 +112,8 @@ void getfileinfo()
 
     while ((!hangup) && (i>0) && (!abort)) {
         SETREC(i);
-        read(dlf,(void *)&u,sizeof(uploadsrec));
-        abort=printfileinfo(&u,udir[curdir].subnum);
+        read(sess.dlf,(void *)&u,sizeof(uploadsrec));
+        abort=printfileinfo(&u,sess.udir[sess.curdir].subnum);
         if(num<1)
             i=nrecno(s,i);
         else i=0;
@@ -124,14 +130,14 @@ int printfileinfo(uploadsrec *u, int dn)
     int i,abort=0;
     FILE *f;
 
-    sprintf(s,"%sfstat.fmt",syscfg.gfilesdir);
+    sprintf(s,"%sfstat.fmt",sys.cfg.gfilesdir);
     f=fopen(s,"rt");
-    if(modem_speed)
-        t=((double) (((u->numbytes)+127)/128)) * (1620.0)/((double) (modem_speed));
+    if(sess.modem_speed)
+        t=((double) (((u->numbytes)+127)/128)) * (1620.0)/((double) (sess.modem_speed));
     abort=0;
 
     strcpy(fstatus,"");
-    sprintf(s,"%s%s",directories[dn].dpath,u->filename);
+    sprintf(s,"%s%s",sys.directories[dn].dpath,u->filename);
     if(!exist(s)) strcpy(fstatus,"0(6File is OffLine0) ");
     if(u->ats[0]==0) strcat(fstatus,"0(8Unvalidated0) ");
     if(u->mask & mask_unavail) strcat(fstatus,"1(8Unavailble1)");
@@ -164,7 +170,7 @@ void displayformat()
     char s[161],s1[161],s2[51];
     FILE *f;
 
-    sprintf(s,"%sfile%d.fmt",syscfg.gfilesdir,thisuser.flisttype);
+    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype);
     f=fopen(s,"rt");
     fgets(s,81,f);
     fclose(f);
@@ -206,7 +212,7 @@ void ascii_send(char *fn, int *sent, double *percent)
             *sent=1;
         else {
             *sent=0;
-            thisuser.dk += ((pos+1023L)/1024L);
+            sess.user.dk += ((pos+1023L)/1024L);
         }
         *percent=((double) pos)/((double)max);
     } 
@@ -241,9 +247,9 @@ void send_file(char *fn, int *sent, int *abort, char *ft)
         break;
     default:
         i1=extern_prot(i,fn,1);
-        strcpy(ft,(proto[i].description));
+        strcpy(ft,(sys.proto[i].description));
         *abort=0;
-        if (i1==proto[i].ok1)
+        if (i1==sys.proto[i].ok1)
             *sent=1;
         else
             *sent=0;
@@ -267,8 +273,8 @@ void receive_file(char *fn, int *received, char *ft, int okbatch)
         break;
     default:
         i1=extern_prot(i,fn,0);
-        strcpy(ft,(proto[i].description));
-        if (i1==proto[i].ok1) {
+        strcpy(ft,(sys.proto[i].description));
+        if (i1==sys.proto[i].ok1) {
             *received=1;
         } 
         else {
@@ -284,8 +290,8 @@ int get_batchprotocol(int dl,int *hang)
     int i1,prot;
 
 
-    prot=thisuser.defprot;
-    if(!proto[prot].description[0]||prot<0) prot=get_protocol(1);
+    prot=sess.user.defprot;
+    if(!sys.proto[prot].description[0]||prot<0) prot=get_protocol(1);
     if(dl);
     *hang=0;
 
@@ -298,7 +304,7 @@ top:
     case 13: 
         return(prot);
     case 'X': 
-        return(thisuser.defprot=get_protocol(1));
+        return(sess.user.defprot=get_protocol(1));
     case 'A': 
         return(-1);
     case 'B': 
@@ -312,7 +318,7 @@ top:
 }
 
 
-int get_protocol(int batch)
+int get_protocol(int is_batch)
 {
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],oks[MAX_PATH_LEN],s2[MAX_PATH_LEN],ch;
     int i,i1,i2,maxprot,done;
@@ -322,10 +328,10 @@ int get_protocol(int batch)
     maxprot=0;
     done=0;
 
-    for (i1=0; i1<numextrn; i1++) {
-        if(batch||(!batch&&proto[i1].singleok)) {
+    for (i1=0; i1<sys.numextrn; i1++) {
+        if(is_batch||(!is_batch&&sys.proto[i1].singleok)) {
             ++maxprot;
-            sprintf(s1,"%c",proto[i1].key);
+            sprintf(s1,"%c",sys.proto[i1].key);
             strcat(oks,s1);
         }
     }
@@ -341,9 +347,9 @@ int get_protocol(int batch)
             nl();
             dtitle("Dominion Transfer Protocols");
             pl("5<5Q5>0 Abort");
-            for (i1=0; i1<numextrn; i1++) {
-                if(batch||(!batch&&proto[i1].singleok))
-                    npr("5<5%c5>0 %s\r\n",proto[i1].key,(proto[i1].description));
+            for (i1=0; i1<sys.numextrn; i1++) {
+                if(is_batch||(!is_batch&&sys.proto[i1].singleok))
+                    npr("5<5%c5>0 %s\r\n",sys.proto[i1].key,(sys.proto[i1].description));
             }
             nl();
         } 
@@ -356,8 +362,8 @@ int get_protocol(int batch)
     if(ch=='N') return(-3);
     if(ch=='A') return(-4);
 
-    for(i=0;i<numextrn;i++)
-        if(ch==proto[i].key) return(i);
+    for(i=0;i<sys.numextrn;i++)
+        if(ch==sys.proto[i].key) return(i);
 
     return(-1);
 }
@@ -370,29 +376,29 @@ int extern_prot(int pn, char *fn1, int sending)
 
     i=0;
     for (i1=0; i1<81; i1++) {
-        i+=proto[pn].description[i1];
-        i+=proto[pn].sendfn[i1];
-        i+=proto[pn].receivefn[i1];
+        i+=sys.proto[pn].description[i1];
+        i+=sys.proto[pn].sendfn[i1];
+        i+=sys.proto[pn].receivefn[i1];
     }
     if (sending) {
         nl();
-        if(pn>-1) strcpy(s1,(proto[pn].sendfn));
+        if(pn>-1) strcpy(s1,(sys.proto[pn].sendfn));
     } 
     else {
         nl();
-        if (pn>-1) strcpy(s1,(proto[pn].receivefn));
+        if (pn>-1) strcpy(s1,(sys.proto[pn].receivefn));
     }
     strcpy(fn,fn1);
     stripfn1(fn);
-    ultoa(com_speed,sx1,10);
-    ultoa(modem_speed,sx3,10);
-    sx2[0]='0'+syscfg.primaryport;
+    ultoa(sess.com_speed,sx1,10);
+    ultoa(sess.modem_speed,sx3,10);
+    sx2[0]='0'+sys.cfg.primaryport;
     sx2[1]=0;
     stuff_in(s,s1,sx1,sx2,fn,sx3,"");
     if (s[0]) {
         set_protect(0);
         clrscr();
-        printf("[0;37;1;44m[KCurrent user: %s\n\n[0;1m",nam(&thisuser,usernum));
+        printf("[0;37;1;44m[KCurrent user: %s\n\n[0;1m",nam(&sess.user,sess.usernum));
         outs(s);
         outs("\r\n");
         if (incom) {
@@ -461,7 +467,7 @@ int dirlist(char type)
     int i,i1,abort=0;
     if(type);
 
-    sprintf(s,"%sdirlist.fmt",syscfg.gfilesdir);
+    sprintf(s,"%sdirlist.fmt",sys.cfg.gfilesdir);
     f=fopen(s,"rt");
 
     fgets(s,163,f); 
@@ -476,19 +482,19 @@ int dirlist(char type)
     filter(s1,'\n');
     fgets(s6,163,f); 
     filter(s6,'\n');
-    for(i=0;i<umaxdirs&&udir[i].subnum!=-1; i++) {
-        dliscan1(udir[i].subnum);
-        d=directories[udir[i].subnum];
-        itoa(numf,s2,10);
+    for(i=0;i<sess.umaxdirs&&sess.udir[i].subnum!=-1; i++) {
+        dliscan1(sess.udir[i].subnum);
+        d=sys.directories[sess.udir[i].subnum];
+        itoa(sess.numf,s2,10);
         sprintf(s3,"Download%s",(d.mask & mask_no_uploads)?"":"/Upload");
 
         i1=0;
-        if (thisuser.nscn[udir[i].subnum]>=0) i1=1;
+        if (sess.user.nscn[sess.udir[i].subnum]>=0) i1=1;
 
         if(i1)
-            stuff_in2(s,s1,noc2(d.name),40,udir[i].keys,2,s2,3,s3,15,"",0);
+            stuff_in2(s,s1,noc2(d.name),40,sess.udir[i].keys,2,s2,3,s3,15,"",0);
         else
-            stuff_in2(s,s6,noc2(d.name),40,udir[i].keys,2,s2,3,s3,15,"",0);
+            stuff_in2(s,s6,noc2(d.name),40,sess.udir[i].keys,2,s2,3,s3,15,"",0);
         plfmta(s,&abort);
     }
     fgets(s1,163,f); 
@@ -509,19 +515,19 @@ void genner(char *fn,char *spec, int type)
 
     out=fopen(fn,"wt");
 
-    fprintf(out,">>>File List of %s\n\n",syscfg.systemname);
-    for (i=0;i<num_dirs; i++) {
+    fprintf(out,">>>File List of %s\n\n",sys.cfg.systemname);
+    for (i=0;i<sys.num_dirs; i++) {
         pts=1;
         if(type==2)
-            if(!(directories[i].mask & mask_PD)) {
+            if(!(sys.directories[i].mask & mask_PD)) {
                 pts=0;
             }
 
         if (pts) {
             if(type!=2) {
                 pts=0;
-                for(i1=0;i1<num_dirs&&i1<MAX_DIRS&&usub[i1].subnum!=-1;i1++) {
-                    if(udir[i1].subnum==i1)
+                for(i1=0;i1<sys.num_dirs&&i1<MAX_DIRS&&sess.usub[i1].subnum!=-1;i1++) {
+                    if(sess.udir[i1].subnum==i1)
                         pts=1;
                 }
 
@@ -531,18 +537,18 @@ void genner(char *fn,char *spec, int type)
 
             dliscan1(i);
             pty=1;
-            for (i1=1; (i1<=numf); i1++) {
+            for (i1=1; (i1<=sess.numf); i1++) {
                 SETREC(i1);
-                read(dlf,(void *)&u,sizeof(uploadsrec));
+                read(sess.dlf,(void *)&u,sizeof(uploadsrec));
 
                 if(!compare(spec,u.filename))
                     continue;
 
-                if(type==1&&u.daten<nscandate)
+                if(type==1&&u.daten<sess.nscandate)
                     continue;
 
                 if (pty) {
-                    fprintf(out,"\nArea: %s #%d [%d Files]\n\n",directories[i].name,i,numf);
+                    fprintf(out,"\nArea: %s #%d [%d Files]\n\n",sys.directories[i].name,i,sess.numf);
                     pty=0;
                 }
                 if(u.ats[0]) {
@@ -570,7 +576,7 @@ void genner(char *fn,char *spec, int type)
     }
 
 
-    fprintf(out,"\n\nFiles For %s\n",syscfg.systemname);
+    fprintf(out,"\n\nFiles For %s\n",sys.cfg.systemname);
     fprintf(out,"Files Total: %d\n",num);
 
     fclose(out);
@@ -590,7 +596,7 @@ void listgen(void)
     genner("filelist.dom",s,isnew);
     sprintf(s,"filelist.dom");
     add_arc("filelist","filelist.dom");
-    sprintf(s1,"%s\\filelist.%s",cdir,xarc[ARC_NUMBER].extension);
+    sprintf(s1,"%s\\filelist.%s",sys.cdir,sys.xarc[sys.ARC_NUMBER].extension);
     i=open(s1,O_RDONLY|O_BINARY);
     close(i);
     send_file(s1,(int *)&sent,(int *)&abort,s);

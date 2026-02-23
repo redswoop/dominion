@@ -1,7 +1,10 @@
 #pragma hdrstop
 
 #include <stdio.h>
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "json_io.h"
 
 #include <fcntl.h>
@@ -9,15 +12,18 @@
 #include <string.h>
 #include <stdarg.h>
 
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 #ifndef DOS
-/* syscfg, nifty, xarc from vars.h; thisuser, usernum, topdata via session macros */
+/* sys.cfg, sys.nifty, sys.xarc from vars.h; sess.user, sess.usernum, sess.topdata via session macros */
 
 #else
+
 int mciok;
-configrec syscfg;
-niftyrec nifty;
-xarcrec xarc[8];
+configrec sys.cfg;
+niftyrec sys.nifty;
+xarcrec sys.xarc[8];
 
 int hangup=0;
 
@@ -207,19 +213,19 @@ void filecfg()
         outchr(12);
         lpr("5� 0File Area Configuration");
         nl();
-        bitset(get_string2(47),nifty.nifstatus,nif_ratio);
-        bitset(get_string2(48),nifty.nifstatus,nif_fpts);
-        bitset(get_string2(49),nifty.nifstatus,nif_pcr);
-        bitset(get_string2(50),nifty.nifstatus,nif_autocredit);
+        bitset(get_string2(47),sys.nifty.nifstatus,nif_ratio);
+        bitset(get_string2(48),sys.nifty.nifstatus,nif_fpts);
+        bitset(get_string2(49),sys.nifty.nifstatus,nif_pcr);
+        bitset(get_string2(50),sys.nifty.nifstatus,nif_autocredit);
         nl();
-        lpr("5. KiloByte Ratio    : %-5.3f",syscfg.req_ratio);
-        lpr("6. File Point Ratio  : 1 to %d ",nifty.fptsratio);
-        lpr("7. Post Call Ratio   : %-5.3f",syscfg.post_call_ratio);
+        lpr("5. KiloByte Ratio    : %-5.3f",sys.cfg.req_ratio);
+        lpr("6. File Point Ratio  : 1 to %d ",sys.nifty.fptsratio);
+        lpr("7. Post Call Ratio   : %-5.3f",sys.cfg.post_call_ratio);
         nl();
-        if(syscfg.newuploads<255) itoa(syscfg.newuploads,s,10);
+        if(sys.cfg.newuploads<255) itoa(sys.cfg.newuploads,s,10);
         else strcpy(s,"None.");
         lpr("8. New Uploads Area  : %s",s);
-        lpr("9. Dl Commision      : %d",nifty.fcom);
+        lpr("9. Dl Commision      : %d",sys.nifty.fcom);
         nl();
 
         outstr(get_string2(11));
@@ -229,30 +235,30 @@ void filecfg()
             break;
 
         case '1':
-            togglebit((long *)&nifty.nifstatus,nif_ratio);
+            togglebit((long *)&sys.nifty.nifstatus,nif_ratio);
             break;
         case '2': 
-            togglebit((long *)&nifty.nifstatus,nif_fpts);
+            togglebit((long *)&sys.nifty.nifstatus,nif_fpts);
             break;
         case '3': 
-            togglebit((long *)&nifty.nifstatus,nif_pcr);
+            togglebit((long *)&sys.nifty.nifstatus,nif_pcr);
             break;
         case '4': 
-            togglebit((long *)&nifty.nifstatus,nif_autocredit);
+            togglebit((long *)&sys.nifty.nifstatus,nif_autocredit);
             break;
 
         case '5':
             getselect(s,7,23,5,1);
-            sscanf(s,"%f",&syscfg.req_ratio);
+            sscanf(s,"%f",&sys.cfg.req_ratio);
             break;
         case '6':
-            nifty.fptsratio = getselectd(8,23,20);
-            if(nifty.fptsratio<1)
-                nifty.fptsratio=1;
+            sys.nifty.fptsratio = getselectd(8,23,20);
+            if(sys.nifty.fptsratio<1)
+                sys.nifty.fptsratio=1;
             break;
         case '7':
             getselect(s,9,23,5,1);
-            sscanf(s,"%f",&syscfg.post_call_ratio);
+            sscanf(s,"%f",&sys.cfg.post_call_ratio);
             break;
 
         case '8':
@@ -262,12 +268,12 @@ void filecfg()
             input(s,3);
 #endif
             if(s[0]) {
-                syscfg.newuploads=atoi(s);
+                sys.cfg.newuploads=atoi(s);
             } 
-            else syscfg.newuploads=255;
+            else sys.cfg.newuploads=255;
             break;
         case '9':
-            nifty.fcom = getselectd(12,23,3);
+            sys.nifty.fcom = getselectd(12,23,3);
             break;
         }
     } 
@@ -283,21 +289,21 @@ void namepath()
         outchr(12);
         lpr("5� 0System Info And Paths");
         nl();
-        lpr("1. System Name       : %s",syscfg.systemname);
-        lpr("2. System Phone      : %s",syscfg.systemphone);
-        lpr("3. System Password   : %s",syscfg.systempw);
-        lpr("4. SysOp Name        : %s",syscfg.sysopname);
-        lpr("5. Matrix Password   : %s",nifty.matrix);
-        lpr("6. New User Password : %s",syscfg.newuserpw);
-        lpr("7. Lock Out Password : %s",nifty.lockoutpw);
+        lpr("1. System Name       : %s",sys.cfg.systemname);
+        lpr("2. System Phone      : %s",sys.cfg.systemphone);
+        lpr("3. System Password   : %s",sys.cfg.systempw);
+        lpr("4. SysOp Name        : %s",sys.cfg.sysopname);
+        lpr("5. Matrix Password   : %s",sys.nifty.matrix);
+        lpr("6. New User Password : %s",sys.cfg.newuserpw);
+        lpr("7. Lock Out Password : %s",sys.nifty.lockoutpw);
         nl();
-        lpr("8. Data Directory    : %s",syscfg.datadir);
-        lpr("9. Afiles Directory  : %s",syscfg.gfilesdir);
-        lpr("0. Msgs Directory    : %s",syscfg.msgsdir);
-        lpr("A. Menu Directory    : %s",syscfg.menudir);
-        lpr("B. Batch Directory   : %s",syscfg.batchdir);
-        lpr("C. Temp Directory    : %s",syscfg.tempdir);
-        lpr("D. Default Dls Dir   : %s",syscfg.dloadsdir);
+        lpr("8. Data Directory    : %s",sys.cfg.datadir);
+        lpr("9. Afiles Directory  : %s",sys.cfg.gfilesdir);
+        lpr("0. Msgs Directory    : %s",sys.cfg.msgsdir);
+        lpr("A. Menu Directory    : %s",sys.cfg.menudir);
+        lpr("B. Batch Directory   : %s",sys.cfg.batchdir);
+        lpr("C. Temp Directory    : %s",sys.cfg.tempdir);
+        lpr("D. Default Dls Dir   : %s",sys.cfg.dloadsdir);
         nl();
         outstr(get_string2(11));
         switch(toupper(getkey())) {
@@ -305,52 +311,52 @@ void namepath()
             done=1; 
             break;
         case '1':
-            getselect(syscfg.systemname,2,23, sizeof(syscfg.systemname)-1,1);
+            getselect(sys.cfg.systemname,2,23, sizeof(sys.cfg.systemname)-1,1);
             break;
         case '2':
 #ifndef DOS
             go(4,24); 
-            inputfone(syscfg.systemphone); 
+            inputfone(sys.cfg.systemphone); 
             break;
 #else
-            getselect(syscfg.systemphone,3,23,12,0); 
+            getselect(sys.cfg.systemphone,3,23,12,0); 
             break;
 #endif
         case '3': 
-            getselect(syscfg.systempw,4,23,   sizeof(syscfg.systempw)-1,0);
+            getselect(sys.cfg.systempw,4,23,   sizeof(sys.cfg.systempw)-1,0);
             break;
         case '4': 
-            getselect(syscfg.sysopname,5,23,  sizeof(syscfg.sysopname)-1,1);
+            getselect(sys.cfg.sysopname,5,23,  sizeof(sys.cfg.sysopname)-1,1);
             break;
         case '5': 
-            getselect(nifty.matrix,6,23,      sizeof(nifty.matrix)-1,0);
+            getselect(sys.nifty.matrix,6,23,      sizeof(sys.nifty.matrix)-1,0);
             break;
         case '6': 
-            getselect(syscfg.newuserpw,7,23,  sizeof(syscfg.newuserpw)-1,0);
+            getselect(sys.cfg.newuserpw,7,23,  sizeof(sys.cfg.newuserpw)-1,0);
             break;
         case '7': 
-            getselect(nifty.lockoutpw,8,23,  sizeof(nifty.lockoutpw)-1,0);
+            getselect(sys.nifty.lockoutpw,8,23,  sizeof(sys.nifty.lockoutpw)-1,0);
             break;
         case '8': 
-            getselect(syscfg.datadir,10,23,    sizeof(syscfg.datadir)-1,1);
+            getselect(sys.cfg.datadir,10,23,    sizeof(sys.cfg.datadir)-1,1);
             break;
         case '9': 
-            getselect(syscfg.gfilesdir,11,23, sizeof(syscfg.gfilesdir)-1,1);
+            getselect(sys.cfg.gfilesdir,11,23, sizeof(sys.cfg.gfilesdir)-1,1);
             break;
         case '0': 
-            getselect(syscfg.msgsdir,12,23,   sizeof(syscfg.msgsdir)-1,1);
+            getselect(sys.cfg.msgsdir,12,23,   sizeof(sys.cfg.msgsdir)-1,1);
             break;
         case 'A': 
-            getselect(syscfg.menudir,13,23,    sizeof(syscfg.menudir)-1,1);
+            getselect(sys.cfg.menudir,13,23,    sizeof(sys.cfg.menudir)-1,1);
             break;
         case 'B': 
-            getselect(syscfg.batchdir,14,23,  sizeof(syscfg.batchdir)-1,1);
+            getselect(sys.cfg.batchdir,14,23,  sizeof(sys.cfg.batchdir)-1,1);
             break;
         case 'C': 
-            getselect(syscfg.tempdir,15,23,   sizeof(syscfg.tempdir)-1,1);
+            getselect(sys.cfg.tempdir,15,23,   sizeof(sys.cfg.tempdir)-1,1);
             break;
         case 'D': 
-            getselect(syscfg.dloadsdir,16,23, sizeof(syscfg.dloadsdir)-1,1);
+            getselect(sys.cfg.dloadsdir,16,23, sizeof(sys.cfg.dloadsdir)-1,1);
             break;
         }
     } 
@@ -366,37 +372,37 @@ void flagged()
         lpr("5� 0Flagged Information");
         nl();
 #ifdef DOS
-        bits("1. File Ratio",nifty.nifstatus,nif_ratio);
-        bitset("2. File Point Ratio",nifty.nifstatus,nif_fpts);
-        bits("3. Post Call Ratio",nifty.nifstatus,nif_pcr);
-        bitset("4. Auto UL Validation",nifty.nifstatus,nif_autocredit);
-        bits("5. 2Way Default",syscfg.sysconfig,sysconfig_2_way);
-        lpr("%-30s: %s","6. Chat Call Type",nifty.nifstatus & nif_chattype?"Screech":"Beep");
-        bitset("7. Log to Printer",syscfg.sysconfig,sysconfig_printer);
-        bits("8. Disallow Handles",syscfg.sysconfig,sysconfig_no_alias);
-        bitset("9. Phone Number in Logon",syscfg.sysconfig,sysconfig_free_phone);
-        bits("0. AutoMessage in Logon",nifty.nifstatus,nif_automsg);
-        bitset("A. Last Few Callers in Logon",nifty.nifstatus,nif_lastfew);
-        bits("B. Your Info in Logon",nifty.nifstatus,nif_yourinfo);
-        bitset("C. Automatic Chat Buffer Open",nifty.nifstatus,nif_autochat);
-        bits("D. Local System Security",syscfg.sysconfig,sysconfig_no_local);
-        bitset("E. Phone Off-Hook",syscfg.sysconfig,sysconfig_off_hook);
-        bits("F. Allow Users to Fast Logon",syscfg.sysconfig,sysconfig_no_xfer);
-        bitset("G. Strip Color from Logs",syscfg.sysconfig,sysconfig_shrink_term);
-        bits("H. Forced Voting",nifty.nifstatus,nif_forcevote);
-        bitset("!. All Uploads to SysOp",syscfg.sysconfig,sysconfig_all_sysop);
+        bits("1. File Ratio",sys.nifty.nifstatus,nif_ratio);
+        bitset("2. File Point Ratio",sys.nifty.nifstatus,nif_fpts);
+        bits("3. Post Call Ratio",sys.nifty.nifstatus,nif_pcr);
+        bitset("4. Auto UL Validation",sys.nifty.nifstatus,nif_autocredit);
+        bits("5. 2Way Default",sys.cfg.sysconfig,sysconfig_2_way);
+        lpr("%-30s: %s","6. Chat Call Type",sys.nifty.nifstatus & nif_chattype?"Screech":"Beep");
+        bitset("7. Log to Printer",sys.cfg.sysconfig,sysconfig_printer);
+        bits("8. Disallow Handles",sys.cfg.sysconfig,sysconfig_no_alias);
+        bitset("9. Phone Number in Logon",sys.cfg.sysconfig,sysconfig_free_phone);
+        bits("0. AutoMessage in Logon",sys.nifty.nifstatus,nif_automsg);
+        bitset("A. Last Few Callers in Logon",sys.nifty.nifstatus,nif_lastfew);
+        bits("B. Your Info in Logon",sys.nifty.nifstatus,nif_yourinfo);
+        bitset("C. Automatic Chat Buffer Open",sys.nifty.nifstatus,nif_autochat);
+        bits("D. Local System Security",sys.cfg.sysconfig,sysconfig_no_local);
+        bitset("E. Phone Off-Hook",sys.cfg.sysconfig,sysconfig_off_hook);
+        bits("F. Allow Users to Fast Logon",sys.cfg.sysconfig,sysconfig_no_xfer);
+        bitset("G. Strip Color from Logs",sys.cfg.sysconfig,sysconfig_shrink_term);
+        bits("H. Forced Voting",sys.nifty.nifstatus,nif_forcevote);
+        bitset("!. All Uploads to SysOp",sys.cfg.sysconfig,sysconfig_all_sysop);
 #else
-        bits(get_string2(51),syscfg.sysconfig,sysconfig_2_way);
-        lpr("%-30s: %s","2. Chat Call Type",nifty.nifstatus & nif_chattype?"Screech":"Beep");
-        bits(get_string2(53),syscfg.sysconfig,sysconfig_printer);
-        bitset(get_string2(54),syscfg.sysconfig,sysconfig_no_alias);
-        bits(get_string2(55),syscfg.sysconfig,sysconfig_free_phone);
-        bitset(get_string2(59),nifty.nifstatus,nif_autochat);
-        bits(get_string2(60),syscfg.sysconfig,sysconfig_no_local);
-        bitset(get_string2(61),syscfg.sysconfig,sysconfig_off_hook);
-        bits(get_string2(62),syscfg.sysconfig,sysconfig_no_xfer);
-        bitset(get_string2(63),syscfg.sysconfig,sysconfig_shrink_term);
-        bitset(get_string2(65),syscfg.sysconfig,sysconfig_all_sysop);
+        bits(get_string2(51),sys.cfg.sysconfig,sysconfig_2_way);
+        lpr("%-30s: %s","2. Chat Call Type",sys.nifty.nifstatus & nif_chattype?"Screech":"Beep");
+        bits(get_string2(53),sys.cfg.sysconfig,sysconfig_printer);
+        bitset(get_string2(54),sys.cfg.sysconfig,sysconfig_no_alias);
+        bits(get_string2(55),sys.cfg.sysconfig,sysconfig_free_phone);
+        bitset(get_string2(59),sys.nifty.nifstatus,nif_autochat);
+        bits(get_string2(60),sys.cfg.sysconfig,sysconfig_no_local);
+        bitset(get_string2(61),sys.cfg.sysconfig,sysconfig_off_hook);
+        bits(get_string2(62),sys.cfg.sysconfig,sysconfig_no_xfer);
+        bitset(get_string2(63),sys.cfg.sysconfig,sysconfig_shrink_term);
+        bitset(get_string2(65),sys.cfg.sysconfig,sysconfig_all_sysop);
 #endif
         nl();
         outstr(get_string2(11));
@@ -405,37 +411,37 @@ void flagged()
             done=1; 
             break;
         case '1':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_2_way);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_2_way);
             break;
         case '2':
-            togglebit((long *)&nifty.nifstatus,nif_chattype);
+            togglebit((long *)&sys.nifty.nifstatus,nif_chattype);
             break;
         case '3':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_printer);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_printer);
             break;
         case '4':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_no_alias);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_no_alias);
             break;
         case '5':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_free_phone);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_free_phone);
             break;
         case '6':
-            togglebit((long *)&nifty.nifstatus,nif_autochat);
+            togglebit((long *)&sys.nifty.nifstatus,nif_autochat);
             break;
         case '7':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_no_local);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_no_local);
             break;
         case '8':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_off_hook);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_off_hook);
             break;
         case '9':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_no_xfer);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_no_xfer);
             break;
         case '0':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_shrink_term);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_shrink_term);
             break;
         case 'A':
-            togglebit((long *)&syscfg.sysconfig,sysconfig_all_sysop);
+            togglebit((long *)&sys.cfg.sysconfig,sysconfig_all_sysop);
             break;
         }
     } 
@@ -454,35 +460,35 @@ void varible()
         outchr(12);
         lpr("5� 0Variable System Data");
         nl();
-        lpr("1. Start Out Menu    : %s",nifty.firstmenu);
-        lpr("2. New User Menu     : %s",nifty.newusermenu);
-        lpr("3. Echo Character    : %c",nifty.echochar);
+        lpr("1. Start Out Menu    : %s",sys.nifty.firstmenu);
+        lpr("2. New User Menu     : %s",sys.nifty.newusermenu);
+        lpr("3. Echo Character    : %c",sys.nifty.echochar);
         nl();
-        lpr("4. Max Waiting Mail  : %d",syscfg.maxwaiting);
-        lpr("5. Input Prompt Type : %s",nifty.nifstatus & nif_comment?"Dots":"Blue");
-        lpr("6. Maxtrix Active    : %s",nifty.matrixtype?"Yes":"No");
-        lpr("7. Lock Out Rate     : %d",nifty.lockoutrate);
+        lpr("4. Max Waiting Mail  : %d",sys.cfg.maxwaiting);
+        lpr("5. Input Prompt Type : %s",sys.nifty.nifstatus & nif_comment?"Dots":"Blue");
+        lpr("6. Maxtrix Active    : %s",sys.nifty.matrixtype?"Yes":"No");
+        lpr("7. Lock Out Rate     : %d",sys.nifty.lockoutrate);
         nl();
-        lpr("8. Chat Hours Start  : %s ",ctim((double)syscfg.sysoplowtime*60));
-        lpr("9. Chat Hours End    : %s ",ctim((double)syscfg.sysophightime*60));
+        lpr("8. Chat Hours Start  : %s ",ctim((double)sys.cfg.sysoplowtime*60));
+        lpr("9. Chat Hours End    : %s ",ctim((double)sys.cfg.sysophightime*60));
 #ifndef DOS
         npr("0. Set Rotating Clrs : SysOp=");
         for(i=0;i<5;i++) {
-            ansic(nifty.rotate[i]);
+            ansic(sys.nifty.rotate[i]);
             npr("%d,",i);
         }
         outstr(" User=");
         for(i=0;i<5;i++) {
-            ansic(syscfg.dszbatchdl[i]);
+            ansic(sys.cfg.dszbatchdl[i]);
             npr("%d,",i);
         }
         backspace();
         nl();
 #endif
-        lpr("0A. Chat Type         : %s",chattype[nifty.chatcolor]);
+        lpr("0A. Chat Type         : %s",chattype[sys.nifty.chatcolor]);
         nl();
-        lpr("B. Days to Keep Logs : %d",nifty.systemtype);
-        lpr("C. QWK Packet Name   : %s",nifty.menudir);
+        lpr("B. Days to Keep Logs : %d",sys.nifty.systemtype);
+        lpr("C. QWK Packet Name   : %s",sys.nifty.menudir);
         nl();
         outstr(get_string2(11));
         switch(toupper(getkey())) {
@@ -490,32 +496,32 @@ void varible()
             done=1;
             break;
         case '1':
-            getselect(nifty.firstmenu,2,23,sizeof(nifty.firstmenu),1);
+            getselect(sys.nifty.firstmenu,2,23,sizeof(sys.nifty.firstmenu),1);
             break;
         case '2': 
-            getselect(nifty.newusermenu,3,23,sizeof(nifty.newusermenu),1); 
+            getselect(sys.nifty.newusermenu,3,23,sizeof(sys.nifty.newusermenu),1); 
             break;
         case '3': 
             getselect(s,4,23,1,1);
-            nifty.echochar=s[0];
+            sys.nifty.echochar=s[0];
             break;
         case '4':
-            syscfg.maxwaiting = getselectd(6,23,4);
+            sys.cfg.maxwaiting = getselectd(6,23,4);
             break;
         case '5':
-            togglebit((long *)&nifty.nifstatus,nif_comment);
+            togglebit((long *)&sys.nifty.nifstatus,nif_comment);
             break;
         case '6':
-            nifty.matrixtype=!(nifty.matrixtype); 
+            sys.nifty.matrixtype=!(sys.nifty.matrixtype); 
             break;
         case '7':
-            nifty.lockoutrate=getselectd(9,23,20);
+            sys.nifty.lockoutrate=getselectd(9,23,20);
             break;
         case '8':
-            getselectt(&syscfg.sysoplowtime,11,23,20);
+            getselectt(&sys.cfg.sysoplowtime,11,23,20);
             break;
         case '9':
-            getselectt(&syscfg.sysophightime,12,23,20);
+            getselectt(&sys.cfg.sysophightime,12,23,20);
             break;
         case '0':
             nl();
@@ -523,24 +529,24 @@ void varible()
                 npr("Color %d: ",i);
                 input(s,3);
                 if(s[0])
-                    nifty.rotate[i]=atoi(s);
+                    sys.nifty.rotate[i]=atoi(s);
             }
             for(i=0;i<5;i++) {
                 npr("Color %d: ",i);
                 input(s,3);
                 if(s[0])
-                    syscfg.dszbatchdl[i]=atoi(s);
+                    sys.cfg.dszbatchdl[i]=atoi(s);
             }
             break;
         case 'A':
-            { int _tmp = nifty.chatcolor; getlist(&_tmp,chattype,3); nifty.chatcolor = _tmp; }
+            { int _tmp = sys.nifty.chatcolor; getlist(&_tmp,chattype,3); sys.nifty.chatcolor = _tmp; }
             break;
         case 'B':
-            nifty.systemtype=getselectd(16,23,20);
+            sys.nifty.systemtype=getselectd(16,23,20);
             break;
 
         case 'C':
-            getselect(nifty.menudir,17,23,8,1);
+            getselect(sys.nifty.menudir,17,23,8,1);
             break;
 
         }
@@ -558,13 +564,13 @@ void events()
         outchr(12);
         lpr("5� 0Event Manager");
         nl();
-        lpr("1. Logon Event     : %s",syscfg.logon_c);
-        lpr("2. Logoff Event    : %s",syscfg.upload_c);
-        lpr("3. Begin Day Event : %s",syscfg.beginday_c);
-        lpr("4. Newuser Event   : %s",syscfg.newuser_c);
+        lpr("1. Logon Event     : %s",sys.cfg.logon_c);
+        lpr("2. Logoff Event    : %s",sys.cfg.upload_c);
+        lpr("3. Begin Day Event : %s",sys.cfg.beginday_c);
+        lpr("4. Newuser Event   : %s",sys.cfg.newuser_c);
         nl();
-        lpr("5. Timed Event Execute Time : %s ",ctim((double)syscfg.executetime*60));
-        lpr("6. Timed Event File Name    : %s",syscfg.executestr);
+        lpr("5. Timed Event Execute Time : %s ",ctim((double)sys.cfg.executetime*60));
+        lpr("6. Timed Event File Name    : %s",sys.cfg.executestr);
         nl();
         outstr(get_string2(11));
         switch(toupper(getkey())) {
@@ -572,22 +578,22 @@ void events()
             done=1; 
             break;
         case '1': 
-            getselect(syscfg.logon_c,2,21,sizeof(syscfg.logon_c),1); 
+            getselect(sys.cfg.logon_c,2,21,sizeof(sys.cfg.logon_c),1); 
             break;
         case '2': 
-            getselect(syscfg.upload_c,3,21,sizeof(syscfg.upload_c),1); 
+            getselect(sys.cfg.upload_c,3,21,sizeof(sys.cfg.upload_c),1); 
             break;
         case '3': 
-            getselect(syscfg.beginday_c,4,21,sizeof(syscfg.beginday_c),1); 
+            getselect(sys.cfg.beginday_c,4,21,sizeof(sys.cfg.beginday_c),1); 
             break;
         case '4': 
-            getselect(syscfg.newuser_c,5,21,sizeof(syscfg.newuser_c),1); 
+            getselect(sys.cfg.newuser_c,5,21,sizeof(sys.cfg.newuser_c),1); 
             break;
         case '5': 
-            getselectt(&syscfg.executetime,7,30,30); 
+            getselectt(&sys.cfg.executetime,7,30,30); 
             break;
         case '6': 
-            getselect(syscfg.executestr,8,30,sizeof(syscfg.executestr),1); 
+            getselect(sys.cfg.executestr,8,30,sizeof(sys.cfg.executestr),1); 
             break;
         }
     } 
@@ -603,9 +609,9 @@ void modeminfo()
         outchr(12);
         lpr("5� 0Modem Information");
         nl();
-        lpr("1. Com Port     : %d",syscfg.primaryport);
-        lpr("2. Interrupt    : %d",syscfg.com_ISR[syscfg.primaryport]);
-        lpr("3. Base Address : %x",syscfg.com_base[syscfg.primaryport]);
+        lpr("1. Com Port     : %d",sys.cfg.primaryport);
+        lpr("2. Interrupt    : %d",sys.cfg.com_ISR[sys.cfg.primaryport]);
+        lpr("3. Base Address : %x",sys.cfg.com_base[sys.cfg.primaryport]);
         nl();
         outstr(get_string2(11));
         switch(toupper(getkey())) {
@@ -613,14 +619,14 @@ void modeminfo()
             done=1; 
             break;
         case '1': 
-            syscfg.primaryport = getselectd(2,18,2); 
+            sys.cfg.primaryport = getselectd(2,18,2); 
             break;
         case '2': 
-            syscfg.com_ISR[syscfg.primaryport] = getselectd(3,18,2); 
+            sys.cfg.com_ISR[sys.cfg.primaryport] = getselectd(3,18,2); 
             break;
         case '3': 
             getselect(s,4,18,4,1);
-            sscanf(s,"%x",&syscfg.com_base[syscfg.primaryport]);
+            sscanf(s,"%x",&sys.cfg.com_base[sys.cfg.primaryport]);
             break;
         }
     } 
@@ -640,17 +646,17 @@ void autoval()
         nl();
         for(i1=0;i1<10;i1++) {
             for (i=0; i<=15; i++) {
-                if (syscfg.autoval[i1].ar & (1 << i)) ar[i]='A'+i;
+                if (sys.cfg.autoval[i1].ar & (1 << i)) ar[i]='A'+i;
                 else ar[i]='-';
-                if (syscfg.autoval[i1].dar & (1 << i)) dar[i]='A'+i;
+                if (sys.cfg.autoval[i1].dar & (1 << i)) dar[i]='A'+i;
                 else dar[i]='-';
-                if (syscfg.autoval[i1].restrict & (1 << i)) res[i]=s[i];
+                if (sys.cfg.autoval[i1].restrict & (1 << i)) res[i]=s[i];
                 else res[i]='-';
             }
             ar[16]=0;
             dar[16]=0;
             res[16]=0;
-            sprintf(s,"%d%2d. SL=%3d DL=%3d AR=%s IR=%s R=%s",i1==numed?0:3,i1+1,syscfg.autoval[i1].sl,syscfg.autoval[i1].dsl,ar,dar,res);
+            sprintf(s,"%d%2d. SL=%3d DL=%3d AR=%s IR=%s R=%s",i1==numed?0:3,i1+1,sys.cfg.autoval[i1].sl,sys.cfg.autoval[i1].dsl,ar,dar,res);
             pl(s);
         }
         nl();
@@ -667,19 +673,19 @@ void autoval()
             if(numed>0) numed--; 
             break;
         case 'S': 
-            syscfg.autoval[i1].sl = getselectd(i1+2,7,3); 
+            sys.cfg.autoval[i1].sl = getselectd(i1+2,7,3); 
             break;
         case 'D': 
-            syscfg.autoval[i1].dsl = getselectd(i1+2,15,3); 
+            sys.cfg.autoval[i1].dsl = getselectd(i1+2,15,3); 
             break;
         case 'A': 
-            { int _tmp = syscfg.autoval[i1].ar; setbit(i1+2,21,"ABCDEFGHIJKLMNOP",&_tmp); syscfg.autoval[i1].ar = _tmp; } 
+            { int _tmp = sys.cfg.autoval[i1].ar; setbit(i1+2,21,"ABCDEFGHIJKLMNOP",&_tmp); sys.cfg.autoval[i1].ar = _tmp; } 
             break;
         case 'I': 
-            { int _tmp = syscfg.autoval[i1].dar; setbit(i1+2,41,"ABCDEFGHIJKLMNOP",&_tmp); syscfg.autoval[i1].dar = _tmp; } 
+            { int _tmp = sys.cfg.autoval[i1].dar; setbit(i1+2,41,"ABCDEFGHIJKLMNOP",&_tmp); sys.cfg.autoval[i1].dar = _tmp; } 
             break;
         case 'R': 
-            { int _tmp = syscfg.autoval[i1].restrict; setbit(i1+2,60,restrict_string,&_tmp); syscfg.autoval[i1].restrict = _tmp; } 
+            { int _tmp = sys.cfg.autoval[i1].restrict; setbit(i1+2,60,restrict_string,&_tmp); sys.cfg.autoval[i1].restrict = _tmp; } 
             break;
         }
     } 
@@ -691,9 +697,9 @@ void archive()
     char s[MAX_PATH_LEN];
     int i,done=0,i1=0;
 
-    sprintf(s,"%sarchive.dat",syscfg.datadir);
+    sprintf(s,"%sarchive.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR);
-    read(i,&xarc[0],8*sizeof(xarc[0]));
+    read(i,&sys.xarc[0],8*sizeof(sys.xarc[0]));
     close(i);
 
     do {
@@ -702,17 +708,17 @@ void archive()
         nl();
         lpr("3Number 9%d/70",i1);
         nl();
-        lpr("1. Extension  : %s",xarc[i1].extension);
-        lpr("2. Add to Arc : %s",xarc[i1].arca);
-        lpr("3. Extract Arc: %s",xarc[i1].arce);
-        lpr("4. View Arc   : %s",xarc[i1].arcl);
-        lpr("5. Test Arc   : %s",xarc[i1].arct);
-        lpr("6. Comment Arc: %s",xarc[i1].arcc);
-        lpr("7. Swap to Run: %s",xarc[i1].attr & xarc_swap?"Yes":"No");
-        lpr("8. Ok Level 1 : %d",xarc[i1].ok1);
-        lpr("9. Ok Level 1 : %d",xarc[i1].ok2);
-        lpr("0. Error 1    : %d",xarc[i1].nk1);
-        lpr("A. Error 2    : %d",xarc[i1].nk2);
+        lpr("1. Extension  : %s",sys.xarc[i1].extension);
+        lpr("2. Add to Arc : %s",sys.xarc[i1].arca);
+        lpr("3. Extract Arc: %s",sys.xarc[i1].arce);
+        lpr("4. View Arc   : %s",sys.xarc[i1].arcl);
+        lpr("5. Test Arc   : %s",sys.xarc[i1].arct);
+        lpr("6. Comment Arc: %s",sys.xarc[i1].arcc);
+        lpr("7. Swap to Run: %s",sys.xarc[i1].attr & xarc_swap?"Yes":"No");
+        lpr("8. Ok Level 1 : %d",sys.xarc[i1].ok1);
+        lpr("9. Ok Level 1 : %d",sys.xarc[i1].ok2);
+        lpr("0. Error 1    : %d",sys.xarc[i1].nk1);
+        lpr("A. Error 2    : %d",sys.xarc[i1].nk2);
         nl();
         pl(" %1 = Archive File Name");
         pl(" %2 = File to Touch");
@@ -730,41 +736,41 @@ void archive()
             if(i1<7) i1++; 
             break;
         case '1': 
-            getselect(xarc[i1].extension,4,16,3,0); 
+            getselect(sys.xarc[i1].extension,4,16,3,0); 
             break;
         case '2': 
-            getselect(xarc[i1].arca,5,16,sizeof(xarc[i1].arca),1); 
+            getselect(sys.xarc[i1].arca,5,16,sizeof(sys.xarc[i1].arca),1); 
             break;
         case '3': 
-            getselect(xarc[i1].arce,6,16,sizeof(xarc[i1].arce),1); 
+            getselect(sys.xarc[i1].arce,6,16,sizeof(sys.xarc[i1].arce),1); 
             break;
         case '4': 
-            getselect(xarc[i1].arcl,7,16,sizeof(xarc[i1].arcl),1); 
+            getselect(sys.xarc[i1].arcl,7,16,sizeof(sys.xarc[i1].arcl),1); 
             break;
         case '5': 
-            getselect(xarc[i1].arct,8,16,sizeof(xarc[i1].arct),1); 
+            getselect(sys.xarc[i1].arct,8,16,sizeof(sys.xarc[i1].arct),1); 
             break;
         case '6': 
-            getselect(xarc[i1].arcc,9,16,sizeof(xarc[i1].arcc),1); 
+            getselect(sys.xarc[i1].arcc,9,16,sizeof(sys.xarc[i1].arcc),1); 
             break;
         case '7': 
-            togglebit((long *)&xarc[i1].attr,xarc_swap);
+            togglebit((long *)&sys.xarc[i1].attr,xarc_swap);
             break;
         case '8': 
-            xarc[i1].ok1 = getselectd(11,16,2);
+            sys.xarc[i1].ok1 = getselectd(11,16,2);
         case '9': 
-            xarc[i1].ok2 = getselectd(12,16,2);
+            sys.xarc[i1].ok2 = getselectd(12,16,2);
         case '0': 
-            xarc[i1].nk1 = getselectd(13,16,2);
+            sys.xarc[i1].nk1 = getselectd(13,16,2);
         case 'A': 
-            xarc[i1].nk2 = getselectd(14,16,2);
+            sys.xarc[i1].nk2 = getselectd(14,16,2);
         }
     } 
     while(!done&&!hangup);
 
-    sprintf(s,"%sarchive.dat",syscfg.datadir);
+    sprintf(s,"%sarchive.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
-    write(i,&xarc[0],8*sizeof(xarc[0]));
+    write(i,&sys.xarc[0],8*sizeof(sys.xarc[0]));
     close(i);
 }
 
@@ -779,16 +785,16 @@ void secleved()
         nl();
         lpr("3Number 9%d0",i1);
         nl();
-        lpr("1. Time Per Day          : %d",syscfg.sl[i1].time_per_day);
-        lpr("2. Time Per Call         : %d",syscfg.sl[i1].time_per_logon);
-        lpr("3. Max Calls per day     : %d",syscfg.sl[i1].maxcalls);
-        lpr("4. Max Emails            : %d",syscfg.sl[i1].emails);
-        lpr("5. Max Posts             : %d",syscfg.sl[i1].posts);
-        bitset("6. Post Anonymous",syscfg.sl[i1].ability        ,ability_post_anony);
-        bitset("7. Email Anonymous",syscfg.sl[i1].ability       ,ability_email_anony);
-        bitset("8. Read Anonymous Posts",syscfg.sl[i1].ability  ,ability_read_post_anony);
-        bitset("9. Read Anonymous Email",syscfg.sl[i1].ability  ,ability_read_email_anony);
-        bitset("0. Posts Need Validation",syscfg.sl[i1].ability,ability_val_net);
+        lpr("1. Time Per Day          : %d",sys.cfg.sl[i1].time_per_day);
+        lpr("2. Time Per Call         : %d",sys.cfg.sl[i1].time_per_logon);
+        lpr("3. Max Calls per day     : %d",sys.cfg.sl[i1].maxcalls);
+        lpr("4. Max Emails            : %d",sys.cfg.sl[i1].emails);
+        lpr("5. Max Posts             : %d",sys.cfg.sl[i1].posts);
+        bitset("6. Post Anonymous",sys.cfg.sl[i1].ability        ,ability_post_anony);
+        bitset("7. Email Anonymous",sys.cfg.sl[i1].ability       ,ability_email_anony);
+        bitset("8. Read Anonymous Posts",sys.cfg.sl[i1].ability  ,ability_read_post_anony);
+        bitset("9. Read Anonymous Email",sys.cfg.sl[i1].ability  ,ability_read_email_anony);
+        bitset("0. Posts Need Validation",sys.cfg.sl[i1].ability,ability_val_net);
         nl();
         outstr("5Select (Q=Quit, #,J=Jump,],[ to Select)5 :");
         switch(toupper(getkey())) {
@@ -819,34 +825,34 @@ void secleved()
             if(i1>255) i1=255; 
             break;
         case '1': 
-            syscfg.sl[i1].time_per_day = getselectd(4,27,3); 
+            sys.cfg.sl[i1].time_per_day = getselectd(4,27,3); 
             break;
         case '2': 
-            syscfg.sl[i1].time_per_logon = getselectd(5,27,3); 
+            sys.cfg.sl[i1].time_per_logon = getselectd(5,27,3); 
             break;
         case '3': 
-            syscfg.sl[i1].maxcalls = getselectd(6,27,3); 
+            sys.cfg.sl[i1].maxcalls = getselectd(6,27,3); 
             break;
         case '4': 
-            syscfg.sl[i1].emails = getselectd(7,27,3); 
+            sys.cfg.sl[i1].emails = getselectd(7,27,3); 
             break;
         case '5': 
-            syscfg.sl[i1].posts = getselectd(8,27,3); 
+            sys.cfg.sl[i1].posts = getselectd(8,27,3); 
             break;
         case '6': 
-            togglebit((long *)&syscfg.sl[i1].ability,ability_post_anony);
+            togglebit((long *)&sys.cfg.sl[i1].ability,ability_post_anony);
             break;
         case '7': 
-            togglebit((long *)&syscfg.sl[i1].ability,ability_email_anony);
+            togglebit((long *)&sys.cfg.sl[i1].ability,ability_email_anony);
             break;
         case '8': 
-            togglebit((long *)&syscfg.sl[i1].ability,ability_read_post_anony);
+            togglebit((long *)&sys.cfg.sl[i1].ability,ability_read_post_anony);
             break;
         case '9': 
-            togglebit((long *)&syscfg.sl[i1].ability,ability_read_email_anony);
+            togglebit((long *)&sys.cfg.sl[i1].ability,ability_read_email_anony);
             break;
         case '0': 
-            togglebit((long *)&syscfg.sl[i1].ability,ability_val_net);
+            togglebit((long *)&sys.cfg.sl[i1].ability,ability_val_net);
             break;
         }
     } 
@@ -863,19 +869,19 @@ void nued()
         outchr(12);
         lpr("5� 0New User Data");
         nl();
-        lpr(get_string2(66),nifty.nulevel+1);
-        lpr(get_string2(67),nifty.nuinf);
-        lpr(get_string2(68),i=syscfg.newusergold);
-        lpr(get_string2(69),nifty.nifstatus & nif_nuv?"Active":"InActive");
-        lpr(get_string2(70),nifty.nuvyes);
-        lpr(get_string2(71),nifty.nuvbad);
-        lpr(get_string2(72),nifty.nuvlevel);
-        lpr(get_string2(73),nifty.nuvinf);
-        lpr(get_string2(74),nifty.nuvsl);
-        lpr("0. Accepting New Users       : %s",syscfg.closedsystem?"No":"Yes");
-        lpr("A. Maximum Users             : %d",syscfg.maxusers);
+        lpr(get_string2(66),sys.nifty.nulevel+1);
+        lpr(get_string2(67),sys.nifty.nuinf);
+        lpr(get_string2(68),i=sys.cfg.newusergold);
+        lpr(get_string2(69),sys.nifty.nifstatus & nif_nuv?"Active":"InActive");
+        lpr(get_string2(70),sys.nifty.nuvyes);
+        lpr(get_string2(71),sys.nifty.nuvbad);
+        lpr(get_string2(72),sys.nifty.nuvlevel);
+        lpr(get_string2(73),sys.nifty.nuvinf);
+        lpr(get_string2(74),sys.nifty.nuvsl);
+        lpr("0. Accepting New Users       : %s",sys.cfg.closedsystem?"No":"Yes");
+        lpr("A. Maximum Users             : %d",sys.cfg.maxusers);
         outstr("B. NUV Action                : ");
-        switch(nifty.nuvaction) {
+        switch(sys.nifty.nuvaction) {
         case 0: 
             pl("Deleted if voted bad"); 
             break;
@@ -886,7 +892,7 @@ void nued()
             pl("Set to Bad Profile"); 
             break;
         }
-        lpr("C. NUV Bad Level             : %d",nifty.nuvbadlevel);
+        lpr("C. NUV Bad Level             : %d",sys.nifty.nuvbadlevel);
         nl();
         outstr(get_string2(11));
         switch(toupper(getkey())) {
@@ -894,50 +900,50 @@ void nued()
             done=1; 
             break;
         case '1': 
-            nifty.nulevel=getselectd(2,31,2);
-            nifty.nulevel--;
-            syscfg.newusersl=syscfg.autoval[nifty.nulevel].sl;
-            syscfg.newuserdsl=syscfg.autoval[nifty.nulevel].dsl;
+            sys.nifty.nulevel=getselectd(2,31,2);
+            sys.nifty.nulevel--;
+            sys.cfg.newusersl=sys.cfg.autoval[sys.nifty.nulevel].sl;
+            sys.cfg.newuserdsl=sys.cfg.autoval[sys.nifty.nulevel].dsl;
             break;
         case '2': 
-            getselect(nifty.nuinf,3,31,8,0); 
+            getselect(sys.nifty.nuinf,3,31,8,0); 
             break;
         case '3': 
-            syscfg.newusergold=getselectd(4,31,8);
+            sys.cfg.newusergold=getselectd(4,31,8);
             break;
 #ifdef NUV
         case '4': 
-            togglebit((long *)&nifty.nifstatus,nif_nuv);
+            togglebit((long *)&sys.nifty.nifstatus,nif_nuv);
             break;
         case '5': 
-            nifty.nuvyes=getselectd(6,31,8);
+            sys.nifty.nuvyes=getselectd(6,31,8);
             break;
         case '6': 
-            nifty.nuvbad=getselectd(7,31,8); 
+            sys.nifty.nuvbad=getselectd(7,31,8); 
             break;
         case '7': 
-            nifty.nuvlevel=getselectd(8,31,8); 
+            sys.nifty.nuvlevel=getselectd(8,31,8); 
             break;
         case '8': 
-            getselect(nifty.nuvinf,9,31,8,0); 
+            getselect(sys.nifty.nuvinf,9,31,8,0); 
             break;
         case '9': 
-            getselect(nifty.nuvsl,10,31,10,0); 
+            getselect(sys.nifty.nuvsl,10,31,10,0); 
             break;
 #endif
         case '0': 
-            syscfg.closedsystem=!(syscfg.closedsystem); 
+            sys.cfg.closedsystem=!(sys.cfg.closedsystem); 
             break;
         case 'A': 
-            syscfg.maxusers=getselectd(12,31,8); 
+            sys.cfg.maxusers=getselectd(12,31,8); 
             break;
         case 'C': 
-            nifty.nuvbadlevel=getselectd(14,31,8); 
+            sys.nifty.nuvbadlevel=getselectd(14,31,8); 
             break;
         case 'B': 
-            nifty.nuvaction++;
-            if(nifty.nuvaction==3)
-                nifty.nuvaction=0;
+            sys.nifty.nuvaction++;
+            if(sys.nifty.nuvaction==3)
+                sys.nifty.nuvaction=0;
             break;
         }
     } 
@@ -953,7 +959,7 @@ void acscfg(void)
     char s[MAX_PATH_LEN];
     acsrec acs;
 
-    sprintf(s,"%sacs.dat",syscfg.datadir);
+    sprintf(s,"%sacs.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     read(i,&acs,sizeof(acsrec));
     close(i);
@@ -1068,13 +1074,13 @@ void main(int argc, char *argv[])
     if(!checkpw())
         return;
 
-    topdata=0;
+    sess.topdata=0;
     topscreen();
 #else
     {
         cJSON *cfg_root = read_json_file("config.json");
         if (!cfg_root) { printf("config.json not found!\n"); exit(1); }
-        json_to_configrec(cfg_root, &syscfg, &nifty);
+        json_to_configrec(cfg_root, &sys.cfg, &sys.nifty);
         cJSON_Delete(cfg_root);
     }
 #endif
@@ -1141,7 +1147,7 @@ void main(int argc, char *argv[])
     while(!done&&!hangup);
 
     {
-        cJSON *cfg_root = configrec_to_json(&syscfg, &nifty);
+        cJSON *cfg_root = configrec_to_json(&sys.cfg, &sys.nifty);
         write_json_file("config.json", cfg_root);
         cJSON_Delete(cfg_root);
     }

@@ -1,13 +1,20 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 int num_nuv(char *fn)
 {
     char s[MAX_PATH_LEN];
     int nn,i;
 
-    sprintf(s,"%s%s",syscfg.datadir,fn);
+    sprintf(s,"%s%s",sys.cfg.datadir,fn);
     i=open(s,O_BINARY|O_RDWR);
     nn=filelength(i)/sizeof(nuvdata);
     close(i);
@@ -20,7 +27,7 @@ void read_nuv(unsigned int user, char *fn, nuvdata *newuser)
     char s[MAX_PATH_LEN];
     int i;
 
-    sprintf(s,"%s%s",syscfg.datadir,fn);
+    sprintf(s,"%s%s",sys.cfg.datadir,fn);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     lseek(i,sizeof(nuvdata)*user,SEEK_SET);
     read(i,newuser,sizeof(nuvdata));
@@ -36,7 +43,7 @@ void write_nuv(unsigned int user, char *fn, nuvdata *newuser)
 
     n= *newuser;
 
-    sprintf(s,"%s%s",syscfg.datadir,fn);
+    sprintf(s,"%s%s",sys.cfg.datadir,fn);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     lseek(i,sizeof(nuvdata)*user,0);
     write(i,&n,sizeof(nuvdata));
@@ -50,10 +57,10 @@ void del_nuv(unsigned int user)
     nuvdata dn;
     int dnc,nnu,i,o;
 
-    sprintf(s,"%snuv.dat",syscfg.datadir);
+    sprintf(s,"%snuv.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR);
 
-    sprintf(s1,"%snuv.bak",syscfg.datadir);
+    sprintf(s1,"%snuv.bak",sys.cfg.datadir);
     o=open(s1,O_BINARY|O_RDWR|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
 
     nnu=filelength(i)/sizeof(dn);
@@ -112,7 +119,7 @@ int enter_nuv(userrec tu,int un,int form)
     num=num_nuv("nuv.dat");
     write_nuv(num,"nuv.dat",&nu);
     if(form) {
-        infoform(nifty.nuvinf,0);
+        infoform(sys.nifty.nuvinf,0);
         printfile("nuvmsg");
     }
     logtypes(2,"%s added to NUV",nam(&tu,un));
@@ -129,7 +136,7 @@ int avoted(unsigned int user)
 
     read_nuv(user,"nuv.dat",&v);
 
-    strcpy(s,nam(&thisuser,usernum));
+    strcpy(s,nam(&sess.user,sess.usernum));
 
     for (i=0; i < v.vcmt_num; i++)
         if (!strcmp(v.vote_comment[i].name,s))
@@ -148,8 +155,8 @@ void print_nuv(nuvdata v)
     npr("3Voting On5: 3%s\r\n",nam(&u,v.num));
     nl();
 
-    npr("3Yes Votes5: 2%d 3- Required: 3%d \r\n",v.vote_yes,nifty.nuvyes);
-    npr("3No Votes 5: 2%d 3- Required: 3%d \r\n",v.vote_no,nifty.nuvbad);
+    npr("3Yes Votes5: 2%d 3- Required: 3%d \r\n",v.vote_yes,sys.nifty.nuvyes);
+    npr("3No Votes 5: 2%d 3- Required: 3%d \r\n",v.vote_no,sys.nifty.nuvbad);
     npr("3First on 5: 2%s\r\n",v.firston);
     nl();
     npr("3Comments On 5: 3%s3...",nam(&u,v.num));
@@ -210,7 +217,7 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
             break;
         case 'I':
             userdb_load(vn.num,&u);
-            readform(nifty.nuvinf,u.name);
+            readform(sys.nifty.nuvinf,u.name);
             break;
 
         case 'Y':
@@ -248,9 +255,9 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
         else if(vv==-1)
             vn.vote_no++;
 
-        strcpy(vn.vote_comment[vn.vcmt_num].name,nam(&thisuser,usernum));
+        strcpy(vn.vote_comment[vn.vcmt_num].name,nam(&sess.user,sess.usernum));
         vn.vote_comment[vn.vcmt_num].vote = vv;
-        vn.vote_comment[vn.vcmt_num].sl = thisuser.sl;
+        vn.vote_comment[vn.vcmt_num].sl = sess.user.sl;
 
         vn.vote_comment[vn.vcmt_num].say[0]=0;
 
@@ -262,7 +269,7 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
     write_nuv(user,"nuv.dat",&vn);
     *resn = vn;
 
-    if ((vn.vote_yes>=nifty.nuvyes)||(vn.vote_no>=nifty.nuvbad)) {
+    if ((vn.vote_yes>=sys.nifty.nuvyes)||(vn.vote_no>=sys.nifty.nuvbad)) {
         val_nuv(user);
         return 1;
     }
@@ -285,8 +292,8 @@ void val_nuv(unsigned int user)
     userdb_load(i1,&u);
     u.nuv=-1;
 
-    if (valn.vote_no >= nifty.nuvbad) {
-        switch(nifty.nuvaction) {
+    if (valn.vote_no >= sys.nifty.nuvbad) {
+        switch(sys.nifty.nuvaction) {
         case 0:
             pl("7Deleting User");
             deluser(i1);
@@ -303,11 +310,11 @@ void val_nuv(unsigned int user)
             break;
         case 2:
             pl("7Bad Validating User");
-            u.sl=syscfg.autoval[nifty.nuvbadlevel-1].sl;
-            u.dsl=syscfg.autoval[nifty.nuvbadlevel-1].dsl;
-            u.ar=syscfg.autoval[nifty.nuvbadlevel-1].ar;
-            u.dar=syscfg.autoval[nifty.nuvbadlevel-1].dar;
-            u.restrict=syscfg.autoval[nifty.nuvbadlevel-1].restrict;
+            u.sl=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].sl;
+            u.dsl=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].dsl;
+            u.ar=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].ar;
+            u.dar=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].dar;
+            u.restrict=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].restrict;
             logtypes(3,"NUV Bad Validated %s",nam(&u,i1));
             u.nuv=0;
             userdb_save(i1,&u);
@@ -316,11 +323,11 @@ void val_nuv(unsigned int user)
     }
     else {
         pl("7Validating User");
-        u.sl=syscfg.autoval[nifty.nuvlevel-1].sl;
-        u.dsl=syscfg.autoval[nifty.nuvlevel-1].dsl;
-        u.ar=syscfg.autoval[nifty.nuvlevel-1].ar;
-        u.dar=syscfg.autoval[nifty.nuvlevel-1].dar;
-        u.restrict=syscfg.autoval[nifty.nuvlevel-1].restrict;
+        u.sl=sys.cfg.autoval[sys.nifty.nuvlevel-1].sl;
+        u.dsl=sys.cfg.autoval[sys.nifty.nuvlevel-1].dsl;
+        u.ar=sys.cfg.autoval[sys.nifty.nuvlevel-1].ar;
+        u.dar=sys.cfg.autoval[sys.nifty.nuvlevel-1].dar;
+        u.restrict=sys.cfg.autoval[sys.nifty.nuvlevel-1].restrict;
         logtypes(3,"NUV Validated %s",nam(&u,i1));
         u.nuv=0;
         userdb_save(i1,&u);
@@ -334,7 +341,7 @@ void nuv(void)
     char s[MAX_PATH_LEN];
     int i,cnt,done=0,sh=0,done1;
 
-    strcpy(s,nifty.nuvsl);
+    strcpy(s,sys.nifty.nuvsl);
     if(!slok(s,0)) {
         nl();
         pl(get_string(59));

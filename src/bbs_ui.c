@@ -7,7 +7,10 @@
  */
 
 #include "io_ncurses.h"  /* MUST come before vars.h */
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "terminal_bridge.h"
 #include "ansi_attr.h"
 
@@ -30,6 +33,10 @@
  *   \x1b[D  = ANSI cursor-left
  *   \xb1    = CP437 ▒ (light shade — the mpl() field background)
  * Do NOT run encoding-aware tools (sed, iconv) on this function. */
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 void backblue(void)
 {
     int i;
@@ -99,7 +106,7 @@ void mpl(int i)
     if(!okansi())
         return;
 
-    if(nifty.nifstatus & nif_comment) {
+    if(sys.nifty.nifstatus & nif_comment) {
         mpl1(i);
         return;
     }
@@ -142,7 +149,7 @@ void mpl1(int i)
  * redraw the field background character.  Otherwise uses plain backspace().
  *
  * Handles:  BS(8)=delete char, Ctrl-W(23)=delete word, Ctrl-U/X(21/24)=clear line,
- *           Ctrl-Z(26)=insert ^Z marker (if input_extern), ESC(27)=swallow ANSI sequence.
+ *           Ctrl-Z(26)=insert ^Z marker (if sess.input_extern), ESC(27)=swallow ANSI sequence.
  *
  * The ANSI swallowing (in_ansi state machine) eats ESC [ nn m sequences that
  * arrive when the remote terminal echoes back color codes — without this,
@@ -218,7 +225,7 @@ int input1(char *s, int maxlen, int lc, int crend)
                 }
                 break;
             case 26:
-                if (input_extern) {
+                if (sess.input_extern) {
                     s[curpos++] = 26;
                     outstr("^Z");
                 }

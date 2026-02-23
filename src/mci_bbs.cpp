@@ -8,12 +8,15 @@
  */
 
 #include "io_ncurses.h"  /* must come before vars.h */
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "userdb.h"
 #include "mci.h"
 #include "mci_bbs.h"
 
-/* pp now in vars.h (Phase B0) */
+/* sess.pp now in vars.h (Phase B0) */
 
 
 /*
@@ -22,6 +25,10 @@
  * Returns 1 + fills buf for pure data codes.
  * Returns 0 for side-effect, mutation, or unknown codes.
  */
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
 {
     (void)ctx;
@@ -35,16 +42,16 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
     /* --- Pure data codes --- */
 
     case ']':
-        snprintf(s, sizeof(s), "%s", pp.pausefile);
+        snprintf(s, sizeof(s), "%s", sess.pp.pausefile);
         break;
     case '[':
         snprintf(s, sizeof(s), "%s", times());
         break;
     case '!':
-        sprintf(s, "%.0f%%", syscfg.req_ratio * 100);
+        sprintf(s, "%.0f%%", sys.cfg.req_ratio * 100);
         break;
     case '%':
-        sprintf(s, "%.0f%%", syscfg.post_call_ratio * 100);
+        sprintf(s, "%.0f%%", sys.cfg.post_call_ratio * 100);
         break;
     case '#':
         sprintf(s, "%.0f%%", ratio() * 100);
@@ -53,19 +60,19 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         sprintf(s, "%.0f%%", post_ratio() * 100);
         break;
     case '^':
-        strcpy(s, ratio() >= syscfg.req_ratio ? "Passed" : "Failed");
+        strcpy(s, ratio() >= sys.cfg.req_ratio ? "Passed" : "Failed");
         break;
     case '&':
-        strcpy(s, post_ratio() >= syscfg.post_call_ratio ? "Passed" : "Failed");
+        strcpy(s, post_ratio() >= sys.cfg.post_call_ratio ? "Passed" : "Failed");
         break;
     case '*':
-        sprintf(s, "%-4d", thisuser.msgpost);
+        sprintf(s, "%-4d", sess.user.msgpost);
         break;
     case '(':
-        sprintf(s, "%-4d", thisuser.logons);
+        sprintf(s, "%-4d", sess.user.logons);
         break;
     case ')':
-        sprintf(s, "%-4d", thisuser.ontoday);
+        sprintf(s, "%-4d", sess.user.ontoday);
         break;
     case '+':
         sprintf(s, "%s", sys.status.lastuser);
@@ -74,7 +81,7 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         strcpy(s, get_string(sysop2() ? 4 : 5));
         break;
     case '-':
-        sprintf(s, "%s [%s]", nam(&thisuser, usernum), thisuser.comment);
+        sprintf(s, "%s [%s]", nam(&sess.user, sess.usernum), sess.user.comment);
         break;
 
     case 'a':
@@ -92,19 +99,19 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         }
         break;
     case 'b':
-        strcpy(s, proto[thisuser.defprot].description);
+        strcpy(s, sys.proto[sess.user.defprot].description);
         break;
     case 'c':
-        sprintf(s, "%d", thisuser.timebank);
+        sprintf(s, "%d", sess.user.timebank);
         break;
     case 'd':
-        sprintf(s, "%d", numwaiting(&thisuser));
+        sprintf(s, "%d", numwaiting(&sess.user));
         break;
     case 'e':
-        strcpy(s, thisuser.comment);
+        strcpy(s, sess.user.comment);
         break;
     case 'f':
-        sprintf(s, "%d", nummsgs - msgr);
+        sprintf(s, "%d", sys.nummsgs - sess.msgr);
         break;
 
     /* Top-ten read codes — pure data, no mutation */
@@ -124,100 +131,100 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
     case 'n': return false;
 
     case 'o':
-        sprintf(s, "%d", numbatchdl);
+        sprintf(s, "%d", sess.numbatchdl);
         break;
     case 'p':
-        sprintf(s, "%d", numbatch - numbatchdl);
+        sprintf(s, "%d", sess.numbatch - sess.numbatchdl);
         break;
     case 'q':
-        sprintf(s, "%-1.f", batchsize);
+        sprintf(s, "%-1.f", sess.batchsize);
         break;
     case 'r':
-        sprintf(s, "%s", ctim(batchtime));
+        sprintf(s, "%s", ctim(sess.batchtime));
         break;
     case 't':
         sprintf(s, "%.0f", nsl() / 60.0);
         break;
 
     case 'A':
-        if (usub[cursub].subnum > -1)
-            sprintf(s, "%s", usub[cursub].keys);
+        if (sess.usub[sess.cursub].subnum > -1)
+            sprintf(s, "%s", sess.usub[sess.cursub].keys);
         else
             strcpy(s, "-1");
         break;
     case 'B':
-        if (usub[cursub].subnum > -1)
-            sprintf(s, "%s", subboards[usub[cursub].subnum].name);
+        if (sess.usub[sess.cursub].subnum > -1)
+            sprintf(s, "%s", sys.subboards[sess.usub[sess.cursub].subnum].name);
         else
             strcpy(s, "No Subs");
         break;
     case 'C':
-        if (udir[curdir].subnum > -1)
-            sprintf(s, "%s", udir[curdir].keys);
+        if (sess.udir[sess.curdir].subnum > -1)
+            sprintf(s, "%s", sess.udir[sess.curdir].keys);
         else
             strcpy(s, "-1");
         break;
     case 'D':
-        if (udir[curdir].subnum > -1)
+        if (sess.udir[sess.curdir].subnum > -1)
             sprintf(s, "%s%s",
-                    directories[udir[curdir].subnum].name,
-                    (directories[udir[curdir].subnum].mask & mask_no_ratio) ? " [NR]" : "");
+                    sys.directories[sess.udir[sess.curdir].subnum].name,
+                    (sys.directories[sess.udir[sess.curdir].subnum].mask & mask_no_ratio) ? " [NR]" : "");
         else
             strcpy(s, "No Dirs");
         break;
     case 'E':
-        sprintf(s, "%s", thisuser.laston);
+        sprintf(s, "%s", sess.user.laston);
         break;
     case 'F':
-        sprintf(s, "%d", thisuser.fpts);
+        sprintf(s, "%d", sess.user.fpts);
         break;
     case 'G':
-        sprintf(s, "%s", sys.conf[curconf].name);
+        sprintf(s, "%s", sys.conf[sess.curconf].name);
         break;
     case 'H':
-        sprintf(s, "%s", pnam(&thisuser));
+        sprintf(s, "%s", pnam(&sess.user));
         break;
     case 'I':
         s[0] = '\0';
         break;
     case 'J':
-        sprintf(s, "%d", thisuser.dsl);
+        sprintf(s, "%d", sess.user.dsl);
         break;
     case 'K':
-        sprintf(s, "%-4ld", thisuser.uk);
+        sprintf(s, "%-4ld", sess.user.uk);
         break;
     case 'L':
-        sprintf(s, "%d", usernum);
+        sprintf(s, "%d", sess.usernum);
         break;
     case 'N':
-        strcpy(s, nam(&thisuser, usernum));
+        strcpy(s, nam(&sess.user, sess.usernum));
         break;
     case 'O':
-        sprintf(s, "%-4d", thisuser.downloaded);
+        sprintf(s, "%-4d", sess.user.downloaded);
         break;
     case 'Q':
-        sprintf(s, "%d", numf);
+        sprintf(s, "%d", sess.numf);
         break;
     case 'R':
-        sprintf(s, "%s", thisuser.realname);
+        sprintf(s, "%s", sess.user.realname);
         break;
     case 'S':
-        itoa(thisuser.sl, s, 10);
+        itoa(sess.user.sl, s, 10);
         break;
     case 'T':
         strcpy(s, ctim(nsl()));
         break;
     case 'U':
-        sprintf(s, "%-4d", thisuser.uploaded);
+        sprintf(s, "%-4d", sess.user.uploaded);
         break;
     case 'V':
-        sprintf(s, "%d", msgr);
+        sprintf(s, "%d", sess.msgr);
         break;
     case 'W':
-        sprintf(s, "%d", nummsgs);
+        sprintf(s, "%d", sys.nummsgs);
         break;
     case 'X':
-        sprintf(s, "%-4ld", thisuser.dk);
+        sprintf(s, "%-4ld", sess.user.dk);
         break;
 
     /* --- Side-effect codes: return 0, handled by setmci() --- */

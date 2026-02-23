@@ -1,5 +1,8 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "terminal_bridge.h"
 
 #pragma hdrstop
@@ -7,13 +10,17 @@
 #include "swap.h"
 #include "cp437.h"
 
-/* menuat now in vars.h (Phase B0) */
+/* sess.menuat now in vars.h (Phase B0) */
 
 /* ================================================================== */
 /* ANSI terminal console — delegates to Terminal via bridge            */
 /* ================================================================== */
 
 /* Reset cached terminal attribute (call after direct ANSI output) */
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 void reset_attr_cache(void)
 {
     term_emit_attr(-1);
@@ -82,12 +89,12 @@ void out1chx(unsigned char ch)
 }
 
 
-/* doinghelp moved to vars.h (Phase B0) */
+/* sess.doinghelp moved to vars.h (Phase B0) */
 
 
 void out1ch(unsigned char ch)
 {
-    if(doinghelp) return;
+    if(sess.doinghelp) return;
 
     if (x_only) {
         if (ch>31) {
@@ -205,7 +212,7 @@ void set_protect(int l)
     }
     topline=l;
     if (using_modem)
-        screenlinest=thisuser.screenlines;
+        screenlinest=sess.user.screenlines;
     else
         screenlinest=defscreenbottom+1-topline;
 }
@@ -246,13 +253,13 @@ void temp_cmd(char *s, int ccc)
     int i;
 
     pr_wait(1);
-    savescreen(&screensave);
+    savescreen(&sess.screensave);
     i=topline;
     topline=0;
     curatr=0x07;
     clrscrb();
     runprog(s,ccc);
-    restorescreen(&screensave);
+    restorescreen(&sess.screensave);
     topline=i;
     pr_wait(0);
 }
@@ -290,7 +297,7 @@ int alt_key(unsigned char ch)
     cmd[0]=0;
     ch1=scan_to_char(ch,txt);
     if (ch1) {
-        sprintf(s,"%skbdef.dat",syscfg.gfilesdir);
+        sprintf(s,"%skbdef.dat",sys.cfg.gfilesdir);
         f=open(s,O_RDONLY | O_BINARY);
         if (f>0) {
             l=filelength(f);
@@ -350,10 +357,10 @@ void skey(unsigned char ch)
     type=alt_key(ch);
     if(!type) return;
 
-    if (((syscfg.sysconfig & sysconfig_no_local) ==0) && (okskey)) {
+    if (((sys.cfg.sysconfig & sysconfig_no_local) ==0) && (sess.okskey)) {
         if ((ch>=104) && (ch<=113)) {
             set_autoval(ch-104);
-            read_menu(menuat,0);
+            read_menu(sess.menuat,0);
         }
         else
             switch (type) {
@@ -380,23 +387,23 @@ void skey(unsigned char ch)
                 break;
             case 94:
             case 59: /* F1 */
-                if(doinghelp) doinghelp=0;
+                if(sess.doinghelp) sess.doinghelp=0;
                 val_cur_user(ch==94?0:1);
-                read_menu(menuat,0);
+                read_menu(sess.menuat,0);
                 break;
             case 60: /* F2 */
-                if(topdata==0) topdata=1;
+                if(sess.topdata==0) sess.topdata=1;
                 else {
-                    sprintf(s,"%stops%d.dat",syscfg.gfilesdir,topdata+1);
+                    sprintf(s,"%stops%d.dat",sys.cfg.gfilesdir,sess.topdata+1);
                     if(exist(s))
-                        topdata++;
+                        sess.topdata++;
                     else
-                        topdata=0;
+                        sess.topdata=0;
                 }
                 topscreen();
                 break;
             case 85: /* Shift f2 */
-                topdata=0;
+                sess.topdata=0;
                 topscreen();
                 break;
             case 61: /* F3 */
@@ -408,7 +415,7 @@ void skey(unsigned char ch)
                 break;
             case 62: /* F4 */
                 chatcall=0;
-                chatreason[0]=0;
+                sess.chatreason[0]=0;
                 topscreen();
                 break;
             case 63: /* F5 */
@@ -416,21 +423,21 @@ void skey(unsigned char ch)
                 dtr(0);
                 break;
             case 64: /* F6 */
-                sysop_alert=!sysop_alert;
+                sess.sysop_alert=!sess.sysop_alert;
                 topscreen();
                 break;
             case 65: /* F7 */
-                thisuser.extratime-=5.0*60.0;
+                sess.user.extratime-=5.0*60.0;
                 tleft(0);
                 break;
             case 66: /* F8 */
-                thisuser.extratime+=5.0*60.0;
+                sess.user.extratime+=5.0*60.0;
                 tleft(0);
                 break;
             case 67: /* F9 */
-                if (thisuser.sl!=255) {
-                    if (actsl!=255) {
-                        actsl=255;
+                if (sess.user.sl!=255) {
+                    if (sess.actsl!=255) {
+                        sess.actsl=255;
                         logpr("7!! 0Temp SysOp Access given at 4%s",times());
                     }
                     else {
@@ -438,14 +445,14 @@ void skey(unsigned char ch)
                         reset_act_sl();
                     }
                     changedsl();
-                    read_menu(menuat,0);
+                    read_menu(sess.menuat,0);
                     tleft(0);
                 }
                 break;
             case 68: /* lF10 */
-                if(doinghelp) doinghelp=0;
+                if(sess.doinghelp) sess.doinghelp=0;
                 if (chatting==0)
-                    chat1("",syscfg.sysconfig & sysconfig_2_way);
+                    chat1("",sys.cfg.sysconfig & sysconfig_2_way);
                 else
                     chatting=0;
                 break;
@@ -480,7 +487,7 @@ void skey(unsigned char ch)
                 break;
             case 103: /* Ctrl-F10 */
                 if (chatting==0)
-                    chat1("",!(syscfg.sysconfig & sysconfig_2_way));
+                    chat1("",!(sys.cfg.sysconfig & sysconfig_2_way));
                 else
                     chatting=0;
                 break;
@@ -492,8 +499,8 @@ void skey(unsigned char ch)
                 temp_cmd(getenv("COMSPEC"),1);
                 break;
             case 45:
-                if(doinghelp) doinghelp=0;
-                savescreen(&screensave);
+                if(sess.doinghelp) sess.doinghelp=0;
+                savescreen(&sess.screensave);
                 textattr(15);
                 clrscr();
                 cprintf("Exit to Dos? ");
@@ -502,14 +509,14 @@ void skey(unsigned char ch)
                     if(toupper(getche())=='Y')
                         save_state("exitdata.dom",1);
                     sl1(1,"");
-                    userdb_save(usernum,&thisuser);
+                    userdb_save(sess.usernum,&sess.user);
                     sysoplog("7SysOp BBS Exit");
                     pr_wait(1);
                     if (ok_modem_stuff)
                         closeport();
                     exit(10);
                 }
-                restorescreen(&screensave);
+                restorescreen(&sess.screensave);
                 break;
             case 72:
                 strcpy(charbuffer,";[A");
@@ -536,20 +543,20 @@ void skey(unsigned char ch)
                 charbufferpointer=1;
                 break;
             case 35:
-                if(!doinghelp) {
-                    doinghelp=1;
-                    savescreen(&screensave);
+                if(!sess.doinghelp) {
+                    sess.doinghelp=1;
+                    savescreen(&sess.screensave);
                     fastscreen("syshelp.bin");
                 }
                 else {
-                    doinghelp=0;
-                    restorescreen(&screensave);
+                    sess.doinghelp=0;
+                    restorescreen(&sess.screensave);
                 }
                 break;
             case 44:
                 save_state("exitdata.dom",1);
                 sl1(1,"");
-                userdb_save(usernum,&thisuser);
+                userdb_save(sess.usernum,&sess.user);
                 sysoplog("SysOp Quick BBS Exit");
                 pr_wait(1);
                 if (ok_modem_stuff)
@@ -578,8 +585,8 @@ void tleft(int dot)
     cc=curatr;
     nsln=nsl();
 
-    if (topdata) {
-        sprintf(s,"%stops%d.tl",syscfg.gfilesdir,topdata);
+    if (sess.topdata) {
+        sprintf(s,"%stops%d.tl",sys.cfg.gfilesdir,sess.topdata);
 
         f=fopen(s,"rt");
 
@@ -614,7 +621,7 @@ void tleft(int dot)
                 break;
 
             case 2:
-                if ((actsl==255) && (thisuser.sl!=255) && !backdoor)
+                if ((sess.actsl==255) && (sess.user.sl!=255) && !sess.backdoor)
                     strcpy(s,arg);
                 break;
 
@@ -624,7 +631,7 @@ void tleft(int dot)
                 break;
 
             case 4:
-                if (sysop_alert)
+                if (sess.sysop_alert)
                     strcpy(s,arg);
                 break;
 
@@ -637,7 +644,7 @@ void tleft(int dot)
                 break;
 
             case 7:
-                if(useron)
+                if(sess.useron)
                     sprintf(s,"%s",ctim(nsl()));
                 else
                     strcpy(s,"Suspended");
@@ -656,9 +663,9 @@ void tleft(int dot)
 
     reset_attr_cache();
 
-    if ((dot) && (useron))
-        if ((nsln==0.0) && (thisuser.sl!=255)) {
-            if(thisuser.timebank) {
+    if ((dot) && (sess.useron))
+        if ((nsln==0.0) && (sess.user.sl!=255)) {
+            if(sess.user.timebank) {
                 bank2(60);
                 nsln=nsl();
                 if(nsln>0.0) return;
@@ -679,9 +686,9 @@ void topscreen(void)
     FILE *f;
     userrec u;
 
-    sys.status.net_edit_stuff=topdata;
+    sys.status.net_edit_stuff=sess.topdata;
 
-    if(topdata==0) {
+    if(sess.topdata==0) {
 /* asm: ax,0x1003 */
 /* asm: bl,0x1 */
 /* asm: int 0x10 */
@@ -689,7 +696,7 @@ void topscreen(void)
         return;
     }
 
-    sprintf(s,"%stops%d.dat",syscfg.gfilesdir,topdata);
+    sprintf(s,"%stops%d.dat",sys.cfg.gfilesdir,sess.topdata);
 
     f=fopen(s,"rt");
     if (!f) { set_protect(0); return; }
@@ -714,7 +721,7 @@ void topscreen(void)
 /* asm: int 0x10 */
 
     /* Read topscreen binary into scrn buffer and render via Terminal */
-    sprintf(s,"%stops%d.bin",syscfg.gfilesdir,topdata);
+    sprintf(s,"%stops%d.bin",sys.cfg.gfilesdir,sess.topdata);
     i=open(s,O_RDWR|O_BINARY);
     if (i >= 0) {
         b=(char *)malloca(160*linelen);
@@ -731,7 +738,7 @@ void topscreen(void)
         i = -1; /* file not found, skip */
     }
 
-    sprintf(s,"%shistory.dat",syscfg.datadir);
+    sprintf(s,"%shistory.dat",sys.cfg.datadir);
     ff=open(s,O_RDWR|O_BINARY);
     lseek(ff,0L,SEEK_SET);
     read(ff,(void *)&z[0],sizeof(zlogrec)*3);
@@ -739,15 +746,15 @@ void topscreen(void)
 
     strcpy(rst,restrict_string);
     for (i=0; i<=15; i++) {
-        if (thisuser.ar & (1 << i))
+        if (sess.user.ar & (1 << i))
             ar[i]='A'+i;
         else
             ar[i]='a'+i;
-        if (thisuser.dar & (1 << i))
+        if (sess.user.dar & (1 << i))
             dar[i]='A'+i;
         else
             dar[i]='a'+i;
-        if (thisuser.restrict & (1 << i))
+        if (sess.user.restrict & (1 << i))
             restrict[i]=rst[i];
         else
             restrict[i]=32;
@@ -756,13 +763,13 @@ void topscreen(void)
     ar[16]=0;
     restrict[16]=0;
 
-    if(thisuser.exempt & exempt_ratio) lo[0]='R';
+    if(sess.user.exempt & exempt_ratio) lo[0]='R';
     else lo[0]=32;
-    if(thisuser.exempt & exempt_time)  lo[1]='T';
+    if(sess.user.exempt & exempt_time)  lo[1]='T';
     else lo[1]=32;
-    if(thisuser.exempt & exempt_userlist)  lo[2]='U';
+    if(sess.user.exempt & exempt_userlist)  lo[2]='U';
     else lo[2]=32;
-    if(thisuser.exempt & exempt_post)  lo[3]='P';
+    if(sess.user.exempt & exempt_post)  lo[3]='P';
     else lo[3]=32;
     lo[4]=0;
 
@@ -783,19 +790,19 @@ void topscreen(void)
 
         switch (type) {
         case 0:
-            strcpy(s,nam(&thisuser,usernum));
+            strcpy(s,nam(&sess.user,sess.usernum));
             break;
         case 1:
-            sprintf(s,"%d",modem_speed);
+            sprintf(s,"%d",sess.modem_speed);
             break;
         case 3:
-            strcpy(s,thisuser.street);
+            strcpy(s,sess.user.street);
             break;
         case 4:
-            strcpy(s,thisuser.city);
+            strcpy(s,sess.user.city);
             break;
         case 5:
-            strcpy(s,thisuser.note);
+            strcpy(s,sess.user.note);
             break;
         case 6:
             sprintf(s,"%d",sys.status.msgposttoday);
@@ -822,28 +829,28 @@ void topscreen(void)
             sprintf(s,"%d",sys.status.callstoday);
             break;
         case 15:
-            strcpy(s,thisuser.laston);
+            strcpy(s,sess.user.laston);
             break;
         case 16:
-            sprintf(s,"%s",chatreason[0]? "On":"Off");
+            sprintf(s,"%s",sess.chatreason[0]? "On":"Off");
             break;
         case 18:
-            sprintf(s,thisuser.realname);
+            sprintf(s,sess.user.realname);
             break;
         case 19:
-            strcpy(s,thisuser.comment);
+            strcpy(s,sess.user.comment);
             break;
         case 21:
-            sprintf(s,"%d",thisuser.sl);
+            sprintf(s,"%d",sess.user.sl);
             break;
         case 22:
-            sprintf(s,"%d",thisuser.msgpost);
+            sprintf(s,"%d",sess.user.msgpost);
             break;
         case 23:
-            sprintf(s,"%d",thisuser.uploaded);
+            sprintf(s,"%d",sess.user.uploaded);
             break;
         case 24:
-            sprintf(s,"%d",thisuser.fpts);
+            sprintf(s,"%d",sess.user.fpts);
             break;
         case 25:
             strcpy(s,lo);
@@ -858,28 +865,28 @@ void topscreen(void)
             strcpy(s,dar);
             break;
         case 29:
-            sprintf(s,"%d",thisuser.dsl);
+            sprintf(s,"%d",sess.user.dsl);
             break;
         case 30:
-            sprintf(s,"%d",thisuser.logons);
+            sprintf(s,"%d",sess.user.logons);
             break;
         case 31:
-            sprintf(s,"%d",thisuser.downloaded);
+            sprintf(s,"%d",sess.user.downloaded);
             break;
         case 32:
-            sprintf(s,"%d",thisuser.timebank);
+            sprintf(s,"%d",sess.user.timebank);
             break;
         case 37:
-            strcpy(s,thisuser.phone);
+            strcpy(s,sess.user.phone);
             break;
         case 38:
-            sprintf(s,"%d",thisuser.age);
+            sprintf(s,"%d",sess.user.age);
             break;
         case 39:
-            sprintf(s,"%c",thisuser.sex);
+            sprintf(s,"%c",sess.user.sex);
             break;
         case 40:
-            strcpy(s,ctype(thisuser.comp_type));
+            strcpy(s,ctype(sess.user.comp_type));
             break;
         case 41:
             sprintf(s,"%s    %4d    %4d    %4d     %3d     %3d    %3d  %3d%%",z[wz].date,z[wz].calls,z[wz].active,z[wz].posts,z[wz].email,z[wz].fback,z[wz].up,10*z[wz].active/144);
@@ -887,13 +894,13 @@ void topscreen(void)
             if(wz==3) wz=0;
             break;
         case 42:
-            sprintf(s,"%ld",thisuser.uk);
+            sprintf(s,"%ld",sess.user.uk);
             break;
         case 43:
-            sprintf(s,"%ld",thisuser.dk);
+            sprintf(s,"%ld",sess.user.dk);
             break;
         case 44:
-            strcpy(s,thisuser.pw);
+            strcpy(s,sess.user.pw);
             break;
         case 45:
             strcpy(s,sys.status.lastuser);

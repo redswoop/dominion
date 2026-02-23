@@ -1,10 +1,17 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 
 #include <math.h>
 #include "json_io.h"
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void read_in_file(char *fn, messagerec *m, int maxary)
 {
@@ -17,7 +24,7 @@ void read_in_file(char *fn, messagerec *m, int maxary)
         m[i].storage_type=0;
     }
 
-    sprintf(s,"%s%s",syscfg.gfilesdir,fn);
+    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
     i=open(s,O_RDWR | O_BINARY);
     if (i<0) {
         err(1,s,"In Read_in_file");
@@ -75,7 +82,7 @@ void save_status()
     char path[MAX_PATH_LEN];
     cJSON *root;
 
-    sprintf(path, "%sstatus.json", syscfg.datadir);
+    sprintf(path, "%sstatus.json", sys.cfg.datadir);
     root = statusrec_to_json(&sys.status);
     write_json_file(path, root);
     cJSON_Delete(root);
@@ -86,7 +93,7 @@ double freek1(char *s)
 {
     int d;
 
-    d=cdir[0];
+    d=sys.cdir[0];
     if (s[1]==':')
         d=s[0];
     d=d-'A'+1;
@@ -127,7 +134,7 @@ void set_global_handle(int i)
 
     if (i) {
         if (!global_handle) {
-            sprintf(s,"%sGLOBAL.TXT",syscfg.gfilesdir);
+            sprintf(s,"%sGLOBAL.TXT",sys.cfg.gfilesdir);
             global_handle=open(s,O_RDWR | O_APPEND | O_BINARY | O_CREAT,
             S_IREAD | S_IWRITE);
             global_ptr=0;
@@ -252,14 +259,14 @@ void printmenu(int which)
     long l,l1;
     char *b,ch,s[MAX_PATH_LEN];
 
-    sprintf(s,"%smnudata.dat",syscfg.gfilesdir);
+    sprintf(s,"%smnudata.dat",sys.cfg.gfilesdir);
 
     i=open(s,O_BINARY|O_RDWR);
     if(i<0)
         return;
 
-    lseek(i,menus[which].storage_type,0);
-    l1=menus[which].stored_as;
+    lseek(i,sys.menus[which].storage_type,0);
+    l1=sys.menus[which].stored_as;
 
     b=(char *)malloca(l1);
     read(i,b,l1);
@@ -275,33 +282,33 @@ int printfile(char *fn)
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[3],tmp[MAX_PATH_LEN];
     int done=0;
 
-    strcpy(s,syscfg.gfilesdir);
+    strcpy(s,sys.cfg.gfilesdir);
 
     strcat(s,fn);
     if (strchr(s,'.')==NULL) {
         strcpy(tmp,s);
 
-        if(thisuser.sysstatus & sysstatus_rip) {
+        if(sess.user.sysstatus & sysstatus_rip) {
             strcat(s,".rip");
             if(exist(s))
                 done=1;
         }
 
-        if(!done&&(thisuser.sysstatus & sysstatus_avatar)) {
+        if(!done&&(sess.user.sysstatus & sysstatus_avatar)) {
             strcpy(s,tmp);
             strcat(s,".avt");
             if(exist(s))
                 done=1;
         }
 
-        if(!done&&(thisuser.sysstatus & sysstatus_color)) {
+        if(!done&&(sess.user.sysstatus & sysstatus_color)) {
             strcpy(s,tmp);
             strcat(s,".ans");
             if(exist(s))
                 done=1;
         }
 
-        if(!done&&(thisuser.sysstatus & sysstatus_ansi)) {
+        if(!done&&(sess.user.sysstatus & sysstatus_ansi)) {
             strcpy(s,tmp);
             strcat(s,".b&w");
             if(exist(s))

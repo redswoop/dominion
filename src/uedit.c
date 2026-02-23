@@ -1,8 +1,15 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 #include <stdarg.h>
 
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 void deluser(int un)
 {
@@ -22,7 +29,7 @@ void deluser(int un)
         u.inact |= inact_deleted;
         u.waiting=0;
         userdb_save(un,&u);
-        sprintf(fn,"%svoting.dat",syscfg.datadir);
+        sprintf(fn,"%svoting.dat",sys.cfg.datadir);
         f=open(fn,O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
         n=(int) (filelength(f) / sizeof(votingrec)) -1;
         for (i=0; i<20; i++)
@@ -50,7 +57,7 @@ void addtrash(userrec u)
 
     npr("5Add 0%s5 to Trashcan? ",u.name);
     if(!yn()) return;
-    sprintf(s,"%strashcan.lst",syscfg.gfilesdir);
+    sprintf(s,"%strashcan.lst",sys.cfg.gfilesdir);
     i=open(s,O_RDWR|O_BINARY|O_CREAT,S_IREAD|S_IWRITE);
     lseek(i,0L,SEEK_END);
     sprintf(s,"%s\n",u.name);
@@ -192,7 +199,7 @@ int usearch(int un,char val[41])
             if(u.sl<atoi(s+1)) curok=0; 
             break;
         case 'U': 
-            if(atoi(s+1)!=usernum) curok=0; 
+            if(atoi(s+1)!=sess.usernum) curok=0; 
             break;
         }
         if(neg) curok=opp(curok);
@@ -236,7 +243,7 @@ void uedit(int usern)
             nl();
             prt(5,"User Editor (?=Help):0 ");
             strcpy(s,"@#1234567890ABCDEFGHIJKUQS[],.?|_-/O{}$%");
-            if ((actsl==255) || (wfc))
+            if ((sess.actsl==255) || (sys.wfc))
                 strcat(s,":;!^");
             ch=onek(s);
             switch(ch) {
@@ -312,7 +319,7 @@ void uedit(int usern)
                 }
                 break;
             case '_': 
-                readform(nifty.nuinf,u.name); 
+                readform(sys.nifty.nuinf,u.name); 
                 break;
             case '-': 
                 nl();
@@ -326,11 +333,11 @@ void uedit(int usern)
                 i=atoi(s);
                 if(s[0]) {
                     i--;
-                    u.sl=syscfg.autoval[i].sl;
-                    u.dsl=syscfg.autoval[i].dsl;
-                    u.ar=syscfg.autoval[i].ar;
-                    u.dar=syscfg.autoval[i].dar;
-                    u.restrict=syscfg.autoval[i].restrict;
+                    u.sl=sys.cfg.autoval[i].sl;
+                    u.dsl=sys.cfg.autoval[i].dsl;
+                    u.ar=sys.cfg.autoval[i].ar;
+                    u.dar=sys.cfg.autoval[i].dar;
+                    u.restrict=sys.cfg.autoval[i].restrict;
                     userdb_save(un,&u);
                 }
                 break;
@@ -657,7 +664,7 @@ void uedit(int usern)
         while ((!done1) && (!hangup));
     } 
     while ((!done) && (!hangup));
-    if (!wfc)
+    if (!sys.wfc)
         topscreen();
 }
 

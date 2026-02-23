@@ -1,19 +1,18 @@
 /*
- * system.c — System-wide state global instance + initialization (Phase B3)
+ * system.c — System-wide state singleton implementation (Phase C)
  */
 
 #include "system.h"
 #include <string.h>
 
-system_t sys;
-
-void system_init(system_t *s)
+System& System::instance()
 {
-    /* Zero everything first */
-    memset(s, 0, sizeof(system_t));
+    static System s;
+    return s;
+}
 
-    /* Non-zero defaults */
-    s->last_time_c = 0L;
-    s->ARC_NUMBER = -1;
-    s->MAX_BATCH = 0;
+System::System()
+{
+    memset(this, 0, sizeof(System));
+    ARC_NUMBER = -1;
 }

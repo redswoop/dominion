@@ -1,5 +1,11 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
+
+
+static auto& sys = System::instance();
 
 void noc(char *s, char *s1)
 {
@@ -22,7 +28,7 @@ void boarddata(int n, char *s)
     char x,y,k,i,s1[MAX_PATH_LEN];
     subboardrec r;
 
-    r=subboards[n];
+    r=sys.subboards[n];
     if (r.ar==0)
         x=32;
     else {
@@ -44,7 +50,7 @@ void showsubs()
     abort=0;
     pla("0NN2�0AR2�0Name2��������������������������������������0FileName2�0RAcs2�0PAcs2�0Max2�0Conf2",
     &abort);
-    for (i=0; (i<num_subs) && (!abort); i++) {
+    for (i=0; (i<sys.num_subs) && (!abort); i++) {
         boarddata(i,s);
         pla(s,&abort);
     }
@@ -61,7 +67,7 @@ void modify_sub(int n)
     unsigned int ui;
 
     done=0;
-    r=subboards[n];
+    r=sys.subboards[n];
 
     do {
         outchr(12);
@@ -118,15 +124,15 @@ void modify_sub(int n)
             pausescr(); 
             break;
         case ']': 
-            if((n>=0) &&(n<num_subs-1)) {
-                subboards[n++]=r;
-                r=subboards[n];
+            if((n>=0) &&(n<sys.num_subs-1)) {
+                sys.subboards[n++]=r;
+                r=sys.subboards[n];
             } 
             break;
         case '[': 
             if(n>0) { 
-                subboards[n--]=r;
-                r=subboards[n];
+                sys.subboards[n--]=r;
+                r=sys.subboards[n];
             } 
             break;
         case 'J': 
@@ -135,8 +141,8 @@ void modify_sub(int n)
             input(s,3);
             if(s[0]) {
                 i=atoi(s);
-                subboards[n]=r;
-                r=subboards[i];
+                sys.subboards[n]=r;
+                r=sys.subboards[i];
             } 
             break;
         case 'Q':
@@ -252,8 +258,8 @@ void modify_sub(int n)
         }
     } 
     while ((!done) && (!hangup));
-    subboards[n]=r;
-    if (!wfc)
+    sys.subboards[n]=r;
+    if (!sys.wfc)
         changedsl();
 }
 
@@ -267,9 +273,9 @@ void swap_subs(int sub1, int sub2)
     userrec u;
 
 
-    sbt=subboards[sub1];
-    subboards[sub1]=subboards[sub2];
-    subboards[sub2]=sbt;
+    sbt=sys.subboards[sub1];
+    sys.subboards[sub1]=sys.subboards[sub2];
+    sys.subboards[sub2]=sbt;
 
 }
 
@@ -281,8 +287,8 @@ void insert_sub(int n,int config)
     userrec u;
     long l1,l2,l3;
 
-    for (i=num_subs-1; i>=n; i--)
-        subboards[i+1]=subboards[i];
+    for (i=sys.num_subs-1; i>=n; i--)
+        sys.subboards[i+1]=sys.subboards[i];
 
     inputdat("Name for New Sub",r.name,41,0);
     if(!r.name[0])
@@ -306,8 +312,8 @@ void insert_sub(int n,int config)
     r.origin=0;
     memset(&r.add.zone,0,sizeof(r.add));
 
-    subboards[n]=r;
-    ++num_subs;
+    sys.subboards[n]=r;
+    ++sys.num_subs;
 
     if(config)
         modify_sub(n);
@@ -321,9 +327,9 @@ void delete_sub(int n)
     long l1,l2;
     char s[MAX_PATH_LEN];
 
-    for (i=n; i<num_subs; i++)
-        subboards[i]=subboards[i+1];
-    --num_subs;
+    for (i=n; i<sys.num_subs; i++)
+        sys.subboards[i]=sys.subboards[i+1];
+    --sys.num_subs;
 }
 
 
@@ -344,7 +350,7 @@ void boardedit()
         switch(ch) {
         case '!':
             input(s,4);
-            num_subs=atoi(s);
+            sys.num_subs=atoi(s);
             break;
         case '?':
             showsubs();
@@ -357,18 +363,18 @@ void boardedit()
             prt(2,"Sub number? ");
             input(s,2);
             i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<num_subs))
+            if ((s[0]!=0) && (i>=0) && (i<sys.num_subs))
                 modify_sub(i);
             break;
         case 'I':
-            if (num_subs<199) {
+            if (sys.num_subs<199) {
                 nl();
                 prt(2,"Insert before which sub? ");
                 input(s,2);
                 i=atoi(s);
                 if(i==0)
                     pl("Nothing can be inserted before area 0!");
-                else if ((s[0]!=0) && (i>=0) && (i<=num_subs))
+                else if ((s[0]!=0) && (i>=0) && (i<=sys.num_subs))
                     insert_sub(i,1);
             }
             break;
@@ -379,9 +385,9 @@ void boardedit()
             i=atoi(s);
             if(i==0)
                 pl("Area #0 Cannot be deleted!");
-            else if ((s[0]!=0) && (i>=0) && (i<num_subs)) {
+            else if ((s[0]!=0) && (i>=0) && (i<sys.num_subs)) {
                 nl();
-                sprintf(s1,"Delete %s? ",subboards[i].name);
+                sprintf(s1,"Delete %s? ",sys.subboards[i].name);
                 prt(5,s1);
                 if (yn())
                     delete_sub(i);
@@ -390,9 +396,9 @@ void boardedit()
         }
     } 
     while ((!done) && (!hangup));
-    sprintf(s,"%ssubs.dat",syscfg.datadir);
+    sprintf(s,"%ssubs.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
-    write(f,(void *)&subboards[0], num_subs * sizeof(subboardrec));
+    write(f,(void *)&sys.subboards[0], sys.num_subs * sizeof(subboardrec));
     close(f);
 }
 
@@ -414,7 +420,7 @@ void showconf()
     outchr(12);
     abort=0;
     pla("0NN2��0Name2�������������������������������������0SL2�������0Flags2������������������",&abort);
-    for (i=0; (i<num_conf) && (!abort); i++) {
+    for (i=0; (i<sys.num_conf) && (!abort); i++) {
         confdata(i,s);
         pla(s,&abort);
     }
@@ -445,7 +451,7 @@ void modify_conf(int n)
         ch=onek("Q1234J[]T");
         switch(ch) {
         case ']': 
-            if((n>=0) && (n<num_conf-1))
+            if((n>=0) && (n<sys.num_conf-1))
             { 
                 sys.conf[n++]=r;
                 r=sys.conf[n];
@@ -500,7 +506,7 @@ void modify_conf(int n)
     } 
     while ((!done) && (!hangup));
     sys.conf[n]=r;
-    if (!wfc)
+    if (!sys.wfc)
         changedsl();
 }
 
@@ -512,14 +518,14 @@ void insert_conf(int n)
     userrec u;
     long l1,l2,l3;
 
-    for (i=num_conf-1; i>=n; i--)
+    for (i=sys.num_conf-1; i>=n; i--)
         sys.conf[i+1]=sys.conf[i];
 
     strcpy(r.name,">New Conference<");
     strcpy(r.sl,"s20");
     strcpy(r.flagstr,"");
     sys.conf[n]=r;
-    ++num_conf;
+    ++sys.num_conf;
     modify_conf(n);
 }
 
@@ -530,10 +536,10 @@ void delete_conf(int n)
     userrec u;
     long l1,l2;
 
-    for (i=n; i<num_conf; i++)
+    for (i=n; i<sys.num_conf; i++)
         sys.conf[i]=sys.conf[i+1];
-    --num_conf;
-    if (!wfc)
+    --sys.num_conf;
+    if (!sys.wfc)
         changedsl();
 }
 
@@ -563,16 +569,16 @@ void confedit()
             prt(2,"Conference number? ");
             input(s,2);
             i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<num_conf))
+            if ((s[0]!=0) && (i>=0) && (i<sys.num_conf))
                 modify_conf(i);
             break;
         case 'I':
-            if (num_conf<10) {
+            if (sys.num_conf<10) {
                 nl();
                 prt(2,"Insert before which conf? ");
                 input(s,2);
                 i=atoi(s);
-                if ((s[0]!=0) && (i>=0) && (i<=num_conf))
+                if ((s[0]!=0) && (i>=0) && (i<=sys.num_conf))
                     insert_conf(i);
             }
             break;
@@ -581,7 +587,7 @@ void confedit()
             prt(2,"Delete which conf? ");
             input(s,2);
             i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<num_conf)) {
+            if ((s[0]!=0) && (i>=0) && (i<sys.num_conf)) {
                 nl();
                 sprintf(s1,"Delete %s? ",sys.conf[i].name);
                 prt(5,s1);
@@ -592,8 +598,8 @@ void confedit()
         }
     } 
     while ((!done) && (!hangup));
-    sprintf(s,"%sconf.dat",syscfg.datadir);
+    sprintf(s,"%sconf.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
-    write(f,(void *)&sys.conf[0], num_conf * sizeof(confrec));
+    write(f,(void *)&sys.conf[0], sys.num_conf * sizeof(confrec));
     close(f);
 }

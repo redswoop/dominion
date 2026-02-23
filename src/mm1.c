@@ -1,10 +1,17 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
 
 #include "menudb.h"
 
-/* pp, tg, maxcmd, menuat now in vars.h (Phase B0) */
+/* sess.pp, sess.tg, sess.maxcmd, sess.menuat now in vars.h (Phase B0) */
 extern int fastlogon;
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 struct mmfmt_t {
     char         fmt[41],
@@ -22,7 +29,7 @@ char *getfmt(char *fn, int which)
     FILE *f;
     static char s[161];
 
-    sprintf(s,"%s%s.fmt",syscfg.menudir,fn);
+    sprintf(s,"%s%s.fmt",sys.cfg.menudir,fn);
     f=fopen(s,"rt");
     if(f==NULL) return NULL;
     fgets(s,161,f);
@@ -52,7 +59,7 @@ void readmnufmt(mmrec pf)
     FILE *f;
     char s[161];
 
-    sprintf(s,"%s%s.fmt",syscfg.menudir,pf.format);
+    sprintf(s,"%s%s.fmt",sys.cfg.menudir,pf.format);
     mmfmt.fmt[0]=0;
     mmfmt.fill=0;
     f=fopen(s,"rt");
@@ -130,42 +137,42 @@ int read_menu(char fn[15],int doauto)
             npr("8Menu %s not found!  Please inform the SysOp!!",fn);
             logtypes(5,"Menu 4%s 0Not Found!",fn);
         }
-        readmenu(nifty.firstmenu);
+        readmenu(sys.nifty.firstmenu);
         return 0;
     }
 
-    pp = raw.header;
-    if(!slok(pp.slneed,1)) {
+    sess.pp = raw.header;
+    if(!slok(sess.pp.slneed,1)) {
         pl("8Sorry, you do not have the proper access to enter this menu.");
         logtypes(3,"Tried entering menu (4%s0) that did not have access for.",fn);
-        readmenu(nifty.firstmenu);
+        readmenu(sys.nifty.firstmenu);
         return 0;
     }
 
-    /* Set menuat to filename with .mnu extension */
-    strncpy(menuat, fn, sizeof(menuat) - 1);
-    menuat[sizeof(menuat) - 1] = '\0';
-    if(!strchr(menuat,'.'))
-        strcat(menuat,".mnu");
+    /* Set sess.menuat to filename with .mnu extension */
+    strncpy(sess.menuat, fn, sizeof(sess.menuat) - 1);
+    sess.menuat[sizeof(sess.menuat) - 1] = '\0';
+    if(!strchr(sess.menuat,'.'))
+        strcat(sess.menuat,".mnu");
 
-    maxcmd = 0;
+    sess.maxcmd = 0;
     for (i = 0; i < raw.count; i++) {
         if (raw.commands[i].attr == command_forced) {
             if (doauto && slok(raw.commands[i].sl, 0))
                 ex(raw.commands[i].type, raw.commands[i].ms);
         } else if (slok(raw.commands[i].sl, 1)) {
-            tg[maxcmd++] = raw.commands[i];
+            sess.tg[sess.maxcmd++] = raw.commands[i];
         }
     }
 
-    if(pp.format[0]) readmnufmt(pp);
+    if(sess.pp.format[0]) readmnufmt(sess.pp);
 
-    if(!(pp.attr & menu_noglobal)) {
+    if(!(sess.pp.attr & menu_noglobal)) {
         menu_data_t global_raw;
         if (menudb_load("global", &global_raw) == 0) {
-            for (i = 0; i < global_raw.count && maxcmd < MAX_MENU_COMMANDS; i++) {
+            for (i = 0; i < global_raw.count && sess.maxcmd < MAX_MENU_COMMANDS; i++) {
                 if (slok(global_raw.commands[i].sl, 1))
-                    tg[maxcmd++] = global_raw.commands[i];
+                    sess.tg[sess.maxcmd++] = global_raw.commands[i];
             }
         }
     }
@@ -214,7 +221,7 @@ char *aligncmd(char in[MAX_PATH_LEN])
     r++;
     strcpy(s3,s1+r);
 
-    switch(pp.columns) {
+    switch(sess.pp.columns) {
     case 1: 
         w=45; 
         break;
@@ -242,9 +249,9 @@ char *aligncmd(char in[MAX_PATH_LEN])
         stuff_in(s1,mmfmt.fmt,s2,s3,s,"","");
     } 
     else
-        sprintf(s1,"%c%c%c%s%c%c%c%s",pp.col[0]+1,init,pp.col[1]+1,s2,pp.col[0]+1,bo(init),pp.col[2]+1,s);
+        sprintf(s1,"%c%c%c%s%c%c%c%s",sess.pp.col[0]+1,init,sess.pp.col[1]+1,s2,sess.pp.col[0]+1,bo(init),sess.pp.col[2]+1,s);
 
-    switch(pp.columns) {
+    switch(sess.pp.columns) {
     case 1: 
         w=51; 
         break;
@@ -280,37 +287,37 @@ void drawhead(int top)
 
     switch(top) {
     case 1: 
-        sprintf(s,"%s%s.ans",syscfg.gfilesdir,mmfmt.ansifn);
+        sprintf(s,"%s%s.ans",sys.cfg.gfilesdir,mmfmt.ansifn);
         if(exist(s)) {
             printfile(mmfmt.ansifn);
         } 
         else {
             outchr(12);
             nl();
-            pl(pp.title1);
-            pl(pp.title2);
+            pl(sess.pp.title1);
+            pl(sess.pp.title2);
         }
-        if(pp.format[0])
-            pl(getfmt(pp.format,0));
+        if(sess.pp.format[0])
+            pl(getfmt(sess.pp.format,0));
         else
             nl();
         break;
     case 2: 
-        if(pp.format[0])
-            outstr(getfmt(pp.format,1));
+        if(sess.pp.format[0])
+            outstr(getfmt(sess.pp.format,1));
         else
             nl();
         break;
     case 3: 
-        if(pp.format[0])
-            outstr(getfmt(pp.format,0));
+        if(sess.pp.format[0])
+            outstr(getfmt(sess.pp.format,0));
         else
             nl();
         break;
     case 4: 
-        sprintf(s,"%s%s.ans",syscfg.gfilesdir,mmfmt.ansiftfn);
-        if(pp.format[0])
-            pl(getfmt(pp.format,1));
+        sprintf(s,"%s%s.ans",sys.cfg.gfilesdir,mmfmt.ansiftfn);
+        if(sess.pp.format[0])
+            pl(getfmt(sess.pp.format,1));
         else
             nl();
         if(exist(s))
@@ -324,7 +331,7 @@ void showmenu()
 {
     ansic(0);
 
-    if(!printfile(pp.altmenu))
+    if(!printfile(sess.pp.altmenu))
         showmenucol();
 }
 
@@ -357,7 +364,7 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
     char ok=1,neg=0,*p,s1[MAX_PATH_LEN],s[MAX_PATH_LEN],curok=1,s2[MAX_PATH_LEN];
     int i,i1;
 
-    if(backdoor) return 1;
+    if(sess.backdoor) return 1;
 
     strcpy(s,val);
 
@@ -375,34 +382,34 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
         }
         switch(toupper(s[0])) {
         case 'A': 
-            if(!(thisuser.ar & (1 << toupper(s[1])-'A'))) curok=0; 
+            if(!(sess.user.ar & (1 << toupper(s[1])-'A'))) curok=0; 
             break;
         case 'B': 
-            if((modem_speed/100)<atoi(s+1)) curok=0; 
+            if((sess.modem_speed/100)<atoi(s+1)) curok=0; 
             break;
         case 'C': 
             if(!postr_ok()) curok=0; 
             break;
         case 'D': 
-            if(thisuser.dsl<atoi(s+1)) curok=0; 
+            if(sess.user.dsl<atoi(s+1)) curok=0; 
             break;
         case 'G': 
-            if(thisuser.age<atoi(s+1)) curok=0; 
+            if(sess.user.age<atoi(s+1)) curok=0; 
             break;
         case 'I': 
-            if(!(thisuser.dar & (1 << toupper(s[1])-'A'))) curok=0;
+            if(!(sess.user.dar & (1 << toupper(s[1])-'A'))) curok=0;
             break;
         case 'S': 
-            if(actsl<atoi(s+1)) curok=0; 
+            if(sess.actsl<atoi(s+1)) curok=0; 
             break;
         case 'U': 
-            if(atoi(s+1)!=usernum) curok=0; 
+            if(atoi(s+1)!=sess.usernum) curok=0; 
             break;
         case 'V':
             curok=0;
             break;
         case '@': 
-            if(!strchr(sys.conf[curconf].flagstr,s[1])) curok=0; 
+            if(!strchr(sys.conf[sess.curconf].flagstr,s[1])) curok=0; 
             break;
         case '#': 
             if(!sysop2()) curok=0; 
@@ -420,27 +427,27 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
             if(qyn) curok=0; 
             break;
         case 'H':
-            if(atoi(s+1)!=thisuser.helplevel) curok=0;
+            if(atoi(s+1)!=sess.user.helplevel) curok=0;
             break;
         case 'M':
-            if(!stricmp(s+1,subboards[usub[cursub].subnum].filename)) curok=0;
+            if(!stricmp(s+1,sys.subboards[sess.usub[sess.cursub].subnum].filename)) curok=0;
             break;
         case 'W':
-            if(!stricmp(s+1,directories[udir[curdir].subnum].filename)) curok=0;
+            if(!stricmp(s+1,sys.directories[sess.udir[sess.curdir].subnum].filename)) curok=0;
             break;
         case 'E':
             switch(s[1]) {
-                case 'R': if(!(thisuser.exempt & exempt_ratio)) curok=0; break;
-                case 'T': if(!(thisuser.exempt & exempt_time)) curok=0; break;
-                case 'U': if(!(thisuser.exempt & exempt_userlist)) curok=0; break;
-                case 'P': if(!(thisuser.exempt & exempt_post)) curok=0; break;
+                case 'R': if(!(sess.user.exempt & exempt_ratio)) curok=0; break;
+                case 'T': if(!(sess.user.exempt & exempt_time)) curok=0; break;
+                case 'U': if(!(sess.user.exempt & exempt_userlist)) curok=0; break;
+                case 'P': if(!(sess.user.exempt & exempt_post)) curok=0; break;
             }
         default:
             i=0;
             while(i<strlen(s)&&s[i]!='=')
                 i++;
             strncpy(s2,s,i-1);
-            i1=atoi(&sp[i+1]);
+            i1=atoi(&sys.sp[i+1]);
             for(i=0;i<numvars;i++) {
                 if(!stricmp(s2,vars[i].id))
                     if(vars[i].i!=i1)
@@ -480,7 +487,7 @@ void addpop(char param[MAX_PATH_LEN])
     strcpy(m.ms,p);
 
     sprintf(m.desc,"[%s] %s",m.key,s1);
-    tg[numpopers]=m;
+    sess.tg[numpopers]=m;
     numpopers++;
 }
 
@@ -493,13 +500,13 @@ void batchpop(char param[MAX_PATH_LEN])
 {
     int i;
 
-    maxcmd=numpopers;
+    sess.maxcmd=numpopers;
     numitems[0]=numpopers-1;
     popup(param);
     for(i=1;i<numpopers;i++)
-        if(!stricmp(retfrompldn,tg[i].key))
-            ex(tg[i].type,tg[i].ms);
-    read_menu(menuat,0);
+        if(!stricmp(retfrompldn,sess.tg[i].key))
+            ex(sess.tg[i].type,sess.tg[i].ms);
+    read_menu(sess.menuat,0);
     strcpy(retfrompldn,"");
 }
 
@@ -516,7 +523,7 @@ void menubatch(char fn[12])
 
     numpopers=1;
 
-    sprintf(s,"%s%s.mbt",syscfg.menudir,fn);
+    sprintf(s,"%s%s.mbt",sys.cfg.menudir,fn);
     if(!exist(s)) return;
 
     f=fopen(s,"rt");
@@ -640,23 +647,23 @@ void showmenucol()
 
     strcpy(s,aligncmd("[ ]"));
 
-    for(i=0;i<maxcmd&&!abort;i++) {
-        m=tg[i];
+    for(i=0;i<sess.maxcmd&&!abort;i++) {
+        m=sess.tg[i];
 
         if(m.attr == command_hidden) continue;
         if(m.attr == command_pulldown) continue;
         if(!slok(m.sl,1)&&!(m.attr == command_unhidden)) continue;
 
         if(m.attr == command_title) {
-            if(columns<pp.columns&&columns) {
+            if(columns<sess.pp.columns&&columns) {
                 if(mmfmt.fill) {
-                    while(columns<pp.columns) {
+                    while(columns<sess.pp.columns) {
                         columns++;
                         mla(s,&abort);
                     }
                 }
                 nl();
-                columns=pp.columns;
+                columns=sess.pp.columns;
             }
             drawhead(header_top_sub);
             pl(m.ms);
@@ -668,15 +675,15 @@ void showmenucol()
             columns++;
         }
 
-        if(columns==pp.columns) {
+        if(columns==sess.pp.columns) {
             nl();
             columns=0;
         }
     }
 
-    if(columns!=pp.columns&&!abort&&columns) {
+    if(columns!=sess.pp.columns&&!abort&&columns) {
         if(mmfmt.fill) {
-            while(columns<pp.columns) {
+            while(columns<sess.pp.columns) {
                 columns++;
                 mla(s,&abort);
             }

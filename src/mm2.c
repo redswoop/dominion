@@ -1,13 +1,20 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #pragma hdrstop
-/* menuat now in vars.h (Phase B0) */
+/* sess.menuat now in vars.h (Phase B0) */
 #include <stdarg.h>
 
 #ifdef PD
 
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
+
 char menutitles[4][20],ml[4][20];
 int curitem=0,curtitle=0,numtitles=0,numitems[4],usepldns=0;
-/* pp, tg, maxcmd now in vars.h (Phase B0) */
+/* sess.pp, sess.tg, sess.maxcmd now in vars.h (Phase B0) */
 
 void popup(char *fn);
 int usepop;
@@ -122,7 +129,7 @@ void amsgcommand(char type)
 
 void hangupcmd(char type,char ms[40])
 {
-    if(numbatchdl) {
+    if(sess.numbatchdl) {
         outstr(get_string(78));
         if(!yn()) return;
     }
@@ -197,7 +204,7 @@ void sysopcmd(char type,char ms[41])
         break;
     case 'U': 
         logtypes(3,"Edited Users");
-        uedit(usernum); 
+        uedit(sess.usernum); 
         break;
     case 'V': 
         logtypes(3,"Editing Voting");
@@ -227,7 +234,7 @@ void sysopcmd(char type,char ms[41])
         break;
     case '#': 
         logtypes(3,"Edited Menus");
-        if(ms[0]=='!') menued(menuat);
+        if(ms[0]=='!') menued(sess.menuat);
         else menu("");
         break;
     default: 
@@ -339,20 +346,20 @@ void readmenup()
     memset(&ml[0][0],0,80);
 
     i=0;
-    strcpy(menutitles[i++],tg[0].desc);
+    strcpy(menutitles[i++],sess.tg[0].desc);
 
     do {
-        if(!(tg[i].attr & command_pulldown)&&!(tg[i].attr & command_title)&&!(tg[i].attr & command_hidden)&&comn<20) {
+        if(!(sess.tg[i].attr & command_pulldown)&&!(sess.tg[i].attr & command_title)&&!(sess.tg[i].attr & command_hidden)&&comn<20) {
             ml[numtitles][comn++]=i;
         } 
-        else if(!(tg[i].attr & command_hidden)&&numtitles<4) {
+        else if(!(sess.tg[i].attr & command_hidden)&&numtitles<4) {
             numitems[numtitles]=comn;
             comn=0;
             numtitles++;
-            strcpy(menutitles[numtitles],tg[i].desc);
+            strcpy(menutitles[numtitles],sess.tg[i].desc);
         }
     } 
-    while(i++<maxcmd);
+    while(i++<sess.maxcmd);
 
     numitems[numtitles]=comn-1;
     numtitles++;
@@ -389,7 +396,7 @@ void pldn(void)
     char s[212],fmt[MAX_PATH_LEN],fmto[MAX_PATH_LEN],s1[212],desc[MAX_PATH_LEN],key[20];
     FILE *f;
 
-    sprintf(s,"%s%s.fmt",syscfg.menudir,"pulldown");
+    sprintf(s,"%s%s.fmt",sys.cfg.menudir,"pulldown");
     f=fopen(s,"rt");
     if (!f) return;
 
@@ -424,11 +431,11 @@ void pldn(void)
                 else
                     strcpy(s1,fmto);
 
-                aligncmd1(tg[ml[curtitle][i]].desc,key,desc);
+                aligncmd1(sess.tg[ml[curtitle][i]].desc,key,desc);
                 tlen=slen;
                 if(strlen(key)>1)
                     tlen-=(strlen(key)-1);
-                stuff_in(s,s1,key,makelen(desc,tlen),tg[ml[curtitle][i]].desc,"","");
+                stuff_in(s,s1,key,makelen(desc,tlen),sess.tg[ml[curtitle][i]].desc,"","");
                 npr(s);
             }
 
@@ -436,7 +443,7 @@ void pldn(void)
                 bar(22);
                 myxy(21,0);
                 ansic(0);
-                outstr(pp.prompt2);
+                outstr(sess.pp.prompt2);
                 draw=0;
             }
         }
@@ -446,23 +453,23 @@ void pldn(void)
             else
                 i=1;
 
-            aligncmd1(tg[ml[curtitle][curitem+i]].desc,key,desc);
+            aligncmd1(sess.tg[ml[curtitle][curitem+i]].desc,key,desc);
             tlen=slen;
             if(strlen(key)>1)
                 tlen-=(strlen(key)-1);
 
             myxy(curitem+y+i,x);
-            stuff_in(s,fmto,key,makelen(desc,tlen),tg[ml[curtitle][curitem+i]].desc,"","");
+            stuff_in(s,fmto,key,makelen(desc,tlen),sess.tg[ml[curtitle][curitem+i]].desc,"","");
             npr(s);
 
             myxy(curitem+y,x);
 
-            aligncmd1(tg[ml[curtitle][curitem]].desc,key,desc);
+            aligncmd1(sess.tg[ml[curtitle][curitem]].desc,key,desc);
             tlen=slen;
             if(strlen(key)>1)
                tlen-=(strlen(key)-1);
 
-            stuff_in(s,fmt,key,makelen(desc,tlen),tg[ml[curtitle][curitem]].desc,"","");
+            stuff_in(s,fmt,key,makelen(desc,tlen),sess.tg[ml[curtitle][curitem]].desc,"","");
             npr(s);
         }
         r=pmmkey(retfrompldn);
@@ -502,7 +509,7 @@ void pldn(void)
             if(!retfrompldn[0]) {
                 npr("[24;1H");
                 nl();
-                strcpy(retfrompldn,tg[ml[curtitle][curitem]].key);
+                strcpy(retfrompldn,sess.tg[ml[curtitle][curitem]].key);
                 ansic(0);
                 return;
             } 
@@ -534,16 +541,16 @@ void configpldn(int config)
         nl();
         npr("5Do you want Pulldowns automatically when you logon? ");
         if(yn())
-            thisuser.sysstatus |= sysstatus_clr_scrn;
+            sess.user.sysstatus |= sysstatus_clr_scrn;
         else
-            thisuser.sysstatus ^= sysstatus_clr_scrn;
+            sess.user.sysstatus ^= sysstatus_clr_scrn;
         return;
     }
 
     if(config==2||config==3) {
-        if(thisuser.sysstatus & sysstatus_clr_scrn) {
+        if(sess.user.sysstatus & sysstatus_clr_scrn) {
             if(!incom) {
-                topdata=0;
+                sess.topdata=0;
                 topscreen();
             }
             usepldns=1;
@@ -570,7 +577,7 @@ void makerembox(int x,int y,int ylen,char *fn)
     char s[212];
     FILE *f;
 
-    sprintf(s,"%s%s.fmt",syscfg.menudir,fn);
+    sprintf(s,"%s%s.fmt",sys.cfg.menudir,fn);
     f=fopen(s,"rt");
     if (!f) return;
 
@@ -634,7 +641,7 @@ void popup(char *fn)
 
     makerembox(x,y-1,(24-y)+2,fn);
 
-    sprintf(s,"%s%s.fmt",syscfg.menudir,fn);
+    sprintf(s,"%s%s.fmt",sys.cfg.menudir,fn);
     f=fopen(s,"rt");
     if (!f) return;
 
@@ -660,8 +667,8 @@ void popup(char *fn)
         else
             strcpy(s1,fmto);
 
-        aligncmd1(tg[ml[curtitle][curitem+i]].desc,key,desc);
-        stuff_in(s,s1,key,makelen(desc,slen),tg[ml[curtitle][curitem+i]].desc,"","");
+        aligncmd1(sess.tg[ml[curtitle][curitem+i]].desc,key,desc);
+        stuff_in(s,s1,key,makelen(desc,slen),sess.tg[ml[curtitle][curitem+i]].desc,"","");
         npr(s);
     }
 
@@ -673,13 +680,13 @@ void popup(char *fn)
                 i=1;
 
             myxy(curitem+y+i,x);
-            aligncmd1(tg[ml[curtitle][curitem+i]].desc,key,desc);
-            stuff_in(s,fmto,key,makelen(desc,slen),tg[ml[curtitle][curitem+i]].desc,"","");
+            aligncmd1(sess.tg[ml[curtitle][curitem+i]].desc,key,desc);
+            stuff_in(s,fmto,key,makelen(desc,slen),sess.tg[ml[curtitle][curitem+i]].desc,"","");
             npr(s);
 
             myxy(curitem+y,x);
-            aligncmd1(tg[ml[curtitle][curitem]].desc,key,desc);
-            stuff_in(s,fmt,key,makelen(desc,slen),tg[ml[curtitle][curitem]].desc,"","");
+            aligncmd1(sess.tg[ml[curtitle][curitem]].desc,key,desc);
+            stuff_in(s,fmt,key,makelen(desc,slen),sess.tg[ml[curtitle][curitem]].desc,"","");
             npr(s);
         }
 
@@ -702,7 +709,7 @@ void popup(char *fn)
         } 
         else {
             if(!retfrompldn[0]) {
-                strcpy(retfrompldn,tg[ml[curtitle][curitem]].key);
+                strcpy(retfrompldn,sess.tg[ml[curtitle][curitem]].key);
                 ansic(0);
                 return;
             } 

@@ -5,21 +5,7 @@
  * io.h — Dominion I/O layer umbrella header
  *
  * Handles ncurses setup (macro conflict cleanup) which must happen
- * before platform.h / vars.h are included.
- *
- * io_stream.h (session state + compat macros) is pulled in by vars.h
- * and cannot be included here — the curspeed #define macro would collide
- * with a struct field in vardec_ui.h if active before vardec.h is parsed.
- *
- * Usage:
- *     #include "io.h"              // ncurses setup — before vars.h
- *     #define _DEFINE_GLOBALS_     // if this TU owns globals
- *     #include "vars.h"           // platform.h + fcns.h + io_stream.h
- *
- * After these includes you have:
- *   - io_session_t io (session state struct + compat macros)
- *   - ncurses include guard + nc_active flag
- *   - All IO function prototypes (via fcns_io.h in fcns.h)
+ * before session.h / system.h are included.
  */
 
 #include "io_ncurses.h"

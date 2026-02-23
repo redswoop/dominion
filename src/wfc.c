@@ -1,9 +1,17 @@
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
+#include "version.h"
 
 #pragma hdrstop
 #include "swap.h"
 
 #include <math.h>
+
+
+static auto& sys = System::instance();
+static auto& sess = Session::instance();
 
 double thing=0.00;
 
@@ -17,17 +25,17 @@ int getcaller(void)
 
     frequent_init();
     sl1(1,"");
-    usernum=0;
-    wfc=0;
+    sess.usernum=0;
+    sys.wfc=0;
     hold=0;
-    userdb_load(1,&thisuser);
-    usernum=1;
+    userdb_load(1,&sess.user);
+    sess.usernum=1;
     reset_act_sl();
-    cursub=0;
-    fwaiting=numwaiting(&thisuser);
-    if (thisuser.inact & inact_deleted) {
-        thisuser.screenchars=80;
-        thisuser.screenlines=25;
+    sess.cursub=0;
+    sess.fwaiting=numwaiting(&sess.user);
+    if (sess.user.inact & inact_deleted) {
+        sess.user.screenchars=80;
+        sess.user.screenlines=25;
     }
     screenlinest=defscreenbottom+1;
     d=(1.0+timer()) / 102.723;
@@ -35,12 +43,12 @@ int getcaller(void)
     d*=10000.0;
     srand((unsigned int)d);
     wfcs();
-    if (tcp_port > 0 && ok_modem_stuff)
+    if (sys.tcp_port > 0 && ok_modem_stuff)
         initport(0);
     topit();
     strcpy(curspeed,"KB");
     do {
-        wfc=1;
+        sys.wfc=1;
         wfct();
         if(hold) {
             gotoxy(60,24);
@@ -52,12 +60,12 @@ int getcaller(void)
             cprintf(" c");
         }
         check_event();
-        if (do_event) {
+        if (sys.do_event) {
             run_event();
             wfcs();
         }
         lokb=0;
-        okskey=0;
+        sess.okskey=0;
         ch=toupper(inkey());
         if (ch) {
             _setcursortype(2);
@@ -81,21 +89,21 @@ int getcaller(void)
                     if (ch=='Y') {
                         outs("Yes\r\n");
                         lokb=1;
-                        com_speed=modem_speed=syscfg.baudrate[syscfg.primaryport];
-                        if ((syscfg.sysconfig & sysconfig_off_hook)==0)
+                        sess.com_speed=sess.modem_speed=sys.cfg.baudrate[sys.cfg.primaryport];
+                        if ((sys.cfg.sysconfig & sysconfig_off_hook)==0)
                             dtr(0);
                     }
                     if ((ch=='F') && (ok_local())) {
                         outs("Fast\r\n");
-                        userdb_load(1,&thisuser);
+                        userdb_load(1,&sess.user);
                         reset_act_sl();
-                        com_speed=modem_speed=syscfg.baudrate[syscfg.primaryport];
-                        if (thisuser.inact & inact_deleted) {
+                        sess.com_speed=sess.modem_speed=sys.cfg.baudrate[sys.cfg.primaryport];
+                        if (sess.user.inact & inact_deleted) {
                             out1ch(12);
                             break;
                         }
                         lokb=2;
-                        if ((syscfg.sysconfig & sysconfig_off_hook)==0)
+                        if ((sys.cfg.sysconfig & sysconfig_off_hook)==0)
                             dtr(0);
                     }
                     if (ch==0)
@@ -132,7 +140,7 @@ int getcaller(void)
             case 'M':
             case 'C':
             case 'U':
-                okskey=1;
+                sess.okskey=1;
                 if (ok_local()) {
                     outchr(12);
                     if(ch=='B') boardedit();
@@ -150,7 +158,7 @@ int getcaller(void)
                     else if(ch=='C') confedit();
                     else if(ch=='O') config();
                 }
-                okskey=0;
+                sess.okskey=0;
                 wfcs();
                 break;
             case 'D':
@@ -175,17 +183,17 @@ int getcaller(void)
                 break;
             case 'Q': 
                 if(!ok_local()) if(!checkpw()); 
-                end_bbs(oklevel); 
+                end_bbs(sys.oklevel); 
                 break;
             case 'R':
                 if (ok_local()) {
                     clrscrb();
-                    usernum=1;
-                    if (thisuser.waiting) {
-                            okskey=1;
+                    sess.usernum=1;
+                    if (sess.user.waiting) {
+                            sess.okskey=1;
                         readmailj(0,0);
-                        okskey=0;
-                        userdb_save(1,&thisuser);
+                        sess.okskey=0;
+                        userdb_save(1,&sess.user);
                         }
                 }
                 wfcs();
@@ -199,13 +207,13 @@ int getcaller(void)
             case 'W':
                 if (ok_local()) {
                     clrscrb();
-                    usernum=1;
-                    useron=1;
-                    okskey=1;
-                    post(cursub=0);
-                    okskey=0;
-                    useron=0;
-                    userdb_save(1,&thisuser);
+                    sess.usernum=1;
+                    sess.useron=1;
+                    sess.okskey=1;
+                    post(sess.cursub=0);
+                    sess.okskey=0;
+                    sess.useron=0;
+                    userdb_save(1,&sess.user);
                 }
                 wfcs();
                 break;
@@ -217,8 +225,8 @@ int getcaller(void)
             case '|': 
                 if(!ok_local()) break;
                 clrscr();
-                usernum=1;
-                userdb_load(1,&thisuser);
+                sess.usernum=1;
+                userdb_load(1,&sess.user);
                 changedsl();
                 getcmdtype();
                 pausescr();
@@ -239,24 +247,24 @@ int getcaller(void)
             if (!incom) {
                 _setcursortype(0);
                 frequent_init();
-                userdb_load(1,&thisuser);
-                fwaiting=numwaiting(&thisuser);
+                userdb_load(1,&sess.user);
+                sess.fwaiting=numwaiting(&sess.user);
                 reset_act_sl();
-                usernum=1;
+                sess.usernum=1;
             }
-            okskey=0;
+            sess.okskey=0;
         }
 
         /* Check for incoming TCP connection (replaces modem ring detection) */
-        if (!hold && ok_modem_stuff && !lokb && listen_fd >= 0) {
+        if (!hold && ok_modem_stuff && !lokb && sys.listen_fd >= 0) {
             struct timeval tv = {0, 50000}; /* 50ms poll */
             fd_set fds;
             FD_ZERO(&fds);
-            FD_SET(listen_fd, &fds);
-            if (select(listen_fd + 1, &fds, NULL, NULL, &tv) > 0) {
+            FD_SET(sys.listen_fd, &fds);
+            if (select(sys.listen_fd + 1, &fds, NULL, NULL, &tv) > 0) {
                 struct sockaddr_in caddr;
                 socklen_t clen = sizeof(caddr);
-                int accepted_fd = accept(listen_fd, (struct sockaddr *)&caddr, &clen);
+                int accepted_fd = accept(sys.listen_fd, (struct sockaddr *)&caddr, &clen);
                 if (accepted_fd >= 0) {
                     io.stream[IO_REMOTE].fd_in = accepted_fd;
                     io.stream[IO_REMOTE].fd_out = accepted_fd;
@@ -265,7 +273,7 @@ int getcaller(void)
                     send_terminal_init(accepted_fd);
                     incom = 1;
                     outcom = 1;
-                    com_speed = modem_speed = 38400;
+                    sess.com_speed = sess.modem_speed = 38400;
                     strcpy(curspeed, "TCP/IP");
                 }
             }
@@ -274,17 +282,17 @@ int getcaller(void)
             usleep(50000);
         }
     }
-    while ((!incom) && (!lokb) && (!endday));
+    while ((!incom) && (!lokb) && (!sys.endday));
 
     using_modem=incom;
     if (lokb==2)
         using_modem=-1;
-    okskey=1;
-    if (!endday) {
+    sess.okskey=1;
+    if (!sys.endday) {
         clrscr();
         cprintf("Connection Established at: %s\r\n",curspeed);
     }
-    wfc=0;
+    sys.wfc=0;
     return 0;
 }
 
@@ -294,26 +302,26 @@ void gotcaller(unsigned int ms, unsigned int cs)
     double d;
 
     frequent_init();
-    com_speed = cs;
-    modem_speed = ms;
+    sess.com_speed = cs;
+    sess.modem_speed = ms;
     sl1(1,"");
-    if(already_on==1) {
+    if(sess.already_on==1) {
         incom=1;
         outcom=1;
         send_terminal_init(client_fd);
     }
-    userdb_load(1,&thisuser);
+    userdb_load(1,&sess.user);
     reset_act_sl();
-    usernum=1;
-    if (thisuser.inact & inact_deleted) {
-        thisuser.screenchars=80;
-        thisuser.screenlines=25;
+    sess.usernum=1;
+    if (sess.user.inact & inact_deleted) {
+        sess.user.screenchars=80;
+        sess.user.screenlines=25;
     }
     screenlinest=25;
     clrscrb();
     sprintf(s,"Connection Established at: %s\r\n",curspeed);
     outs(s);
-    if(already_on==2)
+    if(sess.already_on==2)
         using_modem=-1;
     else
         using_modem=1;
@@ -390,7 +398,7 @@ void wfcs(void)
     _setcursortype(0);
     fastscreen("wfc.bin");
 
-    sprintf(s,"%swfc.dat",syscfg.gfilesdir);
+    sprintf(s,"%swfc.dat",sys.cfg.gfilesdir);
     f=fopen(s,"rt");
 
     while(f && fgets(s,81,f)!=NULL) {
@@ -438,7 +446,7 @@ void wfcs(void)
             cprintf("%ldk",l);
             break;
         case 10:
-            cprintf("%d",fwaiting);
+            cprintf("%d",sess.fwaiting);
             break;
         case 11:
             bargraph(10*sys.status.activetoday/144);
@@ -455,7 +463,7 @@ void wfcs(void)
 
 int ok_local()
 {
-    if (syscfg.sysconfig& sysconfig_no_local)
+    if (sys.cfg.sysconfig& sysconfig_no_local)
         return(0);
     else
         return(1);

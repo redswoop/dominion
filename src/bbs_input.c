@@ -2,11 +2,14 @@
  * bbs_input.c — BBS input multiplexer (Layer 5)
  *
  * How keys arrive from any source: local keyboard, remote TCP,
- * macro buffer, quote buffer.  Extracted from com.c.
+ * macro buffer, sess.quote buffer.  Extracted from com.c.
  */
 
 #include "io_ncurses.h"  /* MUST come before vars.h */
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "terminal_bridge.h"
 
 #pragma hdrstop
@@ -18,6 +21,9 @@
 
 /* kbhitb — non-blocking local keyboard check.
  * Delegates to Terminal which handles ncurses wgetch/ungetch internally. */
+
+static auto& sess = Session::instance();
+
 int kbhitb()
 {
     return term_local_key_ready();
@@ -55,7 +61,7 @@ void checkhangup()
                 ok = 1;
         if (!ok) {
             hangup = hungup = 1;
-            if (useron && !in_extern)
+            if (sess.useron && !sess.in_extern)
                 sysoplog("Hung Up.");
         }
     }
@@ -63,15 +69,15 @@ void checkhangup()
 
 /* empty — returns 1 if no input is available from ANY source.
  * Checks: local keyboard (kbhitb), remote TCP (comhit), macro buffer
- * (charbufferpointer), external program pipe (in_extern==2), and
- * quote buffer (bquote).  Used by getkey() to spin-wait for input. */
+ * (charbufferpointer), external program pipe (sess.in_extern==2), and
+ * sess.quote buffer (sess.bquote).  Used by getkey() to spin-wait for input. */
 int empty()
 {
     if(x_only) return 0;
 
     if (kbhitb() || (incom && comhit()) ||
         (charbufferpointer && charbuffer[charbufferpointer]) ||
-        (in_extern == 2)||bquote)
+        (sess.in_extern == 2)||sess.bquote)
         return(0);
     return(1);
 }
@@ -84,7 +90,7 @@ int empty()
 /* skey1 — post-process a key after reading from any source.
  * Called by inkey() on every character.  Handles:
  *   - 127→8 mapping (DEL→BS, defense in depth)
- *   - Ctrl-A/D/F/Y → expand user macros from thisuser.macros[]
+ *   - Ctrl-A/D/F/Y → expand user macros from sess.user.macros[]
  *   - Ctrl-T → display time remaining (ptime)
  *   - Ctrl-R → reprint last line (reprint)
  * Writes result back through *ch pointer. */
@@ -101,7 +107,7 @@ void skey1(char *ch)
     case 4:
     case 6:
     case 25:
-        if (okmacro && !charbufferpointer) {
+        if (sess.okmacro && !charbufferpointer) {
             if (c == 1)
                 c = 2;
             else if (c == 4)
@@ -114,8 +120,8 @@ void skey1(char *ch)
                 userdb_load(1,&u);
                 strcpy(charbuffer, &(u.macros[c][0]));
             }
-            else if (okskey)
-                strcpy(charbuffer, &(thisuser.macros[c][0]));
+            else if (sess.okskey)
+                strcpy(charbuffer, &(sess.user.macros[c][0]));
             c = charbuffer[0];
             if (c)
                 charbufferpointer = 1;
@@ -130,7 +136,7 @@ void skey1(char *ch)
             reprint();
         break;
     case '\x15':
-        if (okskey) break;
+        if (sess.okskey) break;
         nl();
         ex("OP","3");
         break;
@@ -146,7 +152,7 @@ void skey1(char *ch)
 /* inkey — non-blocking read from ANY input source.
  *
  * Input priority (first match wins):
- *   1. Quote buffer (bquote)  — auto-quoting in message reply
+ *   1. Quote buffer (sess.bquote)  — auto-sess.quoting in message reply
  *   2. Macro buffer (charbufferpointer) — Ctrl-A/D/F/Y macro expansion
  *   3. Local keyboard (kbhitb → getchd1) — sysop console via ncurses
  *   4. Remote TCP (comhit → get1c) — telnet user
@@ -162,28 +168,28 @@ char inkey()
     char ch=0;
     static int qpointer=0,cpointer;
 
-    if (bquote) {
+    if (sess.bquote) {
         if (!qpointer) {
             charbuffer[1]=0;
             cpointer=0;
             qpointer=1;
-            while (qpointer<bquote) {
-                if (quote[cpointer++]==13)
+            while (qpointer<sess.bquote) {
+                if (sess.quote[cpointer++]==13)
                     ++qpointer;
             }
             charbufferpointer=1;
         }
-        if (quote[cpointer]==3)
-            quote[cpointer]=16;
-        if (quote[cpointer]==14)
-            quote[cpointer]=5;
-        if (quote[cpointer]==0) {
+        if (sess.quote[cpointer]==3)
+            sess.quote[cpointer]=16;
+        if (sess.quote[cpointer]==14)
+            sess.quote[cpointer]=5;
+        if (sess.quote[cpointer]==0) {
             qpointer=0;
-            bquote=0;
-            equote=0;
+            sess.bquote=0;
+            sess.equote=0;
             return(13);
         }
-        return(quote[cpointer++]);
+        return(sess.quote[cpointer++]);
     }
 
 
@@ -199,21 +205,21 @@ char inkey()
             return(charbuffer[charbufferpointer++]);
         }
     }
-    if (kbhitb() || (in_extern == 2)) {
+    if (kbhitb() || (sess.in_extern == 2)) {
         ch = getchd1();
         lastcon = 1;
         if (!ch) {
-            if (in_extern)
-                in_extern = 2;
+            if (sess.in_extern)
+                sess.in_extern = 2;
             else {
                 ch = getchd1();
                 skey(ch);
                 ch = (((ch == 68) || (ch==103)) ? 2 : 0);
             }
         }
-        else if (in_extern)
-            in_extern = 1;
-        timelastchar1=timer1();
+        else if (sess.in_extern)
+            sess.in_extern = 1;
+        sess.timelastchar1=timer1();
     }
     else if (incom && comhit()) {
         ch = get1c();
@@ -246,7 +252,7 @@ unsigned char getkey()
     long dd,tv,tv1;
 
     beepyet = 0;
-    timelastchar1=timer1();
+    sess.timelastchar1=timer1();
 
     tv=3276L;
 
@@ -256,15 +262,15 @@ unsigned char getkey()
     do {
         while (empty() && !hangup) {
             dd = timer1();
-            if ((dd<timelastchar1) && ((dd+1000)>timelastchar1))
-                timelastchar1=dd;
-            if (labs(dd - timelastchar1) > 65536L)
-                timelastchar1 -= 1572480L;
-            if (((dd - timelastchar1) > tv1) && (!beepyet)) {
+            if ((dd<sess.timelastchar1) && ((dd+1000)>sess.timelastchar1))
+                sess.timelastchar1=dd;
+            if (labs(dd - sess.timelastchar1) > 65536L)
+                sess.timelastchar1 -= 1572480L;
+            if (((dd - sess.timelastchar1) > tv1) && (!beepyet)) {
                 beepyet = 1;
                 outchr(7);
             }
-            if (labs(dd - timelastchar1) > tv) {
+            if (labs(dd - sess.timelastchar1) > tv) {
                 nl();
                 pl("Sorry, but you appear to have fallen asleep!");
                 nl();
@@ -275,7 +281,7 @@ unsigned char getkey()
         }
         ch = inkey();
     }
-    while (!ch && !in_extern && !hangup);
+    while (!ch && !sess.in_extern && !hangup);
     if (ch == 127) ch = 8;  /* macOS sends DEL for backspace */
     return(ch);
 }
