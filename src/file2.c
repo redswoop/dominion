@@ -576,10 +576,6 @@ void genner(char *fn,char *spec, int type)
 }
 
 
-void gofer(void)
-{
-    genner("gofer.lst","????????.???",2);
-}
 
 void listgen(void)
 {

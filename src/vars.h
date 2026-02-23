@@ -62,7 +62,6 @@ unsigned short com_speed, modem_speed;
 protocolrec proto[20];
 
 /* --- Config/system --- */
-fnetrec fnet;
 niftyrec nifty;
 confrec conf[20];
 userrec thisuser;
@@ -148,7 +147,6 @@ extern protocolrec proto[20];
 /* --- Config/system --- */
 extern niftyrec nifty;
 extern userrec thisuser;
-extern fnetrec fnet;
 extern configrec syscfg;
 extern confrec conf[20];
 extern statusrec status;

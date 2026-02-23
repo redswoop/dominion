@@ -402,7 +402,6 @@ void inmsg(void *msg, char *title, int *anession, int mode,
            char *subname, int flags);
 char *readfile(void *msg, char *subname, long *len);
 void remove_link(void *msg, char *subname);
-char *rnam(char *name);
 void sendout_email(char *title, void *msg, int anession,
                    int usernum, int sysnum, int flag);
 

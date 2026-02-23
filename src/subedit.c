@@ -112,11 +112,6 @@ void modify_sub(int n)
         ch=onek("!Q1234567890AVFUGRNEMJOP[]?");
         switch(ch) {
         case 'O':
-#ifdef OLDFIDO
-            cfgorigin();
-#else
-            fidocfg();
-#endif
             break;
         case '?': 
             printmenu(28); 

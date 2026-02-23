@@ -12,7 +12,6 @@
 
 
 #ifndef DOS
-extern fnetrec fnet;
 extern configrec syscfg;
 extern niftyrec nifty;
 extern int topdata;
@@ -22,7 +21,6 @@ extern xarcrec xarc[8];
 
 #else
 int mciok;
-fnetrec fnet;
 configrec syscfg;
 niftyrec nifty;
 xarcrec xarc[8];
@@ -953,339 +951,7 @@ void nued()
 
 }
 
-#ifdef FDREDIT
-
-fdrrec fdr[15];
-int numfdr;
-
-void showfdr()
-{
-    int i;
-
-    outchr(12);
-    lpr("0##2��0Description2������������������������������0Lev2�0Speed");
-    for (i=0; (i<numfdr) ; i++) {
-        lpr("3%2d. 3%-40s 3%3d 3%5d",i,fdr[i].desc,fdr[i].level,fdr[i].speed);
-    }
-}
-
-
-void modify_fdr(int n)
-{
-    fdrrec r;
-    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],ch,ch2;
-    int i,i1,done;
-
-    done=0;
-    r=fdr[n];
-
-    do {
-        outchr(12);
-        lpr("31. Name         : 0%s",r.desc);
-        lpr("32. Filename     : 0%s",r.fn);
-        lpr("33. Speed        : 0%d",r.speed);
-        lpr("34. ErrorLevel   : 0%d",r.level);
-        s[0]=196;
-        if (r.attr & fdr_connect) s[1]='C'; 
-        else s[1]='�';
-        if (r.attr & fdr_mail) s[2]='M'; 
-        else s[2]='�';
-        if (r.attr & fdr_cmdtype) s[3]='T'; 
-        else s[3]='�';
-        if (r.attr & fdr_local) s[4]='L'; 
-        else s[4]='�';
-        s[5]=0;
-        lpr("3Flags           :0 %s",s);
-        nl();
-        nl();
-        outstr("5FDR Response Editor (?=Help) ? ");
-        ch=onek("Q1234CMTL[]?");
-        nl();
-        switch(ch) {
-        case ']': 
-            if((n>=0) &&(n<numfdr-1)) {
-                fdr[n++]=r;
-                r=fdr[n];
-            } 
-            break;
-        case '[': 
-            if(n>0) { 
-                fdr[n--]=r;
-                r=fdr[n];
-            } 
-            break;
-        case 'J': 
-            nl(); 
-            outstr("To Which Response? ");
-            input(s,3);
-            if(s[0]) {
-                i=atoi(s);
-                fdr[n]=r;
-                r=fdr[i];
-            } 
-            break;
-        case 'Q':
-            done=1; 
-            break;
-        case '1': 
-            input1(r.desc,51,1,1); 
-            break;
-        case '2': 
-            input1(r.fn,81,1,1); 
-            break;
-        case '3': 
-            input(s,5); 
-            if(s[0]) r.speed=atoi(s); 
-            break;
-        case '4': 
-            input(s,5); 
-            if(s[0]) r.level=atoi(s); 
-            break;
-        case 'M': 
-            togglebit((long *)&r.attr,fdr_mail);
-            break;
-        case 'C': 
-            togglebit((long *)&r.attr,fdr_connect);
-            break;
-        case 'T': 
-            togglebit((long *)&r.attr,fdr_cmdtype);
-            break;
-        case 'L': 
-            togglebit((long *)&r.attr,fdr_local);
-            break;
-        }
-    } 
-    while ((!done) && (!hangup));
-    fdr[n]=r;
-}
-
-
-void insert_fdr(int n)
-{
-    fdrrec r;
-    int i,i1,nu;
-    long l1,l2,l3;
-
-    for (i=numfdr-1; i>=n; i--) {
-        fdr[i+1]=fdr[i];
-    }
-    strcpy(fdr[n].desc,"Baud Rate");
-    strcpy(fdr[n].fn,"");
-    fdr[n].speed=syscfg.baudrate[syscfg.primaryport];
-    fdr[n].level=0;
-    ++numfdr;
-    modify_fdr(n);
-}
-
-
-void delete_fdr(int n)
-{
-    int i,i1,i2,nu;
-    long l1,l2;
-    char s[MAX_PATH_LEN];
-
-    for (i=n; i<numfdr; i++) {
-        fdr[i]=fdr[i+1];
-    }
-    --numfdr;
-}
-
-
-
-void fdredit()
-{
-    int i,i1,i2,done,f;
-    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN],ch;
-
-    sprintf(s,"%snetfdr.dat",syscfg.datadir);
-    f=open(s,O_RDWR | O_BINARY );
-    read(f,(void *)&fdr[0], numfdr * sizeof(fdrrec));
-    close(f);
-
-    showfdr();
-    done=0;
-    do {
-        nl();
-#ifdef DOS
-        outstr("[D]elete, [M]odify, [I]nsert, [Q]uit: ");
-#else
-        outstr(get_string2(1));
-#endif
-        ch=onek("QDIM?");
-        switch(ch) {
-        case '?':
-            showfdr();
-            break;
-        case 'Q':
-            done=1;
-            break;
-        case 'M':
-            nl();
-            outstr("2Response number? ");
-            input(s,2);
-            i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<numfdr))
-                modify_fdr(i);
-            break;
-        case 'I':
-            if (numfdr<15) {
-                nl();
-                outstr("2Insert before which Response? ");
-                input(s,2);
-                i=atoi(s);
-                if ((s[0]!=0) && (i>=0) && (i<=numfdr))
-                    insert_fdr(i);
-            }
-            break;
-        case 'D':
-            nl();
-            outstr("2Delete which Response? ");
-            input(s,2);
-            i=atoi(s);
-            if ((s[0]!=0) && (i>=0) && (i<numfdr)) {
-                nl();
-                npr("5Delete %s? ",fdr[i].desc);
-                if (yn())
-                    delete_fdr(i);
-            }
-            break;
-        }
-    } 
-    while ((!done) && (!hangup));
-    sprintf(s,"%snetfdr.dat",syscfg.datadir);
-    f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
-    write(f,(void *)&fdr[0], numfdr * sizeof(fdrrec));
-    close(f);
-}
-
-
-#endif
-
-#ifdef OLDFIDO
-void cfgorigin()
-#else
-void fidocfg()
-#endif
-{
-    int done=0,i1=0,i;
-    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],*p;
-    originrec ors[10];
-
-    sprintf(s,"%sorigin.dat",syscfg.datadir);
-    i=open(s,O_BINARY|O_RDWR);
-    read(i,&ors[0],sizeof(ors[0])*10);
-    close(i);
-
-    do {
-        outchr(12);
-        lpr("5� 0Network Origin Configuration");
-        nl();
-        lpr("3Number 9%d/90",i1);
-        nl();
-        lpr("1. Address            : %d/%d:%d",ors[i1].add.zone,ors[i1].add.net,ors[i1].add.node);
-        lpr("2. Description        : %s",ors[i1].netname);
-        lpr("3. Origin Line        : %s",ors[i1].origin);
-        nl();
-        outstr("5Select (Q=Quit, #,],[ to Select)5 :");
-        switch(toupper(getkey())) {
-        case 'Q': 
-            done=1; 
-            break;
-        case '[':
-            if(i1) i1--;
-            break;
-        case ']':
-            if(i1<9) i1++;
-            break;
-        case '1': 
-            nl();
-            getselect(s,4,24,21,1);
-            strcpy(s1,s);
-            p=strtok(s1,":");
-            ors[i1].add.zone=atoi(p);
-            p=strtok(NULL,"/");
-            ors[i1].add.net=atoi(p);
-            p=strtok(NULL,"");
-            ors[i1].add.node=atoi(p);
-            break;
-        case '2': 
-            nl();
-            getselect(ors[i1].netname,5,24,51,1);
-            break;
-        case '3': 
-            nl();
-            getselect(ors[i1].origin,6,24,71,1);
-            break;
-        }
-    } 
-    while(!done&&!hangup);
-
-    sprintf(s,"%sorigin.dat",syscfg.datadir);
-    i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
-    write(i,&ors[0],sizeof(ors[0])*10);
-    close(i);
-}
-
-#ifdef OLDFIDO
-void fidocfg()
-{
-    int done=0;
-    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],*p;
-
-    do {
-        outchr(12);
-        lpr("5� 0FidoNet Information");
-        nl();
-        lpr("1. Configure Origins");
-        nl();
-        nl();
-        nl();
-        nl();
-        lpr("5. Internal FrontEnd  : %s",syscfg.sysconfig & sysconfig_log_dl?"Yes":"No");
-        lpr("6. Mailer Command     : %s",fnet.mailer);
-        lpr("7. Mailer Ok Level    : %d",fnet.nlev);
-        lpr("8. Return to WFC Level: %d",fnet.retlev);
-        lpr("9. Scan After Logoff  : %s",syscfg.sysconfig & sysconfig_flow_control?"Yes":"No");
-#ifdef FDREDIT
-        lpr("0. Edit Exit Levels");
-#endif
-        nl();
-        outstr(get_string2(11));
-        switch(toupper(getkey())) {
-        case 'Q': 
-            done=1; 
-            break;
-        case '6': 
-            getselect(fnet.mailer,8,24,51,1);
-            break;
-        case '7': 
-            getselect(s,9,24,51,1);
-            if(s[0]) fnet.nlev=atoi(s); 
-            break;
-        case '8': 
-            getselect(s,10,24,51,1);
-            if(s[0]) fnet.retlev=atoi(s); 
-            break;
-#ifdef FDREDIT
-        case '0':
-            fdredit();
-            break;
-#endif
-        case '5': 
-            togglebit((long *)&syscfg.sysconfig,sysconfig_log_dl);
-            break;
-        case '9': 
-            togglebit((long *)&syscfg.sysconfig,sysconfig_flow_control);
-            break;
-        case '1':
-            cfgorigin();
-            break;
-        }
-    } 
-    while(!done&&!hangup);
-
-}
-#endif
+/* FidoNet config editors removed */
 
 void acscfg(void)
 {
@@ -1417,17 +1083,6 @@ void main(int argc, char *argv[])
         json_to_configrec(cfg_root, &syscfg, &nifty);
         cJSON_Delete(cfg_root);
     }
-    sprintf(s,"%sfnet.dat",syscfg.datadir);
-    f=fopen(s,"rb");
-    fread(&fnet,sizeof(fnetrec),1,f);
-    fclose(f);
-
-    sprintf(s,"%snetfdr.dat",syscfg.datadir);
-    i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
-    numfdr=(read(i,&fdr[0], (15*sizeof(fdrrec))))/
-        sizeof(fdrrec);
-    close(i);
-
 #endif
     do {
         outchr(12);
@@ -1476,9 +1131,6 @@ void main(int argc, char *argv[])
         case '9': 
             secleved(); 
             break;
-        case '0': 
-            fidocfg(); 
-            break;
         case 'F':
             filecfg();
             break;
@@ -1499,10 +1151,4 @@ void main(int argc, char *argv[])
         write_json_file("config.json", cfg_root);
         cJSON_Delete(cfg_root);
     }
-#ifdef OLDFIDO
-    sprintf(s,"%sfnet.dat",syscfg.datadir);
-    f=fopen(s,"wb");
-    fwrite(&fnet,sizeof(fnetrec),1,f);
-    fclose(f);
-#endif
 }

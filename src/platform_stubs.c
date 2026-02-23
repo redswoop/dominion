@@ -645,13 +645,6 @@ void remove_link(void *msg, char *subname)
     fprintf(stderr, "[STUB] remove_link: not yet implemented\n");
 }
 
-/* rnam — look up real name for a FidoNet address/name */
-char *rnam(char *name)
-{
-    /* Just return the input name as-is */
-    return name;
-}
-
 /* sendout_email — send an email message */
 void sendout_email(char *title, void *msg, int anession,
                    int usernum, int sysnum, int flag)

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     int i,i2,v,port,show=0;
     unsigned int ui=0, us=0;
     double dt;
-    unsigned short c_s,c_o,dogofer=0,dofilenet=0;
+    unsigned short c_s,c_o;
     int splash_pause=0;
 
     if(getenv("DOM")) cd_to(getenv("DOM"));
@@ -65,19 +65,10 @@ int main(int argc, char *argv[])
                 printf("/L  - Logon as SysOp Locally\n");
                 printf("/I  - Load Quietly(Bypass all loading screens)\n");
                 printf("/W  - Pause at splash screen\n");
-                printf("/F  - Enable/Disable Mailer Loadup\n");
-                printf("/A  - Toss in File Net\n");
                 printf("\n");
                 exit(0);
             case 'D': 
                 SYSTEMDEBUG=1; 
-                break;
-            case 'A': 
-                dofilenet=1; 
-                break;
-            case 'G':
-                show=1;
-                dogofer=1; 
                 break;
             case 'L': 
                 already_on=2; 
@@ -118,16 +109,6 @@ int main(int argc, char *argv[])
 
     init(show);
     if(port!=0) syscfg.primaryport=port;
-
-    if(dofilenet)
-        exit(fdnfilenet());
-
-    if(dogofer) {
-        gofer();
-        exit(0);
-    }
-
-
 
     if (_OvrInitExt(0,0)==0)
         cprintf("\nXMS Memory Found, Will Be Used for Overlay Swapping.\n");

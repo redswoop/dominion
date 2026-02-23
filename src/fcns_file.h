@@ -69,7 +69,6 @@ int extern_prot(int pn, char *fn1, int sending);
 void stuff_in2(char *s, char *s1, char f1[63],int l1,char f2[63],int l2, char f3[63],int l3,char f4[63],int l4, char f5[63],int l5);
 int dirlist(char type);
 void genner(char *fn,char *spec, int type);
-void gofer(void);
 void listgen(void);
 
 
@@ -88,8 +87,6 @@ char *stripfn(char *fn);
 void stripfn1(char *fn);
 int upload_file2(char *fn, int dn, char *desc);
 int maybe_upload(char *fn, int dn, char *desc);
-void fdnupload_files(char *fn, int dn, int type);
-int fdnfilenet(void);
 
 
 /* File: archive.c */

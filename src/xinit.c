@@ -274,13 +274,6 @@ void init(int show)
         sizeof(directoryrec);
     close(i);
 
-#ifdef OLDFIDO
-    sprintf(s,"%sfnet.dat",syscfg.datadir);
-    i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
-    read(i,&fnet,sizeof(fnet));
-    close(i);
-#endif
-
     if(!restoring_shrink&&!show)
         dotopinit("Protocol.dat",60);
 

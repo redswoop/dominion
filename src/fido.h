@@ -1,62 +1,19 @@
 #ifndef _FIDO_H_
 #define _FIDO_H_
 
+/* FidoNet address — embedded in subboardrec (SUBS.DAT) and hdrinfo.
+ * Must keep exact layout for binary file compatibility. */
 typedef struct {
         int zone,net,node,point;
 } addressrec;
 
-#define fdr_connect 0x0001
-#define fdr_mail    0x0002
-#define fdr_local   0x0004
-#define fdr_cmdtype 0x0008
-
-typedef struct {
-        char  desc[51],                 /* Description of ErrorLevel */
-              fn[MAX_PATH_LEN];                   /* Filename to run on mail */
- unsigned int speed;                    /* Modem Speed returned */
-        int   level,                    /* Actual Error Level */
-              attr;                     /* Action Type */
-} fdrrec;
-
-typedef struct {
-    char mailer[MAX_PATH_LEN],
-         fdpath[MAX_PATH_LEN];
-    int nlev,retlev;
-    unsigned long attr;
-} fnetrec;
-
-/* FIDO .msg Format */
-typedef struct {
-        char from[36],
-             to[36],
-             title[72],
-             date[20];
-             int
-             timesread,
-             destnode,
-             orignode,
-             cost,
-             orignet,
-             destnet;
-             char
-             res[8];
-             int
-             replyto,
-             attrib,
-             nextreply;
-} fmsgrec;
-
+/* Origin record — read from origin.dat by getorigin() in msgbase.c.
+ * Must keep exact layout for binary file compatibility. */
 typedef struct {
         char origin[MAX_PATH_LEN];
         char tear[MAX_PATH_LEN];
         char netname[41];
         addressrec add;
 } originrec;
-
-#ifdef DFIDO
-
-#else
-extern fnetrec fnet;
-#endif
 
 #endif /* _FIDO_H_ */
