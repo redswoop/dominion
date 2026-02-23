@@ -1,22 +1,29 @@
 /*
- * cmd_registry.c — Data-driven command dispatch.
+ * cmd_registry.cpp — Data-driven command dispatch.
  *
  * Each command "family" (type[0]) has a handler that dispatches on
  * type[1].  The static registry table maps type[0] -> handler.
  *
- * Inline handlers that used to live in ex() (mm.c) are extracted here:
+ * Family handlers extracted here:
  *   filecmd()    — 'F' family (file operations)
  *   bbslistcmd() — 'Q' family (BBS list)
  *   navcmd()     — '=' family (menu navigation)
  *   showcmd()    — '?' family (show menu)
  *
- * Existing handlers stay in their original files:
- *   msgcommand() — 'M' (mm.c)
- *   othercmd()   — 'O' (mm.c)
- *   sysopcmd()   — 'S' (mm2.c)
- *   hangupcmd()  — 'I' (mm2.c)
- *   amsgcommand()— 'J' (mm2.c)
- *   matrixcmd()  — 'W' (mm2.c)
+ * Direct registry (exact two-char code → handler):
+ *   O*  — 13 'other' commands (sysinfo, chat, bank, etc.)
+ *   M*  — 6 message commands (post, mail, scan, etc.)
+ *   S*  — 15 sysop commands (boardedit, config, uedit, etc.)
+ *   J*  — 3 automessage commands (read, write, reply)
+ *   W*  — 3 matrix commands (login, newuser, password)
+ *
+ * Remaining family handlers in original files:
+ *   msgcommand() — 'MN' only (mm.cpp)
+ *   othercmd()   — 'O' non-direct (mm.cpp)
+ *   sysopcmd()   — 'SC','S#' only (mm2.cpp)
+ *   hangupcmd()  — 'I' (mm2.cpp)
+ *   amsgcommand()— fallback only (mm2.cpp)
+ *   matrixcmd()  — fallback only (mm2.cpp)
  *   rundoor()    — 'D' (extrn.c)
  */
 
@@ -485,6 +492,228 @@ static int cmd_chat(const char *param)
 
 
 /* ================================================================
+ * Extracted: message commands (was in msgcommand(), mm.cpp)
+ * ================================================================ */
+
+static int cmd_yourinfomsg(const char *param)
+{
+    (void)param;
+    yourinfomsg();
+    return 1;
+}
+
+static int cmd_post(const char *param)
+{
+    (void)param;
+    auto& sess = Session::instance();
+    post(sess.cursub);
+    return 1;
+}
+
+static int cmd_rscanj(const char *param)
+{
+    (void)param;
+    rscanj();
+    return 1;
+}
+
+static int cmd_readmail(const char *param)
+{
+    readmailj(atoi(param), 0);
+    return 1;
+}
+
+static int cmd_smail(const char *param)
+{
+    auto& sess = Session::instance();
+    sess.cursub = 0;
+    smail((char *)param);
+    return 1;
+}
+
+static int cmd_uploadpost(const char *param)
+{
+    (void)param;
+    upload_post();
+    return 1;
+}
+
+/* ================================================================
+ * Extracted: sysop commands (was in sysopcmd(), mm2.cpp)
+ * ================================================================ */
+
+static int cmd_boardedit(const char *param)
+{
+    (void)param;
+    logtypes(3, "Edited Message Areas");
+    boardedit();
+    return 1;
+}
+
+static int cmd_glocolor(const char *param)
+{
+    (void)param;
+    glocolor();
+    return 1;
+}
+
+static int cmd_config(const char *param)
+{
+    (void)param;
+    logtypes(3, "Edited Configuration");
+    config();
+    return 1;
+}
+
+static int cmd_diredit(const char *param)
+{
+    (void)param;
+    logtypes(3, "Edited Directories");
+    diredit();
+    return 1;
+}
+
+static int cmd_readallmail(const char *param)
+{
+    (void)param;
+    logtypes(3, "Read All Mail");
+    return 1;
+}
+
+static int cmd_chuser(const char *param)
+{
+    (void)param;
+    logtypes(3, "Changed Users");
+    chuser();
+    return 1;
+}
+
+static int cmd_voteprint(const char *param)
+{
+    (void)param;
+    /* voteprint() commented out in original */
+    return 1;
+}
+
+static int cmd_uedit(const char *param)
+{
+    (void)param;
+    auto& sess = Session::instance();
+    logtypes(3, "Edited Users");
+    uedit(sess.usernum);
+    return 1;
+}
+
+static int cmd_ivotes(const char *param)
+{
+    (void)param;
+    logtypes(3, "Editing Voting");
+    /* ivotes() commented out in original */
+    return 1;
+}
+
+static int cmd_zlog(const char *param)
+{
+    (void)param;
+    zlog();
+    return 1;
+}
+
+static int cmd_edstring(const char *param)
+{
+    logtypes(3, "Edited Strings");
+    if (param[0]) edstring(atoi(param));
+    else edstring(0);
+    return 1;
+}
+
+static int cmd_resetfiles(const char *param)
+{
+    (void)param;
+    reset_files(1);
+    return 1;
+}
+
+static int cmd_protedit(const char *param)
+{
+    (void)param;
+    logtypes(3, "Edited Protocols");
+    protedit();
+    return 1;
+}
+
+static int cmd_confedit(const char *param)
+{
+    (void)param;
+    logtypes(3, "Edited Conferences");
+    confedit();
+    return 1;
+}
+
+static int cmd_viewlog(const char *param)
+{
+    (void)param;
+    viewlog();
+    return 1;
+}
+
+/* ================================================================
+ * Extracted: automessage commands (was in amsgcommand(), mm2.cpp)
+ * ================================================================ */
+
+static int cmd_writeautomsg(const char *param)
+{
+    (void)param;
+    write_automessage();
+    return 1;
+}
+
+static int cmd_readautomsg(const char *param)
+{
+    (void)param;
+    read_automessage();
+    return 1;
+}
+
+static int cmd_replyautomsg(const char *param)
+{
+    (void)param;
+    auto& sys = System::instance();
+    if (sys.status.amsguser)
+        email(sys.status.amsguser, "Reply to AutoMessage", 1);
+    return 1;
+}
+
+/* ================================================================
+ * Extracted: matrix commands (was in matrixcmd(), mm2.cpp)
+ * ================================================================ */
+
+static int cmd_checkmatrixpw(const char *param)
+{
+    (void)param;
+    checkmatrixpw();
+    return 1;
+}
+
+static int cmd_getmatrixpw(const char *param)
+{
+    (void)param;
+    getmatrixpw();
+    return 1;
+}
+
+static int cmd_matrixnewuser(const char *param)
+{
+    (void)param;
+    nl();
+    npr("5Logon as New? ");
+    if (yn())
+        newuser();
+    return 1;
+}
+
+
+/* ================================================================
  * Direct registry — exact two-char code → handler
  * Checked before family dispatch, so extracted commands override.
  * ================================================================ */
@@ -503,6 +732,37 @@ static const cmd_direct_t direct_registry[] = {
     { "OT", "bank",          cmd_bank         },
     { "OA", "today_history", cmd_todayhistory },
     { "OC", "chat",          cmd_chat         },
+    /* message commands (from msgcommand) */
+    { "MY", "yourinfomsg",   cmd_yourinfomsg  },
+    { "MP", "post",          cmd_post         },
+    { "MS", "rscan_j",       cmd_rscanj       },
+    { "MM", "read_mail",     cmd_readmail     },
+    { "ME", "smail",         cmd_smail        },
+    { "MU", "upload_post",   cmd_uploadpost   },
+    /* sysop commands (from sysopcmd) */
+    { "SB", "board_edit",    cmd_boardedit    },
+    { "S-", "glo_color",     cmd_glocolor     },
+    { "SP", "config",        cmd_config       },
+    { "SF", "dir_edit",      cmd_diredit      },
+    { "SM", "read_all_mail", cmd_readallmail  },
+    { "SH", "ch_user",       cmd_chuser       },
+    { "SI", "vote_print",    cmd_voteprint    },
+    { "SU", "user_edit",     cmd_uedit        },
+    { "SV", "ivotes",        cmd_ivotes       },
+    { "SZ", "zlog",          cmd_zlog         },
+    { "SE", "ed_string",     cmd_edstring     },
+    { "SR", "reset_files",   cmd_resetfiles   },
+    { "SX", "prot_edit",     cmd_protedit     },
+    { "SL", "conf_edit",     cmd_confedit     },
+    { "SO", "view_log",      cmd_viewlog      },
+    /* automessage commands (from amsgcommand) */
+    { "JW", "write_automsg", cmd_writeautomsg },
+    { "JR", "read_automsg",  cmd_readautomsg  },
+    { "JA", "reply_automsg", cmd_replyautomsg },
+    /* matrix commands (from matrixcmd) */
+    { "WC", "check_matpw",   cmd_checkmatrixpw  },
+    { "WL", "get_matpw",     cmd_getmatrixpw    },
+    { "WN", "matrix_newuser",cmd_matrixnewuser  },
     { "",   NULL,             NULL             }
 };
 

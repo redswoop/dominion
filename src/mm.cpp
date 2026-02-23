@@ -27,17 +27,10 @@ void msgcommand(char type,char ms[40])
 {
     auto& sys = System::instance();
     auto& sess = Session::instance();
-    int c,c1,ok=1,i;
+    int c,ok=1,i;
     char s[MAX_PATH_LEN],*p;
-    unsigned long l;
 
     switch(type) {
-    case 'Y': 
-        yourinfomsg();
-        break;
-    case 'P': 
-        post(sess.cursub); 
-        break;
     case 'N':
         if(ms[1]=='?') {
             p=strtok(ms,";");
@@ -91,28 +84,7 @@ void msgcommand(char type,char ms[40])
             }
         }
         break;
-    case 'S': 
-        rscanj();  
-        break;
-    case 'M': 
-        readmailj(atoi(ms),0); 
-        break;
-    case 'E': 
-        sess.cursub=0; 
-        smail(ms);
-        break;
-    case 'U': 
-        upload_post(); 
-        break;
-#ifdef QWK
-    case 'W': 
-        makeqwk(ms[0]); 
-        break;
-    case 'Z': 
-        qwkreply(); 
-        break;
-#endif
-    default: 
+    default:
         badcommand('M',type);
     }
 }

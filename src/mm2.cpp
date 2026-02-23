@@ -72,38 +72,15 @@ void badcommand(char onf,char tw)
 void matrixcmd(char type)
 {
     switch(type) {
-    case 'C': 
-        checkmatrixpw(); 
-        break;
-    case 'L': 
-        getmatrixpw(); 
-        break;
-    case 'N': 
-        nl();
-        npr("5Logon as New? ");
-        if(yn())
-            newuser();
-        break;
-    default: 
+    default:
         badcommand('W',type);
     }
 }
 
 void amsgcommand(char type)
 {
-    auto& sys = System::instance();
     switch(type) {
-    case 'W': 
-        write_automessage(); 
-        break;
-    case 'R': 
-        read_automessage();
-        break;
-    case 'A':
-        if(sys.status.amsguser)
-            email(sys.status.amsguser,"Reply to AutoMessage",1);
-        break;
-    default: 
+    default:
         badcommand('J',type);
     }
 }
@@ -135,7 +112,7 @@ void hangupcmd(char type,char ms[40])
                 if(type=='L') {
                     outstr("5Leave Message to Next User? ");
                     if(yn()) {
-                        amsgcommand('W');
+                        write_automessage();
                     }
                 }
             }
@@ -153,29 +130,7 @@ void sysopcmd(char type,char ms[41])
     auto& sess = Session::instance();
     switch(type)
     {
-    case 'B': 
-        logtypes(3,"Edited Message Areas");
-        boardedit(); 
-        break;
-    case '-': 
-        glocolor(); 
-        break;
-    case 'P': 
-        logtypes(3,"Edited Configuration");
-        config(); 
-        break;
-    case 'F': 
-        logtypes(3,"Edited Directories");
-        diredit(); 
-        break;
-    case 'M': 
-        logtypes(3,"Read All Mail");
-        break;
-    case 'H': 
-        logtypes(3,"Changed Users");
-        chuser(); 
-        break;
-    case 'C': 
+    case 'C':
         { static char _sysop_avail_flag = 0;
         _sysop_avail_flag ^= 0x10;
         pl(_sysop_avail_flag & 0x10 ?
@@ -183,45 +138,12 @@ void sysopcmd(char type,char ms[41])
         logtypes(3,"Changed Chat Availability");
         topscreen();
         break;
-    case 'I':
-        //        voteprint();
-        break;
-    case 'U': 
-        logtypes(3,"Edited Users");
-        uedit(sess.usernum); 
-        break;
-    case 'V': 
-        logtypes(3,"Editing Voting");
-        //                     ivotes(); 
-        break;
-    case 'Z': 
-        zlog(); 
-        break;
-    case 'E': 
-        logtypes(3,"Edited Strings");
-        if(ms[0]) edstring(atoi(ms));
-        else edstring(0); 
-        break;
-    case 'R': 
-        reset_files(1); 
-        break;
-    case 'X': 
-        logtypes(3,"Edited Protocols");
-        protedit(); 
-        break;
-    case 'L': 
-        logtypes(3,"Edited Conferences");
-        confedit(); 
-        break;
-    case 'O': 
-        viewlog(); 
-        break;
     case '#':
         logtypes(3,"Edited Menus");
         if(ms[0]=='!') menued(sess.menuat);
         else menu("");
         break;
-    default: 
+    default:
         badcommand('S',type);
     }
 }
