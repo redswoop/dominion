@@ -14,22 +14,6 @@ extern void reset_attr_cache(void);
 extern void conio_sync_cursor(int x, int y);
 
 /* ================================================================== */
-/*  int86() — BIOS/DOS interrupt stub                                  */
-/* ================================================================== */
-
-int int86(int intno, union REGS *inregs, union REGS *outregs)
-{
-    /* Stub — DOS interrupts don't exist on macOS.
-     * Individual callers (fossil, console, etc.) will be replaced
-     * with native implementations over time.
-     */
-    if (outregs) {
-        memset(outregs, 0, sizeof(union REGS));
-    }
-    return 0;
-}
-
-/* ================================================================== */
 /*  CONSOLE FUNCTIONS — ncurses implementations                        */
 /* ================================================================== */
 

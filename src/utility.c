@@ -35,10 +35,7 @@ void reset_act_sl()
 
 int sysop1()
 {
-    if ((peekb(0,1047) & 0x10)==0)
-        return(1);
-    else
-        return(0);
+    return(1); /* Always available — DOS Scroll Lock check removed */
 }
 
 int okansi()

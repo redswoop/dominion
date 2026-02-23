@@ -56,7 +56,6 @@ void init(int show)
     char s[161],*buf,ch,*ss,s1[MAX_PATH_LEN],s2[10];
     int i,i1,i2,sm,cp,n,f;
     long l;
-    union REGS r;
     struct date today;
     int resaveconfig=0;
     //  votingrec v;

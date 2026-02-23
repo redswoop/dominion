@@ -46,10 +46,8 @@ public:
     int configfile, statusfile;
     int restoring_shrink, tempio;
 
-    /* Network / serial (vestigial) */
+    /* Network */
     int tcp_port, listen_fd;
-    int X00port, async_irq, base;
-    union REGS regs;
 
     /* Paths */
     char cdir[MAX_PATH_LEN];

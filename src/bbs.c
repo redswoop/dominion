@@ -10,7 +10,6 @@
 #include "mci_bbs.h"
 
 #define modem_time 3.5
-/* extern unsigned _stklen=30000U; — DOS stack size, not needed on macOS */
 extern double thing;
 /* sess.menuat now in vars.h (Phase B0) */
 

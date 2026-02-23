@@ -99,8 +99,6 @@
 /* --- Suppress Borland pragmas --- */
 /* #pragma hdrstop, #pragma warn, etc. are ignored by clang */
 
-/* --- Stack size (no-op on modern systems) --- */
-
 /* ================================================================== */
 /*  TYPE COMPATIBILITY                                                 */
 /* ================================================================== */
@@ -114,29 +112,6 @@
  * there are sized for binary file compatibility.
  */
 
-/* --- union REGS for int86() — stubbed out --- */
-typedef struct {
-    unsigned char al, ah, bl, bh, cl, ch, dl, dh;
-} BYTEREGS_X86;
-
-typedef struct {
-    unsigned short ax, bx, cx, dx, si, di, cflag, flags;
-} WORDREGS_X86;
-
-typedef union REGS {
-    BYTEREGS_X86 h;
-    WORDREGS_X86 x;
-} REGS;
-
-/* int86() — stub, implemented in platform_stubs.c */
-int int86(int intno, union REGS *inregs, union REGS *outregs);
-
-/* --- Segment/offset memory (not applicable) --- */
-#define MK_FP(seg, off)   ((void*)0)  /* Always returns NULL — never dereference */
-#define FP_SEG(p)         (0)
-#define FP_OFF(p)         (0)
-#define peek(seg, off)    (0)
-#define peekb(seg, off)   (0)
 
 /* ================================================================== */
 /*  BORLAND CONIO.H REPLACEMENTS                                      */
@@ -360,12 +335,6 @@ char *strlwr(char *s);
  * macOS has random() as a different function (no args, returns long).
  * Override with the Borland-compatible version. */
 #define random(n)  (rand() % (n))
-
-/* bioskey — stub */
-#define bioskey(cmd)  (0)
-
-/* geninterrupt — no-op */
-#define geninterrupt(n)  /* no-op */
 
 /* environ — available on macOS but needs declaration */
 extern char **environ;
