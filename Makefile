@@ -106,7 +106,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 # --- Tool targets ---
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest $(BUILDDIR)/iotest
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest $(BUILDDIR)/iotest $(BUILDDIR)/uitest
 
 $(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c | $(BUILDDIR)
 	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
@@ -144,6 +144,13 @@ $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
 $(BUILDDIR)/iotest: $(TOOLDIR)/iotest.cpp $(OBJDIR)/terminal.o | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/terminal.o -lncurses
 
+# UI test — declarative UI harness, ZERO BBS dependencies
+$(OBJDIR)/ui.o: $(SRCDIR)/ui.cpp $(SRCDIR)/ui.h $(SRCDIR)/terminal.h | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -c -o $@ $<
+
+$(BUILDDIR)/uitest: $(TOOLDIR)/uitest.cpp $(OBJDIR)/ui.o $(OBJDIR)/terminal.o | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/terminal.o -lncurses
+
 # --- Data sync from dist/ into build/ ---
 data: | $(BUILDDIR)
 	@for d in $(DATA_DIRS); do mkdir -p $(BUILDDIR)/$$d; done
@@ -175,7 +182,7 @@ clean:
 	rm -f $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump
 	rm -f $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump
 	rm -f $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest
-	rm -f $(BUILDDIR)/iotest
+	rm -f $(BUILDDIR)/iotest $(BUILDDIR)/uitest
 
 # Remove just objects (keep binary + data for quick relink)
 clean-obj:

@@ -34,6 +34,11 @@ Layer 3   Leaf I/O & Data Modules (no BBS globals)
       │                             telnet IAC, keyboard, cursor
       │                       Test: tools/iotest.cpp (zero stubs)
       │
+      ├─► ui.h/.cpp           Declarative UI: Session, Navigator, Form
+      │                       Deps: terminal.h only
+      │                       Owns: event loop, input dispatch, session mgmt
+      │                       Test: tools/uitest.cpp (zero stubs)
+      │
       ├── ansi_attr.h/.c      Pure ANSI SGR escape generation
       │                       Deps: platform.h (itoa only)
       │                       No vars.h — testable in isolation
@@ -134,4 +139,9 @@ Phase 4 (done):  Split com.c → ansi_attr.c (Layer 3 leaf)
 
 Phase 5:         conio.c splits: topscreen/skey → sysop_ui.cpp,
                   screen ops already in Terminal
+
+Phase 6 (done):  ui.h/.cpp — declarative UI harness (C++ leaf)
+                  Session/Navigator/Form types, poll-based event loop
+                  uitest.cpp: toy BBS, multi-session telnet
+                  Links ui.o + terminal.o only (zero BBS objects)
 ```
