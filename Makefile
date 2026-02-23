@@ -55,14 +55,14 @@ CXXFLAGS = -std=c++17 \
            -fsigned-char -g -O0
 
 # The BBS core modules (from the original makefile)
-BBS_CORE = bbs ansi_attr bbs_output bbs_input bbs_ui conio bbsutl file file1 mm \
+BBS_CORE = bbs ansi_attr bbs_output bbs_input bbs_ui conio bbsutl file file1 \
            utility extrn mm1 tcpio jam stream_processor mci mci_bbs
 
-BBS_MODULES = mm2 cmd_registry acs menu_nav msgbase disk userdb menudb timest utility1 \
+BBS_MODULES = cmd_registry acs menu_nav msgbase disk userdb menudb timest utility1 \
               file2 file3 archive filesys \
               menued uedit diredit subedit stringed \
               bbsutl2 sysopf wfc xinit \
-              personal misccmd config \
+              personal misccmd automsg bbslist timebank topten config \
               lilo error chat nuv newuser
 
 # Platform compatibility

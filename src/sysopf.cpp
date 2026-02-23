@@ -6,8 +6,47 @@
 #pragma hdrstop
 
 #include "json_io.h"
+#include <stdarg.h>
 
 extern char commstr[41];
+
+
+void logtypes(char type,char *fmt, ...)
+{
+    va_list ap;
+    char s[512],s1[MAX_PATH_LEN];
+
+    va_start(ap, fmt);
+    vsprintf(s, fmt, ap);
+    va_end(ap);
+
+    switch(type) {
+    case 0:
+        strcpy(s1,"7\xFA""7>");
+        break;
+    case 1:
+        strcpy(s1,"5\xFA""5\xFA");
+        break;
+    case 2:
+        strcpy(s1,"1\xFA""1>");
+        break;
+    case 3:
+        strcpy(s1,"2\xFA""2\xFA");
+        break;
+    case 4:
+        strcpy(s1,"3\xFA""3>");
+        break;
+    case 5:
+        strcpy(s1,"9#9#9#");
+        break;
+    }
+
+    strcat(s1,"0 ");
+    strcat(s1,s);
+    if(type==5) sl1(0,s1);
+    else
+        sysoplog(s1);
+}
 
 
 void reset_files(int show)

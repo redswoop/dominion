@@ -64,16 +64,6 @@ int inscan(int sb,userrec *u);
 void togglenws(int sb,userrec *u,int scan);
 
 
-/* File: mm.c */
-
-int slok(char val[31],char menu);
-void msgcommand(char type,char ms[40]);
-void othercmd(char type,char ms[40]);
-int ex(char type[2],char ms[MAX_PATH_LEN]);
-void menuman(void);
-void handleinput(char *s,int begx);
-
-
 /* File: mm1.c */
 
 char *getfmt(char *fn, int which);
@@ -91,18 +81,6 @@ void plfmt(char *s);
 void plfmta(char *s,int *abort);
 void menubatch(char fn[12]);
 void showmenucol();
-
-
-/* File: mm2.c */
-
-void getcmdtype(void);
-void logtypes(char type,char *fmt, ...);
-void badcommand(char onf,char tw);
-void matrixcmd(char type);
-void amsgcommand(char type);
-void hangupcmd(char type,char ms[40]);
-void sysopcmd(char type,char ms[41]);
-void configpldn(int config);
 
 
 /* File: stringed.c */

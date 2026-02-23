@@ -56,6 +56,7 @@ void print_local_file(char ss[MAX_PATH_LEN]);
 void text_edit();
 void viewlog();
 void glocolor(void);
+void logtypes(char type,char *fmt, ...);
 
 
 /* File: xinit.c */
@@ -128,22 +129,11 @@ void write_door_sys(int rname);
 void rundoor(char type,char ms[MAX_PATH_LEN]);
 
 
-/* File: misccmd.c */
+/* File: misccmd.cpp */
 
-void read_automessage();
-void write_automessage();
-void addbbs(char *fn);
-void searchbbs(char *fn);
 void list_users();
 void yourinfo();
 void jumpconf(char ms[41]);
-void add_time(int limit);
-void remove_time();
-void bank2(int limit);
-char *stl(long l);
-char *sti(int i);
-void updtopten(void);
-char *topten(int type);
 char *get_date_filename();
 void today_history();
 void dtitle(char msg[MAX_PATH_LEN]);
@@ -151,6 +141,33 @@ void selfValidationCheck(char *param);
 char *getComputerType(int which);
 int numctype(void);
 int numComputerTypes(void);
+
+
+/* File: automsg.cpp */
+
+void read_automessage();
+void write_automessage();
+
+
+/* File: bbslist.cpp */
+
+void addbbs(char *fn);
+void searchbbs(char *fn);
+
+
+/* File: timebank.cpp */
+
+void add_time(int limit);
+void remove_time();
+void bank2(int limit);
+
+
+/* File: topten.cpp */
+
+char *stl(long l);
+char *sti(int i);
+void updtopten(void);
+char *topten(int type);
 
 
 /* File: config.c */

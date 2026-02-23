@@ -12,4 +12,7 @@
 #include "fcns_file.h"
 #include "fcns_sys.h"
 
+#include "acs.h"
+#include "cmd_registry.h"
+
 #endif /* _FCNS_H_ */

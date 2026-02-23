@@ -136,3 +136,15 @@ int acs_check(const char *acs_string, const acs_context_t *ctx)
 
     return ok;
 }
+
+
+int slok(char val[31],char menu)
+{
+    acs_context_t ctx;
+
+    acs_fill_context(&ctx);
+    if (menu == 3) menu = 0;
+    if (!menu) ctx.can_post = 0;  /* 'C' always denies in execution mode */
+
+    return acs_check(val, &ctx);
+}

@@ -54,4 +54,9 @@ void acs_fill_context(acs_context_t *ctx);
  * Unknown clause types pass silently (curok stays 1). */
 int acs_check(const char *acs_string, const acs_context_t *ctx);
 
+/* Thin wrapper: fill context from globals, call acs_check().
+ * menu==0 or 3: execution mode ('C' always denies).
+ * menu==1: display mode (respects 'C'). */
+int slok(char val[31],char menu);
+
 #endif /* _ACS_H_ */

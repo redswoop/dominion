@@ -13,6 +13,9 @@
 /* Main menu loop.  Called from bbs.c after login. */
 void menu_nav_loop(void);
 
+/* One menu iteration.  Called from lilo.cpp matrix loop. */
+void menuman(void);
+
 /* Navigation operations — called from navcmd() in cmd_registry.c.
  * These modify the nav stack and load the new menu.
  * Returns 1 on success, 0 on failure (fallback to firstmenu). */

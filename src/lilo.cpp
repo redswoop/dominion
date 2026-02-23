@@ -8,6 +8,7 @@
 
 #include "cp437.h"
 #include "terminal_bridge.h"
+#include "menu_nav.h"
 
 extern char withansi,MCISTR[161];
 

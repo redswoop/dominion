@@ -35,4 +35,13 @@ const cmd_family_t *cmd_lookup(char prefix);
  * Returns 1 = continue, 0 = navigation happened, -1 = unknown type. */
 int cmd_exec(const char type[3], const char *param);
 
+/* Legacy entry point: calls cmd_exec, logs badcommand on unknown type. */
+int ex(char type[2],char *ms);
+
+/* Command dispatch error handler (logs + prints "Invalid Command Type"). */
+void badcommand(char onf,char tw);
+
+/* Sysop debug: prompts for type+params and executes via ex(). */
+void getcmdtype(void);
+
 #endif /* _CMD_REGISTRY_H_ */
