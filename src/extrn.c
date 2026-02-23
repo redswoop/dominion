@@ -6,7 +6,6 @@
 #pragma hdrstop
 
 #include <math.h>
-#include "swap.h"
 
 
 static auto& sys = System::instance();
@@ -69,19 +68,12 @@ int runprog(char *s, int swp)
 {
     int rc;
     char x[161];
-    unsigned char f;
 
+    (void)swp; /* DOS XMS/EMS swap no longer relevant */
     sl1(1,"");
     checkhangup();
-    if(swp) {
-        sprintf(x,"/C %s",s);
-        swap((unsigned char *)getenv("COMSPEC"),(unsigned char *)x,&f,(unsigned char *)"swap.dom");
-        rc=f;
-    } 
-    else {
-        sprintf(x,"%s /C %s", getenv("COMSPEC"), s);
-        rc=do_it(x);
-    }
+    sprintf(x,"%s /C %s", getenv("COMSPEC"), s);
+    rc=do_it(x);
     initport(sys.cfg.primaryport);
     inkey();
     inkey();

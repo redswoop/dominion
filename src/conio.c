@@ -7,7 +7,6 @@
 
 #pragma hdrstop
 
-#include "swap.h"
 #include "cp437.h"
 
 /* sess.menuat now in vars.h (Phase B0) */

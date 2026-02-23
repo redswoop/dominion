@@ -100,7 +100,6 @@
 /* #pragma hdrstop, #pragma warn, etc. are ignored by clang */
 
 /* --- Stack size (no-op on modern systems) --- */
-/* extern unsigned _stklen is DOS overlay-related */
 
 /* ================================================================== */
 /*  TYPE COMPATIBILITY                                                 */
@@ -338,12 +337,6 @@ char *ultoa(unsigned long value, char *str, int radix);
 int spawnvpe(int mode, const char *path, const char *const argv[], const char *const envp[]);
 
 /* ================================================================== */
-/*  OVERLAY MANAGEMENT — NO-OP                                         */
-/* ================================================================== */
-
-#define _OvrInitExt(a,b)  (-1)  /* Return -1 = "no XMS found" */
-
-/* ================================================================== */
 /*  STRING COMPATIBILITY                                               */
 /* ================================================================== */
 
@@ -387,14 +380,6 @@ int  chsize(int fd, long size);
 long dostounix(struct date *d, struct time *t);
 void unixtodos(long unixtime, struct date *d, struct time *t);
 int  fnsplit(const char *path, char *drive, char *dir, char *name, char *ext);
-/* swap() declared in swap.h with extern "C" linkage */
-#ifndef _SWAP_H_INCLUDED
-#ifdef __cplusplus
-extern "C"
-#endif
-int  swap(unsigned char *program_name, unsigned char *command_line,
-          unsigned char *exec_return, unsigned char *swap_fname);
-#endif
 void pr(char *fmt, ...);
 
 /* --- BBS stub functions (platform_stubs.c) — not yet implemented --- */

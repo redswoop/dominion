@@ -568,22 +568,6 @@ int fnsplit(const char *path, char *drive, char *dir, char *name, char *ext)
 }
 
 /* ================================================================== */
-/*  SWAP — DOS memory swap for external execution                      */
-/* ================================================================== */
-
-int swap(unsigned char *program_name, unsigned char *command_line,
-         unsigned char *exec_return, unsigned char *swap_fname)
-{
-    (void)program_name;
-    (void)command_line;
-    (void)swap_fname;
-    /* Can't swap on modern OS — just report error */
-    if (exec_return) *exec_return = 0x08;  /* NO_MEMORY */
-    fprintf(stderr, "[STUB] swap: %s %s\n", program_name, command_line);
-    return 2;  /* SWAP_NO_SAVE */
-}
-
-/* ================================================================== */
 /*  STANDALONE TOOL FUNCTIONS USED BY BBS MODULES                      */
 /* ================================================================== */
 

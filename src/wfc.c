@@ -5,7 +5,6 @@
 #include "version.h"
 
 #pragma hdrstop
-#include "swap.h"
 
 #include <math.h>
 

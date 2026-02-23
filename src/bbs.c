@@ -117,8 +117,6 @@ int main(int argc, char *argv[])
     init(show);
     if(port!=0) sys.cfg.primaryport=port;
 
-    if (_OvrInitExt(0,0)==0)
-        cprintf("\nXMS Memory Found, Will Be Used for Overlay Swapping.\n");
     if(node) cprintf("System is Node %d using port %d",node,sys.cfg.primaryport);
 
     if(exist("critical")) {
