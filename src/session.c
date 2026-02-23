@@ -93,7 +93,6 @@ void session_init(session_t *s)
     s->chatsoundon = 1;
     s->blueinput = 0;
     s->readinvoting = 0;
-    s->crttype = 0;
     s->com_speed = 0;
     s->modem_speed = 0;
 }

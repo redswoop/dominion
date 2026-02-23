@@ -200,7 +200,6 @@ extern JAMAPIREC JamRec;
 #define filelistformat3 session.filelistformat3
 #define blueinput       session.blueinput
 #define readinvoting    session.readinvoting
-#define crttype         session.crttype
 #define screensave      session.screensave
 
 #define com_speed       session.com_speed

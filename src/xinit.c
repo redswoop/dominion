@@ -60,7 +60,7 @@ void init(int show)
         exit(1);
     }
     memset(scrn, 0, 4000);
-    crttype=3; /* color text mode */
+
     defscreenbottom=24;
     screenbottom=defscreenbottom;
     screenlen=160*(screenbottom+1);

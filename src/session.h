@@ -80,7 +80,6 @@ typedef struct {
     char filelistformat3[100];
     char blueinput;
     char readinvoting;
-    char crttype;
     screentype screensave;
 
     /* Misc */
