@@ -5,6 +5,7 @@
 #include "system.h"
 #include "acs.h"
 #include "ansi_attr.h"
+#include "sysopf.h"
 #pragma hdrstop
 
 

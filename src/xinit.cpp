@@ -1,4 +1,5 @@
 #include "io_ncurses.h"
+#include "xinit.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"

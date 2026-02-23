@@ -3,6 +3,8 @@
 #include "session.h"
 #include "system.h"
 #include "ansi_attr.h"
+#include "misccmd.h"
+#include "sysopf.h"
 #pragma hdrstop
 
 #include <time.h>

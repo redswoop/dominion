@@ -1,8 +1,10 @@
+#include "extrn.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
 #include "cmd_registry.h"
+#include "sysopf.h"
 
 #pragma hdrstop
 

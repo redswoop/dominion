@@ -5,6 +5,7 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "sysopf.h"
 
 
 void read_automessage()

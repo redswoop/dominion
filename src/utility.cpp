@@ -5,6 +5,7 @@
 #include "stream_processor.h"
 #include "acs.h"
 #include "error.h"
+#include "misccmd.h"
 #pragma hdrstop
 
 

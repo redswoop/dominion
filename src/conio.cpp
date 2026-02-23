@@ -6,6 +6,9 @@
 #include "terminal_bridge.h"
 #include "chat.h"
 #include "timebank.h"
+#include "extrn.h"
+#include "misccmd.h"
+#include "lilo.h"
 
 #pragma hdrstop
 

@@ -4,6 +4,7 @@
 #include "system.h"
 #include "ansi_attr.h"
 #include "cmd_registry.h"
+#include "misccmd.h"
 #pragma hdrstop
 
 

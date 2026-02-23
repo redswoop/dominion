@@ -21,23 +21,6 @@ void printmenu(int which);
 int printfile(char *fn);
 
 
-/* File: lilo.c */
-
-int getmuser();
-void getmatrixpw(void);
-void checkmatrixpw(void);
-int matrix(void);
-void getuser();
-void logon();
-void logoff();
-void scrollfile(void);
-void oneliner();
-void fastscreen(char fn[13]);
-void lastfewcall(void);
-int check_ansi();
-int checkpw();
-
-
 /* File: newuser.c */
 
 void go(int x,int y);
@@ -56,24 +39,6 @@ void input_pw();
 void newuser();
 void infoform(char fn[8],int once);
 void readform(char fn[8],char i[31]);
-
-
-/* File: personal.c */
-
-void change_colors(userrec *u1);
-void print_cur_stat();
-char *cn(char c);
-char *describe(char col);
-void color_list();
-void config_qscan(int dl);
-void list_macro(char *s);
-void make_macros();
-void input_pw1();
-void getfileformat();
-void setcolors(userrec *uu);
-void input_ansistat();
-void selecthelplevel();
-void getmsgformat();
 
 
 /* File: utility.c */
@@ -110,9 +75,5 @@ void print_data(int un, userrec *u,int lng);
 int usearch(int un,char val[41]);
 void uedit(int usern);
 
-
-/* File: personal.c (additional) */
-
-void modify_mailbox(void);
 
 #endif /* _FCNS_USER_H_ */

@@ -4,6 +4,7 @@
 #include "system.h"
 #include "acs.h"
 #include "cmd_registry.h"
+#include "sysopf.h"
 #pragma hdrstop
 
 #include "menudb.h"

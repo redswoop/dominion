@@ -1,8 +1,13 @@
+#include "sysopf.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
 #include "topten.h"
+#include "extrn.h"
+#include "misccmd.h"
+#include "lilo.h"
+#include "personal.h"
 
 #pragma hdrstop
 

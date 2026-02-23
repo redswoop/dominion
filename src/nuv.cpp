@@ -4,6 +4,7 @@
 #include "session.h"
 #include "system.h"
 #include "acs.h"
+#include "sysopf.h"
 #pragma hdrstop
 
 

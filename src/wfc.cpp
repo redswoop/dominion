@@ -4,6 +4,12 @@
 #include "system.h"
 #include "version.h"
 #include "cmd_registry.h"
+#include "extrn.h"
+#include "sysopf.h"
+#include "xinit.h"
+#include "menued.h"
+#include "subedit.h"
+#include "lilo.h"
 
 #pragma hdrstop
 

@@ -1,11 +1,6 @@
 #ifndef _FCNS_SYS_H_
 #define _FCNS_SYS_H_
 
-/* File: bbs.c */
-
-int main(int argc, char *argv[]);
-
-
 /* File: bbsutl.c */
 
 void far *malloca(unsigned long nbytes);
@@ -44,29 +39,6 @@ int click(long *byt,long bit,int x, int y);
 void val_cur_user(int wait);
 
 
-/* File: sysopf.c */
-
-void reset_files(int show);
-void get_status();
-void read_new_stuff();
-void chuser();
-void zlog();
-void beginday();
-void print_local_file(char ss[MAX_PATH_LEN]);
-void text_edit();
-void viewlog();
-void glocolor(void);
-void logtypes(char type,char *fmt, ...);
-
-
-/* File: xinit.c */
-
-void bargraph1(int percent);
-void dotopinit(char fn[40],int per);
-void init(int show);
-void end_bbs(int lev);
-
-
 /* File: timest.c */
 
 void check_event();
@@ -83,64 +55,6 @@ void wait1(long l);
 char *ctim(double d);
 void ptime();
 char *curtime(void);
-
-
-/* File: menued.c */
-
-void menuinfoed(char fn[15]);
-void edmenu (int x);
-void top(char fn[15]);
-void menu(char fn[15]);
-void addmenu(char fn[15]);
-void extractheader();
-void readheader();
-void listmform(void);
-void menued(char fn[15]);
-
-
-/* File: subedit.c */
-
-void noc(char *s, char *s1);
-void boarddata(int n, char *s);
-void showsubs();
-void swap_subs(int sub1, int sub2);
-void insert_sub(int n,int config);
-void delete_sub(int n);
-void boardedit();
-void confdata(int n, char *s);
-void showconf();
-void insert_conf(int n);
-void delete_conf(int n);
-void confedit();
-
-
-/* File: extrn.c */
-
-void cd_to(char *s);
-void get_dir(char *s, int be);
-int do_it(char cl[MAX_PATH_LEN]);
-int runprog(char *s, int swp);
-void alf(int f, const char *s);
-char *create_chain_file(char *fn);
-int restore_data(char *s);
-void save_state(char *s, int state);
-void dorinfo_def(void);
-void write_door_sys(int rname);
-void rundoor(char type,char ms[MAX_PATH_LEN]);
-
-
-/* File: misccmd.cpp */
-
-void list_users();
-void yourinfo();
-void jumpconf(char ms[41]);
-char *get_date_filename();
-void today_history();
-void dtitle(char msg[MAX_PATH_LEN]);
-void selfValidationCheck(char *param);
-char *getComputerType(int which);
-int numctype(void);
-int numComputerTypes(void);
 
 
 /* File: config.c */

@@ -2,6 +2,8 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "subedit.h"
+#include "lilo.h"
 #pragma hdrstop
 
 
@@ -25,7 +27,7 @@ void showdirs()
 
     outchr(12);
     abort=0;
-    pla("0NN2Ä0Name2ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ0Filename2Ä0Dsl2Ä0AGE2Ä0Max2ÄÄ0Path2ÄÄÄ",
+    pla("0NN2ï¿½0Name2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0Filename2ï¿½0Dsl2ï¿½0AGE2ï¿½0Max2ï¿½ï¿½0Path2ï¿½ï¿½ï¿½",
     &abort);
     for (i=0; (i<sys.num_dirs) && (!abort); i++) {
         dirdata(i,s);
@@ -62,18 +64,18 @@ void modify_dir(int n)
         npr("37. DAR        :0 %s\r\n",s);
         npr("38. Cmnt File  :0 %s\r\n",r.upath);
         npr("39. List ACS   :0 %s\r\n",r.vacs);
-        if (r.mask & mask_no_uploads) s[0]='U'; 
-        else s[0]='Ä';
-        if (r.mask & mask_archive)  s[1]='A'; 
-        else s[1]='Ä';
-        if (r.mask & mask_autocredit) s[2]='C'; 
-        else s[2]='Ä';
-        if (r.mask & mask_no_ratio) s[3]='R'; 
-        else s[3]='Ä';
-        if (r.mask & mask_FDN) s[4]='N'; 
-        else s[4]='Ä';
-        if (r.mask & mask_PD) s[5]='G'; 
-        else s[5]='Ä';
+        if (r.mask & mask_no_uploads) s[0]='U';
+        else s[0]='\xFA';
+        if (r.mask & mask_archive)  s[1]='A';
+        else s[1]='\xFA';
+        if (r.mask & mask_autocredit) s[2]='C';
+        else s[2]='\xFA';
+        if (r.mask & mask_no_ratio) s[3]='R';
+        else s[3]='\xFA';
+        if (r.mask & mask_FDN) s[4]='N';
+        else s[4]='\xFA';
+        if (r.mask & mask_PD) s[5]='G';
+        else s[5]='\xFA';
         s[6]=0;
         npr("3Flags         :0 %s\r\n",s);
         nl();
@@ -232,7 +234,7 @@ void insert_dir(int n,char path[60], int temp,int config)
             sys.directories[i+1]=sys.directories[i];
     }
     if(temp) strcpy(r.name,"<< Temporary >>");
-    else strcpy(r.name,"Ä> New Directory <Ä");
+    else strcpy(r.name,"ï¿½> New Directory <ï¿½");
     if(temp) strcpy(r.filename,"TEMPDIR");
     else strcpy(r.filename,"NEWDIR");
     strcpy(r.dpath,path);
@@ -396,7 +398,7 @@ void showprots()
 
     outchr(12);
     abort=0;
-    pla("0NN2ÄÄ0Single2ÄÄ0Description2ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ",&abort);
+    pla("0NN2ï¿½ï¿½0Single2ï¿½ï¿½0Description2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",&abort);
     for (i=0; (i<sys.numextrn) && (!abort); i++) {
         protdata(i,s);
         pla(s,&abort);

@@ -9,6 +9,9 @@
 #include "menudb.h"
 #include "mci_bbs.h"
 #include "menu_nav.h"
+#include "extrn.h"
+#include "xinit.h"
+#include "lilo.h"
 
 #define modem_time 3.5
 extern double thing;

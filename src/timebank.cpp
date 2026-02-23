@@ -5,6 +5,8 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "misccmd.h"
+#include "sysopf.h"
 
 
 void add_time(int limit)

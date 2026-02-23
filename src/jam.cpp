@@ -5,6 +5,9 @@
 #include "acs.h"
 #include "chat.h"
 #include "cmd_registry.h"
+#include "misccmd.h"
+#include "sysopf.h"
+#include "subedit.h"
 #pragma hdrstop
 
 

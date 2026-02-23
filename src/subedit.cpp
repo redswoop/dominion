@@ -1,7 +1,9 @@
+#include "subedit.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "lilo.h"
 #pragma hdrstop
 
 

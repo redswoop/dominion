@@ -37,6 +37,13 @@
 #include "chat.h"
 #include "menu_nav.h"
 #include "timebank.h"
+#include "extrn.h"
+#include "misccmd.h"
+#include "sysopf.h"
+#include "menued.h"
+#include "subedit.h"
+#include "lilo.h"
+#include "personal.h"
 
 #define sysstatus_pause_on_message 0x0400
 

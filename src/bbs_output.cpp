@@ -13,6 +13,7 @@
 #include "terminal_bridge.h"
 #include "stream_processor.h"
 #include "ansi_attr.h"
+#include "misccmd.h"
 
 #pragma hdrstop
 

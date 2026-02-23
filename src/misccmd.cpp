@@ -1,5 +1,6 @@
 /* misccmd.cpp — Miscellaneous user commands. */
 
+#include "misccmd.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"
@@ -7,6 +8,8 @@
 #include "version.h"
 
 #include "acs.h"
+#include "sysopf.h"
+#include "subedit.h"
 
 #pragma hdrstop
 

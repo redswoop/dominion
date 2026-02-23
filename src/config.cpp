@@ -5,6 +5,8 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "lilo.h"
+#include "personal.h"
 #include "json_io.h"
 
 #include <fcntl.h>

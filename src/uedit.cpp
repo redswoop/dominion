@@ -3,6 +3,9 @@
 #include "session.h"
 #include "system.h"
 #include "nuv.h"
+#include "misccmd.h"
+#include "sysopf.h"
+#include "lilo.h"
 #pragma hdrstop
 
 #include <stdarg.h>

@@ -1,4 +1,5 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
+#include "lilo.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"
@@ -10,6 +11,10 @@
 #include "cmd_registry.h"
 #include "terminal_bridge.h"
 #include "menu_nav.h"
+#include "extrn.h"
+#include "misccmd.h"
+#include "sysopf.h"
+#include "personal.h"
 
 extern char withansi,MCISTR[161];
 

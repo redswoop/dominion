@@ -4,6 +4,9 @@
 #include "system.h"
 #include "acs.h"
 #include "cmd_registry.h"
+#include "misccmd.h"
+#include "sysopf.h"
+#include "personal.h"
 #pragma hdrstop
 
 #define FDEC

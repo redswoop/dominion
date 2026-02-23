@@ -3,6 +3,8 @@
 #include "session.h"
 #include "system.h"
 #include "version.h"
+#include "sysopf.h"
+#include "lilo.h"
 #pragma hdrstop
 
 

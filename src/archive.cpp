@@ -2,6 +2,9 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "extrn.h"
+#include "misccmd.h"
+#include "sysopf.h"
 #pragma hdrstop
 
 #define SETREC(i)  lseek(sess.dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);

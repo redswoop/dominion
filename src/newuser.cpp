@@ -5,6 +5,8 @@
 #include "cmd_registry.h"
 #include "nuv.h"
 #include "terminal_bridge.h"
+#include "misccmd.h"
+#include "personal.h"
 #pragma hdrstop
 
 
