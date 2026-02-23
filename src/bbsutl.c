@@ -670,7 +670,7 @@ char *smkey(char *avail,int num, int slash, int crend,int full)
 }
 
 char MCISTR[161];
-extern mmrec pp;
+/* pp now in vars.h (Phase B0) */
 
 #include "mci.h"
 #include "mci_bbs.h"

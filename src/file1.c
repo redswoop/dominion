@@ -82,7 +82,7 @@ void downloaded(char *fn)
                 SETREC(i);
                 write(dlf,(void *)&u,sizeof(uploadsrec));
                 closedl();
-                npr("2þ 4%s 0Succesfully Transfered. 4%4ldK0, 2%3d Points\r\n",u.filename,((u.numbytes+1023)/1024),u.points);
+                npr("2ï¿½ 4%s 0Succesfully Transfered. 4%4ldK0, 2%3d Points\r\n",u.filename,((u.numbytes+1023)/1024),u.points);
                 sprintf(s,"%s downloaded '%s' on %s",nam(&thisuser,usernum), u.filename, date());
                 ssm(u.ownerusr,0,s);
                 userdb_load(u.ownerusr,&ur);
@@ -111,7 +111,7 @@ void upload_batch_file(int blind)
     ss=NULL;
 
     outchr(12);
-    npr("2þ 0Processing: 4%s\r\n",batch.filename);
+    npr("2ï¿½ 0Processing: 4%s\r\n",batch.filename);
     d=directories[batch.dir];
     dliscan1(batch.dir);
     time(&l);
@@ -163,17 +163,17 @@ void upload_batch_file(int blind)
             printf("Failed\n");
             sprintf(s,"%s%s",syscfg.batchdir,stripfn(u.filename));
             if(exist(s)) {
-                batchdir=0;
+                session.batchdir=0;
                 batch.dir=0;
                 dliscan1(batch.dir);
                 d=directories[batch.dir];
                 logtypes(3,"File 4%s0 failed Integrity Test, Moving to SysOp Dir.",u.filename);
-                pl("7þ 0Error in Upload.  Sending to SysOp Directory");
+                pl("7ï¿½ 0Error in Upload.  Sending to SysOp Directory");
                 ok=2;
             } 
             else {
                 logtypes(3,"File 4%s0 failed Integrity Test, deleted.",u.filename);
-                pl("7þ 0Error in upload, deleted by test.");
+                pl("7ï¿½ 0Error in upload, deleted by test.");
                 ok=0;
             }
         }
@@ -225,7 +225,7 @@ void upload_batch_file(int blind)
 
     closedl();
     i=curdir;
-    if (batchdir==0)
+    if (session.batchdir==0)
         curdir=0;
 }
 
@@ -234,7 +234,7 @@ void uploaded(char *fn)
     int i,i1,done=0;
     char *ss,s[MAX_PATH_LEN];
 
-    dliscan1(batchdir);
+    dliscan1(session.batchdir);
     for (i1=0; i1<numbatch; i1++) {
         batch.batchdesc[0]=0;
         batrec(1,i1);
@@ -289,7 +289,7 @@ void uploaded(char *fn)
 
 
     if (batch.batchdesc[0]==0) {
-        strcpy(batch.batchdesc,"ÄÄÄÄÄÄÄ[User Hung Up]ÄÄÄÄÄÄÄ");
+        strcpy(batch.batchdesc,"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½[User Hung Up]ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
         sprintf(s,"%s needs a description!",fn);
         ssm(usernum,0,s);
     }
@@ -553,7 +553,7 @@ void download(int dn,int mark)
     uploadsrec u;
 
 
-    batchdir=udir[dn].subnum;
+    session.batchdir=udir[dn].subnum;
 
     menubatch("download");
 
@@ -574,7 +574,7 @@ void download(int dn,int mark)
             strcat(s,".*");
         align(s);
         i1=0;
-        i2=findfile(batchdir,s);
+        i2=findfile(session.batchdir,s);
         if(!i2) {
             pl(get_string2(26));
             for(i1=0;i1<umaxdirs&&!abort;i1++) {
@@ -606,9 +606,9 @@ void newul(int dn)
 
     if(dn==-1)
         dn=udir[curdir].subnum;
-    batchdir=dn;
-    d=directories[batchdir];
-    dliscan1(batchdir);
+    session.batchdir=dn;
+    d=directories[session.batchdir];
+    dliscan1(session.batchdir);
 
     if (numf>=d.maxfiles) {
         nl();
@@ -689,7 +689,7 @@ void newul(int dn)
                     batch.dir=0;
                 } 
                 else {
-                    batch.dir=batchdir;
+                    batch.dir=session.batchdir;
                     strcpy(batch.batchdesc,s);
                 }
                 batch.sending=0;

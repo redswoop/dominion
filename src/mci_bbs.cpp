@@ -13,7 +13,7 @@
 #include "mci.h"
 #include "mci_bbs.h"
 
-extern mmrec pp;
+/* pp now in vars.h (Phase B0) */
 
 
 /*

@@ -66,7 +66,7 @@ BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               lilo error chat nuv newuser
 
 # Platform compatibility
-PLATFORM = platform_stubs jam_stubs io_stream terminal terminal_bridge
+PLATFORM = platform_stubs jam_stubs io_stream session terminal terminal_bridge
 
 # JSON I/O (cJSON library + serialization layer)
 JSON_IO = cJSON json_io

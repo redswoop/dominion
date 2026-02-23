@@ -382,7 +382,7 @@ void logon()
     }
 
 
-    timeon=timer();
+    session.timeon=timer();
     useron=1;
     if (live_user)
         topscreen();
@@ -581,9 +581,9 @@ void logoff()
     thisuser.lastrate=modem_speed;
     strcpy(thisuser.laston,status.date1);
     thisuser.illegal=0;
-    if ((timer()-timeon)<-30.0)
-        timeon-=24.0*3600.0;
-    ton=timer()-timeon;
+    if ((timer()-session.timeon)<-30.0)
+        session.timeon-=24.0*3600.0;
+    ton=timer()-session.timeon;
     thisuser.timeon += ton;
     thisuser.timeontoday += (ton-extratimecall);
     status.activetoday += (int) (ton/60.0);
@@ -602,7 +602,7 @@ void logoff()
 
 
     if ((incom) || (actsl!=255))
-        logpr("0Time Spent Online for 7%s0: 4%u0 minutes",nam(&thisuser,usernum),(int)((timer()-timeon)/60.0));
+        logpr("0Time Spent Online for 7%s0: 4%u0 minutes",nam(&thisuser,usernum),(int)((timer()-session.timeon)/60.0));
 
 
     if (mailcheck) {

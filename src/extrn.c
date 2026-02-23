@@ -158,12 +158,12 @@ char *create_chain_file(char *fn)
     alf(f,s);
     alf(f,syscfg.systemname);
     alf(f,syscfg.sysopname);
-    l=(long) (timeon);
+    l=(long) (session.timeon);
     if (l<0)
         l += 3600*24;
     ltoa(l,s,10);
     alf(f,s);
-    l=(long) (timer()-timeon);
+    l=(long) (timer()-session.timeon);
     if (l<0)
         l += 3600*24;
     ltoa(l,s,10);
@@ -192,7 +192,7 @@ char *create_chain_file(char *fn)
 
 #define WRITE(x) write(f,&(x),sizeof(x))
 
-extern char menuat[15],mstack[10][15],mdepth;
+/* menuat, mstack, mdepth now in vars.h (Phase B0) */
 
 int restore_data(char *s)
 {
@@ -215,7 +215,7 @@ int restore_data(char *s)
     READ(usernum);
     READ(chatcall);
     READ(chatreason);
-    READ(timeon);
+    READ(session.timeon);
     READ(extratimecall);
     READ(curspeed);
     READ(modem_speed);
@@ -285,7 +285,7 @@ void save_state(char *s, int state)
     WRITE(usernum);
     WRITE(chatcall);
     WRITE(chatreason);
-    WRITE(timeon);
+    WRITE(session.timeon);
     WRITE(extratimecall);
     WRITE(curspeed);
     WRITE(modem_speed);
@@ -341,7 +341,7 @@ void dorinfo_def(void)
     alf(f,okansi()?"1":"0");
     itoa(thisuser.sl,s,10);
     alf(f,s);
-    l=(long) (timeon);
+    l=(long) (session.timeon);
     if (l<0)
         l += 3600*24;
     ltoa(l,s,10);

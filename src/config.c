@@ -1,8 +1,7 @@
 #pragma hdrstop
 
 #include <stdio.h>
-#include "fcns.h"
-#include "io_stream.h"
+#include "vars.h"
 #include "json_io.h"
 
 #include <fcntl.h>
@@ -12,12 +11,7 @@
 
 
 #ifndef DOS
-extern configrec syscfg;
-extern niftyrec nifty;
-extern int topdata;
-extern userrec thisuser;
-extern int usernum;
-extern xarcrec xarc[8];
+/* syscfg, nifty, xarc from vars.h; thisuser, usernum, topdata via session macros */
 
 #else
 int mciok;

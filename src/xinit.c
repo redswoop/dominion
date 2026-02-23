@@ -10,7 +10,7 @@
 #include "menudb.h"
 #include "terminal_bridge.h"
 
-extern char menuat[15];
+/* menuat now in vars.h (Phase B0) */
 
 
 #define GODOWN(x,y) gotoxy(y+1,x+1);

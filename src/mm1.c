@@ -3,9 +3,7 @@
 
 #include "menudb.h"
 
-extern mmrec pp;
-extern menurec tg[50];
-extern char maxcmd,menuat[15];
+/* pp, tg, maxcmd, menuat now in vars.h (Phase B0) */
 extern int fastlogon;
 
 struct mmfmt_t {

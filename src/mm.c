@@ -4,8 +4,6 @@
 #include "menudb.h"
 
 extern int SYSTEMDEBUG;
-menurec tg[50];
-mmrec pp;
 
 struct mmfmt_t {
     char         fmt[41],
@@ -33,7 +31,7 @@ extern int fastlogon;
 
 void packm(void);
 
-char maxcmd,menuat[15],mstack[10][15],mdepth=0;
+/* maxcmd, menuat, mstack, mdepth moved to vars.h (Phase B0) */
 
 void conv(void);
 

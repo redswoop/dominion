@@ -45,7 +45,7 @@ int okavt()
     return(thisuser.sysstatus & sysstatus_avatar);
 }
 
-extern int doinghelp;
+/* doinghelp now in vars.h (Phase B0) */
 
 void frequent_init()
 {

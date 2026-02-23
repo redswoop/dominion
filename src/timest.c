@@ -88,9 +88,9 @@ double nsl()
 
     dd=timer();
     if (useron) {
-        if (timeon>(dd+60.0))
-            timeon -= 24.0*3600.0;
-        tot=(dd-timeon);
+        if (session.timeon>(dd+60.0))
+            session.timeon -= 24.0*3600.0;
+        tot=(dd-session.timeon);
         xx=syscfg.sl[actsl];
         tpl=((double) xx.time_per_logon) * 60.0;
         tpd=((double) xx.time_per_day) * 60.0;
@@ -213,7 +213,7 @@ void ptime()
     s[strlen(s) - 1] = 0;
     npr("3It is 0%s3.\r\n",s);
     if (useron)
-        npr("3You have been on for 0%s3, and have 0`T3 left\r\n",ctim(timer()-timeon));
+        npr("3You have been on for 0%s3, and have 0`T3 left\r\n",ctim(timer()-session.timeon));
     nl();
 
     restorel(cl, atr, xl, &cc);

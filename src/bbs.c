@@ -9,7 +9,7 @@
 #define modem_time 3.5
 /* extern unsigned _stklen=30000U; — DOS stack size, not needed on macOS */
 extern double thing;
-extern char menuat[15];
+/* menuat now in vars.h (Phase B0) */
 int node=0,SYSTEMDEBUG=0;
 
 
@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
         cd_to(searchpath("config.json"));
     }
 
-    io_init(&io);
+    session_init(&session);
     mci_bbs_init();
     already_on=0;
     endday=0;

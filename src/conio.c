@@ -7,7 +7,7 @@
 #include "swap.h"
 #include "cp437.h"
 
-extern char menuat[15];
+/* menuat now in vars.h (Phase B0) */
 
 /* ================================================================== */
 /* ANSI terminal console — delegates to Terminal via bridge            */
@@ -82,7 +82,7 @@ void out1chx(unsigned char ch)
 }
 
 
-int doinghelp=0;
+/* doinghelp moved to vars.h (Phase B0) */
 
 
 void out1ch(unsigned char ch)

@@ -1,4 +1,5 @@
 #include "vars.h"
+#undef batch     /* used as function parameter name */
 
 #pragma hdrstop
 

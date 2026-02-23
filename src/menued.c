@@ -3,9 +3,7 @@
 
 #include "menudb.h"
 
-extern menurec tg[50];
-extern mmrec pp;
-extern char menuat[15],maxcmd;
+/* tg, pp, menuat, maxcmd now in vars.h (Phase B0) */
 
 
 void menuinfoed(char fn[15])

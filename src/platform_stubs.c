@@ -6,7 +6,7 @@
 
 #include "io_ncurses.h"  /* MUST come before platform.h — see io_ncurses.h */
 #include "platform.h"
-#include "io_stream.h"
+#include "session.h"
 #include "cp437.h"
 #include "terminal_bridge.h"
 

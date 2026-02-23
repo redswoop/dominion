@@ -1,15 +1,13 @@
 #include "vars.h"
 #pragma hdrstop
-extern char menuat[15];
+/* menuat now in vars.h (Phase B0) */
 #include <stdarg.h>
 
 #ifdef PD
 
 char menutitles[4][20],ml[4][20];
 int curitem=0,curtitle=0,numtitles=0,numitems[4],usepldns=0;
-extern mmrec pp;
-extern menurec tg[50];
-extern char maxcmd;
+/* pp, tg, maxcmd now in vars.h (Phase B0) */
 
 void popup(char *fn);
 int usepop;

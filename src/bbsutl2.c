@@ -4,7 +4,7 @@
 #define frequency 500
 
 int begxx,begyy;
-extern char menuat[15];
+/* menuat now in vars.h (Phase B0) */
 
 void bbsCRC(void)
 {
@@ -91,17 +91,17 @@ void makewindow(int x, int y, int xlen, int ylen)
     s[xlen]=0;
     movecsr(x,y);
     cprintf(" ");
-    cprintf("Ú");
+    cprintf("ï¿½");
     cprintf(s);
-    cprintf("¿");
+    cprintf("ï¿½");
     cprintf(" ");
     s[0]=193;
     s[xlen-1]=193;
     movecsr(x,y+ylen-1);
     cprintf(" ");
-    cprintf("À");
+    cprintf("ï¿½");
     cprintf(s);
-    cprintf("Ù");
+    cprintf("ï¿½");
     cprintf(" ");
     movecsr(x+1,y+1);
     for (i=1; i<xlen-1; i++)
@@ -111,9 +111,9 @@ void makewindow(int x, int y, int xlen, int ylen)
     for (i=1; i<ylen-1; i++) {
         movecsr(x,i+y);
         cprintf(" ");
-        cprintf("³");
+        cprintf("ï¿½");
         cprintf(s);
-        cprintf("³");
+        cprintf("ï¿½");
         cprintf(" ");
     }
     movecsr(xx,yy);
@@ -385,7 +385,7 @@ void clickat(long byte,long bit,int x, int y)
     movecsr(x-1,y-1);
     if(byte & bit) {
         curatr=31;
-        outs("û");
+        outs("ï¿½");
     } 
     else {
         curatr=15;
@@ -405,7 +405,7 @@ int click(long *byt,long bit,int x, int y)
         movecsr(x-1,y-1);
         if(byte & bit) {
             curatr=31;
-            outs("û");
+            outs("ï¿½");
         } 
         else {
             curatr=15;

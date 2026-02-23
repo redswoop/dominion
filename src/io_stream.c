@@ -40,8 +40,9 @@
 #undef x_only
 #undef curspeed
 #undef global_handle
+#undef io
 
-io_session_t io;
+/* io_session_t io; — removed Phase B, now lives in session_t */
 
 void io_init(io_session_t *s)
 {

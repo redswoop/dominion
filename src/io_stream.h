@@ -75,7 +75,8 @@ typedef struct {
     session_caps_t caps;    /* granular ANSI capability control */
 } io_session_t;
 
-extern io_session_t io;
+/* io global removed — now lives in session_t (Phase B).
+ * session.h provides: #define io session.io */
 void io_init(io_session_t *s);
 
 /* Compatibility macros -- existing code compiles unchanged */
