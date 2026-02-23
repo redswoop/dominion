@@ -37,12 +37,13 @@ def mkconfig_binary():
     out = DOMINION_DIR / "build" / "mkconfig"
     result = subprocess.run(
         [
-            "cc", "-std=gnu89", "-DPD", "-fsigned-char",
+            "c++", "-std=c++17", "-fsigned-char",
             "-I", str(DOMINION_DIR / "src"),
             "-o", str(out),
+            "-x", "c++",
             str(DOMINION_DIR / "tools" / "mkconfig.c"),
-            str(DOMINION_DIR / "src" / "cJSON.c"),
-            str(DOMINION_DIR / "src" / "json_io.c"),
+            str(DOMINION_DIR / "src" / "cJSON.cpp"),
+            str(DOMINION_DIR / "src" / "json_io.cpp"),
         ],
         capture_output=True,
         text=True,

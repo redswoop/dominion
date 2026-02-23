@@ -16,17 +16,16 @@
  *   5. .BIN file  — if a path is given, display it via out1ch()
  */
 
-#define _DEFINE_GLOBALS_
-#include "vars.h"
+#include "platform.h"
+#include "fcns.h"
+#include "session.h"
+#include "system.h"
 #include "cp437.h"
 
 #include <termios.h>
 
-/* ------------------------------------------------------------------ */
-/*  Globals referenced by conio.o but not in vars.h                    */
-/* ------------------------------------------------------------------ */
-
-char menuat[15];
+/* Declared in conio.cpp but not in any header */
+extern void SCROLL_UP(int t, int b, int l);
 
 /* ------------------------------------------------------------------ */
 /*  Stubs for conio.o dependencies we don't exercise                   */
@@ -69,7 +68,7 @@ void set_autoval(int i)          { (void)i; }
 void changedsl()                 {}
 void reset_act_sl()              {}
 char *nam(userrec *u1, unsigned int un) { (void)u1; (void)un; return "Test User"; }
-char *ctype(int i)               { (void)i; return ""; }
+char *getComputerType(int i)     { (void)i; return (char *)""; }
 int numwaiting(userrec *u)       { (void)u; return 0; }
 
 /* --- menu/command --- */
@@ -84,7 +83,8 @@ void save_state(char *s, int i)  { (void)s; (void)i; }
 void set_global_handle(int i)    { (void)i; }
 void sl1(int i, char *s)         { (void)i; (void)s; }
 void sysoplog(char *s)           { (void)s; }
-void far *malloca(unsigned long nbytes) { return malloc(nbytes); }
+void *malloca(unsigned long nbytes) { return malloc(nbytes); }
+char *times()                    { return (char *)"00:00:00"; }
 
 /* ------------------------------------------------------------------ */
 /*  Terminal setup / teardown                                          */
@@ -150,11 +150,11 @@ static void test_80x25_frame(void)
 {
     int r, c;
 
-    curatr = 0x07;
+    io.curatr = 0x07;
     clrscrb();
 
     /* Draw 80x25 double-line box using CP437 box chars */
-    curatr = 0x0B;  /* bright cyan on black */
+    io.curatr = 0x0B;  /* bright cyan on black */
     movecsr(0, 0);
     out1chx(0xC9);  /* top-left ╔ */
     for (c = 1; c < 79; c++) out1chx(0xCD);  /* ═ */
@@ -176,7 +176,7 @@ static void test_80x25_frame(void)
     fflush(stdout);
 
     /* Column rulers at rows 1 and 23 */
-    curatr = 0x08;  /* dark gray */
+    io.curatr = 0x08;  /* dark gray */
     for (c = 1; c < 79; c++) {
         if (c % 10 == 0) {
             movecsr(c, 1);
@@ -199,15 +199,15 @@ static void test_80x25_frame(void)
     /* Row numbers down left side */
     for (r = 2; r < 23; r++) {
         movecsr(1, r);
-        curatr = 0x08;
+        io.curatr = 0x08;
         cprintf("%2d", r);
     }
 
     /* Center label */
-    curatr = 0x0F;
+    io.curatr = 0x0F;
     movecsr(30, 11);
     cprintf("80 x 25 Reference Frame");
-    curatr = 0x07;
+    io.curatr = 0x07;
     movecsr(24, 13);
     cprintf("Both corners of the box should be");
     movecsr(24, 14);
@@ -224,7 +224,7 @@ static void test_color_grid(void)
     int fg, bg;
     char *bg_names[] = {"Black","Blue","Green","Cyan","Red","Magenta","Brown","LtGray"};
 
-    curatr = 0x07;
+    io.curatr = 0x07;
     clrscrb();
     banner(0, "=== Test 1: Color Grid (out1chx) ===");
     prompt(1, "Each row = one bg color.  16 fg chars per row.");
@@ -235,7 +235,7 @@ static void test_color_grid(void)
         textattr(0x07);
         cprintf("%-8s ", bg_names[bg]);
         for (fg = 0; fg < 16; fg++) {
-            curatr = (bg << 4) | fg;
+            io.curatr = (bg << 4) | fg;
             out1chx('A' + fg);
             out1chx(' ');
         }
@@ -247,7 +247,7 @@ static void test_color_grid(void)
 
 static void test_clrscrb(void)
 {
-    curatr = 0x07;
+    io.curatr = 0x07;
     clrscrb();
     banner(0, "=== Test 2: clrscrb() ===");
     prompt(2, "The entire screen should be BLACK background.");
@@ -260,7 +260,7 @@ static void test_scroll_clear(void)
 {
     int i;
 
-    curatr = 0x07;
+    io.curatr = 0x07;
     clrscrb();
 
     for (i = 0; i <= 24; i++) {
@@ -284,7 +284,7 @@ static void test_scroll_up(void)
 {
     int i;
 
-    curatr = 0x07;
+    io.curatr = 0x07;
     clrscrb();
     banner(0, "=== Test 4: SCROLL_UP scroll 5 lines ===");
 
@@ -327,7 +327,7 @@ static void test_bin_file(char *path)
     int f, len, i;
     unsigned char *buf;
 
-    curatr = 0x07;
+    io.curatr = 0x07;
     clrscrb();
 
     f = open(path, O_RDONLY);
@@ -341,7 +341,7 @@ static void test_bin_file(char *path)
 
     len = lseek(f, 0, SEEK_END);
     lseek(f, 0, SEEK_SET);
-    buf = malloc(len);
+    buf = (unsigned char *)malloc(len);
     if (!buf) { close(f); return; }
     read(f, buf, len);
     close(f);
@@ -352,7 +352,7 @@ static void test_bin_file(char *path)
      * 80 columns per row.
      */
     for (i = 0; i + 1 < len; i += 2) {
-        curatr = buf[i + 1];
+        io.curatr = buf[i + 1];
         out1ch(buf[i]);
     }
 
@@ -368,7 +368,7 @@ static void test_bin_file(char *path)
 /*  main                                                               */
 /* ------------------------------------------------------------------ */
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     atexit(cleanup);
 
@@ -378,25 +378,25 @@ void main(int argc, char *argv[])
 
     enter_raw_mode();
 
-    /* Initialize minimum globals for conio.c / com.c */
-    screenbottom = 24;
-    topline = 0;
-    curatr = 0x07;
-    defscreenbottom = 24;
-    screenlen = 4000;
-    scrn = malloc(screenlen);
-    if (scrn) memset(scrn, 0, screenlen);
-    lines_listed = 0;
-    x_only = 0;
-    change_color = 0;
-    change_ecolor = 0;
-    outcom = 0;       /* no remote output */
-    incom = 0;
-    using_modem = 0;
-    hangup = 0;
-    okskey = 0;       /* disable sysop key handler */
-    chatting = 0;
-    global_handle = 0;
+    /* Initialize minimum io/session fields for conio.cpp */
+    io.screenbottom = 24;
+    io.topline = 0;
+    io.curatr = 0x07;
+    io.defscreenbottom = 24;
+    io.screenlen = 4000;
+    io.scrn = (char *)malloc(io.screenlen);
+    if (io.scrn) memset(io.scrn, 0, io.screenlen);
+    io.lines_listed = 0;
+    io.x_only = 0;
+    io.change_color = 0;
+    io.change_ecolor = 0;
+    io.stream[IO_REMOTE].out_active = 0;   /* no remote output */
+    io.stream[IO_REMOTE].in_active = 0;
+    io.session_type = 0;
+    io.hangup = 0;
+    Session::instance().okskey = 0;       /* disable sysop key handler */
+    io.chatting = 0;
+    io.global_handle = 0;
 
     /* Run tests */
     test_80x25_frame();
@@ -413,5 +413,5 @@ void main(int argc, char *argv[])
             test_bin_file(argv[i]);
     }
 
-    if (scrn) free(scrn);
+    if (io.scrn) free(io.scrn);
 }

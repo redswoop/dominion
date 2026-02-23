@@ -147,10 +147,10 @@ char *topten(int type);
 char *get_date_filename();
 void today_history();
 void dtitle(char msg[MAX_PATH_LEN]);
-void selfval(char *param);
-char *ctype(int which);
+void selfValidationCheck(char *param);
+char *getComputerType(int which);
 int numctype(void);
-int numctypes(void);
+int numComputerTypes(void);
 
 
 /* File: config.c */

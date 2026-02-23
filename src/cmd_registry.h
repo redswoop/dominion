@@ -14,12 +14,19 @@
 #define _CMD_REGISTRY_H_
 
 typedef int (*cmd_handler_fn)(char subtype, const char *param);
+typedef int (*cmd_direct_fn)(const char *param);
 
 typedef struct {
     char          prefix;       /* type[0]: 'M', 'F', '=', etc. */
     const char   *name;         /* human-readable family name */
     cmd_handler_fn handler;     /* dispatcher for this family */
 } cmd_family_t;
+
+typedef struct {
+    const char    code[3];      /* full type code: "OI", "OU", etc. */
+    const char   *name;
+    cmd_direct_fn handler;
+} cmd_direct_t;
 
 /* Lookup handler by type[0].  Returns NULL if not found. */
 const cmd_family_t *cmd_lookup(char prefix);

@@ -29,8 +29,6 @@
 
 extern int SYSTEMDEBUG;
 
-static auto& sys = System::instance();
-static auto& sess = Session::instance();
 
 extern struct mmfmt_t {
     char fmt[41], fill, promptfn[8], ansifn[8], ansiftfn[8], center;
@@ -46,6 +44,7 @@ static std::vector<std::string> nav_stack;
 /* Keep sess.mstack/mdepth in sync for extrn.c door save/restore. */
 static void sync_mstack(void)
 {
+    auto& sess = Session::instance();
     int depth = (int)nav_stack.size();
     if (depth > 10) depth = 10;
     sess.mdepth = depth;
@@ -62,6 +61,8 @@ static void sync_mstack(void)
 
 int menu_nav_push(const char *menu_name)
 {
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
     nl();
     /* Save current menu on stack */
     if (nav_stack.size() >= 10) {
@@ -86,6 +87,7 @@ int menu_nav_push(const char *menu_name)
 
 int menu_nav_pop(void)
 {
+    auto& sys = System::instance();
     nl();
     if (!nav_stack.empty()) {
         std::string prev = nav_stack.back();
@@ -103,6 +105,7 @@ int menu_nav_pop(void)
 
 int menu_nav_goto(const char *menu_name)
 {
+    auto& sys = System::instance();
     nl();
     nav_stack.clear();
     sync_mstack();
@@ -118,6 +121,7 @@ int menu_nav_goto(const char *menu_name)
 
 static void nav_dispatch(char *s, int begx)
 {
+    auto& sess = Session::instance();
     int i, i1, c;
 
     for (i = 0; i < sess.maxcmd && !io.hangup; i++) {
@@ -157,6 +161,8 @@ static void nav_dispatch(char *s, int begx)
 
 void menuman(void)
 {
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
     char cmd, c, begx, s[161], test[MAX_PATH_LEN];
     char *ss = s;
     int i, helpl, i1;

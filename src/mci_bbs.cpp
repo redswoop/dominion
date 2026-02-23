@@ -26,11 +26,11 @@
  * Returns 0 for side-effect, mutation, or unknown codes.
  */
 
-static auto& sys = System::instance();
-static auto& sess = Session::instance();
 
 static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
 {
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
     (void)ctx;
     char s[161];
     userrec u;

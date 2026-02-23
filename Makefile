@@ -88,10 +88,6 @@ binary: $(TARGET)
 $(TARGET): $(OBJS) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) -lm -lncurses
 
-# Compile .c as C++ (BBS source)
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -x c++ -c $< -o $@
-
 # Compile C++
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -104,10 +100,11 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 # --- Tool targets ---
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest $(BUILDDIR)/iotest $(BUILDDIR)/uitest
+# termtest and inputtest excluded — need Phase C migration (vars.h → session/system singletons)
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/rawinput $(BUILDDIR)/iotest $(BUILDDIR)/uitest
 
-$(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
+$(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp | $(BUILDDIR)
+	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp
 
 $(BUILDDIR)/dosconv: $(TOOLDIR)/dosconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
@@ -118,8 +115,8 @@ $(BUILDDIR)/mnudump: $(TOOLDIR)/mnudump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 $(BUILDDIR)/mnuconv: $(TOOLDIR)/mnuconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
 
-$(BUILDDIR)/mnu2json: $(TOOLDIR)/mnu2json.c $(SRCDIR)/vardec.h $(SRCDIR)/menu_json.c $(SRCDIR)/menu_json.h $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/menu_json.c $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
+$(BUILDDIR)/mnu2json: $(TOOLDIR)/mnu2json.c $(SRCDIR)/vardec.h $(SRCDIR)/menu_json.cpp $(SRCDIR)/menu_json.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp | $(BUILDDIR)
+	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/menu_json.cpp $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp
 
 $(BUILDDIR)/datadump: $(TOOLDIR)/datadump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
@@ -128,9 +125,9 @@ $(BUILDDIR)/jamdump: $(TOOLDIR)/jamdump.c $(SRCDIR)/jam.h $(SRCDIR)/jamsys.h | $
 	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
 
 # Terminal test — links against real BBS .o files to test rendering
-TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
+TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/session.o $(OBJDIR)/system.o
 $(BUILDDIR)/termtest: $(TOOLDIR)/termtest.c $(TERMTEST_OBJS) | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -x c++ -I$(SRCDIR) -o $@ $< $(TERMTEST_OBJS) -lncurses
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ -x c++ $< -x none $(TERMTEST_OBJS) -lncurses
 
 # Raw input byte inspector — standalone, no BBS dependencies
 $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
@@ -139,7 +136,7 @@ $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 # Input function test — links against real BBS .o files to test input1/inputdat/getkey
 INPUTTEST_OBJS = $(OBJDIR)/bbs_output.o $(OBJDIR)/bbs_input.o $(OBJDIR)/bbs_ui.o $(OBJDIR)/ansi_attr.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/stream_processor.o
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -x c++ -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ -x c++ $< -x none $(INPUTTEST_OBJS) -lncurses
 
 # IO test — clean Terminal class, ZERO BBS dependencies
 $(BUILDDIR)/iotest: $(TOOLDIR)/iotest.cpp $(OBJDIR)/terminal.o | $(BUILDDIR)
