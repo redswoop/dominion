@@ -401,9 +401,6 @@ void init(int show)
 
     daylight=0;
 
-#ifdef MOUSE
-    initpointer(1);
-#endif
 
     if (!restoring_shrink&&!show) {
         /*      GODOWN(2,3);

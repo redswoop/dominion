@@ -24,8 +24,6 @@ int alt_key(unsigned char ch);
 void skey(unsigned char ch);
 void tleft(int dot);              /* time-left display */
 void topscreen(void);
-void initpointer(int init);
-void executemouse(int x,int y);
 
 
 /* File: ansi_attr.c (Layer 3 — no BBS globals) */
