@@ -174,9 +174,6 @@ static int convert_file(const char *inpath, const char *outpath)
     old = data;
 
     safe_copy(hdr.prompt,   (char *)&old[OLD_PROMPT_OFF],  OLD_PROMPT_LEN,  sizeof(hdr.prompt));
-#ifdef PD
-    hdr.prompt2[0] = 0;
-#endif
     hdr.helpfile[0] = 0;
     safe_copy(hdr.title1,   (char *)&old[OLD_TITLE1_OFF],  OLD_TITLE1_LEN,  sizeof(hdr.title1));
     safe_copy(hdr.title2,   (char *)&old[OLD_TITLE2_OFF],  OLD_TITLE2_LEN,  sizeof(hdr.title2));

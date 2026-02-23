@@ -22,7 +22,7 @@ OBJDIR   = $(BUILDDIR)/obj
 CC = cc
 CXX = c++
 # C flags — used only for standalone tools (mkconfig, dosconv, etc.)
-CFLAGS = -std=gnu89 -DPD \
+CFLAGS = -std=gnu89 \
          -Wall -Wno-implicit-function-declaration \
          -Wno-return-type -Wno-pointer-sign \
          -Wno-parentheses -Wno-dangling-else \
@@ -42,7 +42,7 @@ CFLAGS = -std=gnu89 -DPD \
          -fsigned-char \
          -g -O0
 # C++ flags — used for ALL BBS source (.c compiled as C++ via -x c++, plus .cpp)
-CXXFLAGS = -std=c++17 -DPD \
+CXXFLAGS = -std=c++17 \
            -Wall -Wextra \
            -Wno-unused-parameter -Wno-unused-variable -Wno-unused-value \
            -Wno-return-type -Wno-parentheses -Wno-dangling-else \
@@ -58,7 +58,7 @@ CXXFLAGS = -std=c++17 -DPD \
 BBS_CORE = bbs ansi_attr bbs_output bbs_input bbs_ui conio bbsutl file file1 mm \
            utility extrn mm1 tcpio jam stream_processor mci mci_bbs
 
-BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
+BBS_MODULES = mm2 cmd_registry acs menu_nav msgbase disk userdb menudb timest utility1 \
               file2 file3 archive filesys \
               menued uedit diredit subedit stringed \
               bbsutl2 sysopf wfc xinit \
@@ -69,7 +69,7 @@ BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
 PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge
 
 # JSON I/O (cJSON library + serialization layer)
-JSON_IO = cJSON json_io
+JSON_IO = cJSON json_io menu_json
 
 MODULES = version $(BBS_CORE) $(BBS_MODULES) $(PLATFORM) $(JSON_IO)
 OBJS    = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(MODULES)))
@@ -104,25 +104,28 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 # --- Tool targets ---
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest $(BUILDDIR)/iotest $(BUILDDIR)/uitest
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest $(BUILDDIR)/iotest $(BUILDDIR)/uitest
 
 $(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c | $(BUILDDIR)
-	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
+	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
 
 $(BUILDDIR)/dosconv: $(TOOLDIR)/dosconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
 
 $(BUILDDIR)/mnudump: $(TOOLDIR)/mnudump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
 
 $(BUILDDIR)/mnuconv: $(TOOLDIR)/mnuconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
+
+$(BUILDDIR)/mnu2json: $(TOOLDIR)/mnu2json.c $(SRCDIR)/vardec.h $(SRCDIR)/menu_json.c $(SRCDIR)/menu_json.h $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c | $(BUILDDIR)
+	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $< $(SRCDIR)/menu_json.c $(SRCDIR)/cJSON.c $(SRCDIR)/json_io.c
 
 $(BUILDDIR)/datadump: $(TOOLDIR)/datadump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
 
 $(BUILDDIR)/jamdump: $(TOOLDIR)/jamdump.c $(SRCDIR)/jam.h $(SRCDIR)/jamsys.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -DPD -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
 
 # Terminal test — links against real BBS .o files to test rendering
 TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
@@ -164,7 +167,7 @@ data: | $(BUILDDIR)
 # --- Generate config.json + seed data (first-time setup) ---
 # Order matters: mkconfig first (generates JSON), then dist data on top
 # (overwrites stubs with real content like mnudata.dat).
-init: $(BUILDDIR)/mkconfig
+init: $(BUILDDIR)/mkconfig $(BUILDDIR)/mnu2json
 	@if [ ! -f $(BUILDDIR)/config.json ]; then \
 		echo "Generating config.json and seed data..."; \
 		cd $(BUILDDIR) && ./mkconfig .; \
@@ -172,13 +175,26 @@ init: $(BUILDDIR)/mkconfig
 		echo "config.json already exists (use 'make distclean' first to regenerate)"; \
 	fi
 	@$(MAKE) data
+	@$(MAKE) menus-json
+
+# --- Convert binary .mnu files to .json in build/menus/ ---
+menus-json: $(BUILDDIR)/mnu2json
+	@if ls $(BUILDDIR)/menus/*.mnu 1>/dev/null 2>&1; then \
+		echo "Converting .mnu files to .json..."; \
+		for f in $(BUILDDIR)/menus/*.mnu; do \
+			base=$$(basename "$$f" .mnu); \
+			if [ ! -f "$(BUILDDIR)/menus/$$base.json" ]; then \
+				$(BUILDDIR)/mnu2json "$$f"; \
+			fi; \
+		done; \
+	fi
 
 # Remove binary + objects, preserve data dirs (config, users, messages, etc.)
 clean:
 	rm -rf $(OBJDIR)
 	rm -f $(BUILDDIR)/dominion
 	rm -f $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump
-	rm -f $(BUILDDIR)/mnuconv $(BUILDDIR)/datadump $(BUILDDIR)/jamdump
+	rm -f $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump
 	rm -f $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest
 	rm -f $(BUILDDIR)/iotest $(BUILDDIR)/uitest
 
@@ -190,4 +206,4 @@ clean-obj:
 distclean:
 	rm -rf $(BUILDDIR)
 
-.PHONY: all binary clean clean-obj distclean data tools init
+.PHONY: all binary clean clean-obj distclean data tools init menus-json

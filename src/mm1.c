@@ -177,10 +177,6 @@ int read_menu(char fn[15],int doauto)
         }
     }
 
-#ifdef PD
-    readmenup();
-#endif
-
     return 1;
 }
 
@@ -466,52 +462,6 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
     return ok;
 }
 
-#ifdef PD
-
-int numpopers;
-
-void addpop(char param[MAX_PATH_LEN])
-{
-    char *p;
-    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
-    int i;
-    menurec m;
-
-    p=strtok(param,",");
-    strcpy(s1,p);
-    p=strtok(NULL,",");
-    strcpy(m.key,p);
-    p=strtok(NULL,",");
-    strcpy(m.type,p);
-    p=strtok(NULL,",");
-    strcpy(m.ms,p);
-
-    sprintf(m.desc,"[%s] %s",m.key,s1);
-    sess.tg[numpopers]=m;
-    numpopers++;
-}
-
-
-extern char menutitles[4][20],ml[4][20];
-extern int curitem,curtitle,numtitles,numitems[4],usepldns;
-extern char *retfrompldn;
-
-void batchpop(char param[MAX_PATH_LEN])
-{
-    int i;
-
-    sess.maxcmd=numpopers;
-    numitems[0]=numpopers-1;
-    popup(param);
-    for(i=1;i<numpopers;i++)
-        if(!stricmp(retfrompldn,sess.tg[i].key))
-            ex(sess.tg[i].type,sess.tg[i].ms);
-    read_menu(sess.menuat,0);
-    strcpy(retfrompldn,"");
-}
-
-#endif
-
 void menubatch(char fn[12])
 {
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],*p,type[21],param[MAX_PATH_LEN];
@@ -520,8 +470,6 @@ void menubatch(char fn[12])
     FILE *f;
     varrec vars[50];
     int numvars=0;
-
-    numpopers=1;
 
     sprintf(s,"%s%s.mbt",sys.cfg.menudir,fn);
     if(!exist(s)) return;
@@ -557,17 +505,7 @@ void menubatch(char fn[12])
         } 
         else if(!stricmp(type,"QUIT")) {
             done=1;
-#ifdef PD
-        } 
-        else if(!stricmp(type,"ADDPOP")) {
-            addpop(param);
-        } 
-        else if(!stricmp(type,"POPUP")) {
-            if(!param[0])
-                strcpy(param,"popup");
-            batchpop(param);
-#endif
-        } 
+        }
         else if(!stricmp(type,"ASK")) {
             nl();
             npr("5%s? ",param);
@@ -583,9 +521,6 @@ void menubatch(char fn[12])
         } 
         else if(!stricmp(type,"TYPE")) {
             printfile(param);
-        } 
-        else if(!stricmp(type,"RESETPOP")) {
-            numpopers=1;
         } 
         else if(!stricmp(type,"DEC")) {
             for(i=0;i<numvars;i++) {

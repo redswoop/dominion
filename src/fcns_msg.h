@@ -89,8 +89,6 @@ void drawhead(int top);
 void showmenu();
 void plfmt(char *s);
 void plfmta(char *s,int *abort);
-void addpop(char param[MAX_PATH_LEN]);
-void batchpop(char param[MAX_PATH_LEN]);
 void menubatch(char fn[12]);
 void showmenucol();
 
@@ -104,16 +102,7 @@ void matrixcmd(char type);
 void amsgcommand(char type);
 void hangupcmd(char type,char ms[40]);
 void sysopcmd(char type,char ms[41]);
-int pmmkey(char *s);
-void readmenup();
-void bar(int where);
-void drawheader(void);
-void pldn(void);
 void configpldn(int config);
-void makerembox(int x,int y,int ylen,char *fn);
-void aligncmd1(char in[MAX_PATH_LEN],char *cmd,char *desc);
-char *makelen(char *in ,int len);
-void popup(char *fn);
 
 
 /* File: stringed.c */

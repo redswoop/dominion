@@ -143,8 +143,8 @@ class TestMenuEditor:
             client.send_key("\r")
             text = client.recv_until_quiet(quiet_time=2, max_wait=5)
             plain = client.all_text_plain
-            assert "tstmnu.mnu" in plain.lower(), (
-                f"Expected tstmnu.mnu in listing after create, got:\n{plain[-2000:]}"
+            assert "tstmnu.json" in plain.lower(), (
+                f"Expected tstmnu.json in listing after create, got:\n{plain[-2000:]}"
             )
 
             # D = delete
@@ -157,8 +157,8 @@ class TestMenuEditor:
             client.send_key("\r")
             recent = client.recv_until_quiet(quiet_time=2, max_wait=5)
             recent_plain = strip_to_plain(recent)
-            assert "tstmnu.mnu" not in recent_plain.lower(), (
-                f"tstmnu.mnu should be gone after delete, got:\n{recent_plain[-2000:]}"
+            assert "tstmnu.json" not in recent_plain.lower(), (
+                f"tstmnu.json should be gone after delete, got:\n{recent_plain[-2000:]}"
             )
 
             # Q to quit menu editor

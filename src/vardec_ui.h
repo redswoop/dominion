@@ -158,12 +158,7 @@ typedef struct {
 } menurec;
 
 typedef struct {
-#ifdef PD
-    char prompt[101],
-         prompt2[91],
-#else
     char prompt[192],
-#endif
          helpfile[10],
          title1[101],
          title2[101],

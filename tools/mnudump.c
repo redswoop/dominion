@@ -50,9 +50,8 @@
  * NEW FORMAT (v3.x / current BBS code, #pragma pack(push,1))
  * ----------------------------------------------------------------------------
  *
- * New header (mmrec) — 471 bytes (PD build):
- *   char prompt[101]      Menu prompt string
- *   char prompt2[91]      Pulldown prompt (PD build only)
+ * New header (mmrec) — 471 bytes:
+ *   char prompt[192]      Menu prompt string
  *   char helpfile[10]     External help filename (.HLP)
  *   char title1[101]      Title line 1
  *   char title2[101]      Title line 2
@@ -369,10 +368,6 @@ static void dump_new_format(const unsigned char *data, long fsize, const char *p
     if (buf[0]) printf("  Title 2    : %s\n", buf);
     strip_colors(hdr.prompt, sizeof(hdr.prompt), buf, sizeof(buf));
     printf("  Prompt     : %s\n", buf);
-#ifdef PD
-    strip_colors(hdr.prompt2, sizeof(hdr.prompt2), buf, sizeof(buf));
-    if (buf[0]) printf("  Pldn Prompt: %s\n", buf);
-#endif
     if (hdr.altmenu[0])  printf("  ANSI Menu  : %s\n", hdr.altmenu);
     if (hdr.format[0])   printf("  Format File: %s\n", hdr.format);
     if (hdr.slneed[0])   printf("  Security   : %s\n", hdr.slneed);

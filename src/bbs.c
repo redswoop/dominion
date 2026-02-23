@@ -8,6 +8,7 @@
 #include <math.h>
 #include "menudb.h"
 #include "mci_bbs.h"
+#include "menu_nav.h"
 
 #define modem_time 3.5
 extern double thing;
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
                 else readmenu(sys.nifty.firstmenu);
             }
 main_menu_label:
-            while (!io.hangup) menuman();
+            menu_nav_loop();
             logoff();
         }
 

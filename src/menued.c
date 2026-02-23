@@ -30,9 +30,6 @@ void menuinfoed(char fn[15])
     npr("37. Format File  : 0%s\r\n",sess.pp.format);
     npr("38. MCI Name     : 0%s\r\n",sess.pp.pausefile);
     npr("39. Extended Help: 0%s\r\n",sess.pp.helpfile);
-#ifdef PD
-    npr("30. Pldn Prompt  : 0%s\r\n",sess.pp.prompt2);
-#endif
     npr("3A. HotKeys      : 0");
     if(sess.pp.boarder==1)
         pl("Forced");
@@ -291,12 +288,8 @@ void extractheader()
     f=fopen(s,"wb");
     strcpy(fn,s);
 
-    fputs(sess.pp.prompt,f); 
+    fputs(sess.pp.prompt,f);
     fputs("\n",f);
-#ifdef PD
-    fputs(sess.pp.prompt2,f); 
-    fputs("\n",f);
-#endif
     fputs(sess.pp.title1,f); 
     fputs("\n",f);
     fputs(sess.pp.title2,f); 
@@ -323,16 +316,11 @@ void readheader()
     if(!fn[0]) return;
     f=fopen(fn,"rt");
 
-    fgets(s,161,f); 
-    filter(s,'\n'); 
+    fgets(s,161,f);
+    filter(s,'\n');
     strcpy(sess.pp.prompt,s);
-#ifdef PD
-    fgets(s,161,f); 
-    filter(s,'\n'); 
-    strcpy(sess.pp.prompt2,s);
-#endif
-    fgets(s,161,f); 
-    filter(s,'\n'); 
+    fgets(s,161,f);
+    filter(s,'\n');
     strcpy(sess.pp.title1,s);
     fgets(s,161,f); 
     filter(s,'\n'); 
@@ -402,25 +390,12 @@ void menued(char fn[15])
             if(type) top(fn); 
             else menuinfoed(fn); 
             break;
-        case '1': 
+        case '1':
             pl("Prompt:");
-#ifdef PD
-            outstr(": "); 
-            inli(s,sess.pp.prompt,99,1);
-#else
-            outstr(": "); 
+            outstr(": ");
             inli(s,sess.pp.prompt,192,1);
-#endif
             if(s[0]) strcpy(sess.pp.prompt,s);
             break;
-#ifdef PD
-        case '0': 
-            pl("PullDown Prompt:");
-            outstr(": "); 
-            inli(s,sess.pp.prompt2,99,1);
-            if(s[0]) strcpy(sess.pp.prompt2,s);
-            break;
-#endif
         case '2': 
             pl("Title 1:");
             outstr(": "); 
