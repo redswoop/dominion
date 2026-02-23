@@ -393,7 +393,7 @@ int uploadall(int dn, char s[20])
     strcat(s1,s);
     f1=findfirst(s1,&ff,0);
     ok=1;
-    while ((f1==0) && (!hangup) && (sess.numf<maxf) && (ok)) {
+    while ((f1==0) && (!io.hangup) && (sess.numf<maxf) && (ok)) {
         strcpy(s,(ff.ff_name));
         align(s);
         i=recno(s);
@@ -441,7 +441,7 @@ void removefile(void)
     i=getrec(spec,&type);
 
     abort=0;
-    while ((!hangup) && (i!=-1) && (!abort)) {
+    while ((!io.hangup) && (i!=-1) && (!abort)) {
         SETREC(i);
         read(sess.dlf,&u,sizeof(uploadsrec));
         if (dcs() || (u.ownerusr==sess.usernum) ) {
@@ -846,7 +846,7 @@ void move_file(void)
     i=getrec(sx,&ttype);
 
     done=0;
-    while ((!hangup) && (i>0) && (!done)) {
+    while ((!io.hangup) && (i>0) && (!done)) {
         cp=i;
         dliscan();
         SETREC(i);
@@ -870,7 +870,7 @@ void move_file(void)
                 if (type[0]=='?')
                     dirlist(0);
             }
-            while ((!hangup) && (type[0]=='?'));
+            while ((!io.hangup) && (type[0]=='?'));
             if (type[0])
                 for (i1=0; (i1<64) && (sess.udir[i1].subnum!=-1); i1++)
                     if (strcmp(sess.udir[i1].keys,type)==0)

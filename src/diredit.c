@@ -202,7 +202,7 @@ void modify_dir(int n)
             break;
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sys.directories[n]=r;
     if (!sys.wfc)
         changedsl();
@@ -369,7 +369,7 @@ void diredit()
             break;
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sprintf(s,"%sdirs.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f,(void *)&sys.directories[0], sys.num_dirs * sizeof(directoryrec));
@@ -518,7 +518,7 @@ void modify_prot(int n)
             break;
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sys.proto[n]=r;
 }
 
@@ -611,7 +611,7 @@ void protedit()
             break;
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sprintf(s,"%sprotocol.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f,(void *)&sys.proto[0], sys.numextrn * sizeof(protocolrec));

@@ -1,46 +1,12 @@
 #include "io_stream.h"
 #include <string.h>
 
-/* Undefine compat macros so we can access struct members directly */
-#undef echo
-#undef lastcon
+/* Undefine computed macros so we can access struct members directly */
 #undef using_modem
 #undef incom
 #undef outcom
 #undef ok_modem_stuff
 #undef client_fd
-#undef colblock
-#undef hungup
-#undef change_color
-#undef change_ecolor
-#undef ansistr
-#undef ansiptr
-#undef endofline
-#undef oldx
-#undef oldy
-#undef screenlen
-#undef lecho
-#undef orig_termios
-#undef term_raw_mode
-#undef curatr
-#undef topline
-#undef screenbottom
-#undef screenlinest
-#undef defscreenbottom
-#undef lines_listed
-#undef listing
-#undef scrn
-#undef hangup
-#undef mciok
-#undef charbuffer
-#undef charbufferpointer
-#undef chatcall
-#undef chatting
-#undef chat_file
-#undef x_only
-#undef curspeed
-#undef global_handle
-#undef io
 
 /* io_session_t io; — removed Phase B, now lives in session_t */
 

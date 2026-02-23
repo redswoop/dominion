@@ -88,9 +88,9 @@ void print_data(int un, userrec *u,int lng)
     npr("32. Realname:0 %s\r\n",u->realname);
     if(lng) {
         npr("33. Password:0");
-        echo=0;
+        io.echo=0;
         npr(" %-27.27s",u->pw);
-        echo=1;
+        io.echo=1;
         npr("34. Computer:0 %s\r\n",ctype(u->comp_type));
         npr("35. Address :0 %-27.27s",(u->street));
         npr("36. City/St :0 %s\r\n",(u->city));
@@ -224,8 +224,8 @@ void uedit(int usern)
 
     if(!checkpw()) return;
 
-    top=topline;
-    topline=0;
+    top=io.topline;
+    io.topline=0;
     full=opp(outcom);
     un=usern;
     done=0;
@@ -345,7 +345,7 @@ void uedit(int usern)
             case 'Q':
                 done=1;
                 done1=1;
-                topline=top;
+                io.topline=top;
                 break;
             case '3':
                 nl();
@@ -631,7 +631,7 @@ void uedit(int usern)
                         }
                     }
                 } 
-                while ((!hangup) && (ch1=='?'));
+                while ((!io.hangup) && (ch1=='?'));
                 break;
             case 'E':
                 nl(); 
@@ -644,7 +644,7 @@ void uedit(int usern)
                         userdb_save(un,&u);
                     } 
                 } 
-                while(ch1!='Q'&&!hangup);
+                while(ch1!='Q'&&!io.hangup);
                 break;
             case 'F':
                 nl(); 
@@ -657,13 +657,13 @@ void uedit(int usern)
                         userdb_save(un,&u);
                     } 
                 } 
-                while (ch1!='Q'&&!hangup);
+                while (ch1!='Q'&&!io.hangup);
                 break;
             }
         } 
-        while ((!done1) && (!hangup));
+        while ((!done1) && (!io.hangup));
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     if (!sys.wfc)
         topscreen();
 }

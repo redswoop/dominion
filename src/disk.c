@@ -129,18 +129,18 @@ void set_global_handle(int i)
 {
     char s[MAX_PATH_LEN];
 
-    if (x_only)
+    if (io.x_only)
         return;
 
     if (i) {
-        if (!global_handle) {
+        if (!io.global_handle) {
             sprintf(s,"%sGLOBAL.TXT",sys.cfg.gfilesdir);
-            global_handle=open(s,O_RDWR | O_APPEND | O_BINARY | O_CREAT,
+            io.global_handle=open(s,O_RDWR | O_APPEND | O_BINARY | O_CREAT,
             S_IREAD | S_IWRITE);
             global_ptr=0;
             global_buf=(char *)malloca(GLOBAL_SIZE);
-            if ((global_handle<0) || (!global_buf)) {
-                global_handle=0;
+            if ((io.global_handle<0) || (!global_buf)) {
+                io.global_handle=0;
                 if (global_buf) {
                     farfree(global_buf);
                     global_buf=NULL;
@@ -150,10 +150,10 @@ void set_global_handle(int i)
         }
     }
     else {
-        if (global_handle) {
-            write(global_handle,global_buf,global_ptr);
-            close(global_handle);
-            global_handle=0;
+        if (io.global_handle) {
+            write(io.global_handle,global_buf,global_ptr);
+            close(io.global_handle);
+            io.global_handle=0;
             if (global_buf) {
                 farfree(global_buf);
                 global_buf=NULL;
@@ -166,10 +166,10 @@ void set_global_handle(int i)
 void global_char(char ch)
 {
 
-    if (global_buf && global_handle) {
+    if (global_buf && io.global_handle) {
         global_buf[global_ptr++]=ch;
         if (global_ptr==GLOBAL_SIZE) {
-            write(global_handle,global_buf,global_ptr);
+            write(io.global_handle,global_buf,global_ptr);
             global_ptr=0;
         }
     }

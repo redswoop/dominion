@@ -397,7 +397,7 @@ static flagdef nifstatus_flags[] = {
     { 0x0002, "nuv" },
     { 0x0004, "chattype" },
     { 0x0008, "comment" },
-    { 0x0010, "mciok" },
+    { 0x0010, "io.mciok" },
     { 0x0020, "autochat" },
     { 0x0040, "ratio" },
     { 0x0080, "forcevote" },

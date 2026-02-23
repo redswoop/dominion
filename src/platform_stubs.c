@@ -55,8 +55,8 @@ void clrscr(void)
         move(0, 0);
         refresh();
     }
-    /* Clear the scrn[] shadow buffer so conio.c stays in sync */
-    if (scrn) memset(scrn, 0, 4000);
+    /* Clear the io.scrn[] shadow buffer so conio.c stays in sync */
+    if (io.scrn) memset(io.scrn, 0, 4000);
     /* Reset conio.c cursor tracking to top-left */
     conio_sync_cursor(0, 0);
     reset_attr_cache();

@@ -48,12 +48,12 @@ int strlenc(char *s)
 
 void setfgc(int i)
 {
-    curatr = (curatr & 0xf8) | i;
+    io.curatr = (io.curatr & 0xf8) | i;
 }
 
 void setbgc(int i)
 {
-    curatr = (curatr & 0x8f) | (i << 4);
+    io.curatr = (io.curatr & 0x8f) | (i << 4);
 }
 
 void setc(unsigned char ch)
@@ -65,19 +65,19 @@ void ansic(int n)
 {
     char c,s[10];
 
-    if(colblock)
+    if(io.colblock)
         c=sys.nifty.defaultcol[n];
     else
         c = sess.user.colors[n];
 
-    if (c == curatr) return;
+    if (c == io.curatr) return;
 
     setc(c);
 
     if (okansi())
-        makeansi(sess.user.colors[0],endofline, curatr);
+        makeansi(sess.user.colors[0],io.endofline, io.curatr);
     else
-        endofline[0] = 0;
+        io.endofline[0] = 0;
 }
 
 
@@ -96,12 +96,12 @@ void stream_emit_char(unsigned char c)
 
     /* TCP output (skip tabs — they expand locally) */
     if (outcom && (c != 9)) {
-        if (c == 12 && echo) {
+        if (c == 12 && io.echo) {
             /* Form feed: ANSI clear + home for TCP.
              * Raw 0x0C is unreliable on modern terminals. */
             term_remote_write_raw("\x1b[2J\x1b[H");
         } else {
-            outcomch(echo ? c : sys.nifty.echochar);
+            outcomch(io.echo ? c : sys.nifty.echochar);
         }
     }
 
@@ -111,20 +111,20 @@ void stream_emit_char(unsigned char c)
         for (i = i1; i < (((i1 / 8) + 1) * 8); i++)
             stream_emit_char(32);
     }
-    else if (echo || lecho) {
+    else if (io.echo || io.lecho) {
         out1ch(c);
         if (c == 12 && okansi()) outstrm("\x1b[0;1m");
         if (c == 10) {
-            ++lines_listed;
+            ++io.lines_listed;
             if (((sysstatus_pause_on_page & sess.user.sysstatus)) &&
-                (lines_listed >= screenlinest - 1) && !listing) {
+                (io.lines_listed >= io.screenlinest - 1) && !io.listing) {
                 pausescr();
-                lines_listed = 0;
+                io.lines_listed = 0;
             }
             else if (((sysstatus_pause_on_message & sess.user.sysstatus)) &&
-                (lines_listed >= screenlinest - 1) && readms) {
+                (io.lines_listed >= io.screenlinest - 1) && readms) {
                 pausescr();
-                lines_listed = 0;
+                io.lines_listed = 0;
             }
         }
     }
@@ -135,15 +135,15 @@ void stream_emit_char(unsigned char c)
 
 void outchr(unsigned char c)
 {
-    if (global_handle && echo)
+    if (io.global_handle && io.echo)
         global_char(c);
 
-    if (chatcall && !x_only && !(sys.cfg.sysconfig & sysconfig_no_beep))
+    if (io.chatcall && !io.x_only && !(sys.cfg.sysconfig & sysconfig_no_beep))
         setbeep(1);
 
     stream_putch(c);
 
-    if (chatcall)
+    if (io.chatcall)
         setbeep(0);
 }
 
@@ -156,7 +156,7 @@ void outstr(char *s)
 
     checkhangup();
 
-    if(hangup) return;
+    if(io.hangup) return;
 
     if(s[0]=='\x96') {
         i++;
@@ -164,7 +164,7 @@ void outstr(char *s)
         x=79;
         x-=slen;
         x/=2;
-        curatr = 0xFF;  /* invalidate so setc always emits ANSI */
+        io.curatr = 0xFF;  /* invalidate so setc always emits ANSI */
         setc(0x07);     /* explicit white on black for centering spaces */
         for(slen=0;slen<x-2;slen++)
             outchr(' ');
@@ -180,7 +180,7 @@ void outstr(char *s)
         return;
     }
 
-    while (s[i]&&!hangup)
+    while (s[i]&&!io.hangup)
         outchr(s[i++]);
 
 }
@@ -189,17 +189,17 @@ void outstrm(char *s)
 {
     int i=0;
 
-    if(!outcom||!incom||!strcmp(curspeed,"KB")) return;
+    if(!outcom||!incom||!strcmp(io.curspeed,"KB")) return;
     checkhangup();
-    while (s[i]&&!hangup)
+    while (s[i]&&!io.hangup)
         outcomch(s[i++]);
 }
 
 void nl()
 {
-    if (endofline[0]) {
-        outstr(endofline);
-        endofline[0] = 0;
+    if (io.endofline[0]) {
+        outstr(io.endofline);
+        io.endofline[0] = 0;
     }
     outstr("\r\n");
 }
@@ -259,12 +259,12 @@ void savel(char *cl, char *atr, char *xl, char *cc)
 {
     int i, i1;
 
-    *cc = curatr;
-    strcpy(xl, endofline);
-    i = ((wherey() + topline) * 80) * 2;
+    *cc = io.curatr;
+    strcpy(xl, io.endofline);
+    i = ((wherey() + io.topline) * 80) * 2;
     for (i1 = 0; i1 < wherex(); i1++) {
-        cl[i1]  = scrn[i + (i1 * 2)];
-        atr[i1] = scrn[i + (i1 * 2) + 1];
+        cl[i1]  = io.scrn[i + (i1 * 2)];
+        atr[i1] = io.scrn[i + (i1 * 2) + 1];
     }
     cl[wherex()]  = 0;
     atr[wherex()] = 0;
@@ -282,5 +282,5 @@ void restorel(char *cl, char *atr, char *xl, char *cc)
         outchr(cl[i]);
     }
     setc(*cc);
-    strcpy(endofline, xl);
+    strcpy(io.endofline, xl);
 }

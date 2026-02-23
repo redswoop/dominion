@@ -132,7 +132,7 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
     l1=0;
 
 
-    while ((!done) && (!abort) && (!hangup)) {
+    while ((!done) && (!abort) && (!io.hangup)) {
         ch=buf[l1];
         if (l1>=len)
             ch=26;
@@ -149,10 +149,10 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
             else {
                 if(!ctrla) {
                     if (ch==27) {
-                        if ((topline) && (screenbottom==24) && (!ansi))
+                        if ((io.topline) && (io.screenbottom==24) && (!ansi))
                             set_protect(0);
                         ansi=1;
-                        lines_listed=0;
+                        io.lines_listed=0;
                     }
                     s[p++]=ch;
                     if ((ch==3) || (ch==8))
@@ -168,7 +168,7 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
                 printit=0;
                 if (centre ) {
                     i1=(sess.user.screenchars-wherex()-p1)/2;
-                    for (i=0; (i<i1) && (!abort) && (!hangup); i++)
+                    for (i=0; (i<i1) && (!abort) && (!io.hangup); i++)
                         osan(" ",&abort,next);
                 }
                 if (p) {
@@ -207,7 +207,7 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
     if ((ansi) && (sess.topdata) && (sess.useron))
         topscreen();
 
-    mciok=1;
+    io.mciok=1;
 }
 
 void read_msg(long recnr,int *next)
@@ -308,7 +308,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
     strlwr(s);
     hcrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
-    while(!done&&!hangup) {
+    while(!done&&!io.hangup) {
         if(fd)
             disp=0;
 
@@ -351,7 +351,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
 
         if(disp) {
             if(sys.subboards[sess.curlsub].attr & mattr_nomci)
-                mciok=0;
+                io.mciok=0;
             JAMmbFetchMsgHdr(&sys.JamRec,msgnum,0);
 
             if(sys.JamRec.Hdr.Attribute & MSG_DELETED)
@@ -527,7 +527,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
         }
         else if(s[0]=='T'||(s[0]=='/'&&s[1]=='T')) {
             abort=0;
-            for(i=0;i<10&&!hangup&&!abort&&msgnum<sys.nummsgs;i++) {
+            for(i=0;i<10&&!io.hangup&&!abort&&msgnum<sys.nummsgs;i++) {
                 msgnum++;
                 JAMmbFetchMsgHdr(&sys.JamRec, msgnum,0);
                 getjamhdr(&hdr);
@@ -661,7 +661,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
         pl(get_string(12));
         pl(get_string(41));
 
-        while (!done&&!hangup&&!abort) {
+        while (!done&&!io.hangup&&!abort) {
 
             while((result=ainli(s,ro,160,1,1,curli?1:0))>0) {
                 if(result==1||result==2&&curli) {
@@ -681,7 +681,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
             if(result==-5) strcpy(s,"/Q");
             if(result==-6) strcpy(s,"/M");
 
-            if (hangup) done=1;
+            if (io.hangup) done=1;
             savel=1;
             if (s[0]=='/') {
                 if (stricmp(s,"/Q")==0) {
@@ -871,8 +871,8 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     if (!fsed)
         farfree((void *)lin);
 
-    charbufferpointer=0;
-    charbuffer[0]=0;
+    io.charbufferpointer=0;
+    io.charbuffer[0]=0;
 
     return b;
 }
@@ -1415,7 +1415,7 @@ void gnscan(void)
     int i,next=1;
 
     pl(get_string(15));
-    for(i=0;i<200&&sess.usub[i].subnum!=-1&&i<sess.umaxsubs&&!hangup&&next;i++) {
+    for(i=0;i<200&&sess.usub[i].subnum!=-1&&i<sess.umaxsubs&&!io.hangup&&next;i++) {
         if(inscan(i,&sess.user)&&!(sys.subboards[sess.usub[i].subnum].attr & mattr_private))
             nscan(sess.cursub=sess.usub[i].subnum,&next);
     }

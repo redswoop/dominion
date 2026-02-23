@@ -69,7 +69,7 @@ void change_colors(userrec *u1)
             prt(5,"Is this what you want? ");
             if (yn()) {
                 pl("Color saved.");
-                if(colblock)
+                if(io.colblock)
                     sys.nifty.defaultcol[i]=nc;
                 else {
                     u.colors[i]=nc;
@@ -80,7 +80,7 @@ void change_colors(userrec *u1)
             }
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
 
     *u1=u;
 }
@@ -270,7 +270,7 @@ void config_qscan(int dl)
                 }
             }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
 }
 
 
@@ -358,7 +358,7 @@ void make_macros()
                 if (i>=78)
                     done1=1;
             } 
-            while ((!done1) && (!hangup));
+            while ((!done1) && (!io.hangup));
             sess.okskey=1;
             tempmac[i]=0;
             nl();
@@ -380,7 +380,7 @@ void make_macros()
             }
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
 }
 
 
@@ -395,7 +395,7 @@ void input_pw1()
         nl();
         pl("You must now enter your current password.");
         outstr(": ");
-        echo=0;
+        io.echo=0;
         input(s,19);
         if (strcmp(s,sess.user.pw)) {
             nl();
@@ -407,13 +407,13 @@ void input_pw1()
         nl();
         pl("Enter your new password, 3 to 20 characters long.");
         outstr(": ");
-        echo=0;
+        io.echo=0;
         input(s,19);
         nl();
         nl();
         pl("Repeat password for verification.");
         outstr(": ");
-        echo=0;
+        io.echo=0;
         input(s1,19);
         if (strcmp(s,s1)==0) {
             if (strlen(s1)<3) {
@@ -508,7 +508,7 @@ void getfileformat()
         } 
         else done=1;
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
     nl();
     outstr(get_string(79));
@@ -695,7 +695,7 @@ void getmsgformat()
         } 
         else done=1;
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
     nl();
     outstr(get_string(79));

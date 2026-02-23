@@ -256,7 +256,7 @@ void liststring(int type,int where)
     rumourrec r;
     userrec u;
 
-    mciok=0;
+    io.mciok=0;
     if(type==1)
         sprintf(s1,"%ssysstr.dat",sys.cfg.datadir);
     else if(type==2)
@@ -271,7 +271,7 @@ void liststring(int type,int where)
     else
         npr("%2d. %s\r\n",(num++)+1,&astring.thestring);
     close(i);
-    mciok=1;
+    io.mciok=1;
 }
 
 void edstring(int type)
@@ -333,7 +333,7 @@ void edstring(int type)
             lseek(i,((long)(ednum))*(sizeof(astring)),SEEK_SET);
             read(i,(void *)&astring,sizeof(astring));
             lseek(i,((long)(ednum))*(sizeof(astring)),SEEK_SET);
-            mciok=0;
+            io.mciok=0;
             pl("7Current Value:");
             pl(astring.thestring);
             nl();
@@ -350,11 +350,11 @@ void edstring(int type)
                 write(i,(void *)&astring,161L);
                 close(i);
             }
-            mciok=1;
+            io.mciok=1;
             break;
         }
     } 
-    while(!hangup&&!done);
+    while(!io.hangup&&!done);
 }
 
 void searchrum(void)

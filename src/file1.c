@@ -141,7 +141,7 @@ void upload_batch_file(int blind)
     if(adddiz(s,&u)) {
         u.mask |= mask_extended;
     } 
-    else if (!hangup&&!(u.mask & mask_extended)&&blind) {
+    else if (!io.hangup&&!(u.mask & mask_extended)&&blind) {
         modify_extended_description(&ss);
         if (ss) {
             add_extended_description(u.filename,ss);
@@ -258,14 +258,14 @@ void uploaded(char *fn)
 
     strcpy(sess.batch.filename,fn);
     sess.batch.batchdesc[0]=0;
-    while ((!hangup) && (sess.batch.batchdesc[0]==0)) {
+    while ((!io.hangup) && (sess.batch.batchdesc[0]==0)) {
         sprintf(s,"Please Describe %s",fn);
         inputdat(s,sess.batch.batchdesc,39,1);
     }
 
     sess.batch.dir=0;
 
-    if(!hangup)
+    if(!io.hangup)
     do {
         nl();
         dirlist(0);
@@ -291,7 +291,7 @@ void uploaded(char *fn)
                 }
             }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
 
 

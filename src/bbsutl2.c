@@ -78,15 +78,15 @@ void makewindow(int x, int y, int xlen, int ylen)
     int i,xx,yy,old;
     unsigned char s[MAX_PATH_LEN];
 
-    old=curatr;
+    old=io.curatr;
     if (xlen>80)
         xlen=80;
-    if (ylen>(screenbottom+1-topline))
-        ylen=(screenbottom+1-topline);
+    if (ylen>(io.screenbottom+1-io.topline))
+        ylen=(io.screenbottom+1-io.topline);
     if ((x+xlen)>80)
         x=80-xlen;
-    if ((y+ylen)>screenbottom+1)
-        y=screenbottom+1-ylen;
+    if ((y+ylen)>io.screenbottom+1)
+        y=io.screenbottom+1-ylen;
 
     xx=wherex();
     yy=wherey();
@@ -125,7 +125,7 @@ void makewindow(int x, int y, int xlen, int ylen)
         cprintf(" ");
     }
     movecsr(xx,yy);
-    curatr=old;
+    io.curatr=old;
 }
 */
 
@@ -149,7 +149,7 @@ void editdata(char *str,int len,int xcoord,int ycoord)
     for(i=strlen(s)-1;i>=0 && s[i]==32;i--);
     s[i+1]=0;
     strcpy(str,s);
-    curatr=15;
+    io.curatr=15;
 }
 
 
@@ -160,7 +160,7 @@ int editdig(char *str,int len,int xcoord,int ycoord)
     movecsr(xcoord-1,ycoord-1);
     editline(str,len,NUM_ONLY,&rc,"");
     real=atoi(str);
-    curatr=15;
+    io.curatr=15;
     return(real);
 }
 
@@ -169,13 +169,13 @@ void editline(char *s, int len, int status, int *returncode, char *ss)
 {
     int i,j,k,oldatr,cx,cy,pos,ch,done,insert,i1;
 
-    oldatr=curatr;
+    oldatr=io.curatr;
     cx=wherex();
     cy=wherey();
     for (i=strlen(s); i<len; i++)
         s[i]=32;
     s[len]=0;
-    curatr=31;
+    io.curatr=31;
     outs(s);
     movecsr(cx,cy);
     done=0;
@@ -312,7 +312,7 @@ void editline(char *s, int len, int status, int *returncode, char *ss)
     } 
     while (done==0);
     movecsr(cx,cy);
-    curatr=oldatr;
+    io.curatr=oldatr;
     outs(s);
     movecsr(cx,cy);
 }
@@ -323,17 +323,17 @@ void reprint()
     char xl[MAX_PATH_LEN], cl[MAX_PATH_LEN], atr[MAX_PATH_LEN], cc, ansistr_1[MAX_PATH_LEN];
     int ansiptr_1;
 
-    ansiptr_1=ansiptr;
-    ansiptr=0;
-    ansistr[ansiptr_1]=0;
-    strcpy(ansistr_1,ansistr);
+    ansiptr_1=io.ansiptr;
+    io.ansiptr=0;
+    io.ansistr[ansiptr_1]=0;
+    strcpy(ansistr_1,io.ansistr);
 
     savel(cl, atr, xl, &cc);
     nl();
     restorel(cl, atr, xl, &cc);
 
-    strcpy(ansistr,ansistr_1);
-    ansiptr=ansiptr_1;
+    strcpy(io.ansistr,ansistr_1);
+    io.ansiptr=ansiptr_1;
 }
 
 
@@ -392,11 +392,11 @@ void clickat(long byte,long bit,int x, int y)
 {
     movecsr(x-1,y-1);
     if(byte & bit) {
-        curatr=31;
+        io.curatr=31;
         outs("�");
     } 
     else {
-        curatr=15;
+        io.curatr=15;
         outs(" ");
     }
 }
@@ -412,11 +412,11 @@ int click(long *byt,long bit,int x, int y)
     while(!done) {
         movecsr(x-1,y-1);
         if(byte & bit) {
-            curatr=31;
+            io.curatr=31;
             outs("�");
         } 
         else {
-            curatr=15;
+            io.curatr=15;
             outs(" ");
         }
 
@@ -458,7 +458,7 @@ int click(long *byt,long bit,int x, int y)
     } 
 
     *byt= byte;
-    curatr=15;
+    io.curatr=15;
     return returncode;
 }
 
@@ -475,7 +475,7 @@ void val_cur_user(int wait)
     if(wait) pr_wait(1);
     sess.user.sl=sess.actsl;
     savescreen(&sess.screensave);
-    curatr=11;
+    io.curatr=11;
     ansic(3);
     fastscreen("top.bin");
     itoa((int)sess.user.sl,sl,10);
@@ -511,7 +511,7 @@ void val_cur_user(int wait)
     cp=1;
     done=0;
 
-    curatr=15;
+    io.curatr=15;
 
     outsat(sess.user.name,16,2);
     outsat(sess.user.realname,53,2);

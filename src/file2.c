@@ -110,7 +110,7 @@ void getfileinfo()
     else i=num;
     abort=0;
 
-    while ((!hangup) && (i>0) && (!abort)) {
+    while ((!io.hangup) && (i>0) && (!abort)) {
         SETREC(i);
         read(sess.dlf,(void *)&u,sizeof(uploadsrec));
         abort=printfileinfo(&u,sess.udir[sess.curdir].subnum);
@@ -185,8 +185,8 @@ void ascii_send(char *fn, int *sent, double *percent)
     char b[2048];
     int i,i1,done,abort,i2,next;
     long pos,max;
-    int mcif=mciok;
-    mciok=0;
+    int mcif=io.mciok;
+    io.mciok=0;
 
     i=open(fn,O_RDONLY | O_BINARY);
     if (i>0) {
@@ -196,9 +196,9 @@ void ascii_send(char *fn, int *sent, double *percent)
         i1=read(i,(void *)b,1024);
         pos=0L;
         abort=0;
-        while ((i1) && (!hangup) && (!abort)) {
+        while ((i1) && (!io.hangup) && (!abort)) {
             i2=0;
-            while ((!hangup) && (!abort) && (i2<i1)) {
+            while ((!io.hangup) && (!abort) && (i2<i1)) {
                 checkhangup();
                 outchr(b[i2++]);
                 checka(&abort,&next,0);
@@ -223,7 +223,7 @@ void ascii_send(char *fn, int *sent, double *percent)
         *sent=0;
         *percent=0.0;
     }
-    mciok=mcif;
+    io.mciok=mcif;
 }
 
 void send_file(char *fn, int *sent, int *abort, char *ft)
@@ -356,7 +356,7 @@ int get_protocol(int is_batch)
         else
             done=1;
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     if (ch=='Q')
         return(-1);
     if(ch=='N') return(-3);

@@ -15,7 +15,7 @@ static auto& sess = Session::instance();
 
 void menuinfoed(char fn[15])
 {
-    mciok=0;
+    io.mciok=0;
 
     outchr(12);
     npr("3Menu File Name: %s\r\n",fn);
@@ -46,7 +46,7 @@ void menuinfoed(char fn[15])
     npr("3G. PopUp        : 0%s\r\n",(sess.pp.attr & menu_popup)?"Yes":"No");
     npr("3H. Use Global   : 0%s\r\n",(sess.pp.attr & menu_noglobal)?"No":"Yes");
     nl();
-    mciok=1;
+    io.mciok=1;
 }
 
 
@@ -168,7 +168,7 @@ thespot:
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 }
 
 void top(char fn[15])
@@ -247,7 +247,7 @@ void menu(char fn[15])
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 }
 
 void addmenu(char fn[15])
@@ -585,7 +585,7 @@ void menued(char fn[15])
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
     data.header = sess.pp;
     memcpy(data.commands, sess.tg, sizeof(menurec) * sess.maxcmd);
     data.count = sess.maxcmd;

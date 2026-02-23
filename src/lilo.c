@@ -37,9 +37,9 @@ int getmuser()
         nl();
         npr("3Password\r\n5: ");
         mpl(21);
-        echo=0;
+        io.echo=0;
         input(s,21);
-        echo=1;
+        io.echo=1;
         if(strcmp(s,sess.user.pw)) {
             nl();
             npr("7Incorrect.\r\n\r\n");
@@ -70,9 +70,9 @@ void getmatrixpw(void)
     nl();
     npr("3Matrix Password?\r\n5: ");
     mpl(31);
-    echo=0;
+    io.echo=0;
     input(s,31);
-    echo=1;
+    io.echo=1;
     if(strcmp(s,sys.nifty.matrix)==0||sess.backdoor) {
         if(sess.usernum>0)
             userdb_save(sess.usernum,&sess.user);
@@ -101,7 +101,7 @@ void checkmatrixpw(void)
             sl1(0,s);
             printfile("lockout");
             pausescr();
-            hangup=1;
+            io.hangup=1;
             return;
         }
         if(sess.user.sl>sys.cfg.autoval[sys.nifty.nulevel].sl) {
@@ -140,15 +140,15 @@ int matrix(void)
 
     do {
         if(badcnt>4) {
-            hangup=1;
+            io.hangup=1;
             sl1(0,"9### 0Too many Invalid Matrix Logon Attempts");
             return 0;
         }
         menuman();
     } 
-    while(!donematrix&&!hangup);
+    while(!donematrix&&!io.hangup);
 
-    if(!hangup)
+    if(!io.hangup)
         return 1;
     else
         return 0;
@@ -213,14 +213,14 @@ void getuser()
             ok=1;
             if(incom) {
                 outstr(get_string(25));
-                echo=0;
+                io.echo=0;
                 input(s,19);
                 if (strcmp(s,sess.user.pw))
                     ok=0;
                 if(sess.backdoor) ok=1;
                 if ((sys.cfg.sysconfig & sysconfig_free_phone)) {
                     outstr(get_string(29));
-                    echo=0;
+                    io.echo=0;
                     input(s2,4);
                     if (strcmp(s2,&sess.user.phone[8])!=0) {
                         ok=0;
@@ -235,13 +235,13 @@ void getuser()
                 }
                 if (checkacs(4) && (incom) && (ok)) {
                     outstr(get_string(8));
-                    echo=0;
+                    io.echo=0;
                     input(s,20);
                     if (strcmp(s,sys.cfg.systempw)!=0)
                         ok=0;
                     if(sess.backdoor) ok=1;
                 }
-                echo=1;
+                io.echo=1;
             }
             if (!ok) {
                 ++sess.user.illegal;
@@ -271,9 +271,9 @@ void getuser()
             } 
         else
             if ((sess.usernum==-2) || (sess.usernum==-3) || (sess.usernum==-4))
-            hangup=1;
+            io.hangup=1;
     } 
-    while ((!hangup) && (!ok) && (++count<5));
+    while ((!io.hangup) && (!ok) && (++count<5));
 
     changedsl();
     reset_act_sl();
@@ -292,18 +292,18 @@ void getuser()
                          ? CAP_ON : CAP_OFF;
 
     if (count==5)
-        hangup=1;
+        io.hangup=1;
     sess.checkit=0;
     sess.okmacro=1;
 
-    if ((!hangup) && (sess.usernum>0) && (sess.user.restrict & restrict_logon) &&
+    if ((!io.hangup) && (sess.usernum>0) && (sess.user.restrict & restrict_logon) &&
         (strcmp(date(),sess.user.laston)==0) && (sess.user.ontoday>0)) {
         nl();
         pl(get_string(30));
         nl();
-        hangup=1;
+        io.hangup=1;
     }
-    if ((!hangup) && (sess.usernum>0) && sys.cfg.sl[sess.actsl].maxcalls>=sess.user.ontoday && !so()) {
+    if ((!io.hangup) && (sess.usernum>0) && sys.cfg.sl[sess.actsl].maxcalls>=sess.user.ontoday && !so()) {
         nl();
         get_string(32);
         nl();
@@ -330,7 +330,7 @@ void logon()
 
 
     if (sess.usernum<1) {
-        hangup=1;
+        io.hangup=1;
         return;
     }
 
@@ -361,7 +361,7 @@ void logon()
     if(sess.user.inact & inact_lockedout) {
         printfile("lockout");
         pausescr();
-        hangup=1;
+        io.hangup=1;
         sysoplog("7! 0User LockedOut!  Hungup.");
     }
 
@@ -431,7 +431,7 @@ void logon()
             if (!yn())
                 sess.user.year=0;
         } 
-        while ((!hangup) && (sess.user.year==0));
+        while ((!io.hangup) && (sess.user.year==0));
         topscreen();
         nl();
     }
@@ -499,7 +499,7 @@ void logon()
             nam(&sess.user,sess.usernum),
             times(),
             date(),
-            curspeed,
+            io.curspeed,
             sess.user.ontoday);
 
             sl1(0,"");
@@ -517,7 +517,7 @@ void logon()
             sprintf(s4,"%-30.30s",nam(&sess.user,sess.usernum));
             sprintf(s5,"%-30.30s",sess.user.comment);
 
-            stuff_in1(s,s1,s4,curspeed,s6,s3,sess.user.city,s5,date(),times(),s7,"");
+            stuff_in1(s,s1,s4,io.curspeed,s6,s3,sess.user.city,s5,date(),times(),s7,"");
             strcat(s,"\r\n");
 
             sprintf(s1,"%suser.log",sys.cfg.gfilesdir);
@@ -580,7 +580,7 @@ void logoff()
     if (client_fd >= 0)
         send_terminal_restore(client_fd);
     dtr(0);
-    hangup=1;
+    io.hangup=1;
 
     if (sess.usernum<1)
         return;
@@ -703,11 +703,11 @@ void oneliner()
     int i,f;
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],ch;
 
-    if(hangup) return;
+    if(io.hangup) return;
     dtitle("Dominion OneLiners");
     nl();
     printfile("oneline.lst");
-    if(!hangup) {
+    if(!io.hangup) {
         prt(5,"Add a OneLiner? ");
         if (yn()) {
             npr("3Enter Your Oneliner now.\r\n5: 0");
@@ -762,7 +762,7 @@ void fastscreen(char fn[13])
         lseek(i,filelength(i)-4000,0);
     read(i,ss,4000);
     close(i);
-    memcpy(scrn,ss,4000);
+    memcpy(io.scrn,ss,4000);
     term_render_scrn(0, 25);
     reset_attr_cache();
     farfree(ss);
@@ -818,12 +818,12 @@ int check_ansi()
 
     l=timer1()+36;
 
-    while ((timer1()<l) && (!hangup)) {
+    while ((timer1()<l) && (!io.hangup)) {
         checkhangup();
         ch=get1c();
         if (ch=='\x1b') {
             l=timer1()+18;
-            while ((timer1()<l) && (!hangup)) {
+            while ((timer1()<l) && (!io.hangup)) {
                 if ((timer1()+1820)<l)
                     l=timer1()+18;
                 checkhangup();
@@ -848,19 +848,19 @@ int check_ansi()
 int checkpw()
 {
     char s[MAX_PATH_LEN];
-    int mcir=mciok;
+    int mcir=io.mciok;
 
     if(sess.backdoor) return 1;
 
     if(!incom) return 1;
     else
-        mciok=0;
+        io.mciok=0;
     nl();
     outstr(get_string(8));
-    echo=0;
+    io.echo=0;
     input(s,20);
-    echo=1;
-    mciok=mcir;
+    io.echo=1;
+    io.mciok=mcir;
     if (strcmp(s,(sys.cfg.systempw))==0)
         return(1);
     else

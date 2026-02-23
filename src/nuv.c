@@ -193,7 +193,7 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
             else nl();
         }*/
 
-    while(!done&&!hangup) {
+    while(!done&&!io.hangup) {
         print_nuv(vn);
 
         if(vv!=0) {
@@ -360,7 +360,7 @@ void nuv(void)
     }
 
 
-    while(!done&&!hangup) {
+    while(!done&&!io.hangup) {
         outchr(12);
         npr("5Number of New Users: 2%d",cnt);
         nl();
@@ -398,7 +398,7 @@ void nuv(void)
             i=0;
             sh=0;
             done1=0;
-            while (i < cnt &&!hangup&&!done1) {
+            while (i < cnt &&!io.hangup&&!done1) {
                 read_nuv(i,"nuv.dat",&newuser);
                 nl();
                 if (!avoted(i)) {

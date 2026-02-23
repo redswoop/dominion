@@ -92,18 +92,18 @@ int print_extended(char *fn, int *abort, unsigned char numlist, int indent)
     int next=0;
     unsigned char numl=0;
     int cpos=0;
-    char ch,s[MAX_PATH_LEN],s1[10],col=curatr;
-    int i,mcih=mciok;
+    char ch,s[MAX_PATH_LEN],s1[10],col=io.curatr;
+    int i,mcih=io.mciok;
 
-    mciok=0;
+    io.mciok=0;
     nl();
 
     ss=read_extended_description(fn);
     if (ss) {
         ch=10;
         while ((ss[cpos]) && (!(*abort)) && (numl<numlist)) {
-            if(lines_listed>screenlinest) {
-                lines_listed=0;
+            if(io.lines_listed>io.screenlinest) {
+                io.lines_listed=0;
                 pauseline(0,abort);
             }
             if ((ch==10) && (indent)) {
@@ -114,7 +114,7 @@ int print_extended(char *fn, int *abort, unsigned char numlist, int indent)
                         s[i]=32;
                     s[INDENTION]=0;
                 }
-                if (okansi()) makeansi(col,s1,curatr); else s1[0]=0;
+                if (okansi()) makeansi(col,s1,io.curatr); else s1[0]=0;
                 outstr(s1);
                 osan(s,abort,&next);
             }
@@ -132,7 +132,7 @@ int print_extended(char *fn, int *abort, unsigned char numlist, int indent)
             nl();
     }
     farfree(ss);
-    mciok=mcih;
+    io.mciok=mcih;
     return(numl);
 }
 
@@ -304,7 +304,7 @@ int finddup(char *fn,int quiet)
         nl();
     }
     closedl();
-    for (i=0; (i<sys.num_dirs) && (!hangup);i++) {
+    for (i=0; (i<sys.num_dirs) && (!io.hangup);i++) {
         dliscan1(i);
         for(i1=1;i1<=sess.numf;i1++) {
             SETREC(i1);
@@ -329,7 +329,7 @@ void verify_hangup()
     if(i<=0) {
         nl();
         npr("Automatic Logoff Time Expired, Disconnecting");
-        hangup=1;
+        io.hangup=1;
         logtypes(3,"Automatic Logoff Time Expired, System Disconnected");
     }
 }
@@ -346,7 +346,7 @@ void listbatch()
     sess.numbatch,sess.batchsize,ctim(sess.batchtime));
     dtitle(s);
     nl();
-    for (i=0; (i<sess.numbatch) && (!abort) && (!hangup); i++) {
+    for (i=0; (i<sess.numbatch) && (!abort) && (!io.hangup); i++) {
         sess.batch.batchdesc[0]=0;
         batrec(1,i);
         if (sess.batch.sending) {

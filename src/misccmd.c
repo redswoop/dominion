@@ -218,7 +218,7 @@ void list_users()
     npr("0%-30s 1[0%-40s1]\r\n","Users Name","Comment");
     abort=0;
     num=0;
-    for (i=0; (i<userdb_user_count()) && (!abort) && (!hangup); i++) {
+    for (i=0; (i<userdb_user_count()) && (!abort) && (!io.hangup); i++) {
         smalrec sr;
         userdb_get_entry(i, &sr);
         userdb_load(sr.number,&u);
@@ -330,7 +330,7 @@ void add_time(int limit)
     inputl(s,3);
     minutes = atoi(s);
     if (minutes<1) return;
-    if (hangup) return;
+    if (io.hangup) return;
     if (minutes > (int)((nsl() - 20.0)/60.0)) {
         nl();
         prt(7, "You do not have enough time left to deposit that much.");
@@ -380,7 +380,7 @@ void remove_time()
     minutes = atoi(s);
     if (minutes<1) return;
 
-    if (hangup) return;
+    if (io.hangup) return;
     if (minutes > sess.user.timebank) {
         nl(); 
         nl();
@@ -435,7 +435,7 @@ void bank2(int limit)
             break;
         }
     } 
-    while ((!hangup) && (!done));
+    while ((!io.hangup) && (!done));
     nl();
 }
 

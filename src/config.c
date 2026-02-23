@@ -20,12 +20,12 @@ static auto& sess = Session::instance();
 
 #else
 
-int mciok;
+int io.mciok;
 configrec sys.cfg;
 niftyrec sys.nifty;
 xarcrec sys.xarc[8];
 
-int hangup=0;
+int io.hangup=0;
 
 unsigned char getkey()
 {
@@ -94,9 +94,9 @@ void bits(char *msg,int byte,int bit)
 
 void getselect(char *s,int row,int col,int len,int lc)
 {
-    int i,mcik=mciok;
+    int i,mcik=io.mciok;
 
-    mciok=0;
+    io.mciok=0;
 #ifndef DOS
     npr("[%d;%dH",row+1,col+1);
     for(i=0;i<len;i++) outchr(32);
@@ -108,16 +108,16 @@ void getselect(char *s,int row,int col,int len,int lc)
 #endif
     input1(s,len,lc,1);
 
-    mciok=mcik;
+    io.mciok=mcik;
 }
 
 void getselectt(unsigned short *i,int row,int col,int len)
 {
     unsigned int i1;
     char s[41];
-    unsigned int h,m,mcik=mciok;
+    unsigned int h,m,mcik=io.mciok;
 
-    mciok=0;
+    io.mciok=0;
 #ifndef DOS
     npr("[%d;%dH",row+1,col+1);
     for(i1=0;i1<len;i1++) outchr(32);
@@ -133,7 +133,7 @@ void getselectt(unsigned short *i,int row,int col,int len)
 
     i1=h*60+m;
     *i=i1;
-    mciok=mcik;
+    io.mciok=mcik;
 }
 
 int getselectd(int row,int col,int len)
@@ -186,7 +186,7 @@ void setbit(int row, int col,char bits[16],int *byte)
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 }
 
 
@@ -360,7 +360,7 @@ void namepath()
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 }
 
 void flagged()
@@ -445,7 +445,7 @@ void flagged()
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
 }
 
@@ -551,7 +551,7 @@ void varible()
 
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
 }
 
@@ -597,7 +597,7 @@ void events()
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 }
 
 void modeminfo()
@@ -630,7 +630,7 @@ void modeminfo()
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 }
 
 void autoval()
@@ -689,7 +689,7 @@ void autoval()
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 }
 
 void archive()
@@ -766,7 +766,7 @@ void archive()
             sys.xarc[i1].nk2 = getselectd(14,16,2);
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
     sprintf(s,"%sarchive.dat",sys.cfg.datadir);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
@@ -856,7 +856,7 @@ void secleved()
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
 }
 
@@ -947,7 +947,7 @@ void nued()
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
 }
 
@@ -1036,7 +1036,7 @@ void acscfg(void)
             break;
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
     i=open(s,O_BINARY|O_RDWR|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
     write(i,&acs,sizeof(acsrec));
@@ -1054,9 +1054,9 @@ void defcoled()
     outchr(12);
     userdb_load(1,&u);
 
-    colblock=1;
+    io.colblock=1;
     change_colors(&u);
-    colblock=0;
+    io.colblock=0;
 }
 #endif
 
@@ -1144,7 +1144,7 @@ void main(int argc, char *argv[])
 #endif
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
 
     {
         cJSON *cfg_root = configrec_to_json(&sys.cfg, &sys.nifty);

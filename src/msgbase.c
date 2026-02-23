@@ -55,9 +55,9 @@ void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],c
 {
     FILE *f;
     char s[255],s1[255],s2[10],s3[10],s4[41];
-    int mcir=mciok;
+    int mcir=io.mciok;
 
-    mciok=1;
+    io.mciok=1;
     if(sys.subboards[sess.usub[subnum].subnum].attr & mattr_fidonet)
         sprintf(s,"%smsgnet%d.fmt",sys.cfg.gfilesdir,sess.user.mlisttype);
     else
@@ -98,7 +98,7 @@ void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],c
         pla(s1,abort);
     }
     fclose(f);
-    mciok=mcir;
+    io.mciok=mcir;
 }
 
 
@@ -109,7 +109,7 @@ void osan(char *s, int *abort, int *next)
 
     i=0;
     checkhangup();
-    if (hangup)
+    if (io.hangup)
         *abort=1;
     checka(abort,next,0);
     while ((s[i]) && (!(*abort))) {
@@ -207,10 +207,10 @@ void extract_out(char *b, long len, hdrinfo *hdr)
         else
             s2[0]=0;
     } 
-    while ((!hangup) && (s2[0]!=0) && (s1[0]==0));
+    while ((!io.hangup) && (s2[0]!=0) && (s1[0]==0));
     for(i=0;i<len;i++)
         if(b[i]==13||b[i]==(char)0xAE) b[i]=10;
-    if ((s1[0]) && (!hangup)) {
+    if ((s1[0]) && (!io.hangup)) {
         i=open(s2,O_RDWR | O_BINARY | O_CREAT , S_IREAD | S_IWRITE);
         if (filelength(i)) {
             lseek(i, -1L, SEEK_END);
@@ -391,7 +391,7 @@ void get_quote()
         }
         if (s[0]=='A') {
             sess.quoting=0;
-            charbufferpointer=0;
+            io.charbufferpointer=0;
             sess.bquote=1;
             sess.equote=i;
             return;
@@ -422,9 +422,9 @@ void get_quote()
                 i2=0;
         }
     } 
-    while ((!abort) && (!hangup) && (rl) && (!i2));
+    while ((!abort) && (!io.hangup) && (rl) && (!i2));
     sess.quoting=0;
-    charbufferpointer=0;
+    io.charbufferpointer=0;
     if ((i1>0) && (i2>=i1) && (i2<=i) && (i2-i1<50) && (rl)) {
         sess.bquote=i1;
         sess.equote=i2;

@@ -6,10 +6,10 @@
  * bbsutl2.c (reprint) and conio.c (set_protect) access them.
  *
  * NOT a leaf component — depends on BBS globals for MCI expansion,
- * echo/outcom flags, user color prefs, line counting, pausescr.
+ * io.echo/outcom flags, user color prefs, line counting, pausescr.
  * The point is to separate markup interpretation from Terminal rendering.
  *
- * change_color / change_ecolor remain in io_session_t because outs()
+ * io.change_color / io.change_ecolor remain in io_session_t because outs()
  * in conio.c uses them directly.
  */
 
@@ -28,7 +28,7 @@ extern char MCISTR[161];
  * Parser state — file-scoped statics
  *
  * Only state that is exclusively used by the output markup pipeline.
- * ansistr/ansiptr/oldx/oldy stay in io_session_t (shared with
+ * io.ansistr/io.ansiptr/io.oldx/io.oldy stay in io_session_t (shared with
  * bbsutl2.c reprint() and conio.c set_protect()).
  ***********************************************************************/
 
@@ -53,8 +53,8 @@ static int sp_mci = 0;
 /***********************************************************************
  * ANSI parser (extracted from execute_ansi in com.c)
  *
- * Uses ansistr/ansiptr from io_session_t (via macros in io_stream.h).
- * Uses oldx/oldy from io_session_t for cursor save/restore (ESC[s/u),
+ * Uses io.ansistr/io.ansiptr from io_session_t (via macros in io_stream.h).
+ * Uses io.oldx/io.oldy from io_session_t for cursor save/restore (ESC[s/u),
  * shared with set_protect() in conio.c.
  ***********************************************************************/
 
@@ -64,7 +64,7 @@ static void sp_execute_ansi(void)
     char cmd, temp[11];
     static const char *clrlst = "04261537";
 
-    if (ansistr[1] != '[') {
+    if (io.ansistr[1] != '[') {
         /* Not a CSI sequence — ignore */
     }
     else {
@@ -72,16 +72,16 @@ static void sp_execute_ansi(void)
         ptr = 2;
         for (count = 0; count < 10; count++)
             args[count] = temp[count] = 0;
-        cmd = ansistr[ansiptr - 1];
-        ansistr[ansiptr - 1] = 0;
-        while ((ansistr[ptr]) && (argptr<10) && (tempptr<10)) {
-            if (ansistr[ptr] == ';') {
+        cmd = io.ansistr[io.ansiptr - 1];
+        io.ansistr[io.ansiptr - 1] = 0;
+        while ((io.ansistr[ptr]) && (argptr<10) && (tempptr<10)) {
+            if (io.ansistr[ptr] == ';') {
                 temp[tempptr] = 0;
                 tempptr = 0;
                 args[argptr++] = atoi(temp);
             }
             else
-                temp[tempptr++] = ansistr[ptr];
+                temp[tempptr++] = io.ansistr[ptr];
             ++ptr;
         }
         if (tempptr && (argptr<10)) {
@@ -108,11 +108,11 @@ static void sp_execute_ansi(void)
             movecsr(wherex() - args[0], wherey());
             break;
         case 's':
-            oldx = wherex();
-            oldy = wherey();
+            io.oldx = wherex();
+            io.oldy = wherey();
             break;
         case 'u':
-            movecsr(oldx, oldy);
+            movecsr(io.oldx, io.oldy);
             break;
         case 'J':
             if (args[0] == 2) {
@@ -137,23 +137,23 @@ static void sp_execute_ansi(void)
                 for (count = 0; count < argptr; count++)
                     switch (args[count]) {
                     case 0:
-                        curatr = 0x07;
+                        io.curatr = 0x07;
                         had_reset = 1;
                         break;
                     case 1:
-                        curatr = curatr | 0x08;
+                        io.curatr = io.curatr | 0x08;
                         break;
                     case 4:
                         break;
                     case 5:
-                        curatr = curatr | 0x80;
+                        io.curatr = io.curatr | 0x80;
                         break;
                     case 7:
-                        ptr = curatr & 0x77;
-                        curatr = (curatr & 0x88) | (ptr << 4) | (ptr >> 4);
+                        ptr = io.curatr & 0x77;
+                        io.curatr = (io.curatr & 0x88) | (ptr << 4) | (ptr >> 4);
                         break;
                     case 8:
-                        curatr = 0;
+                        io.curatr = 0;
                         break;
                     default:
                         if ((args[count] >= 30) && (args[count] <= 37))
@@ -164,7 +164,7 @@ static void sp_execute_ansi(void)
                 /* Force black background on TCP after SGR reset.
                  * ESC[0m on modern terminals resets to the terminal's
                  * default background, which may not be black. */
-                if (had_reset && outcom && (curatr & 0x70) == 0)
+                if (had_reset && outcom && (io.curatr & 0x70) == 0)
                     term_remote_write_raw("\x1b[40m");
 
                 /* Inject true color foreground to bypass terminal palette.
@@ -180,7 +180,7 @@ static void sp_execute_ansi(void)
                         {255,  85,  85}, {255,  85, 255},
                         {255, 255,  85}, {255, 255, 255},
                     };
-                    int fg = curatr & 0x0F;
+                    int fg = io.curatr & 0x0F;
                     char tc[24];
                     sprintf(tc, "\x1b[38;2;%d;%d;%dm",
                             cga_rgb[fg][0], cga_rgb[fg][1], cga_rgb[fg][2]);
@@ -190,7 +190,7 @@ static void sp_execute_ansi(void)
             break;
         }
     }
-    ansiptr = 0;
+    io.ansiptr = 0;
 }
 
 
@@ -269,7 +269,7 @@ void stream_putch(unsigned char c)
     }
 
     if (sp_ac == 2) {
-        curatr = c;
+        io.curatr = c;
         if (outcom)
             outcomch(c);
         sp_ac = 0;
@@ -279,23 +279,23 @@ void stream_putch(unsigned char c)
     /* --- MCI expansion: backtick + letter --- */
     if (sp_mci) {
         sp_mci = 0;
-        if (mciok) {
+        if (io.mciok) {
             setmci(c);
             outstr(MCISTR);
             return;
         }
     }
 
-    /* --- change_color / change_ecolor (state in io_session_t) --- */
-    if (change_color) {
-        change_color = 0;
+    /* --- io.change_color / io.change_ecolor (state in io_session_t) --- */
+    if (io.change_color) {
+        io.change_color = 0;
         if ((c >= '0') && (c <= '9'))
             ansic(c - '0');
         return;
     }
 
-    if (change_ecolor) {
-        change_ecolor = 0;
+    if (io.change_ecolor) {
+        io.change_ecolor = 0;
         if ((c >= '0') && (c <= '9'))
             ansic(c - '0' + 10);
         return;
@@ -303,12 +303,12 @@ void stream_putch(unsigned char c)
 
     /* --- Trigger characters --- */
     if (c == 3) {
-        change_color = 1;
+        io.change_color = 1;
         return;
     }
 
     if (c == 14) {
-        change_ecolor = 1;
+        io.change_ecolor = 1;
         return;
     }
 
@@ -318,50 +318,50 @@ void stream_putch(unsigned char c)
     }
 
     if (c == '`') {
-        if (mciok && !sp_mci) {
+        if (io.mciok && !sp_mci) {
             sp_mci = 1;
             return;
         }
     }
 
     if (c == '|') {
-        if (mciok) {
+        if (io.mciok) {
             sp_pipe = 1;
             return;
         }
     }
 
     if (c == 151) {
-        if (mciok) {
+        if (io.mciok) {
             sp_ac = 100;
             return;
         }
     }
 
     /* --- End-of-line color reset --- */
-    if ((c == 10) && endofline[0]) {
-        outstr(endofline);
-        endofline[0] = 0;
+    if ((c == 10) && io.endofline[0]) {
+        outstr(io.endofline);
+        io.endofline[0] = 0;
     }
 
-    /* --- ANSI accumulation (ansistr/ansiptr in io_session_t) --- */
-    if (ansiptr) {
+    /* --- ANSI accumulation (io.ansistr/io.ansiptr in io_session_t) --- */
+    if (io.ansiptr) {
         if (outcom && c != 9)
-            outcomch(echo ? c : sys.nifty.echochar);
-        ansistr[ansiptr++] = c;
-        ansistr[ansiptr] = 0;
+            outcomch(io.echo ? c : sys.nifty.echochar);
+        io.ansistr[io.ansiptr++] = c;
+        io.ansistr[io.ansiptr] = 0;
         if (((c < '0' || c > '9') && c != '[' && c != ';') ||
-            ansistr[1] != '[' || ansiptr > 75)
+            io.ansistr[1] != '[' || io.ansiptr > 75)
             sp_execute_ansi();
         return;
     }
 
     if (c == 27) {
         if (outcom)
-            outcomch(echo ? c : sys.nifty.echochar);
-        ansistr[0] = 27;
-        ansiptr = 1;
-        ansistr[ansiptr] = 0;
+            outcomch(io.echo ? c : sys.nifty.echochar);
+        io.ansistr[0] = 27;
+        io.ansiptr = 1;
+        io.ansistr[io.ansiptr] = 0;
         return;
     }
 
@@ -384,7 +384,7 @@ void stream_reset(void)
     sp_mci = 0;
 
     /* These live in io_session_t (shared with other modules) */
-    ansiptr = 0;
-    change_color = 0;
-    change_ecolor = 0;
+    io.ansiptr = 0;
+    io.change_color = 0;
+    io.change_ecolor = 0;
 }

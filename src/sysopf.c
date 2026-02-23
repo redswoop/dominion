@@ -84,7 +84,7 @@ void zlog()
     read(f,(void *)&z,sizeof(zlogrec));
     pla("0  Date     Calls  Active   Posts   Email   Fback    U/L   D/L   %Act   T/user",&abort);
     pla("7��������   �����  ������   �����   �����   �����    ���   ���   �����  ������0",&abort);
-    while ((i<230) && (!abort) && (!hangup) && (z.date[0]!=0)) {
+    while ((i<230) && (!abort) && (!io.hangup) && (z.date[0]!=0)) {
         if (z.calls)
             i1=z.active/z.calls;
         else

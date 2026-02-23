@@ -77,7 +77,7 @@ void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc);
 int ynn(int pos);
 int ny();
 int yn();
-char nek(char *s, int f);     /* next-key with echo */
+char nek(char *s, int f);     /* next-key with io.echo */
 char onek(char *s);
 
 

@@ -125,7 +125,7 @@ int list_arc_out(char *fn, char *dir)
                 break;
             }
         } 
-        while(!done&&!hangup);
+        while(!done&&!io.hangup);
     } 
     else if(exist(s1)) {
         npr("\r\nUnknown Archive Format: %s\r\n",fn);
@@ -263,7 +263,7 @@ void arc_cl(int type)
             i=nrecno(s,i);
         }
     } 
-    while ((i>0) && (!hangup) && (!abort) &&!l);
+    while ((i>0) && (!io.hangup) && (!abort) &&!l);
     closedl();
 }
 

@@ -73,7 +73,7 @@ void cr()
 void clrscrb()
 {
     term_clear_screen();
-    lines_listed=0;
+    io.lines_listed=0;
 }
 
 
@@ -96,7 +96,7 @@ void out1ch(unsigned char ch)
 {
     if(sess.doinghelp) return;
 
-    if (x_only) {
+    if (io.x_only) {
         if (ch>31) {
             wx=(wx+1)%80;
         }
@@ -142,27 +142,27 @@ void outs(char *s)
     for (i=0; s[i]!=0; i++) {
         ch=s[i];
 
-        if (change_color) {
-            change_color = 0;
+        if (io.change_color) {
+            io.change_color = 0;
             if ((ch >= '0') && (ch <= '9'))
                 ansic(ch - '0');
             break;
         }
 
         if (ch == 3) {
-            change_color = 1;
+            io.change_color = 1;
             break;
         }
 
-        if (change_ecolor) {
-            change_ecolor = 0;
+        if (io.change_ecolor) {
+            io.change_ecolor = 0;
             if ((ch >= '0') && (ch <= '9'))
                 ansic(ch - '0'+10);
             break;
         }
 
         if (ch == 14) {
-            change_ecolor = 1;
+            io.change_ecolor = 1;
             break;
         }
         out1ch(ch);
@@ -194,52 +194,52 @@ void copy_line(char *s, char *b, long *ptr, long len)
 
 void set_protect(int l)
 {
-    if (l!=topline) {
-        if (l>topline) {
-            if ((wherey()+topline-l) < 0) {
+    if (l!=io.topline) {
+        if (l>io.topline) {
+            if ((wherey()+io.topline-l) < 0) {
                 /* Scroll down to make room for topscreen */
-                SCROLL_UP(topline, screenbottom, l-topline);
-                movecsr(wherex(),wherey()+l-topline);
+                SCROLL_UP(io.topline, io.screenbottom, l-io.topline);
+                movecsr(wherex(),wherey()+l-io.topline);
             }
             else {
-                oldy += (topline-l);
+                io.oldy += (io.topline-l);
             }
         }
         else {
-            SCROLL_UP(l,topline-1,0);
-            oldy += (topline-l);
+            SCROLL_UP(l,io.topline-1,0);
+            io.oldy += (io.topline-l);
         }
     }
-    topline=l;
+    io.topline=l;
     if (using_modem)
-        screenlinest=sess.user.screenlines;
+        io.screenlinest=sess.user.screenlines;
     else
-        screenlinest=defscreenbottom+1-topline;
+        io.screenlinest=io.defscreenbottom+1-io.topline;
 }
 
 
 
 void savescreen(screentype *s)
 {
-    if (scrn && s->scrn1)
-        memmove(s->scrn1,scrn,screenlen);
+    if (io.scrn && s->scrn1)
+        memmove(s->scrn1,io.scrn,io.screenlen);
     s->x1=wherex();
     s->y1=wherey();
-    s->topline1=topline;
-    s->curatr1=curatr;
+    s->topline1=io.topline;
+    s->curatr1=io.curatr;
 }
 
 
 void restorescreen(screentype *s)
 {
-    if (scrn && s->scrn1)
-        memmove(scrn,s->scrn1,screenlen);
-    topline=s->topline1;
-    curatr=s->curatr1;
+    if (io.scrn && s->scrn1)
+        memmove(io.scrn,s->scrn1,io.screenlen);
+    io.topline=s->topline1;
+    io.curatr=s->curatr1;
 
-    /* Redraw screen from scrn buffer via Terminal */
-    if (scrn) {
-        term_render_scrn(0, screenbottom + 1);
+    /* Redraw screen from io.scrn buffer via Terminal */
+    if (io.scrn) {
+        term_render_scrn(0, io.screenbottom + 1);
         reset_attr_cache();
     }
     movecsr(s->x1,s->y1);
@@ -254,13 +254,13 @@ void temp_cmd(char *s, int ccc)
 
     pr_wait(1);
     savescreen(&sess.screensave);
-    i=topline;
-    topline=0;
-    curatr=0x07;
+    i=io.topline;
+    io.topline=0;
+    io.curatr=0x07;
     clrscrb();
     runprog(s,ccc);
     restorescreen(&sess.screensave);
-    topline=i;
+    io.topline=i;
     pr_wait(0);
 }
 
@@ -414,12 +414,12 @@ void skey(unsigned char ch)
                 }
                 break;
             case 62: /* F4 */
-                chatcall=0;
+                io.chatcall=0;
                 sess.chatreason[0]=0;
                 topscreen();
                 break;
             case 63: /* F5 */
-                hangup=1;
+                io.hangup=1;
                 dtr(0);
                 break;
             case 64: /* F6 */
@@ -451,17 +451,17 @@ void skey(unsigned char ch)
                 break;
             case 68: /* lF10 */
                 if(sess.doinghelp) sess.doinghelp=0;
-                if (chatting==0)
+                if (io.chatting==0)
                     chat1("",sys.cfg.sysconfig & sysconfig_2_way);
                 else
-                    chatting=0;
+                    io.chatting=0;
                 break;
             case 46: /* HOME */
-                if (chatting) {
-                    if (chat_file)
-                        chat_file=0;
+                if (io.chatting) {
+                    if (io.chat_file)
+                        io.chat_file=0;
                     else
-                        chat_file=1;
+                        io.chat_file=1;
                 }
                 break;
             case 86:
@@ -473,7 +473,7 @@ void skey(unsigned char ch)
                 for (i=0; i<i1; i++)
                     outchr(rand() % 256);
                 if(ch==88) {
-                    hangup=1;
+                    io.hangup=1;
                     dtr(0);
                 }
                 break;
@@ -482,17 +482,17 @@ void skey(unsigned char ch)
                 nl();
                 pl("Call back later when you are there.");
                 nl();
-                hangup=1;
+                io.hangup=1;
                 dtr(0);
                 break;
             case 103: /* Ctrl-F10 */
-                if (chatting==0)
+                if (io.chatting==0)
                     chat1("",!(sys.cfg.sysconfig & sysconfig_2_way));
                 else
-                    chatting=0;
+                    io.chatting=0;
                 break;
             case 84: /* Shift-F1 */
-                set_global_handle(!global_handle);
+                set_global_handle(!io.global_handle);
                 topscreen();
                 break;
             case 93: /* Shift-F10 */
@@ -519,28 +519,28 @@ void skey(unsigned char ch)
                 restorescreen(&sess.screensave);
                 break;
             case 72:
-                strcpy(charbuffer,";[A");
-                charbufferpointer=1;
+                strcpy(io.charbuffer,";[A");
+                io.charbufferpointer=1;
                 break;
             case 80:
-                strcpy(charbuffer,";[B");
-                charbufferpointer=1;
+                strcpy(io.charbuffer,";[B");
+                io.charbufferpointer=1;
                 break;
             case 75:
-                strcpy(charbuffer,";[D");
-                charbufferpointer=1;
+                strcpy(io.charbuffer,";[D");
+                io.charbufferpointer=1;
                 break;
             case 77:
-                strcpy(charbuffer,";[C");
-                charbufferpointer=1;
+                strcpy(io.charbuffer,";[C");
+                io.charbufferpointer=1;
                 break;
             case 71:
-                strcpy(charbuffer,";[H");
-                charbufferpointer=1;
+                strcpy(io.charbuffer,";[H");
+                io.charbufferpointer=1;
                 break;
             case 79:
-                strcpy(charbuffer,";[K");
-                charbufferpointer=1;
+                strcpy(io.charbuffer,";[K");
+                io.charbufferpointer=1;
                 break;
             case 35:
                 if(!sess.doinghelp) {
@@ -580,9 +580,9 @@ void tleft(int dot)
 
     cx=wherex();
     cy=wherey();
-    ctl=topline;
-    topline=0;
-    cc=curatr;
+    ctl=io.topline;
+    io.topline=0;
+    cc=io.curatr;
     nsln=nsl();
 
     if (sess.topdata) {
@@ -626,7 +626,7 @@ void tleft(int dot)
                 break;
 
             case 3:
-                if (global_handle)
+                if (io.global_handle)
                     strcpy(s,arg);
                 break;
 
@@ -655,8 +655,8 @@ void tleft(int dot)
             cprintf(s);
         }
         textattr(15);
-        topline=ctl;
-        curatr=cc;
+        io.topline=ctl;
+        io.curatr=cc;
         movecsr(cx,cy);
         if (f) fclose(f);
     }
@@ -671,7 +671,7 @@ void tleft(int dot)
                 if(nsln>0.0) return;
             }
             printfile("outtime");
-            hangup=1;
+            io.hangup=1;
         }
 }
 
@@ -703,7 +703,7 @@ void topscreen(void)
 
     fgets(s,81,f);
     linelen=atoi(s);
-    topline=linelen;
+    io.topline=linelen;
 
     set_protect(linelen);
 
@@ -711,16 +711,16 @@ void topscreen(void)
 
     cx=wherex();
     cy=wherey();
-    ctl=topline;
-    cc=curatr;
-    topline=0;
+    ctl=io.topline;
+    cc=io.curatr;
+    io.topline=0;
     movecsr(0,3);
 
 /* asm: ax,0x1003 */
 /* asm: bl,0x0 */
 /* asm: int 0x10 */
 
-    /* Read topscreen binary into scrn buffer and render via Terminal */
+    /* Read topscreen binary into io.scrn buffer and render via Terminal */
     sprintf(s,"%stops%d.bin",sys.cfg.gfilesdir,sess.topdata);
     i=open(s,O_RDWR|O_BINARY);
     if (i >= 0) {
@@ -728,7 +728,7 @@ void topscreen(void)
         if (b) {
             read(i,b,linelen*160);
             close(i);
-            memmove(&scrn[0],b,linelen*160);
+            memmove(&io.scrn[0],b,linelen*160);
             farfree(b);
             term_render_scrn(0, linelen);
         } else {
@@ -914,9 +914,9 @@ void topscreen(void)
 
     fclose(f);
 
-    topline=ctl;
+    io.topline=ctl;
     movecsr(cx,cy);
-    curatr=cc;
+    io.curatr=cc;
     tleft(0);
     reset_attr_cache();
 }

@@ -23,18 +23,18 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
     unsigned char ch;
 
 
-    cm=chatting;
+    cm=io.chatting;
     begx=wherex();
     if (rollover[0]!=0) {
-        if (charbufferpointer) {
+        if (io.charbufferpointer) {
             strcpy(s1,rollover);
-            strcat(s1,&charbuffer[charbufferpointer]);
-            strcpy(&charbuffer[1],s1);
-            charbufferpointer=1;
+            strcat(s1,&io.charbuffer[io.charbufferpointer]);
+            strcpy(&io.charbuffer[1],s1);
+            io.charbufferpointer=1;
         } 
         else {
-            strcpy(&charbuffer[1],rollover);
-            charbufferpointer=1;
+            strcpy(&io.charbuffer[1],rollover);
+            io.charbufferpointer=1;
         }
         rollover[0]=0;
     }
@@ -43,8 +43,8 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
     side = 0;
     do {
         ch=getkey();
-        if(ch==17) chatting=0;
-        if (lastcon)
+        if(ch==17) io.chatting=0;
+        if (io.lastcon)
         {
             if (wherey() == 11)
             {
@@ -111,7 +111,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
             ansic(5);
         }
         if (cm)
-            if (chatting==0)
+            if (io.chatting==0)
                 ch=13;
         if ((ch>=32)) {
             if (side==0)
@@ -122,7 +122,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                     {
                         side0[wherey()][cp0++]=ch;
                         if(sys.nifty.chatcolor==1) {
-                            if (okansi()) makeansi(sys.scfilt[ch],s2,curatr); else s2[0]=0;
+                            if (okansi()) makeansi(sys.scfilt[ch],s2,io.curatr); else s2[0]=0;
                             outstr(s2);
                         }
                         if(sys.nifty.chatcolor==2) {
@@ -170,7 +170,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                     {
                         side1[wherey()-13][cp1++]=ch;
                         if(sys.nifty.chatcolor==1) {
-                            if (okansi()) makeansi(sys.cfilt[ch],s2,curatr); else s2[0]=0;
+                            if (okansi()) makeansi(sys.cfilt[ch],s2,io.curatr); else s2[0]=0;
                             outstr(s2);
                         }
                         if(sys.nifty.chatcolor==2) {
@@ -214,7 +214,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
         else
             switch(ch) {
             case 7:
-                if ((chatting) && (outcom))
+                if ((io.chatting) && (outcom))
                     outcomch(7);
                 break;
             case 13: /* C/R */
@@ -400,7 +400,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                 break;
             }
     } 
-    while ((done==0) && (hangup==0));
+    while ((done==0) && (io.hangup==0));
 
     if (ch!=13)
     {
@@ -465,19 +465,19 @@ void chat1(char *chatline, int two_way)
     char cl[MAX_PATH_LEN],xl[MAX_PATH_LEN],s[161],s1[161],atr[MAX_PATH_LEN],s2[MAX_PATH_LEN],cc;
     int i,i1,cf,oe,i2;
     double tc;
-    int mcir=mciok;
+    int mcir=io.mciok;
 
-    mciok=1;
+    io.mciok=1;
 
-    chatcall=0;
-    chatting=1;
+    io.chatcall=0;
+    io.chatting=1;
     tc=timer();
     cf=0;
 
     savel(cl,atr,xl,&cc);
     s1[0]=0;
-    oe=echo;
-    echo=1;
+    oe=io.echo;
+    io.echo=1;
     nl();
     nl();
     tempdata=sess.topdata;
@@ -497,7 +497,7 @@ void chat1(char *chatline, int two_way)
         clrscrb();
         cp0=0;
         cp1=0;
-        if (defscreenbottom==24) {
+        if (io.defscreenbottom==24) {
             sess.topdata=0;
             topscreen();
         }
@@ -523,7 +523,7 @@ void chat1(char *chatline, int two_way)
     readfilter("user.flt","sysop.flt");
 
     if(!two_way)
-        chat_file=sys.nifty.nifstatus & nif_autochat;
+        io.chat_file=sys.nifty.nifstatus & nif_autochat;
 
     do {
 #ifdef TWO_WAY
@@ -534,7 +534,7 @@ void chat1(char *chatline, int two_way)
             i=ainli(s,s1,160,1,2,0);
         switch(i) {
         case -1: 
-            chatting=0; 
+            io.chatting=0; 
             break;
         case -2: 
             chatsound(); 
@@ -548,7 +548,7 @@ void chat1(char *chatline, int two_way)
         case -5: 
             nl(); 
             outstr("5Sure? "); 
-            hangup=yn(); 
+            io.hangup=yn(); 
             break;
         case -6: 
             for(i=0;i<5;i++) outchr(7); 
@@ -560,7 +560,7 @@ void chat1(char *chatline, int two_way)
             else pl("Bad");
         }
 
-        if ((chat_file) && (!two_way)) {
+        if ((io.chat_file) && (!two_way)) {
             if (cf==0) {
                 if (!two_way)
                     outs("-] Chat file opened.\r\n");
@@ -591,13 +591,13 @@ void chat1(char *chatline, int two_way)
             if (!two_way)
                 outs("-] Chat file closed.\r\n");
         }
-        if (hangup)
-            chatting=0;
+        if (io.hangup)
+            io.chatting=0;
     } 
-    while (chatting);
-    if (chat_file) {
+    while (io.chatting);
+    if (io.chat_file) {
         close(cf);
-        chat_file=0;
+        io.chat_file=0;
     }
     ansic(0);
 
@@ -608,7 +608,7 @@ void chat1(char *chatline, int two_way)
     nl();
     pl(get_string(7));
     nl();
-    chatting=0;
+    io.chatting=0;
     tc=timer()-tc;
     if (tc<0)
         tc += 86400.0;
@@ -616,9 +616,9 @@ void chat1(char *chatline, int two_way)
     sess.topdata=tempdata;
     if (sess.useron)
         topscreen();
-    echo=oe;
+    io.echo=oe;
     restorel(cl,atr,xl,&cc);
-    mciok=mcir;
+    io.mciok=mcir;
 }
 
 
@@ -635,15 +635,15 @@ void reqchat1(char reason[MAX_PATH_LEN])
     if (restrict_chat & sess.user.restrict)
         ok=0;
     if (ok) {
-        if (chatcall) {
-            chatcall=0;
+        if (io.chatcall) {
+            io.chatcall=0;
             pl("Chat call Deactivated");
             topscreen();
         } 
         else {
             inputdat(reason,s,70,1);
             if (s[0]) {
-                chatcall=1;
+                io.chatcall=1;
                 strcpy(sess.chatreason,s);
                 nl();
                 sysoplog(sess.chatreason);
@@ -725,7 +725,7 @@ void reqchat(char reason[MAX_PATH_LEN])
         logtypes(3,"Chat 2[2%s2]",sess.chatreason);
         printfile("nosysop");
         if(!ok) {
-            chatcall=0;
+            io.chatcall=0;
             topscreen();
         }
         if(sess.usernum) {
@@ -778,7 +778,7 @@ void playmod(void)
     else
         dev=0;
     modvolume(vol,vol,vol,vol);
-    modsetup("chatcall.mod", 4, 0 ,mix, dev, &stat );
+    modsetup("io.chatcall.mod", 4, 0 ,mix, dev, &stat );
     i=0;
     do {
         wait1(15);

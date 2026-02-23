@@ -257,7 +257,7 @@ void modify_sub(int n)
             break;
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sys.subboards[n]=r;
     if (!sys.wfc)
         changedsl();
@@ -395,7 +395,7 @@ void boardedit()
             break;
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sprintf(s,"%ssubs.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f,(void *)&sys.subboards[0], sys.num_subs * sizeof(subboardrec));
@@ -504,7 +504,7 @@ void modify_conf(int n)
         }                                 
 
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sys.conf[n]=r;
     if (!sys.wfc)
         changedsl();
@@ -597,7 +597,7 @@ void confedit()
             break;
         }
     } 
-    while ((!done) && (!hangup));
+    while ((!done) && (!io.hangup));
     sprintf(s,"%sconf.dat",sys.cfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     write(f,(void *)&sys.conf[0], sys.num_conf * sizeof(confrec));

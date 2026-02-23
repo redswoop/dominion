@@ -6,7 +6,7 @@
  *
  * State sync: Terminal maintains its own topLine_, screenBottom_,
  * curatr_, cx_, cy_.  The BBS has parallel state in io_session_t
- * (via macros: topline, screenbottom, curatr).  During the transition,
+ * (via macros: io.topline, io.screenbottom, io.curatr).  During the transition,
  * the bridge functions that modify these states sync both directions.
  * Callers in conio.c/com.c push BBS state before calling, and pull
  * Terminal state after.  Eventually the BBS macros will read directly

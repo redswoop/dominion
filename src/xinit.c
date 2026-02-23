@@ -62,37 +62,37 @@ void init(int show)
     //  votingrec v;
 
     /* Allocate screen buffer (80x25x2 = 4000 bytes, char+attr pairs) */
-    scrn=(char *)malloc(4000);
-    if (!scrn) {
+    io.scrn=(char *)malloc(4000);
+    if (!io.scrn) {
         printf("\n\nFailed to allocate screen buffer!\n\n");
         exit(1);
     }
-    memset(scrn, 0, 4000);
+    memset(io.scrn, 0, 4000);
 
-    defscreenbottom=24;
-    screenbottom=defscreenbottom;
-    screenlen=160*(screenbottom+1);
+    io.defscreenbottom=24;
+    io.screenbottom=io.defscreenbottom;
+    io.screenlen=160*(io.screenbottom+1);
 
     /* Initialize default text attribute to white-on-black */
-    curatr=0x07;
+    io.curatr=0x07;
 
     /* Initialize ncurses via Terminal class */
     nc_active = term_init_local();
-    if (scrn)
-        term_set_screen_buffer(scrn);
+    if (io.scrn)
+        term_set_screen_buffer(io.scrn);
     if (!nc_active)
         setvbuf(stdout, NULL, _IOLBF, 0);
-    term_raw_mode = 1;
+    io.term_raw_mode = 1;
 
     /* Bind Terminal state pointers to BBS io_session_t fields.
      * After this, both sides share the same memory — no sync needed. */
-    term_bind_state(&curatr, &topline, &screenbottom);
+    term_bind_state(&io.curatr, &io.topline, &io.screenbottom);
 
     if(!exist("exitdata.dom")) sys.restoring_shrink=0; 
     else sys.restoring_shrink=1;
     if (!sys.restoring_shrink&&!show) {
         clrscr();
-        memmove(scrn,ANSIHEADER,4000);
+        memmove(io.scrn,ANSIHEADER,4000);
         term_render_scrn(0, 25);
         gotoxy(1,12);
     }
@@ -102,14 +102,14 @@ void init(int show)
     sess.dlf=-1;
     sess.curlsub=-1;
     sess.curldir=-1;
-    oldx=0;
-    oldy=0;
+    io.oldx=0;
+    io.oldy=0;
     itimer();
     sess.use_workspace=0;
-    chat_file=0;
+    io.chat_file=0;
     sys.do_event=0;
     sess.sysop_alert=0;
-    global_handle=0;
+    io.global_handle=0;
 
 
     getdate(&today);
@@ -236,7 +236,7 @@ void init(int show)
     menudb_init(sys.cfg.menudir);
     sys.status.users = userdb_user_count();
 
-    sess.screensave.scrn1=(char *)mallocx(screenlen);
+    sess.screensave.scrn1=(char *)mallocx(io.screenlen);
 
     read_in_file("mnudata.dat",(sys.menus),50);
 
@@ -402,7 +402,7 @@ void init(int show)
         remove_from_temp("*.*",sys.cfg.batchdir,0);
     }
     if(!sys.restoring_shrink&&!show) sess.menuat[0]=0;
-    lecho=ok_local();
+    io.lecho=ok_local();
     sess.quote=NULL;
     sess.bquote=0;
     sess.equote=0;
@@ -436,7 +436,7 @@ void end_bbs(int lev)
     /* Restore terminal */
     term_shutdown();
     nc_active = 0;
-    term_raw_mode = 0;
+    io.term_raw_mode = 0;
 
     exit(lev);
 }

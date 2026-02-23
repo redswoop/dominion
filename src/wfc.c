@@ -37,7 +37,7 @@ int getcaller(void)
         sess.user.screenchars=80;
         sess.user.screenlines=25;
     }
-    screenlinest=defscreenbottom+1;
+    io.screenlinest=io.defscreenbottom+1;
     d=(1.0+timer()) / 102.723;
     d-=floor(d);
     d*=10000.0;
@@ -46,7 +46,7 @@ int getcaller(void)
     if (sys.tcp_port > 0 && ok_modem_stuff)
         initport(0);
     topit();
-    strcpy(curspeed,"KB");
+    strcpy(io.curspeed,"KB");
     do {
         sys.wfc=1;
         wfct();
@@ -274,7 +274,7 @@ int getcaller(void)
                     incom = 1;
                     outcom = 1;
                     sess.com_speed = sess.modem_speed = 38400;
-                    strcpy(curspeed, "TCP/IP");
+                    strcpy(io.curspeed, "TCP/IP");
                 }
             }
         } else if (!hold && !ok_modem_stuff) {
@@ -290,7 +290,7 @@ int getcaller(void)
     sess.okskey=1;
     if (!sys.endday) {
         clrscr();
-        cprintf("Connection Established at: %s\r\n",curspeed);
+        cprintf("Connection Established at: %s\r\n",io.curspeed);
     }
     sys.wfc=0;
     return 0;
@@ -317,9 +317,9 @@ void gotcaller(unsigned int ms, unsigned int cs)
         sess.user.screenchars=80;
         sess.user.screenlines=25;
     }
-    screenlinest=25;
+    io.screenlinest=25;
     clrscrb();
-    sprintf(s,"Connection Established at: %s\r\n",curspeed);
+    sprintf(s,"Connection Established at: %s\r\n",io.curspeed);
     outs(s);
     if(sess.already_on==2)
         using_modem=-1;
@@ -391,7 +391,7 @@ void wfcs(void)
     FILE *f;
     long l;
     int i,x,y,attr,type;
-    echo=1;
+    io.echo=1;
     clrscr();
     thing=timer();
 

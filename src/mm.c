@@ -238,8 +238,8 @@ void othercmd(char type,char ms[40])
             if(ms[c]==';') ms[c]=13;
         }
         ms[strlen(ms)+1]=13;
-        strcpy(charbuffer,&ms[0]);
-        charbufferpointer = 1;
+        strcpy(io.charbuffer,&ms[0]);
+        io.charbufferpointer = 1;
         break;
     case '1': 
         oneliner(); 
@@ -509,7 +509,7 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
             upload(ms); 
             break;
         case 'N': 
-            lines_listed=0;
+            io.lines_listed=0;
             nl();
             if(ms[1]=='?') {
                 p=strtok(ms,";");
@@ -724,7 +724,7 @@ void menuman(void)
     char avail[61];
     FILE *ff;
 
-    if(!usepldns&&!(sess.pp.attr & menu_popup)&&!charbufferpointer) {
+    if(!usepldns&&!(sess.pp.attr & menu_popup)&&!io.charbufferpointer) {
         nl();
         nl();
     }
@@ -735,7 +735,7 @@ void menuman(void)
     helpl=sess.user.helplevel;
     if(sess.pp.helplevel) helpl=sess.pp.helplevel-1;
 #ifdef PD
-    if(!usepldns&&!(sess.pp.attr & menu_popup)&&!charbufferpointer)
+    if(!usepldns&&!(sess.pp.attr & menu_popup)&&!io.charbufferpointer)
 #endif PD
         switch(helpl) {
         case 0: 
@@ -756,7 +756,7 @@ void menuman(void)
             break;
         }
 
-    if(chatcall&&sess.chatsoundon) chatsound();
+    if(io.chatcall&&sess.chatsoundon) chatsound();
     memset(s,0,40);
 #ifdef PD
     if((sess.pp.attr & menu_popup)&&okansi()) {
@@ -857,7 +857,7 @@ void menuman(void)
         else if((!strcmp(s,"GRAPHICS"))) ex("OP","2");
         else if((!strcmp(s,"CLS"))) {
             if(okansi()) {
-                makeansi(15, test, curatr);
+                makeansi(15, test, io.curatr);
                 outstr(test);
             }
             outchr(12);
@@ -870,9 +870,9 @@ void menuman(void)
         c=strlen(s);
         s[c]=13;
         s[c+1]=0;
-        strcpy(&charbuffer[1],&s[0]);
-        charbuffer[0]=';';
-        charbufferpointer = 1;
+        strcpy(&io.charbuffer[1],&s[0]);
+        io.charbuffer[0]=';';
+        io.charbufferpointer = 1;
     }
 
     else
@@ -880,7 +880,7 @@ void menuman(void)
         getcmdtype();
     } 
     else
-        if((!strcmp(s,"/OFF"))) hangup=1; 
+        if((!strcmp(s,"/OFF"))) io.hangup=1; 
     else
         if(s[0]=='?') { 
         if(helpl!=2) { 
@@ -891,7 +891,7 @@ void menuman(void)
     else
         handleinput(s,begx);
 
-    if(!charbufferpointer)
+    if(!io.charbufferpointer)
         nl();
 }
 
@@ -899,7 +899,7 @@ void handleinput(char *s,int begx)
 {
     int i,i1,c;
 
-    for(i=0;i<sess.maxcmd&&!hangup;i++) {
+    for(i=0;i<sess.maxcmd&&!io.hangup;i++) {
         c=slok(sess.tg[i].sl,0);
         if(!c)
             continue;

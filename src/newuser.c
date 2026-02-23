@@ -84,7 +84,7 @@ int check_name(char *nn)
 
     if(!ok) { 
         printfile("trashcan"); 
-        hangup=1; 
+        io.hangup=1; 
     }
 
     return(ok);
@@ -128,10 +128,10 @@ void input_name(char *namer)
             delay(200);
             ++count;
             if (count==5)
-                hangup=1;
+                io.hangup=1;
         }
     } 
-    while ((!ok) && (!hangup));
+    while ((!ok) && (!io.hangup));
 }
 
 void input_realname(char *namer)
@@ -152,7 +152,7 @@ void input_realname(char *namer)
 
         if (sess.user.realname[0]=='=') strcpy(sess.user.realname,namer);
     } 
-    while ((sess.user.realname[0]==0) && (!hangup));
+    while ((sess.user.realname[0]==0) && (!io.hangup));
 }
 
 void input_city()
@@ -167,7 +167,7 @@ void input_city()
         else outstr("3:0");
         inputl(s,35);
     } 
-    while(!s[0] && !hangup);
+    while(!s[0] && !io.hangup);
     strcpy(sess.user.street,s);
 
     nl();
@@ -180,7 +180,7 @@ void input_city()
         inputl(s,35);
         strcpy(sess.user.city,s);
     } 
-    while(!sess.user.city[0]&&!hangup);
+    while(!sess.user.city[0]&&!io.hangup);
 }
 
 void input_phone()
@@ -221,7 +221,7 @@ void input_phone()
             }
         }
     } 
-    while ((!ok) && (!hangup));
+    while ((!ok) && (!io.hangup));
 
 }
 
@@ -254,7 +254,7 @@ void input_age(userrec *u)
             ok=1;
         else ok=0;
     } 
-    while(!ok&&!hangup);
+    while(!ok&&!io.hangup);
 
     u->month=(unsigned char) m;
     u->day=(unsigned char) d;
@@ -294,9 +294,9 @@ void input_comptype()
             ok=0;
 
     } 
-    while ((!ok) && (!hangup));
+    while ((!ok) && (!io.hangup));
     sess.user.comp_type=ct-1;
-    if (hangup)
+    if (io.hangup)
         sess.user.comp_type=0;
 }
 
@@ -319,7 +319,7 @@ void input_screensize()
         else
             ok=1;
     } 
-    while ((!ok) && (!hangup));
+    while ((!ok) && (!io.hangup));
 
     do {
         nl();
@@ -335,11 +335,11 @@ void input_screensize()
         else
             ok=1;
     } 
-    while ((!ok) && (!hangup));
+    while ((!ok) && (!io.hangup));
 
     sess.user.screenchars=x;
     sess.user.screenlines=y;
-    screenlinest=y;
+    io.screenlinest=y;
 }
 
 void input_pw()
@@ -360,7 +360,7 @@ void input_pw()
         if (strlen(s)<3)
             ok=0;
     } 
-    while ((!ok) && (!hangup));
+    while ((!ok) && (!io.hangup));
     if (ok)
         strcpy(sess.user.pw,s);
     else
@@ -376,7 +376,7 @@ void newuser()
     long l1,l2;
     hdrinfo hdr;
 
-    sprintf(s,"7!! 0New User 4%s 0at 5%s0, %s Baud",date(),times(),curspeed);
+    sprintf(s,"7!! 0New User 4%s 0at 5%s0, %s Baud",date(),times(),io.curspeed);
     sl1(0,"");
     sl1(0,s);
     if (userdb_user_count()>=(int)sys.cfg.maxusers) {
@@ -384,14 +384,14 @@ void newuser()
         nl();
         pl("I'm sorry, but the system currently has the maximum number of users it can handle.");
         nl();
-        hangup=1;
+        io.hangup=1;
     }
     if (sys.cfg.closedsystem) {
         nl();
         nl();
         pl("I'm sorry, but the system is currently closed, and not accepting new users.");
         nl();
-        hangup=1;
+        io.hangup=1;
     }
     if ((sys.cfg.newuserpw[0]!=0) && (incom)) {
         nl();
@@ -408,9 +408,9 @@ void newuser()
                 sl1(0,s1);
             }
         } 
-        while ((!ok) && (!hangup) && (i++<4));
+        while ((!ok) && (!io.hangup) && (i++<4));
         if (!ok)
-            hangup=1;
+            io.hangup=1;
     }
 
     strcpy(sess.user.firston,date());
@@ -423,7 +423,7 @@ void newuser()
     strcpy(sess.user.pw,"");
 
     sess.user.screenlines=25;
-    screenlinest=25;
+    io.screenlinest=25;
 
     sess.user.inact=0;
     sess.user.defprot=0;
@@ -489,7 +489,7 @@ void newuser()
     setcolors(&sess.user);
     input_screensize();
 
-    if (!hangup) {
+    if (!io.hangup) {
         if (incom) {
             if (printfile("system")) sl1(0,"9# 0Aborted System Info Message!");
             pausescr();
@@ -500,7 +500,7 @@ void newuser()
         withansi=sess.user.sysstatus & sysstatus_ansi;
         if(withansi) {
             int saved_incom = incom;
-            mciok=0;
+            io.mciok=0;
             incom=0;
             printfile("newans.ans");
             incom=saved_incom;
@@ -520,7 +520,7 @@ void newuser()
         sess.user.lastdir=0;
     }
 
-    if (!hangup)
+    if (!io.hangup)
     do {
         nl();
         if(!withansi) {
@@ -575,7 +575,7 @@ void newuser()
             break;
         }
     } 
-    while ((!ok) && (!hangup));
+    while ((!ok) && (!io.hangup));
 
     outchr(12);
     /* Set sensible defaults — skip the barrage of post-reg questions.
@@ -584,7 +584,7 @@ void newuser()
     sess.user.helplevel=2;
 
 
-    if (!hangup) {
+    if (!io.hangup) {
         nl();
         outstr("Saving Your Info:");
 
@@ -661,7 +661,7 @@ void infoform(char fn[8],int once)
     sprintf(s,"~%s\n",sess.user.name);
     fputs(s,fno);
 
-    while(fgets(s,255,fnin)!=NULL&&!hangup) {
+    while(fgets(s,255,fnin)!=NULL&&!io.hangup) {
         filter(s,'\n');
         if(s[0]==';') {
             fputs(s,fno);
@@ -673,7 +673,7 @@ void infoform(char fn[8],int once)
                 outstr(s);
                 inputl(s1,51);
             } 
-            while(!s1[0]&&!hangup);
+            while(!s1[0]&&!io.hangup);
             strcat(s,s1);
             strcat(s,"\n");
             fputs(s,fno);
@@ -696,7 +696,7 @@ void infoform(char fn[8],int once)
             fputs(s,fno);
         }
     }
-    if(hangup) {
+    if(io.hangup) {
         fputs("\n",fno);
         fputs("- HUNGUP -\n",fno);
     }

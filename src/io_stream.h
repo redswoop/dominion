@@ -79,52 +79,11 @@ typedef struct {
  * session.h provides: #define io session.io */
 void io_init(io_session_t *s);
 
-/* Compatibility macros -- existing code compiles unchanged */
+/* Computed macros — shortcuts for substructure access */
 #define incom           io.stream[IO_REMOTE].in_active
 #define outcom          io.stream[IO_REMOTE].out_active
 #define ok_modem_stuff  io.stream[IO_REMOTE].available
 #define using_modem     io.session_type
-#define echo            io.echo
-#define lastcon         io.lastcon
 #define client_fd       io.stream[IO_REMOTE].fd_out
-
-/* Phase 2 — com.c parser state */
-#define colblock        io.colblock
-
-/* Phase 3 — IO-internal globals */
-#define hungup          io.hungup
-#define change_color    io.change_color
-#define change_ecolor   io.change_ecolor
-#define ansistr         io.ansistr
-#define ansiptr         io.ansiptr
-#define endofline       io.endofline
-#define oldx            io.oldx
-#define oldy            io.oldy
-#define screenlen       io.screenlen
-#define lecho           io.lecho
-#define orig_termios    io.orig_termios
-#define term_raw_mode   io.term_raw_mode
-
-/* Phase 4 — screen state */
-#define curatr          io.curatr
-#define topline         io.topline
-#define screenbottom    io.screenbottom
-#define screenlinest    io.screenlinest
-#define defscreenbottom io.defscreenbottom
-#define lines_listed    io.lines_listed
-#define listing         io.listing
-#define scrn            io.scrn
-
-/* Phase 5 — session interface globals */
-#define hangup          io.hangup
-#define mciok           io.mciok
-#define charbuffer      io.charbuffer
-#define charbufferpointer io.charbufferpointer
-#define chatcall        io.chatcall
-#define chatting        io.chatting
-#define chat_file       io.chat_file
-#define x_only          io.x_only
-#define curspeed        io.curspeed
-#define global_handle   io.global_handle
 
 #endif /* _IO_STREAM_H_ */

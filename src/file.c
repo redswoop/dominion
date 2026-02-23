@@ -400,7 +400,7 @@ int pauseline(int line,int *abort)
             return 1;
         }
     } 
-    while(!cont&&!hangup);
+    while(!cont&&!io.hangup);
     return 0;
 }
 
@@ -417,14 +417,14 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
         pl(get_string(82));
         return 0;
     }
-    listing=1;
+    io.listing=1;
     sess.num_listed=0;
     prtitle=0;
 
     setformat();
     topofpage=1;
 
-    for (i=val; (i<=sess.numf) && (! (*abort)) && (!hangup); i++) {
+    for (i=val; (i<=sess.numf) && (! (*abort)) && (!io.hangup); i++) {
         SETREC(i);
         read(sess.dlf,(void *)&u,sizeof(uploadsrec));
         ok=1;
@@ -498,7 +498,7 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
     }
 
     closedl();
-    listing=0;
+    io.listing=0;
     return listed;
 }
 
@@ -553,16 +553,16 @@ int nscandir(int d, int *abort, int title,int *next)
     od=sess.curdir;
     sess.curdir=d;
     nonstop=0;
-    listing=1;
+    io.listing=1;
     *next=0;
     if(title) {
         pl(get_string(44));
     }
     num=lfs("????????.???","",abort,&len,1);
     sess.curdir=od;
-    if(did&&!(*abort)&&!(*next)&&!hangup) pauseline(1,abort);
+    if(did&&!(*abort)&&!(*next)&&!io.hangup) pauseline(1,abort);
     if(*next) *abort=0;
-    listing=0;
+    io.listing=0;
     return(num);
 }
 
@@ -576,7 +576,7 @@ void nscanall()
     sess.num_listed=0;
     save=sess.curdir;
     setformat();
-    for (sess.curdir=0; (sess.curdir<200) && (!abort) && (sess.udir[sess.curdir].subnum!=-1) && !hangup; sess.curdir++) {
+    for (sess.curdir=0; (sess.curdir<200) && (!abort) && (sess.udir[sess.curdir].subnum!=-1) && !io.hangup; sess.curdir++) {
         i1=sess.udir[sess.curdir].subnum;
         if (sess.user.nscn[i1]>=0)
             num+=nscandir(sess.curdir,&abort,1,&next);
@@ -739,10 +739,10 @@ void finddescription(char ms[41])
     while(wh[0]=='?');
 
     p=strtok(wh," ,;");
-    while (p&&!abort&&!hangup) {
+    while (p&&!abort&&!io.hangup) {
         checka(&abort,&next,0);
         if(strcmp(p,"A")==0) {
-            for (i=0; (i<64) && (!abort) && (!hangup) && (sess.udir[i].subnum!=-1); i++) {
+            for (i=0; (i<64) && (!abort) && (!io.hangup) && (sess.udir[i].subnum!=-1); i++) {
                 sess.curdir=i;
                 num+=lfs(s,s1,&abort,&len,0);
             }
@@ -754,7 +754,7 @@ void finddescription(char ms[41])
         }
         sp_found=0;
         i=0;
-        while(!sp_found&&i<64 && !abort && !hangup &&sess.udir[i].subnum!=-1) {
+        while(!sp_found&&i<64 && !abort && !io.hangup &&sess.udir[i].subnum!=-1) {
             if(strcmp(p,sess.udir[i].keys)==0)
                 sp_found=1;
             else

@@ -135,7 +135,7 @@ void hangupcmd(char type,char ms[40])
     }
     switch(type) {
     case 'H': 
-        hangup=1; 
+        io.hangup=1; 
         break;
     case 'A':
     case 'L':
@@ -157,7 +157,7 @@ void hangupcmd(char type,char ms[40])
                 }
             }
             printfile("logoff");
-            hangup=1;
+            io.hangup=1;
         }
         break;
     default: 
@@ -258,7 +258,7 @@ int pmmkey(char *s)
             ch=getkey();
             if(ch==';') ch=0;
         } 
-        while ((((ch<27) && (ch!=13)) || (ch>126)) && (hangup==0));
+        while ((((ch<27) && (ch!=13)) || (ch>126)) && (io.hangup==0));
         if(ch=='2') return -2;
         else if(ch=='8') return -1;
         else if(ch=='4') return -4;
@@ -295,7 +295,7 @@ int pmmkey(char *s)
             do {
                 ch=getkey();
             } 
-            while ((((ch<' ') && (ch!=13) && (ch!=8)) || (ch>126)) && (hangup==0));
+            while ((((ch<' ') && (ch!=13) && (ch!=8)) || (ch>126)) && (io.hangup==0));
             ch=toupper(ch);
             if (ch==13) {
                 strcpy(s,cmd1);
@@ -324,7 +324,7 @@ int pmmkey(char *s)
             return 0;
         }
     } 
-    while (hangup==0);
+    while (io.hangup==0);
 
     cmd1[0]=0;
     strcpy(s,cmd1);
@@ -526,7 +526,7 @@ void pldn(void)
             }
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
     ansic(0);
     return;
 }
@@ -724,7 +724,7 @@ void popup(char *fn)
             }
         }
     } 
-    while(!done&&!hangup);
+    while(!done&&!io.hangup);
     ansic(0);
 
     return;

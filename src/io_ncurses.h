@@ -15,8 +15,7 @@
  * Remove it so the BBS can use ncurses input via wgetch() directly. */
 #undef getch
 
-/* ncurses may define echo() as a macro.
- * Remove it before io_stream.h redefines 'echo' as an object-like macro. */
+/* ncurses may define echo() as a macro — remove to avoid collisions. */
 #undef echo
 
 /* 1 if ncurses is active (real terminal), 0 if headless (pipes/files).

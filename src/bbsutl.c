@@ -124,9 +124,9 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
     char s1[255],s2[255],*ss,s3[10],ronum=0,ro2=0;
     unsigned char ch;
 
-    cm=chatting;
+    cm=io.chatting;
 
-    mciok=0;
+    io.mciok=0;
 
     begx=wherex();
     if (rollover[0]!=0) {
@@ -140,15 +140,15 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
                 *ss++=rollover[i];
         }
         *ss=0;
-        if (charbufferpointer) {
+        if (io.charbufferpointer) {
             strcpy(s1,s2);
-            strcat(s1,&charbuffer[charbufferpointer]);
-            strcpy(&charbuffer[1],s1);
-            charbufferpointer=1;
+            strcat(s1,&io.charbuffer[io.charbufferpointer]);
+            strcpy(&io.charbuffer[1],s1);
+            io.charbufferpointer=1;
         } 
         else {
-            strcpy(&charbuffer[1],s2);
-            charbufferpointer=1;
+            strcpy(&io.charbuffer[1],s2);
+            io.charbufferpointer=1;
         }
         rollover[0]=0;
     }
@@ -156,17 +156,17 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
     done=0;
     do {
         ch=getkey();
-        if (sys.nifty.chatcolor==1&&chatting) {
+        if (sys.nifty.chatcolor==1&&io.chatting) {
             if (okansi()) {
-                if (lastcon)
-                    makeansi(sys.scfilt[ch],s3,curatr);
+                if (io.lastcon)
+                    makeansi(sys.scfilt[ch],s3,io.curatr);
                 else
-                    makeansi(sys.cfilt[ch],s3,curatr);
+                    makeansi(sys.cfilt[ch],s3,io.curatr);
             } else s3[0]=0;
             outstr(s3);
         } 
-        else if (sys.nifty.chatcolor==2&&chatting) {
-            if(lastcon) {
+        else if (sys.nifty.chatcolor==2&&io.chatting) {
+            if(io.lastcon) {
                 ansic(sys.nifty.rotate[ronum++]);
                 if(ronum==5) ronum=0;
             } 
@@ -176,7 +176,7 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
             }
         }
         if (cm)
-            if (chatting==0)
+            if (io.chatting==0)
                 ch=13;
         if ((ch>=32)||ch==27) {
             if(cp==0&&ch=='/'&&slash) {
@@ -190,28 +190,28 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
                         printmenu(2); 
                         break;
                     case 'S': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -1;
                     case 'A': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -2;
                     case 'L': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -3;
                     case 'C': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -4;
                     case 'Q': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -5;
                     case 'M': 
-                        mciok=0; 
+                        io.mciok=0; 
                         return -6;
                     case '/': 
                         outstr(get_string(71));
                         input(s1,40);
                         sprintf(s,"/%s",s1);
-                        mciok=1;
+                        io.mciok=1;
                         return 0;
                     }
                 } 
@@ -225,23 +225,23 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
                         printmenu(21); 
                         break;
                     case 'Q': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -1;
                     case 'P': 
-                        mciok=1; 
-                        if(lastcon) return -6; 
+                        io.mciok=1; 
+                        if(io.lastcon) return -6; 
                         else return -2;
                     case 'V': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -3;
                     case 'C': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -4;
                     case 'B': 
-                        mciok=1; 
+                        io.mciok=1; 
                         return -5;
                     case '!': 
-                        mciok=0; 
+                        io.mciok=0; 
                         return -7;
                     case '/': 
                         outstr(get_string(71));
@@ -272,7 +272,7 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
                 if(ch=='A') return(2);
                 break;
             case 7:
-                if ((chatting) && (outcom))
+                if ((io.chatting) && (outcom))
                     outchr(7);
                 break;
             case 13: /* C/R */
@@ -375,7 +375,7 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
                 break;
             }
     } 
-    while ((done==0) && (hangup==0));
+    while ((done==0) && (io.hangup==0));
     if (ch!=13) {
         i=cp-1;
         while ((i>0) && (s[i]!=32) && (s[i]!=8))
@@ -396,7 +396,7 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
     }
     if (crend)
         nl();
-    mciok=1;
+    io.mciok=1;
     return 0;
 }
 
@@ -406,15 +406,15 @@ void checka(int *abort, int *next, int act)
 {
     char ch,s[10];
 
-    while ((!empty()) && (!(*abort)) && (!hangup)) {
+    while ((!empty()) && (!(*abort)) && (!io.hangup)) {
         checkhangup();
         ch=inkey();
-        lines_listed=0;
+        io.lines_listed=0;
         if(act&&ch!=32) {
             *abort=1;
             sprintf(s,";%c",ch);
-            charbufferpointer=1;
-            strcpy(charbuffer,&s[0]);
+            io.charbufferpointer=1;
+            strcpy(io.charbuffer,&s[0]);
         } 
         else
             switch(ch) {
@@ -442,7 +442,7 @@ void pla(char *s, int *abort)
 
     i=0;
     checkhangup();
-    if (hangup)
+    if (io.hangup)
         *abort=1;
     checka(abort,&next,0);
     while ((s[i]) && (!(*abort))) {
@@ -459,7 +459,7 @@ void mla(char *s, int *abort)
 
     i=0;
     checkhangup();
-    if (hangup)
+    if (io.hangup)
         *abort=1;
     checka(abort,&next,1);
 
@@ -633,7 +633,7 @@ char *smkey(char *avail,int num, int slash, int crend,int full)
             ch=getkey();
             ch=upcase(ch);
         } 
-        while(strchr(s,ch)==NULL&&!hangup);
+        while(strchr(s,ch)==NULL&&!io.hangup);
 
         if(ch!=8&&ch!=24&&ch!=27)
             outchr(ch);
@@ -668,7 +668,7 @@ char *smkey(char *avail,int num, int slash, int crend,int full)
             done=1;
         }
     } 
-    while (hangup==0&&!done);
+    while (io.hangup==0&&!done);
 
     if(crend)
         nl();
@@ -718,7 +718,7 @@ void setmci(char ch)
     MCISTR[0] = '\0';
     switch (ch) {
     case '`':  out1ch('`'); if (outcom) outcomch('`'); break;
-    case '\\': mciok = 0; break;
+    case '\\': io.mciok = 0; break;
     case 'M':  nl(); break;
     case 'P':  pausescr(); break;
     case 'Y':  delay(500); break;

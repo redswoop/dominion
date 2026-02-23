@@ -42,31 +42,31 @@ void backblue(void)
     int i;
     char s[15];
 
-    i = echo;
-    echo = 1;
+    i = io.echo;
+    io.echo = 1;
     if(bluein==1)
         outstr("\x1b[D\xb1\x1b[D");
     else {
-        makeansi(8,s,curatr);
+        makeansi(8,s,io.curatr);
         outstr(s);
         outstr("\x1b[D\xb1\x1b[D");
-        makeansi(15,s,curatr);
+        makeansi(15,s,io.curatr);
         outstr(s);
     }
-    echo = i;
+    io.echo = i;
 }
 
 /* backspace — erase one character in normal (non-blue-field) context.
  * Sends BS-SPACE-BS: moves cursor left, overwrites with space, moves left again.
- * Temporarily forces echo=1 so the output goes through even if echo is off. */
+ * Temporarily forces io.echo=1 so the output goes through even if io.echo is off. */
 void backspace()
 {
     int i;
 
-    i = echo;
-    echo = 1;
+    i = io.echo;
+    io.echo = 1;
     outstr("\b \b");
-    echo = i;
+    io.echo = i;
 }
 
 
@@ -78,12 +78,12 @@ void pausescr()
 {
     int i,i1,len;
 
-    i=curatr;
+    i=io.curatr;
     outstr(get_string(20));
     len=strlenc(get_string(20));
     getkey();
     for(i1=0;i1<len;i1++) backspace();
-    curatr=i;
+    io.curatr=i;
 }
 
 
@@ -111,7 +111,7 @@ void mpl(int i)
         return;
     }
     bluein=1;
-    makeansi(31,s,curatr);
+    makeansi(31,s,io.curatr);
     outstr(s);
     for(i1=0;i1<i;i1++) outchr(177);
     for(i1=0;i1<i;i1++) outstr("\x1b[D");
@@ -125,11 +125,11 @@ void mpl1(int i)
     char s[20];
 
     bluein=2;
-    makeansi(8,s,curatr);
+    makeansi(8,s,io.curatr);
     outstr(s);
     for(i1=0;i1<i;i1++) outchr('\xF9');
     for(i1=0;i1<i;i1++) outstr("\x1b[D");
-    makeansi(15,s,curatr);
+    makeansi(15,s,io.curatr);
     outstr(s);
 }
 
@@ -167,15 +167,15 @@ int input1(char *s, int maxlen, int lc, int crend)
         bluein=0;
 
     if(bluein==1) {
-        makeansi(31,s1,curatr);
+        makeansi(31,s1,io.curatr);
         outstr(s1);
     }
     else if(bluein==2) {
-        makeansi(15,s1,curatr);
+        makeansi(15,s1,io.curatr);
         outstr(s1);
     }
 
-    while (!done && !hangup) {
+    while (!done && !io.hangup) {
         ch = getkey();
         if (in_ansi) {
             if ((in_ansi==1) && (ch!='['))
@@ -204,7 +204,7 @@ int input1(char *s, int maxlen, int lc, int crend)
             case 14:
             case 13:
                 s[curpos] = 0;
-                done = echo = 1;
+                done = io.echo = 1;
                 break;
             case 23: /* Ctrl-W */
                 if (curpos) {
@@ -273,11 +273,11 @@ int input1(char *s, int maxlen, int lc, int crend)
         if (in_ansi==3)
             in_ansi=0;
     }
-    if (hangup)
+    if (io.hangup)
         s[0] = 0;
     if(bluein) {
         bluein=0;
-        makeansi(15,s1,curatr);
+        makeansi(15,s1,io.curatr);
         outstr(s1);
     }
     if(crend) nl();
@@ -291,15 +291,15 @@ void inputdate(char *s,int time)
     char s1[19];
 
     if(bluein==1) {
-        makeansi(31,s1,curatr);
+        makeansi(31,s1,io.curatr);
         outstr(s1);
     }
     else if(bluein==2) {
-        makeansi(15,s1,curatr);
+        makeansi(15,s1,io.curatr);
         outstr(s1);
     }
 
-    while (!done && !hangup) {
+    while (!done && !io.hangup) {
         sprintf(s1,"1234567890%c%c%c",8,13,14);
         ch = nek(s1,0);
         if (ch > 31) {
@@ -317,7 +317,7 @@ void inputdate(char *s,int time)
             switch(ch) {
         case 13:
             s[curpos] = 0;
-            done = echo = 1;
+            done = io.echo = 1;
             break;
         case 8:
             if (curpos>0) {
@@ -331,7 +331,7 @@ void inputdate(char *s,int time)
             break;
         }
     }
-    if (hangup)
+    if (io.hangup)
         s[0] = 0;
     ansic(0);
 }
@@ -343,15 +343,15 @@ int inputfone(char *s)
     char s1[19];
 
     if(bluein==1) {
-        makeansi(31,s1,curatr);
+        makeansi(31,s1,io.curatr);
         outstr(s1);
     }
     else if(bluein==2) {
-        makeansi(15,s1,curatr);
+        makeansi(15,s1,io.curatr);
         outstr(s1);
     }
 
-    while (!done && !hangup) {
+    while (!done && !io.hangup) {
         sprintf(s1,"1234567890%c%c%c+",8,13,14);
         ch = nek(s1,0);
         if(ch=='+') {
@@ -373,7 +373,7 @@ int inputfone(char *s)
             switch(ch) {
         case 13:
             s[curpos] = 0;
-            done = echo = 1;
+            done = io.echo = 1;
             break;
         case 8:
             if (curpos>0) {
@@ -387,7 +387,7 @@ int inputfone(char *s)
             break;
         }
     }
-    if (hangup)
+    if (io.hangup)
         s[0] = 0;
 
     ansic(0);
@@ -428,7 +428,7 @@ int ynn(int pos)
     len=strlenc(get_string(pos?52:51));
     outstr(get_string(pos?52:51));
 
-    while(!hangup && !done) {
+    while(!io.hangup && !done) {
         switch(ch=getkey()) {
         case 'n':
         case 'N':
@@ -479,13 +479,13 @@ int yn()
 }
 
 /* nek — wait for one key from allowed set s (case-insensitive).
- * f=1: echo the key and newline.  f=0: silent. */
+ * f=1: io.echo the key and newline.  f=0: silent. */
 char nek(char *s, int f)
 {
     char ch;
 
-    while (!strchr(s, ch = toupper(getkey())) && !hangup);
-    if (hangup) ch = s[0];
+    while (!strchr(s, ch = toupper(getkey())) && !io.hangup);
+    if (io.hangup) ch = s[0];
     if(f) {
         outchr (ch);
         nl();
@@ -493,7 +493,7 @@ char nek(char *s, int f)
     return(ch);
 }
 
-/* onek — wait for one key from allowed set, always echo+newline. */
+/* onek — wait for one key from allowed set, always io.echo+newline. */
 char onek(char *s)
 {
     return(nek(s,1));

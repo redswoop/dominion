@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     ok_modem_stuff=1;
     sys.tcp_port=0;
     sys.listen_fd=-1;
-    term_raw_mode=0;
+    io.term_raw_mode=0;
     if (exist("exitdata.dom"))
         sys.restoring_shrink=1;
     else
@@ -172,20 +172,20 @@ int main(int argc, char *argv[])
 
         bbsCRC();
 
-        if (!hangup) {
+        if (!io.hangup) {
             logon();
             if(!menudb_exists(sys.nifty.firstmenu)) {
                 pl("8Main Menu is missing!!  System cannot Continue!  If Possible, Inform SysOp!");
                 logpr("7!0 MAIN MENU MISSING.  Hanging up on User");
                 pausescr();
-                hangup=1;
+                io.hangup=1;
             } 
             else {
                 if(sess.actsl<=sys.cfg.newusersl) readmenu(sys.nifty.newusermenu);
                 else readmenu(sys.nifty.firstmenu);
             }
 main_menu_label:
-            while (!hangup) menuman();
+            while (!io.hangup) menuman();
             logoff();
         }
 

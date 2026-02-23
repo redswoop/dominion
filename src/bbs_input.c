@@ -54,13 +54,13 @@ void checkhangup()
 {
     int i, ok;
 
-    if (!hangup && using_modem && !cdet()) {
+    if (!io.hangup && using_modem && !cdet()) {
         ok = 0;
         for (i = 0; (i < 500) && !ok; i++)
             if (cdet())
                 ok = 1;
         if (!ok) {
-            hangup = hungup = 1;
+            io.hangup = io.hungup = 1;
             if (sess.useron && !sess.in_extern)
                 sysoplog("Hung Up.");
         }
@@ -69,14 +69,14 @@ void checkhangup()
 
 /* empty — returns 1 if no input is available from ANY source.
  * Checks: local keyboard (kbhitb), remote TCP (comhit), macro buffer
- * (charbufferpointer), external program pipe (sess.in_extern==2), and
+ * (io.charbufferpointer), external program pipe (sess.in_extern==2), and
  * sess.quote buffer (sess.bquote).  Used by getkey() to spin-wait for input. */
 int empty()
 {
-    if(x_only) return 0;
+    if(io.x_only) return 0;
 
     if (kbhitb() || (incom && comhit()) ||
-        (charbufferpointer && charbuffer[charbufferpointer]) ||
+        (io.charbufferpointer && io.charbuffer[io.charbufferpointer]) ||
         (sess.in_extern == 2)||sess.bquote)
         return(0);
     return(1);
@@ -107,7 +107,7 @@ void skey1(char *ch)
     case 4:
     case 6:
     case 25:
-        if (sess.okmacro && !charbufferpointer) {
+        if (sess.okmacro && !io.charbufferpointer) {
             if (c == 1)
                 c = 2;
             else if (c == 4)
@@ -116,23 +116,23 @@ void skey1(char *ch)
                 c = 1;
             else if (c== 25)
                 c=3;
-            if(lastcon) {
+            if(io.lastcon) {
                 userdb_load(1,&u);
-                strcpy(charbuffer, &(u.macros[c][0]));
+                strcpy(io.charbuffer, &(u.macros[c][0]));
             }
             else if (sess.okskey)
-                strcpy(charbuffer, &(sess.user.macros[c][0]));
-            c = charbuffer[0];
+                strcpy(io.charbuffer, &(sess.user.macros[c][0]));
+            c = io.charbuffer[0];
             if (c)
-                charbufferpointer = 1;
+                io.charbufferpointer = 1;
         }
         break;
     case 20:
-        if (echo)
+        if (io.echo)
             ptime();
         break;
     case 18:
-        if (echo)
+        if (io.echo)
             reprint();
         break;
     case '\x15':
@@ -153,12 +153,12 @@ void skey1(char *ch)
  *
  * Input priority (first match wins):
  *   1. Quote buffer (sess.bquote)  — auto-sess.quoting in message reply
- *   2. Macro buffer (charbufferpointer) — Ctrl-A/D/F/Y macro expansion
+ *   2. Macro buffer (io.charbufferpointer) — Ctrl-A/D/F/Y macro expansion
  *   3. Local keyboard (kbhitb → getchd1) — sysop console via ncurses
  *   4. Remote TCP (comhit → get1c) — telnet user
  *
  * Returns 0 if nothing available.  Calls skey1() to post-process
- * (macro expansion, 127→8 mapping).  Sets lastcon=1 for local, 0 for remote.
+ * (macro expansion, 127→8 mapping).  Sets io.lastcon=1 for local, 0 for remote.
  *
  * For the scan-code two-byte sequence: first call returns 0 (NUL prefix),
  * getkey() loops on !ch, second call returns the scan code via getchd1()
@@ -170,14 +170,14 @@ char inkey()
 
     if (sess.bquote) {
         if (!qpointer) {
-            charbuffer[1]=0;
+            io.charbuffer[1]=0;
             cpointer=0;
             qpointer=1;
             while (qpointer<sess.bquote) {
                 if (sess.quote[cpointer++]==13)
                     ++qpointer;
             }
-            charbufferpointer=1;
+            io.charbufferpointer=1;
         }
         if (sess.quote[cpointer]==3)
             sess.quote[cpointer]=16;
@@ -193,21 +193,21 @@ char inkey()
     }
 
 
-    if (x_only)
+    if (io.x_only)
         return(0);
 
-    if (charbufferpointer) {
-        if (!charbuffer[charbufferpointer])
-            charbufferpointer = charbuffer[0] = 0;
+    if (io.charbufferpointer) {
+        if (!io.charbuffer[io.charbufferpointer])
+            io.charbufferpointer = io.charbuffer[0] = 0;
         else {
-            if ((charbuffer[charbufferpointer])==3)
-                charbuffer[charbufferpointer]=16;
-            return(charbuffer[charbufferpointer++]);
+            if ((io.charbuffer[io.charbufferpointer])==3)
+                io.charbuffer[io.charbufferpointer]=16;
+            return(io.charbuffer[io.charbufferpointer++]);
         }
     }
     if (kbhitb() || (sess.in_extern == 2)) {
         ch = getchd1();
-        lastcon = 1;
+        io.lastcon = 1;
         if (!ch) {
             if (sess.in_extern)
                 sess.in_extern = 2;
@@ -223,7 +223,7 @@ char inkey()
     }
     else if (incom && comhit()) {
         ch = get1c();
-        lastcon = 0;
+        io.lastcon = 0;
     }
     skey1(&ch);
     return(ch);
@@ -258,9 +258,9 @@ unsigned char getkey()
 
     tv1=tv/2;
 
-    lines_listed = 0;
+    io.lines_listed = 0;
     do {
-        while (empty() && !hangup) {
+        while (empty() && !io.hangup) {
             dd = timer1();
             if ((dd<sess.timelastchar1) && ((dd+1000)>sess.timelastchar1))
                 sess.timelastchar1=dd;
@@ -274,14 +274,14 @@ unsigned char getkey()
                 nl();
                 pl("Sorry, but you appear to have fallen asleep!");
                 nl();
-                hangup=1;
+                io.hangup=1;
                 wait1(27);
             }
             checkhangup();
         }
         ch = inkey();
     }
-    while (!ch && !sess.in_extern && !hangup);
+    while (!ch && !sess.in_extern && !io.hangup);
     if (ch == 127) ch = 8;  /* macOS sends DEL for backspace */
     return(ch);
 }

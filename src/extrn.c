@@ -220,11 +220,11 @@ int restore_data(char *s)
     READ(sess.sysop_alert);
     READ(sys.do_event);
     READ(sess.usernum);
-    READ(chatcall);
+    READ(io.chatcall);
     READ(sess.chatreason);
     READ(sess.timeon);
     READ(sess.extratimecall);
-    READ(curspeed);
+    READ(io.curspeed);
     READ(sess.modem_speed);
     READ(sess.com_speed);
     READ(sess.cursub);
@@ -242,7 +242,7 @@ int restore_data(char *s)
     READ(sys.xdate);
     READ(incom);
     READ(outcom);
-    READ(global_handle);
+    READ(io.global_handle);
     READ(sess.actsl);
     READ(sess.numbatch);
     READ(sess.numbatchdl);
@@ -252,8 +252,8 @@ int restore_data(char *s)
     READ(sess.mstack);
     READ(sess.mdepth);
 
-    if (global_handle) {
-        global_handle=0;
+    if (io.global_handle) {
+        io.global_handle=0;
         set_global_handle(1);
     }
 
@@ -290,11 +290,11 @@ void save_state(char *s, int state)
     WRITE(sess.sysop_alert);
     WRITE(sys.do_event);
     WRITE(sess.usernum);
-    WRITE(chatcall);
+    WRITE(io.chatcall);
     WRITE(sess.chatreason);
     WRITE(sess.timeon);
     WRITE(sess.extratimecall);
-    WRITE(curspeed);
+    WRITE(io.curspeed);
     WRITE(sess.modem_speed);
     WRITE(sess.com_speed);
     WRITE(sess.cursub);
@@ -312,7 +312,7 @@ void save_state(char *s, int state)
     WRITE(sys.xdate);
     WRITE(incom);
     WRITE(outcom);
-    WRITE(global_handle);
+    WRITE(io.global_handle);
     WRITE(sess.actsl);
     WRITE(sess.numbatch);
     WRITE(sess.numbatchdl);

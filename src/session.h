@@ -11,8 +11,8 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
-/* vardec headers MUST come before io_stream.h — io_stream.h defines macros
- * (#define curspeed, etc.) that would corrupt struct member names */
+/* vardec headers MUST come before io_stream.h — io_stream.h macros
+ * (incom, outcom, etc.) would corrupt struct member names */
 #include "vardec_user.h"
 #include "vardec_ui.h"
 #include "io_stream.h"
@@ -90,8 +90,8 @@ private:
     Session();
 };
 
-/* Compatibility: io_stream.h macros like #define hangup io.hangup chain through:
- *   hangup -> io.hangup -> Session::instance().io.hangup
+/* io_stream.h computed macros (incom, outcom, etc.) chain through this:
+ *   incom -> io.stream[IO_REMOTE].in_active -> Session::instance().io.stream[IO_REMOTE].in_active
  */
 #define io Session::instance().io
 

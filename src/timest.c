@@ -206,9 +206,9 @@ void ptime()
 {
     char xl[MAX_PATH_LEN], cl[MAX_PATH_LEN], atr[MAX_PATH_LEN], cc, s[MAX_PATH_LEN];
     long l;
-    int mcir=mciok;
+    int mcir=io.mciok;
 
-    mciok=1;
+    io.mciok=1;
 
     savel(cl, atr, xl, &cc);
 
@@ -224,7 +224,7 @@ void ptime()
     nl();
 
     restorel(cl, atr, xl, &cc);
-    mciok=mcir;
+    io.mciok=mcir;
 }
 
 char *curtime(void)
