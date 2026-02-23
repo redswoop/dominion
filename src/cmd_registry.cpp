@@ -26,7 +26,9 @@
  */
 
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "conio.h"
 #include "bbsutl.h"
 #include "bbsutl2.h"

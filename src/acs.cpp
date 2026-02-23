@@ -6,11 +6,14 @@
  */
 
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "bbsutl.h"
 #include "session.h"
 #include "system.h"
 #include "acs.h"
+#include "file.h"
 
 
 extern int fastlogon;

@@ -2,7 +2,9 @@
 
 #include "automsg.h"
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "disk.h"
 #include "jam_bbs.h"
 #include "msgbase.h"

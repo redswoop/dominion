@@ -2,7 +2,9 @@
 
 #include "misccmd.h"
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "bbsutl.h"
 #include "file1.h"
 #include "timest.h"
@@ -12,6 +14,7 @@
 #include "msgbase.h"
 #include "mm1.h"
 #include "session.h"
+#include "userdb.h"
 #include "system.h"
 #include "version.h"
 

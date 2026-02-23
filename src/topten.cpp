@@ -2,9 +2,12 @@
 
 #include "topten.h"
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "utility.h"
 #include "session.h"
+#include "userdb.h"
 #include "system.h"
 
 #include "mci.h"

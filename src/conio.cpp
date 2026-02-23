@@ -1,7 +1,9 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "platform.h"
 #include "conio.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "tcpio.h"
 #include "bbsutl.h"
 #include "file1.h"
@@ -10,6 +12,7 @@
 #include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
+#include "userdb.h"
 #include "mm1.h"
 #include "stringed.h"
 #include "session.h"

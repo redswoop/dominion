@@ -1,6 +1,8 @@
 #include "filesys.h"
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "file.h"
 #include "file1.h"
 #include "file2.h"
@@ -15,6 +17,7 @@
 #include "utility1.h"
 #include "stringed.h"
 #include "session.h"
+#include "userdb.h"
 #include "system.h"
 #include "sysopf.h"
 #pragma hdrstop

@@ -8,7 +8,9 @@
 
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_ui.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
 #include "utility.h"
 #include "stringed.h"
 #include "session.h"

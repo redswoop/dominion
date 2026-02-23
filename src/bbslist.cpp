@@ -2,7 +2,9 @@
 
 #include "bbslist.h"
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "bbsutl.h"
 #include "disk.h"
 #include "mm1.h"

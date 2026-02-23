@@ -1,6 +1,8 @@
 #include "file2.h"
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "conio.h"
 #include "file.h"
 #include "file1.h"
@@ -16,6 +18,7 @@
 #include "session.h"
 #include "system.h"
 #include "extrn.h"
+#include "userdb.h"
 #include "misccmd.h"
 #include "sysopf.h"
 

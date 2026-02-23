@@ -9,7 +9,9 @@
 
 #include "io_ncurses.h"  /* must come before vars.h */
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "bbsutl.h"
 #include "file1.h"
 #include "bbsutl2.h"

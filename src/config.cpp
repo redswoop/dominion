@@ -3,7 +3,9 @@
 #include "config.h"
 #include <stdio.h>
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "conio.h"
 #include "file1.h"
 #include "timest.h"
@@ -11,6 +13,7 @@
 #include "newuser.h"
 #include "stringed.h"
 #include "session.h"
+#include "userdb.h"
 #include "system.h"
 #include "lilo.h"
 #include "personal.h"

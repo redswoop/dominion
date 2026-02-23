@@ -1,6 +1,8 @@
 #include "mm1.h"
 #include "platform.h"
-#include "fcns.h"
+#include "bbs_output.h"
+#include "bbs_input.h"
+#include "bbs_ui.h"
 #include "bbsutl.h"
 #include "disk.h"
 #include "stringed.h"
@@ -9,6 +11,7 @@
 #include "acs.h"
 #include "cmd_registry.h"
 #include "sysopf.h"
+#include "file.h"
 #pragma hdrstop
 
 #include "menudb.h"
