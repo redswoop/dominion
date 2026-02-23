@@ -7,6 +7,7 @@
 #pragma hdrstop
 
 #include "cp437.h"
+#include "cmd_registry.h"
 #include "terminal_bridge.h"
 #include "menu_nav.h"
 

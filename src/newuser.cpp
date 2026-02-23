@@ -2,6 +2,9 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "cmd_registry.h"
+#include "nuv.h"
+#include "terminal_bridge.h"
 #pragma hdrstop
 
 

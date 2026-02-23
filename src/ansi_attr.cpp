@@ -6,6 +6,7 @@
  * current_attr to target_attr.
  */
 
+#include "ansi_attr.h"
 #include "platform.h"
 
 static void addto(char *s, int i)

@@ -4,6 +4,8 @@
 #include "session.h"
 #include "system.h"
 #include "terminal_bridge.h"
+#include "chat.h"
+#include "timebank.h"
 
 #pragma hdrstop
 

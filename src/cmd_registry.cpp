@@ -32,7 +32,11 @@
 #include "version.h"
 #include "cmd_registry.h"
 #include "acs.h"
+#include "automsg.h"
+#include "bbslist.h"
+#include "chat.h"
 #include "menu_nav.h"
+#include "timebank.h"
 
 #define sysstatus_pause_on_message 0x0400
 

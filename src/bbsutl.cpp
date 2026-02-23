@@ -2,6 +2,8 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "ansi_attr.h"
+#include "cmd_registry.h"
 #pragma hdrstop
 
 

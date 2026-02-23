@@ -1,5 +1,6 @@
 /* timebank.cpp — Time banking (deposit/withdraw/menu). */
 
+#include "timebank.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"

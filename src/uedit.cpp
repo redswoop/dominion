@@ -2,6 +2,7 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "nuv.h"
 #pragma hdrstop
 
 #include <stdarg.h>

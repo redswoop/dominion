@@ -20,6 +20,9 @@
 #include "system.h"
 #include "version.h"
 
+#include "acs.h"
+#include "ansi_attr.h"
+#include "chat.h"
 #include "cmd_registry.h"
 #include "menu_nav.h"
 #include "menudb.h"

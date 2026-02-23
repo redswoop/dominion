@@ -3,6 +3,7 @@
 #include "session.h"
 #include "system.h"
 #include "version.h"
+#include "cmd_registry.h"
 
 #pragma hdrstop
 

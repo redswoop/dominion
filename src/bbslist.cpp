@@ -1,5 +1,6 @@
 /* bbslist.cpp — BBS phone directory (add/search). */
 
+#include "bbslist.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"

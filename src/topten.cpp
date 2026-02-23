@@ -1,5 +1,6 @@
 /* topten.cpp — Rankings/statistics (top ten lists). */
 
+#include "topten.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"

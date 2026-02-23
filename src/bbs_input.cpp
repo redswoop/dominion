@@ -11,6 +11,7 @@
 #include "session.h"
 #include "system.h"
 #include "terminal_bridge.h"
+#include "cmd_registry.h"
 
 #pragma hdrstop
 

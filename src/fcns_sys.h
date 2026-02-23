@@ -143,33 +143,6 @@ int numctype(void);
 int numComputerTypes(void);
 
 
-/* File: automsg.cpp */
-
-void read_automessage();
-void write_automessage();
-
-
-/* File: bbslist.cpp */
-
-void addbbs(char *fn);
-void searchbbs(char *fn);
-
-
-/* File: timebank.cpp */
-
-void add_time(int limit);
-void remove_time();
-void bank2(int limit);
-
-
-/* File: topten.cpp */
-
-char *stl(long l);
-char *sti(int i);
-void updtopten(void);
-char *topten(int type);
-
-
 /* File: config.c */
 
 void bitset(char *msg,int byte,int bit);
@@ -196,23 +169,6 @@ void delete_fdr(int n);
 void acscfg(void);
 void defcoled();
 void config();
-
-
-/* File: error.c */
-
-void err(int err,char *fn,char msg[80]);
-
-
-/* File: chat.c */
-
-void two_way_chat(char *s, char *rollover, int maxlen, int crend);
-void chat1(char *chatline, int two_way);
-void reqchat1(char reason[MAX_PATH_LEN]);
-void chatsound();
-void reqchat(char reason[MAX_PATH_LEN]);
-void readfilter(char fn[15],char fn2[15]);
-void viewfile();
-void playmod(void);
 
 
 #endif /* _FCNS_SYS_H_ */

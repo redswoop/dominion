@@ -1,5 +1,6 @@
 /* automsg.cpp — Automessage system (read/write). */
 
+#include "automsg.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"

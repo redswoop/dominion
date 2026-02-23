@@ -26,10 +26,6 @@ void tleft(int dot);              /* time-left display */
 void topscreen(void);
 
 
-/* File: ansi_attr.c (Layer 3 — no BBS globals) */
-
-void makeansi(unsigned char attr, char *s, unsigned char current_attr);
-
 /* File: bbs_output.c */
 
 int strlenc(char *s);
@@ -109,12 +105,5 @@ void wfct(void);
 void wfcs(void);
 int ok_local();
 void bargraph(int percent);
-
-/* File: terminal_bridge (term_goto) */
-#ifdef __cplusplus
-extern "C" void term_goto(int x, int y);
-#else
-void term_goto(int x, int y);
-#endif
 
 #endif /* _FCNS_IO_H_ */

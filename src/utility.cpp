@@ -3,6 +3,8 @@
 #include "session.h"
 #include "system.h"
 #include "stream_processor.h"
+#include "acs.h"
+#include "error.h"
 #pragma hdrstop
 
 

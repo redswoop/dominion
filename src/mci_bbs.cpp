@@ -12,6 +12,7 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
+#include "topten.h"
 #include "userdb.h"
 #include "mci.h"
 #include "mci_bbs.h"

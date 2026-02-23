@@ -76,20 +76,6 @@ void selecthelplevel();
 void getmsgformat();
 
 
-/* File: nuv.c */
-
-int num_nuv(char *fn);
-void read_nuv(unsigned int user, char *fn, nuvdata *newuser);
-void write_nuv(unsigned int user, char *fn, nuvdata *newuser);
-void del_nuv(unsigned int user);
-int enter_nuv(userrec tu,int un,int form);
-int avoted(unsigned int user);
-void print_nuv(nuvdata v);
-int vote_nuv(unsigned int user, nuvdata *resn,int *done1);
-void val_nuv(unsigned int user);
-void nuv(void);
-
-
 /* File: utility.c */
 
 unsigned char upcase(unsigned char ch);

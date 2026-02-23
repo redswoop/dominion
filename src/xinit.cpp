@@ -4,6 +4,7 @@
 #include "session.h"
 #include "system.h"
 #include "version.h"
+#include "error.h"
 
 #pragma hdrstop
 
