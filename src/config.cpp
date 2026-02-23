@@ -1,8 +1,11 @@
 #pragma hdrstop
 
+#include "config.h"
 #include <stdio.h>
 #include "platform.h"
 #include "fcns.h"
+#include "newuser.h"
+#include "stringed.h"
 #include "session.h"
 #include "system.h"
 #include "lilo.h"

@@ -94,16 +94,4 @@ void send_terminal_init(int fd);
 void send_terminal_restore(int fd);
 
 
-/* File: wfc.c */
-
-int getcaller(void);
-void gotcaller(unsigned int ms, unsigned int cs);
-void topit(void);
-void topit2(void);
-char *curt(void);
-void wfct(void);
-void wfcs(void);
-int ok_local();
-void bargraph(int percent);
-
 #endif /* _FCNS_IO_H_ */

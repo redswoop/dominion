@@ -2,6 +2,8 @@
 #include "xinit.h"
 #include "platform.h"
 #include "fcns.h"
+#include "config.h"
+#include "wfc.h"
 #include "session.h"
 #include "system.h"
 #include "version.h"

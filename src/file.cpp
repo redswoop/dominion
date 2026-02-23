@@ -1,5 +1,7 @@
 #include "platform.h"
 #include "fcns.h"
+#include "mm1.h"
+#include "stringed.h"
 #include "session.h"
 #include "system.h"
 #include "acs.h"

@@ -64,38 +64,4 @@ int inscan(int sb,userrec *u);
 void togglenws(int sb,userrec *u,int scan);
 
 
-/* File: mm1.c */
-
-char *getfmt(char *fn, int which);
-void parsemmfmt(char line[MAX_PATH_LEN]);
-void readmnufmt(mmrec pf);
-unsigned char bo(unsigned char c);  /* bold attribute */
-char *noc2(char s1[100]);
-int read_menu(char fn[15],int doauto);
-int readmenu(char fn[15]);
-int ccount(char s[MAX_PATH_LEN]);
-char *aligncmd(char in[MAX_PATH_LEN]);
-void drawhead(int top);
-void showmenu();
-void plfmt(char *s);
-void plfmta(char *s,int *abort);
-void menubatch(char fn[12]);
-void showmenucol();
-
-
-/* File: stringed.c */
-
-int opp(int i);
-char *disk_string(int whichstring,char *fn);
-char *get_string(int whichstring);
-char *get_string2(int whichstring);
-char *getdesc(int whichstring);
-char *get_say(int which);
-void addsay(void);
-void readstring(int which);
-void extractstring(int which);
-void liststring(int type,int where);
-void edstring(int type);
-void searchrum(void);
-
 #endif /* _FCNS_MSG_H_ */

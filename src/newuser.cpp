@@ -1,5 +1,8 @@
+#include "newuser.h"
 #include "platform.h"
 #include "fcns.h"
+#include "utility1.h"
+#include "mm1.h"
 #include "session.h"
 #include "system.h"
 #include "cmd_registry.h"

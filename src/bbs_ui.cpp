@@ -9,6 +9,7 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "platform.h"
 #include "fcns.h"
+#include "stringed.h"
 #include "session.h"
 #include "system.h"
 #include "terminal_bridge.h"

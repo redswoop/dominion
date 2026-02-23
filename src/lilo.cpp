@@ -2,6 +2,11 @@
 #include "lilo.h"
 #include "platform.h"
 #include "fcns.h"
+#include "config.h"
+#include "newuser.h"
+#include "utility1.h"
+#include "mm1.h"
+#include "stringed.h"
 #include "session.h"
 #include "system.h"
 

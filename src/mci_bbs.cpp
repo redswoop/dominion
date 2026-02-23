@@ -10,6 +10,7 @@
 #include "io_ncurses.h"  /* must come before vars.h */
 #include "platform.h"
 #include "fcns.h"
+#include "stringed.h"
 #include "session.h"
 #include "system.h"
 #include "topten.h"

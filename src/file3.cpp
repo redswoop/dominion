@@ -1,5 +1,6 @@
 #include "platform.h"
 #include "fcns.h"
+#include "stringed.h"
 #include "session.h"
 #include "system.h"
 #include "ansi_attr.h"

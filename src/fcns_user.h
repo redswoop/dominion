@@ -21,26 +21,6 @@ void printmenu(int which);
 int printfile(char *fn);
 
 
-/* File: newuser.c */
-
-void go(int x,int y);
-void goin(int x,int y);
-int check_name(char *nn);
-void input_comment(void);
-void input_name(char *namer);
-void input_realname(char *namer);
-void input_city();
-void input_phone();
-void input_sex(userrec *u);
-void input_age(userrec *u);
-void input_comptype();
-void input_screensize();
-void input_pw();
-void newuser();
-void infoform(char fn[8],int once);
-void readform(char fn[8],char i[31]);
-
-
 /* File: utility.c */
 
 unsigned char upcase(unsigned char ch);
@@ -57,23 +37,6 @@ char *nam(userrec *u1, unsigned int un);
 unsigned int finduser(char *s);
 void changedsl();
 int checkacs(int w);
-
-
-/* File: utility1.c */
-
-int finduser1(char *sx);
-void ssm(unsigned int un, unsigned int sy, char *s);
-void rsm(int un, userrec *u);
-char *stristr(char *t, char *s);
-
-
-/* File: uedit.c */
-
-void deluser(int un);
-void addtrash(userrec u);
-void print_data(int un, userrec *u,int lng);
-int usearch(int un,char val[41]);
-void uedit(int usern);
 
 
 #endif /* _FCNS_USER_H_ */
