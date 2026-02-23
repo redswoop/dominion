@@ -84,7 +84,7 @@ void addbbs(char *fn)
         if (f>0) {
             lseek(f,0L,SEEK_SET);
             l=filelength(f);
-            if ((ss=malloca(l+500L))==NULL) {
+            if ((ss=(char *)malloca(l+500L))==NULL) {
                 close(f);
                 return;
             }
@@ -239,7 +239,7 @@ void list_users()
 void yourinfo()
 {
     char s[MAX_PATH_LEN];
-    originrec or;
+    originrec orig;
 
     outchr(12);
     dtitle("Your Information");
@@ -255,9 +255,9 @@ void yourinfo()
     npr("You last called 5%s%s0\r\n",thisuser.laston,thisuser.ontoday?s:"");
     nl();
     npr("System is 5%s\r\n",wwiv_version);
-    getorigin(subboards[usub[cursub].subnum].origin,&or);
-    if(or.add.zone)
-        npr("Network is %s, Address %d:%d/%d\r\n",or.netname,or.add.zone,or.add.net,or.add.node);
+    getorigin(subboards[usub[cursub].subnum].origin,&orig);
+    if(orig.add.zone)
+        npr("Network is %s, Address %d:%d/%d\r\n",orig.netname,orig.add.zone,orig.add.net,orig.add.node);
     nl();
     if(thisuser.helplevel==2)
         pausescr();
@@ -447,7 +447,7 @@ char *sti(int i)
     return(s);
 }
 
-extern int whichten,toptentype;
+#include "mci.h"
 
 void updtopten(void)
 {
@@ -628,9 +628,9 @@ char *topten(int type)
     close(i);
 
 
-    i=whichten;
+    i=mci_topten_which();
 
-    switch(toptentype) {
+    switch(mci_topten_type()) {
     case 0:
         strcpy(sname,s[0][i]);
         sprintf(s3,"%d",posts_per_user[i]);

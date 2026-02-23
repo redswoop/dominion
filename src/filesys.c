@@ -339,7 +339,7 @@ int upload_file(char *fn, int dn,int *ato)
         thisuser.fpts+=(u.numbytes+1023)/10240;
         ++thisuser.uploaded;
         if (strstr(u.filename,".GIF"))
-            addgif(ff,u.description);
+            addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
         strcpy(ff,d.dpath);
         strcat(ff,stripfn(u.filename));
@@ -780,7 +780,7 @@ void create_file()
         thisuser.fpts+=(u.numbytes+1023)/10240;
         ++thisuser.uploaded;
         if (strstr(u.filename,".GIF"))
-            addgif(ff,u.description);
+            addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
         strcpy(ff,d.dpath);
         strcat(ff,stripfn(u.filename));
@@ -943,7 +943,7 @@ void move_file(void)
                     unlink(s1);
                 }
                 else {
-                    if ((b=malloca(16400))==NULL)
+                    if ((b=(char *)malloca(16400))==NULL)
                         return;
                     d1=open(s1,O_RDONLY | O_BINARY);
                     d2=open(s2,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);

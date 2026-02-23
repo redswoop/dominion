@@ -267,7 +267,7 @@ void config_qscan(int dl)
 }
 
 
-void list_macro(unsigned char *s)
+void list_macro(char *s)
 {
     int i;
 
@@ -289,7 +289,7 @@ void list_macro(unsigned char *s)
 
 void make_macros()
 {
-    unsigned char tempmac[MAX_PATH_LEN],s[MAX_PATH_LEN];
+    char tempmac[MAX_PATH_LEN],s[MAX_PATH_LEN];
     unsigned char ch,ch1;
     int i,i1,done,done1;
 

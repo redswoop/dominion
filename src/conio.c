@@ -294,7 +294,7 @@ int alt_key(unsigned char ch)
         f=open(s,O_RDONLY | O_BINARY);
         if (f>0) {
             l=filelength(f);
-            ss=farmalloc(l+10);
+            ss=(char *)farmalloc(l+10);
             if (ss) {
                 read(f,ss,l);
                 close(f);
@@ -719,7 +719,7 @@ void topscreen(void)
     sprintf(s,"%stops%d.bin",syscfg.gfilesdir,topdata);
     i=open(s,O_RDWR|O_BINARY);
     if (i >= 0) {
-        b=malloca(160*linelen);
+        b=(char *)malloca(160*linelen);
         if (b) {
             read(i,b,linelen*160);
             close(i);

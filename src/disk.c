@@ -103,7 +103,7 @@ char *get_file(char *fn, long *len)
         *len=0L;
         return(NULL);
     }
-    if ((s=malloca(filelength(i)+50))==NULL) {
+    if ((s=(char *)malloca(filelength(i)+50))==NULL) {
         *len=0L;
         close(i);
         return(NULL);
@@ -131,7 +131,7 @@ void set_global_handle(int i)
             global_handle=open(s,O_RDWR | O_APPEND | O_BINARY | O_CREAT,
             S_IREAD | S_IWRITE);
             global_ptr=0;
-            global_buf=malloca(GLOBAL_SIZE);
+            global_buf=(char *)malloca(GLOBAL_SIZE);
             if ((global_handle<0) || (!global_buf)) {
                 global_handle=0;
                 if (global_buf) {
@@ -237,7 +237,7 @@ void showfile(char *fn)
         return;
 
     l=filelength(i);
-    b=malloca(l);
+    b=(char *)malloca(l);
     read(i,b,l);
     close(i);
 
@@ -261,7 +261,7 @@ void printmenu(int which)
     lseek(i,menus[which].storage_type,0);
     l1=menus[which].stored_as;
 
-    b=malloca(l1);
+    b=(char *)malloca(l1);
     read(i,b,l1);
     close(i);
 

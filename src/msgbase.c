@@ -112,7 +112,7 @@ void osan(char *s, int *abort, int *next)
 }
 
 
-void getorigin(int origin, originrec *or)
+void getorigin(int origin, originrec *orig)
 {
     int i;
     char s[MAX_PATH_LEN];
@@ -120,7 +120,7 @@ void getorigin(int origin, originrec *or)
     sprintf(s,"%sorigin.dat",syscfg.datadir);
     i=open(s,O_BINARY|O_RDWR);
     lseek(i,sizeof(originrec)*origin,0);
-    read(i,or,sizeof(originrec));
+    read(i,orig,sizeof(originrec));
     close(i);
 }
 
@@ -202,7 +202,7 @@ void extract_out(char *b, long len, hdrinfo *hdr)
     } 
     while ((!hangup) && (s2[0]!=0) && (s1[0]==0));
     for(i=0;i<len;i++)
-        if(b[i]==13||b[i]=='') b[i]=10;
+        if(b[i]==13||b[i]==(char)0xAE) b[i]=10;
     if ((s1[0]) && (!hangup)) {
         i=open(s2,O_RDWR | O_BINARY | O_CREAT , S_IREAD | S_IWRITE);
         if (filelength(i)) {
@@ -248,7 +248,7 @@ void load_workspace(char *fnx, int no_edit)
         return;
     }
     l=filelength(i5);
-    if ((b=malloca(l+1024))==NULL) {
+    if ((b=(char *)malloca(l+1024))==NULL) {
         close(i5);
         return;
     }

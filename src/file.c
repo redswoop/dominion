@@ -256,12 +256,12 @@ int printinfo(uploadsrec *u, int *abort,int number)
     sprintf(f,"%s%s",directories[udir[curdir].subnum].dpath,u->filename);
 
     if(!(u->ats[0]))
-        stuff_in1(s,filelistformat3,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t));
+        stuff_in1(s,filelistformat3,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
 
     else if(exist(f))
-        stuff_in1(s,filelistformat,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t));
+        stuff_in1(s,filelistformat,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
     else
-        stuff_in1(s,filelistformat2,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t));
+        stuff_in1(s,filelistformat2,fn,ss,s1,s2,s3,u->upby,u->date,s4,ctim(t),"");
 
     outstr(s);
 
@@ -398,14 +398,14 @@ int pauseline(int line,int *abort)
 }
 
 
-int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int new)
+int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
 {
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],c,*b;
     int i,next,x,prtitle,listed=0,topofpage=0,ok=1,i2,val=1;
     uploadsrec u;
 
 
-    dliscan(udir[curdir].subnum);
+    dliscan();
     if(!slok(directories[udir[curdir].subnum].vacs,0)) {
         pl(get_string(82));
         return 0;
@@ -422,10 +422,10 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int new)
         read(dlf,(void *)&u,sizeof(uploadsrec));
         ok=1;
 
-        if(new)
+        if(isnew)
             if ((u.daten>=nscandate)||(!u.ats[0]));
         else ok=0;
-        if(u.ats[1]==100&&new) ok=1;
+        if(u.ats[1]==100&&isnew) ok=1;
 
         if(ss[0]) {
             strcpy(s,u.description);
@@ -787,10 +787,10 @@ void setformat()
     filter(filelistformat3,'\n');
 
 
-    stuff_in1(s,filelistformat,"Dom30   .Zip","æ"," 300","   0","  1","Fallen Angel","01/01/92","100","","");
+    stuff_in1(s,filelistformat,"Dom30   .Zip","\xAE"," 300","   0","  1","Fallen Angel","01/01/92","100","","");
     strcpy(s1,noc2(s));
     for(i=0;i<strlen(s1);i++) {
-        if(s1[i]=='æ') INDENTION=i;
+        if(s1[i]==(char)0xAE) INDENTION=i;
     }
     if(INDENTION>39) INDENTION=39;
     fclose(ff);

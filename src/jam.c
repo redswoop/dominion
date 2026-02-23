@@ -74,7 +74,7 @@ void getjamhdr(hdrinfo *hdr1)
 
         Len = JAMsysAlign( JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD )),
         SubFldLen -= Len,
-        JamRec.SubFieldPtr = JAMsysAddPtr( JamRec.SubFieldPtr, Len ))
+        JamRec.SubFieldPtr = (JAMSUBFIELD *)JAMsysAddPtr( JamRec.SubFieldPtr, Len ))
         {
         switch(JamRec.SubFieldPtr->LoID) {
         case 2: 
@@ -106,7 +106,7 @@ void getjamhdr(hdrinfo *hdr1)
 
 void show_message(int *next,int abort,char *buf,UINT32 len)
 {
-    unsigned char n[MAX_PATH_LEN],d[MAX_PATH_LEN],s[161],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN],s3[MAX_PATH_LEN],ch;
+    char n[MAX_PATH_LEN],d[MAX_PATH_LEN],s[161],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN],s3[MAX_PATH_LEN],ch;
     int f,done,end,cur,p,p1,p2,printit,ctrla,centre,i,i1,ansi,cabort=0;
     char a,a1,a2;
     long l1;
@@ -213,7 +213,8 @@ void read_msg(long recnr,int *next)
     JAMmbFetchMsgTxt(&JamRec,1);
 
     readms=1;
-    showmsgheader(0,hdr.subject,hdr.who_from,ctime(&hdr.date),hdr.who_to,msgr,nummsgs,hdr.comment,0,&abort);
+    { time_t _dt = (time_t)hdr.date;
+    showmsgheader(0,hdr.subject,hdr.who_from,ctime(&_dt),hdr.who_to,msgr,nummsgs,hdr.comment,0,&abort); }
     if(!abort)
         show_message(next,abort,JamRec.WorkBuf,JamRec.Hdr.TxtLen);
     if(abort)
@@ -254,7 +255,7 @@ int DisplayMsgSubFld( void )
 
         Len = JAMsysAlign( JamRec.SubFieldPtr->DatLen + sizeof( JAMBINSUBFIELD )),
         SubFldLen -= Len,
-        JamRec.SubFieldPtr = JAMsysAddPtr( JamRec.SubFieldPtr, Len ))
+        JamRec.SubFieldPtr = (JAMSUBFIELD *)JAMsysAddPtr( JamRec.SubFieldPtr, Len ))
         {
         printf( "%5u%5u %6lu \"%s\"\n",
         JamRec.SubFieldPtr->HiID, JamRec.SubFieldPtr->LoID,
@@ -269,7 +270,7 @@ int DisplayMsgSubFld( void )
 
 
 
-void scanj(int msgnum,int *nextsub,int sb, int private)
+void scanj(int msgnum,int *nextsub,int sb, int is_private)
 {
     long recnr,l,len;
     UINT32 ucrc,hcrc;
@@ -321,7 +322,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
 
         msgr=msgnum;
 
-        if(private&&disp) {
+        if(is_private&&disp) {
             f=0;
             JAMmbFetchMsgIdx(&JamRec,msgnum);
             if(ucrc==JamRec.Idx.UserCRC||hcrc==JamRec.Idx.UserCRC)
@@ -351,7 +352,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
             else
                 read_msg(msgnum,&next);
 
-            if(private) {
+            if(is_private) {
                 JAMmbLockMsgBase(&JamRec,1);
                 JamRec.Hdr.Attribute |= MSG_READ;
                 JAMmbStoreMsgHdr(&JamRec,msgnum);
@@ -387,7 +388,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
         strcpy(s,ss1);
 
         if(!s[0]) {
-            if(!private)
+            if(!is_private)
                 msgnum++;
             else
                 msgnum=findnextwaiting(msgnum,1,&thisuser);
@@ -413,7 +414,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
         }
         else if(s[0]=='!') {
             if(!(subboards[sb].attr & mattr_private)||cs())
-                private=opp(private);
+                is_private=opp(is_private);
         }
         else if(s[0]=='Q') {
             done=1;
@@ -438,7 +439,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
         else if(s[0]=='P'||s[0]=='R') {
             if(s[0]=='R') {
                 f=1;
-                if(private) {
+                if(is_private) {
                     JAMmbFetchMsgIdx(&JamRec,msgnum);
                         if(ucrc!=JamRec.Idx.UserCRC&&hcrc!=JamRec.Idx.UserCRC)
                             f=0;
@@ -531,7 +532,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
                 else
                     sprintf(s,"1(1%d1) ",msgnum);
 
-                if(s[0]=='/'||private)
+                if(s[0]=='/'||is_private)
                     sprintf(s1,"0%-30.30s By: %-21.21s To: %s",hdr.subject,hdr.who_from,hdr.who_to);
                 else
                     sprintf(s1,"0%-40.40s By: %-21.21s",hdr.subject,hdr.who_from);
@@ -548,7 +549,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
             getcmdtype();
     }
 
-    if(!private) {
+    if(!is_private) {
         nl();
         outstr(get_string(60));
         if(yn())
@@ -561,7 +562,7 @@ void scanj(int msgnum,int *nextsub,int sb, int private)
 
 void rscanj(void)
 {
-    int i,board,next,new;
+    int i,board,next,isnew;
     char s[MAX_PATH_LEN];
 
     if(subboards[usub[cursub].subnum].attr & mattr_private) {
@@ -636,7 +637,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
 
 
     if (!fsed) {
-        if ((lin=malloca((long)(maxli+10)*LEN))==NULL) {
+        if ((lin=(char *)malloca((long)(maxli+10)*LEN))==NULL) {
             return NULL;
         }
         for (i=0; i<maxli; i++)
@@ -679,7 +680,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
                 if (stricmp(s,"/Q")==0) {
                     savel=0;
                     if (quote!=NULL)
-                        get_quote(0);
+                        get_quote();
                 }
                 if (!stricmp(s,"/M")) {
                     savel=0;
@@ -748,10 +749,10 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
                     --curli;
                 } 
                 else if (curli==maxli) {
-                    pl("þ Message limit reached, /S to save þ");
+                    pl("ï¿½ Message limit reached, /S to save ï¿½");
                 } 
                 else if ((curli+5)==maxli) {
-                    pl("þ> 5 lines left <þ");
+                    pl("ï¿½> 5 lines left <ï¿½");
                 }
             }
         }
@@ -825,7 +826,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     }
 
     l1 += 1024;
-    if ((b=malloca(l1))==NULL) {
+    if ((b=(char *)malloca(l1))==NULL) {
         farfree(lin);
         pl("Out of memory.");
         return NULL;
@@ -914,7 +915,7 @@ int okpost(void)
         return 0;
     }
 
-    if (!slok(subboards[curlsub].postacs,1)) {
+    if (!slok((char *)subboards[curlsub].postacs,1)) {
         nl();
         pl("You can't post here.");
         nl();
@@ -963,7 +964,7 @@ void SaveJamMsg(hdrinfo *hdr,long len, char *b,int sb)
     JamRec.Hdr.SubfieldLen=SubFldPos;
     JamRec.Hdr.TxtLen=len;
     JamRec.Hdr.Attribute |= MSG_LOCAL;
-    time((long *)&JamRec.Hdr.DateWritten);
+    { time_t _now; time(&_now); JamRec.Hdr.DateWritten = (UINT32)_now; }
 
     JamMsgWrite(&JamRec,b);
     JamMsgDeinit(&JamRec);
@@ -1562,7 +1563,7 @@ void quote_jam(char *buf,long len,hdrinfo *hdr)
     if(quote!=NULL)
         farfree(quote);
 
-    nb=malloca(len+1000L);
+    nb=(char *)malloca(len+1000L);
 
     thisline[0]=0;
     word[0]=0;

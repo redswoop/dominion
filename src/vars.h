@@ -181,8 +181,8 @@ extern int bquote,equote,quoting;
 #endif
 
 /* from version.c */
-extern char *wwiv_version;
-extern char *wwiv_date;
+extern const char *wwiv_version;
+extern const char *wwiv_date;
 extern unsigned int wwiv_num_version,CRCVal;
 
 

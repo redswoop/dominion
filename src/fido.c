@@ -64,7 +64,7 @@ int tossmsg(int bn, char title[72], char to[36], char from[36], char *b, long le
     char *b1;
     FILE *log;
 
-    b1 = malloc(len);
+    b1 = (char *)malloc(len);
     r = w = 0;
 
     while (b[r]) {
@@ -192,7 +192,7 @@ int fidotosser(int bn)
         if (i1 > -1) {
             read(i1, &f, sizeof(fmsgrec));
             len = filelength(i1) - sizeof(fmsgrec);
-            b = malloca(len);
+            b = (char *)malloca(len);
             if (b == NULL) {
                 pl("Not Enough Memory");
                 return 1;

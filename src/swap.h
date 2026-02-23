@@ -1,3 +1,5 @@
+#ifndef _SWAP_H_INCLUDED
+#define _SWAP_H_INCLUDED
 /* This conditional extern statement is required when compiling with
    Turbo C++
  */
@@ -38,3 +40,4 @@ int xms_installed (void);
 #define BAD_ENVIRON     (0x0A)   /* Invalid environment segment--unlikely      */
 #define BAD_FORMAT      (0x0B)   /* Format invalid--unlikely                   */
 
+#endif /* _SWAP_H_INCLUDED */

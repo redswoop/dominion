@@ -138,7 +138,7 @@ void getselectt(unsigned short *i,int row,int col,int len)
     mciok=mcik;
 }
 
-int getselectd(int *i,int row,int col,int len)
+int getselectd(int row,int col,int len)
 {
     int i1;
     char s[41];
@@ -149,12 +149,11 @@ int getselectd(int *i,int row,int col,int len)
     npr("[%d;%dH",row+1,col+1);
 #else
     pr("[%d;%dH",row+1,col+1);
-    for(i=0;i<len;i++) outchr(32);
+    for(i1=0;i1<len;i1++) outchr(32);
     pr("[%d;%dH",row+1,col+1);
 #endif
     input(s,len);
-    *i=atoi(s);
-    return((*i));
+    return(atoi(s));
 }
 
 
@@ -255,7 +254,7 @@ void filecfg()
             sscanf(s,"%f",&syscfg.req_ratio);
             break;
         case '6':
-            getselectd(&nifty.fptsratio,8,23,20);
+            nifty.fptsratio = getselectd(8,23,20);
             if(nifty.fptsratio<1)
                 nifty.fptsratio=1;
             break;
@@ -276,7 +275,7 @@ void filecfg()
             else syscfg.newuploads=255;
             break;
         case '9':
-            getselectd(&nifty.fcom,12,23,3);
+            nifty.fcom = getselectd(12,23,3);
             break;
         }
     } 
@@ -509,7 +508,7 @@ void varible()
             nifty.echochar=s[0];
             break;
         case '4':
-            getselectd(&syscfg.maxwaiting,6,23,4);
+            syscfg.maxwaiting = getselectd(6,23,4);
             break;
         case '5':
             togglebit((long *)&nifty.nifstatus,nif_comment);
@@ -518,7 +517,7 @@ void varible()
             nifty.matrixtype=!(nifty.matrixtype); 
             break;
         case '7':
-            nifty.lockoutrate=getselectd(&nifty.lockoutrate,9,23,20);
+            nifty.lockoutrate=getselectd(9,23,20);
             break;
         case '8':
             getselectt(&syscfg.sysoplowtime,11,23,20);
@@ -542,10 +541,10 @@ void varible()
             }
             break;
         case 'A':
-            getlist(&nifty.chatcolor,chattype,3);
+            { int _tmp = nifty.chatcolor; getlist(&_tmp,chattype,3); nifty.chatcolor = _tmp; }
             break;
         case 'B':
-            nifty.systemtype=getselectd(&nifty.lockoutrate,16,23,20);
+            nifty.systemtype=getselectd(16,23,20);
             break;
 
         case 'C':
@@ -622,10 +621,10 @@ void modeminfo()
             done=1; 
             break;
         case '1': 
-            getselectd(&syscfg.primaryport,2,18,2); 
+            syscfg.primaryport = getselectd(2,18,2); 
             break;
         case '2': 
-            getselectd(&syscfg.com_ISR[syscfg.primaryport],3,18,2); 
+            syscfg.com_ISR[syscfg.primaryport] = getselectd(3,18,2); 
             break;
         case '3': 
             getselect(s,4,18,4,1);
@@ -676,19 +675,19 @@ void autoval()
             if(numed>0) numed--; 
             break;
         case 'S': 
-            getselectd(&syscfg.autoval[i1].sl,i1+2,7,3); 
+            syscfg.autoval[i1].sl = getselectd(i1+2,7,3); 
             break;
         case 'D': 
-            getselectd(&syscfg.autoval[i1].dsl,i1+2,15,3); 
+            syscfg.autoval[i1].dsl = getselectd(i1+2,15,3); 
             break;
         case 'A': 
-            setbit(i1+2,21,"ABCDEFGHIJKLMNOP",&syscfg.autoval[i1].ar); 
+            { int _tmp = syscfg.autoval[i1].ar; setbit(i1+2,21,"ABCDEFGHIJKLMNOP",&_tmp); syscfg.autoval[i1].ar = _tmp; } 
             break;
         case 'I': 
-            setbit(i1+2,41,"ABCDEFGHIJKLMNOP",&syscfg.autoval[i1].dar); 
+            { int _tmp = syscfg.autoval[i1].dar; setbit(i1+2,41,"ABCDEFGHIJKLMNOP",&_tmp); syscfg.autoval[i1].dar = _tmp; } 
             break;
         case 'R': 
-            setbit(i1+2,60,restrict_string,&syscfg.autoval[i1].restrict); 
+            { int _tmp = syscfg.autoval[i1].restrict; setbit(i1+2,60,restrict_string,&_tmp); syscfg.autoval[i1].restrict = _tmp; } 
             break;
         }
     } 
@@ -760,13 +759,13 @@ void archive()
             togglebit((long *)&xarc[i1].attr,xarc_swap);
             break;
         case '8': 
-            getselectd(&xarc[i1].ok1,11,16,2);
+            xarc[i1].ok1 = getselectd(11,16,2);
         case '9': 
-            getselectd(&xarc[i1].ok2,12,16,2);
+            xarc[i1].ok2 = getselectd(12,16,2);
         case '0': 
-            getselectd(&xarc[i1].nk1,13,16,2);
+            xarc[i1].nk1 = getselectd(13,16,2);
         case 'A': 
-            getselectd(&xarc[i1].nk2,14,16,2);
+            xarc[i1].nk2 = getselectd(14,16,2);
         }
     } 
     while(!done&&!hangup);
@@ -828,19 +827,19 @@ void secleved()
             if(i1>255) i1=255; 
             break;
         case '1': 
-            getselectd(&syscfg.sl[i1].time_per_day,4,27,3); 
+            syscfg.sl[i1].time_per_day = getselectd(4,27,3); 
             break;
         case '2': 
-            getselectd(&syscfg.sl[i1].time_per_logon,5,27,3); 
+            syscfg.sl[i1].time_per_logon = getselectd(5,27,3); 
             break;
         case '3': 
-            getselectd(&syscfg.sl[i1].maxcalls,6,27,3); 
+            syscfg.sl[i1].maxcalls = getselectd(6,27,3); 
             break;
         case '4': 
-            getselectd(&syscfg.sl[i1].emails,7,27,3); 
+            syscfg.sl[i1].emails = getselectd(7,27,3); 
             break;
         case '5': 
-            getselectd(&syscfg.sl[i1].posts,8,27,3); 
+            syscfg.sl[i1].posts = getselectd(8,27,3); 
             break;
         case '6': 
             togglebit((long *)&syscfg.sl[i1].ability,ability_post_anony);
@@ -903,7 +902,7 @@ void nued()
             done=1; 
             break;
         case '1': 
-            nifty.nulevel=getselectd(&i,2,31,2);
+            nifty.nulevel=getselectd(2,31,2);
             nifty.nulevel--;
             syscfg.newusersl=syscfg.autoval[nifty.nulevel].sl;
             syscfg.newuserdsl=syscfg.autoval[nifty.nulevel].dsl;
@@ -912,20 +911,20 @@ void nued()
             getselect(nifty.nuinf,3,31,8,0); 
             break;
         case '3': 
-            syscfg.newusergold=getselectd(&i,4,31,8);
+            syscfg.newusergold=getselectd(4,31,8);
             break;
 #ifdef NUV
         case '4': 
             togglebit((long *)&nifty.nifstatus,nif_nuv);
             break;
         case '5': 
-            nifty.nuvyes=getselectd(&i,6,31,8);
+            nifty.nuvyes=getselectd(6,31,8);
             break;
         case '6': 
-            nifty.nuvbad=getselectd(&i,7,31,8); 
+            nifty.nuvbad=getselectd(7,31,8); 
             break;
         case '7': 
-            nifty.nuvlevel=getselectd(&i,8,31,8); 
+            nifty.nuvlevel=getselectd(8,31,8); 
             break;
         case '8': 
             getselect(nifty.nuvinf,9,31,8,0); 
@@ -938,10 +937,10 @@ void nued()
             syscfg.closedsystem=!(syscfg.closedsystem); 
             break;
         case 'A': 
-            syscfg.maxusers=getselectd(&i,12,31,8); 
+            syscfg.maxusers=getselectd(12,31,8); 
             break;
         case 'C': 
-            nifty.nuvbadlevel=getselectd(&i,14,31,8); 
+            nifty.nuvbadlevel=getselectd(14,31,8); 
             break;
         case 'B': 
             nifty.nuvaction++;

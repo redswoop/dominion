@@ -4,6 +4,7 @@
 #include "vars.h"
 #include <math.h>
 #include "menudb.h"
+#include "mci_bbs.h"
 
 #define modem_time 3.5
 /* extern unsigned _stklen=30000U; — DOS stack size, not needed on macOS */
@@ -12,7 +13,7 @@ extern char menuat[15];
 int node=0,SYSTEMDEBUG=0;
 
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],ch;
     int i,i2,v,port,show=0;
@@ -28,6 +29,7 @@ void main(int argc, char *argv[])
     }
 
     io_init(&io);
+    mci_bbs_init();
     already_on=0;
     endday=0;
     oklevel=0;

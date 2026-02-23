@@ -99,8 +99,14 @@ int kbhit(void)
     return 0;
 }
 
-/* getch() is provided by ncurses via macro: getch() → wgetch(stdscr).
- * No definition needed here — ncurses handles it. */
+/* getch() — ncurses macro was #undef'd in io_ncurses.h, so provide a real function.
+ * Must be extern "C" to match ncurses declaration and platform.h. */
+extern "C" int getch(void)
+{
+    if (!nc_active) return 0;
+    nodelay(stdscr, FALSE);
+    return wgetch(stdscr);
+}
 
 int getche(void)
 {

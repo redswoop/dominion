@@ -56,7 +56,7 @@ static void sp_execute_ansi(void)
 {
     int args[11], argptr, count, ptr, tempptr;
     char cmd, temp[11];
-    static char *clrlst = "04261537";
+    static const char *clrlst = "04261537";
 
     if (ansistr[1] != '[') {
         /* Not a CSI sequence — ignore */

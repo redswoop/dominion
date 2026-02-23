@@ -8,14 +8,14 @@ extern menurec tg[50];
 extern char maxcmd,menuat[15];
 extern int fastlogon;
 
-struct {
+struct mmfmt_t {
     char         fmt[41],
     fill,
     promptfn[8],
     ansifn[8],
     ansiftfn[8],
     center;
-} 
+}
 mmfmt;
 
 

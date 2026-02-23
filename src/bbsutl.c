@@ -593,7 +593,7 @@ void sysoplog(char s[161])
 
 char *smkey(char *avail,int num, int slash, int crend,int full)
 {
-    static unsigned char cmd1[MAX_PATH_LEN];
+    static char cmd1[MAX_PATH_LEN];
     char s[MAX_PATH_LEN],ch;
     int i=0,i1=0,done=0;
 
@@ -671,9 +671,9 @@ char *smkey(char *avail,int num, int slash, int crend,int full)
 
 char MCISTR[161];
 extern mmrec pp;
-int toptentype=0,whichten=0;
 
-char *topten(int type);
+#include "mci.h"
+#include "mci_bbs.h"
 
 
 int sysop2()
@@ -699,231 +699,30 @@ int sysop2()
 
 void setmci(char ch)
 {
-    char s[161];
-    int x;
-    userrec u;
+    char buf[161];
 
-    strcpy(s,"");
-
-    switch (ch) {
-    case ']': 
-        strcpy(s,pp.pausefile); 
-        break;
-    case '[': 
-        strcpy(s,times()); 
-        break;
-    case '`': 
-        out1ch('`'); 
-        if(outcom) outcomch('`'); 
-        break;
-    case '!': 
-        sprintf(s,"%.0f%%",syscfg.req_ratio*100); 
-        break;
-    case '%': 
-        sprintf(s,"%.0f%%",syscfg.post_call_ratio*100); 
-        break;
-    case '#': 
-        sprintf(s,"%.0f%%",ratio()*100); 
-        break;
-    case '$': 
-        sprintf(s,"%.0f%%",post_ratio()*100); 
-        break;
-    case '^': 
-        if(ratio()>=syscfg.req_ratio) strcpy(s,"Passed"); 
-        else strcpy(s,"Failed"); 
-        break;
-    case '&': 
-        if(post_ratio()>=syscfg.post_call_ratio) strcpy(s,"Passed"); 
-        else strcpy(s,"Failed"); 
-        break;
-    case '*': 
-        sprintf(s,"%-4d",thisuser.msgpost); 
-        break;
-    case '(': 
-        sprintf(s,"%-4d",thisuser.logons); 
-        break;
-    case ')': 
-        sprintf(s,"%-4d",thisuser.ontoday); 
-        break;
-    case '+': 
-        sprintf(s,"%s",status.lastuser); 
-        break;
-    case '@': 
-        strcpy(s,get_string(sysop2()?4:5)); 
-        break;
-    case '-': 
-        sprintf(s,"%s [%s]",nam(&thisuser,usernum),thisuser.comment); 
-        break;
-    case '\\': 
-        mciok=0; 
-        break;
-/*       case '/':
-        okabort=0; 
-        break;
-*/
-    case 'a': 
-        userdb_load(status.amsguser,&u);
-        if(status.amsganon==1) {
-            if(so()) {
-                strcpy(s," ");
-                strcat(s,nam(&u,status.amsguser));
-                strcat(s," ");
-            } 
-            else strcpy(s,"Anonymous!");
-        } 
-        else strcpy(s,nam(&u,status.amsguser));
-        break;
-    case 'b': 
-        strcpy(s,proto[thisuser.defprot].description); 
-        break;
-    case 'c': 
-        sprintf(s,"%d",thisuser.timebank); 
-        break;
-    case 'd': 
-        sprintf(s,"%d",numwaiting(&thisuser)); 
-        break;
-    case 'e': 
-        strcpy(s,thisuser.comment); 
-        break;
-    case 'f': 
-        sprintf(s,"%d",nummsgs-msgr); 
-        break;
-
-    case 'g': 
-        whichten++; 
-        if(whichten==10) whichten=0; 
-        break;
-    case 'h': 
-        strcpy(s,topten(0)); 
-        break;
-    case 'i': 
-        strcpy(s,topten(1)); 
-        break;
-
-    case 'j': 
-        toptentype=0; 
-        whichten=0; 
-        break;
-    case 'k': 
-        toptentype=1; 
-        whichten=0; 
-        break;
-    case 'l': 
-        toptentype=2; 
-        whichten=0; 
-        break;
-    case 'm': 
-        toptentype=3; 
-        whichten=0; 
-        break;
-    case 'n': 
-        toptentype=4; 
-        whichten=0; 
-        break;
-    case 'o': 
-        sprintf(s,"%d",numbatchdl); 
-        break;
-    case 'p': 
-        sprintf(s,"%d",numbatch-numbatchdl); 
-        break;
-    case 'q': 
-        sprintf(s,"%-1.f",batchsize); 
-        break;
-    case 'r': 
-        sprintf(s,"%s",ctim(batchtime)); 
-        break;
-    case 't': 
-        sprintf(s,"%.0f",nsl()/60.0); 
-        break;
-    case 'A': 
-        if(usub[cursub].subnum>-1)
-            sprintf(s,"%s",usub[cursub].keys);
-        else strcpy(s,"-1");
-        break;
-    case 'B': 
-        if(usub[cursub].subnum>-1)
-            sprintf(s,"%s",subboards[usub[cursub].subnum].name);
-        else strcpy(s,"No Subs");
-        break;
-    case 'C': 
-        if(udir[curdir].subnum>-1)
-            sprintf(s,"%s",udir[curdir].keys);
-        else strcpy(s,"-1");
-        break;
-    case 'D': 
-        if(udir[curdir].subnum>-1)
-            sprintf(s,"%s%s",directories[udir[curdir].subnum].name,(directories[udir[curdir].subnum].mask & mask_no_ratio)?" [NR]":"");
-        else strcpy(s,"No Dirs");
-        break;
-    case 'E': 
-        sprintf(s,"%s",thisuser.laston); 
-        break;
-    case 'F': 
-        sprintf(s,"%d",thisuser.fpts); 
-        break;
-    case 'G': 
-        sprintf(s,"%s",conf[curconf].name); 
-        break;
-    case 'H': 
-        sprintf(s,"%s",pnam(&thisuser));
-        break;
-    case 'I': 
-        strcpy(s,""); 
-        break;
-    case 'J': 
-        sprintf(s,"%d",thisuser.dsl); 
-        break;
-    case 'K': 
-        sprintf(s,"%-4ld",thisuser.uk); 
-        break;
-    case 'L': 
-        sprintf(s,"%d",usernum); 
-        break;
-    case 'M': 
-        nl(); 
-        break;
-    case 'N': 
-        strcpy(s,nam(&thisuser,usernum)); 
-        break;
-    case 'O': 
-        sprintf(s,"%-4d",thisuser.downloaded); 
-        break;
-    case 'P': 
-        pausescr(); 
-        break;
-    case 'Q': 
-        sprintf(s,"%d",numf); 
-        break;
-    case 'R': 
-        sprintf(s,"%s",thisuser.realname); 
-        break;
-    case 'S': 
-        itoa(thisuser.sl,s,10); 
-        break;
-    case 'T': 
-        strcpy(s,ctim(nsl())); 
-        break;
-    case 'U': 
-        sprintf(s,"%-4d",thisuser.uploaded); 
-        break;
-    case 'V': 
-        sprintf(s,"%d",msgr); 
-        break;
-    case 'W': 
-        sprintf(s,"%d",nummsgs); 
-        break;
-    case 'X': 
-        sprintf(s,"%-4ld",thisuser.dk); 
-        break;
-    case 'Y': 
-        delay(500); 
-        break;
-    case 'Z': 
-        outstr(get_say(0)); 
-        break;
-    default: 
-        break;
+    /* Try the resolver for pure data codes */
+    if (mci_resolve(ch, buf, sizeof(buf))) {
+        strcpy(MCISTR, buf);
+        return;
     }
-    strcpy(MCISTR,s);
+
+    /* Side-effect and mutation codes — handle inline */
+    MCISTR[0] = '\0';
+    switch (ch) {
+    case '`':  out1ch('`'); if (outcom) outcomch('`'); break;
+    case '\\': mciok = 0; break;
+    case 'M':  nl(); break;
+    case 'P':  pausescr(); break;
+    case 'Y':  delay(500); break;
+    case 'Z':  outstr(get_say(0)); break;
+    case 'g':  mci_topten_advance(); break;
+    case 'j':  mci_topten_set_type(0); break;
+    case 'k':  mci_topten_set_type(1); break;
+    case 'l':  mci_topten_set_type(2); break;
+    case 'm':  mci_topten_set_type(3); break;
+    case 'n':  mci_topten_set_type(4); break;
+    default:   break;
+    }
 }
 

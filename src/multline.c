@@ -4,6 +4,13 @@
 
 #include "json_io.h"
 
+/* Forward declarations for multi-node I/O */
+int open_r(char *s);
+int open_w(char *s, int access);
+int open_w_exist(char *s, int access);
+FILE *fopen_r(char *s, char *mode);
+FILE *fopen_w(char *s, char *mode);
+
 /* Multi-node file handles — not in globals, local to this module */
 static int dlf_w = -1;
 static int edlf_w = -1;
@@ -57,7 +64,7 @@ FILE *fopen_w(char *s, char *mode) /* open stream for write */
 
   do
     f=_fsopen(s,mode,SH_DENYWR);
-  while (f<0);
+  while (f==NULL);
   return(f);
 }
 

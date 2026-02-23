@@ -4,7 +4,6 @@
 /* File: conio.c */
 
 void movecsr(int x,int y);
-void term_goto(int x, int y);   /* cursor position: local + TCP */
 int wherex();
 int wherey();
 void lf();
@@ -112,5 +111,12 @@ void wfct(void);
 void wfcs(void);
 int ok_local();
 void bargraph(int percent);
+
+/* File: terminal_bridge (term_goto) */
+#ifdef __cplusplus
+extern "C" void term_goto(int x, int y);
+#else
+void term_goto(int x, int y);
+#endif
 
 #endif /* _FCNS_IO_H_ */

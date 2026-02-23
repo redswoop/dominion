@@ -2,8 +2,8 @@
 #pragma hdrstop
 
 typedef struct {
-    unsigned char thestring[161];
-} 
+    char thestring[161];
+}
 stringrec;
 
 int opp(int i)

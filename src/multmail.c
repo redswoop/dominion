@@ -221,7 +221,7 @@ void maillist()
         nl();
       } else {
         i1=filelength(i);
-        mml_s=malloca(i1+10L);
+        mml_s=(char *)malloca(i1+10L);
         read(i,mml_s,i1);
         mml_s[i1]='\n';
         mml_s[i1+1]=0;

@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include "platform.h"
 
+/* exist() is in disk.c, declared in fcns_user.h */
+int exist(char *s);
+
 /* Internal state */
 static char db_menudir[MAX_PATH_LEN];
 

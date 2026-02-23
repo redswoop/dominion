@@ -42,7 +42,7 @@ void showsubs()
 
     outchr(12);
     abort=0;
-    pla("0NN2д0AR2д0Name2дддддддддддддддддддддддддддддддддддддд0FileName2д0RAcs2д0PAcs2д0Max2д0Conf2",
+    pla("0NN2О©╫0AR2О©╫0Name2О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫0FileName2О©╫0RAcs2О©╫0PAcs2О©╫0Max2О©╫0Conf2",
     &abort);
     for (i=0; (i<num_subs) && (!abort); i++) {
         boarddata(i,s);
@@ -85,22 +85,22 @@ void modify_sub(int n)
         npr("3E. Netmail Path : 0%s\r\n",r.nmpath);
         s[0]=196;
         if(r.attr & mattr_ansi_only) s[1]='G'; 
-        else s[1]='д';
+        else s[1]=(char)196;
         if(r.attr & mattr_autoscan) s[2]='A'; 
-        else s[2]='д';
+        else s[2]=(char)196;
         if(r.attr & mattr_fidonet) s[4]='F'; 
-        else s[4]='д';
+        else s[4]=(char)196;
         if(r.attr & mattr_nomci) s[6]='M'; 
         else s[6]=196;
         if(r.attr & mattr_netmail) s[7]='N'; 
         else s[7]=196;
         if(r.attr & mattr_private) s[8]='P';
-        else s[8]='д';
+        else s[8]=(char)196;
 
         if(r.anony & anony_real_name) s[5]='R'; 
-        else s[5]='д';
+        else s[5]=(char)196;
         if(r.anony & anony_enable_anony) s[3]='U'; 
-        else s[3]='д';
+        else s[3]=(char)196;
 
 
         s[9]=0;
@@ -169,12 +169,12 @@ void modify_sub(int n)
         case '4':
             nl();
             inputdat("New Read ACS",s,21,0);
-            if(s[0]) strcpy(r.readacs,s);
+            if(s[0]) strcpy((char *)r.readacs,s);
             break;
         case '5':
             nl();
             inputdat("New Post ACS",s,21,0);
-            if(s[0]) strcpy(r.postacs,s);
+            if(s[0]) strcpy((char *)r.postacs,s);
             break;
         case '6':
             nl();
@@ -299,8 +299,8 @@ void insert_sub(int n,int config)
 
     r.nmpath[0]=0;
     r.conf='@';
-    strcpy(r.readacs,"S20");
-    strcpy(r.postacs,"S20");
+    strcpy((char *)r.readacs,"S20");
+    strcpy((char *)r.postacs,"S20");
     r.anony=0;
     r.attr=0;
     togglebit((long *)&r.anony,anony_enable_anony);
@@ -418,7 +418,7 @@ void showconf()
 
     outchr(12);
     abort=0;
-    pla("0NN2дд0Name2ддддддддддддддддддддддддддддддддддддд0SL2ддддддд0Flags2дддддддддддддддддд",&abort);
+    pla("0NN2О©╫О©╫0Name2О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫0SL2О©╫О©╫О©╫О©╫О©╫О©╫О©╫0Flags2О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫",&abort);
     for (i=0; (i<num_conf) && (!abort); i++) {
         confdata(i,s);
         pla(s,&abort);

@@ -20,7 +20,8 @@
 /* com.c file-scoped state → io_session_t (Phase 2) */
 #define bluein      io.bluein
 
-extern char MCISTR[161];
+#include "mci.h"
+
 extern int readms;
 
 
@@ -30,20 +31,7 @@ extern int readms;
 
 int strlenc(char *s)
 {
-    int len=0,x=0;
-    while(s[x]) {
-        if(s[x]!=3&&s[x]!=14&&s[x]!='`') {
-            len++;
-            x++;
-        }
-        else {
-            x++;
-            setmci(toupper(s[x]));
-            len+=strlen(MCISTR);
-            x++;
-        }
-    }
-    return len;
+    return mci_strlen(s);
 }
 
 

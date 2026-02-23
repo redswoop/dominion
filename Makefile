@@ -21,6 +21,7 @@ OBJDIR   = $(BUILDDIR)/obj
 
 CC = cc
 CXX = c++
+# C flags — used only for standalone tools (mkconfig, dosconv, etc.)
 CFLAGS = -std=gnu89 -DPD \
          -Wall -Wno-implicit-function-declaration \
          -Wno-return-type -Wno-pointer-sign \
@@ -40,12 +41,22 @@ CFLAGS = -std=gnu89 -DPD \
          -Wno-multichar \
          -fsigned-char \
          -g -O0
-CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-unused-parameter \
+# C++ flags — used for ALL BBS source (.c compiled as C++ via -x c++, plus .cpp)
+CXXFLAGS = -std=c++17 -DPD \
+           -Wall -Wextra \
+           -Wno-unused-parameter -Wno-unused-variable -Wno-unused-value \
+           -Wno-return-type -Wno-parentheses -Wno-dangling-else \
+           -Wno-format -Wno-switch \
+           -Wno-comment -Wno-unknown-pragmas \
+           -Wno-invalid-source-encoding \
+           -Wno-char-subscripts -Wno-four-char-constants -Wno-multichar \
+           -Wno-write-strings -Wno-narrowing -Wno-register \
+           -Wno-deprecated-declarations \
            -fsigned-char -g -O0
 
 # The BBS core modules (from the original makefile)
 BBS_CORE = bbs ansi_attr bbs_output bbs_input bbs_ui conio bbsutl file file1 mm \
-           utility extrn mm1 tcpio jam stream_processor
+           utility extrn mm1 tcpio jam stream_processor mci mci_bbs
 
 BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
               file2 file3 archive filesys \
@@ -79,9 +90,9 @@ binary: $(TARGET)
 $(TARGET): $(OBJS) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) -lm -lncurses
 
-# Compile C
+# Compile .c as C++ (BBS source)
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -x c++ -c $< -o $@
 
 # Compile C++
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
@@ -118,7 +129,7 @@ $(BUILDDIR)/jamdump: $(TOOLDIR)/jamdump.c $(SRCDIR)/jam.h $(SRCDIR)/jamsys.h | $
 # Terminal test — links against real BBS .o files to test rendering
 TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o
 $(BUILDDIR)/termtest: $(TOOLDIR)/termtest.c $(TERMTEST_OBJS) | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(TERMTEST_OBJS) -lncurses
+	$(CXX) $(CXXFLAGS) -x c++ -I$(SRCDIR) -o $@ $< $(TERMTEST_OBJS) -lncurses
 
 # Raw input byte inspector — standalone, no BBS dependencies
 $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
@@ -127,7 +138,7 @@ $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 # Input function test — links against real BBS .o files to test input1/inputdat/getkey
 INPUTTEST_OBJS = $(OBJDIR)/bbs_output.o $(OBJDIR)/bbs_input.o $(OBJDIR)/bbs_ui.o $(OBJDIR)/ansi_attr.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/stream_processor.o
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
+	$(CXX) $(CXXFLAGS) -x c++ -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
 
 # IO test — clean Terminal class, ZERO BBS dependencies
 $(BUILDDIR)/iotest: $(TOOLDIR)/iotest.cpp $(OBJDIR)/terminal.o | $(BUILDDIR)

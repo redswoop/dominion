@@ -39,19 +39,19 @@ void logtypes(char type,char *fmt, ...)
 
     switch(type) {
     case 0: 
-        strcpy(s1,"7ì7>"); 
+        strcpy(s1,"7ï¿½7>"); 
         break;
     case 1: 
-        strcpy(s1,"5þ5þ"); 
+        strcpy(s1,"5ï¿½5ï¿½"); 
         break;
     case 2: 
-        strcpy(s1,"1þ1>"); 
+        strcpy(s1,"1ï¿½1>"); 
         break;
     case 3: 
-        strcpy(s1,"2þ2þ"); 
+        strcpy(s1,"2ï¿½2ï¿½"); 
         break;
     case 4: 
-        strcpy(s1,"3ì3>"); 
+        strcpy(s1,"3ï¿½3>"); 
         break;
     case 5: 
         strcpy(s1,"9#9#9#"); 
@@ -72,7 +72,7 @@ void badcommand(char onf,char tw)
     char s[MAX_PATH_LEN];
 
     nl();
-    sprintf(s,"2þ2þ 0Invalid Command Type %c%c",onf,tw);
+    sprintf(s,"2ï¿½2ï¿½ 0Invalid Command Type %c%c",onf,tw);
     sysoplog(s);
     pl(s);
     nl();
@@ -187,8 +187,10 @@ void sysopcmd(char type,char ms[41])
         chuser(); 
         break;
     case 'C': 
-        pl(((*(char far *)0x00000417L ^= 0x10) & 0x10) ?
-        "Sysop now unavailable" : "Sysop now available");
+        { static char _sysop_avail_flag = 0;
+        _sysop_avail_flag ^= 0x10;
+        pl(_sysop_avail_flag & 0x10 ?
+        (char *)"Sysop now unavailable" : (char *)"Sysop now available"); }
         logtypes(3,"Changed Chat Availability");
         topscreen();
         break;
@@ -243,7 +245,7 @@ char *retfrompldn;
 
 int pmmkey(char *s)
 {
-    static unsigned char cmd1[10],cmd2[MAX_PATH_LEN],ch;
+    static char cmd1[10],cmd2[MAX_PATH_LEN]; unsigned char ch;
     int i,i1,i2,p;
 
     do {
@@ -364,7 +366,7 @@ void bar(int where)
     int i;
 
     myxy(where,1);
-    outstr("[K³[79C³");
+    outstr("[Kï¿½[79Cï¿½");
 }
 
 void drawheader(void)
@@ -376,7 +378,7 @@ void drawheader(void)
     for(i=0;i<numtitles;i++) {
         if(i==curtitle) npr(""); 
         else npr("");
-        npr("%-19.19s³",menutitles[i]);
+        npr("%-19.19sï¿½",menutitles[i]);
     }
     ansic(0);
 }
@@ -567,7 +569,7 @@ void configpldn(int config)
 void makerembox(int x,int y,int ylen,char *fn)
 {
     int i,xx,yy,old;
-    unsigned char s[212];
+    char s[212];
     FILE *f;
 
     sprintf(s,"%s%s.fmt",syscfg.menudir,fn);

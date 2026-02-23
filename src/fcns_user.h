@@ -66,7 +66,7 @@ char *cn(char c);
 char *describe(char col);
 void color_list();
 void config_qscan(int dl);
-void list_macro(unsigned char *s);
+void list_macro(char *s);
 void make_macros();
 void input_pw1();
 void getfileformat();
@@ -113,6 +113,7 @@ int checkacs(int w);
 int finduser1(char *sx);
 void ssm(unsigned int un, unsigned int sy, char *s);
 void rsm(int un, userrec *u);
+char *stristr(char *t, char *s);
 
 
 /* File: uedit.c */
@@ -127,5 +128,9 @@ void uedit(int usern);
 /* File: regis.c */
 
 void checkreg(void);
+
+/* File: personal.c (additional) */
+
+void modify_mailbox(void);
 
 #endif /* _FCNS_USER_H_ */

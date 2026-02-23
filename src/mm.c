@@ -7,15 +7,15 @@ extern int SYSTEMDEBUG;
 menurec tg[50];
 mmrec pp;
 
-extern struct {
+struct mmfmt_t {
     char         fmt[41],
     fill,
     promptfn[8],
     ansifn[8],
     ansiftfn[8],
     center;
-} 
-mmfmt;
+};
+extern struct mmfmt_t mmfmt;
 
 
 void handleinput(char *s,int begx);
@@ -584,14 +584,14 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
         switch(type[1])
         {
         case 'A': 
-            addbbs(ms[0]?ms:"bbslist.msg"); 
+            addbbs(ms[0]?ms:(char *)"bbslist.msg");
             break;
-        case 'R': 
-            printfile(ms[0]?ms:"bbslist.msg");
+        case 'R':
+            printfile(ms[0]?ms:(char *)"bbslist.msg");
             pausescr();
             break;
-        case 'S': 
-            searchbbs(ms[0]?ms:"bbslist.msg");
+        case 'S':
+            searchbbs(ms[0]?ms:(char *)"bbslist.msg");
             break;
         default: 
             badcommand('Q',type[1]);

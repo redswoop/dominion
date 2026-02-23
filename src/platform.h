@@ -166,7 +166,10 @@ int int86(int intno, union REGS *inregs, union REGS *outregs);
 #define _SOLIDCURSOR   1
 #define _NORMALCURSOR  2
 
-/* Console functions — implemented in console_stubs.c */
+/* Console functions — implemented in platform_stubs.c */
+#ifdef __cplusplus
+extern "C" {
+#endif
 void textcolor(int color);
 void textattr(int attr);
 void clrscr(void);
@@ -181,6 +184,9 @@ int  getch(void);
 int  getche(void);
 void cprintf(const char *fmt, ...);
 void cputs(const char *s);
+#ifdef __cplusplus
+}
+#endif
 
 /* directvideo — no-op */
 #define directvideo  /* nothing */
@@ -373,5 +379,32 @@ extern char **environ;
 
 /* setdta — no-op */
 #define setdta(p)  /* no-op */
+
+/* --- Functions in platform_stubs.c that need prototypes for C++ --- */
+int  _chmod(const char *path, int func, ...);
+int  _getdrive(void);
+int  chsize(int fd, long size);
+long dostounix(struct date *d, struct time *t);
+void unixtodos(long unixtime, struct date *d, struct time *t);
+int  fnsplit(const char *path, char *drive, char *dir, char *name, char *ext);
+/* swap() declared in swap.h with extern "C" linkage */
+#ifndef _SWAP_H_INCLUDED
+#ifdef __cplusplus
+extern "C"
+#endif
+int  swap(unsigned char *program_name, unsigned char *command_line,
+          unsigned char *exec_return, unsigned char *swap_fname);
+#endif
+unsigned long bp(char *registration_string, unsigned int security_code);
+void pr(char *fmt, ...);
+
+/* --- BBS stub functions (platform_stubs.c) — not yet implemented --- */
+void inmsg(void *msg, char *title, int *anession, int mode,
+           char *subname, int flags);
+char *readfile(void *msg, char *subname, long *len);
+void remove_link(void *msg, char *subname);
+char *rnam(char *name);
+void sendout_email(char *title, void *msg, int anession,
+                   int usernum, int sysnum, int flag);
 
 #endif /* _PLATFORM_H_ */

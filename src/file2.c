@@ -117,7 +117,7 @@ void getfileinfo()
 
 int printfileinfo(uploadsrec *u, int dn)
 {
-    char s[161],s1[MAX_PATH_LEN],s2[11],s3[11],s4[11],status[MAX_PATH_LEN];
+    char s[161],s1[MAX_PATH_LEN],s2[11],s3[11],s4[11],fstatus[MAX_PATH_LEN];
     userrec us;
     double t;
     int i,abort=0;
@@ -129,11 +129,11 @@ int printfileinfo(uploadsrec *u, int dn)
         t=((double) (((u->numbytes)+127)/128)) * (1620.0)/((double) (modem_speed));
     abort=0;
 
-    strcpy(status,"");
+    strcpy(fstatus,"");
     sprintf(s,"%s%s",directories[dn].dpath,u->filename);
-    if(!exist(s)) strcpy(status,"0(6File is OffLine0) ");
-    if(u->ats[0]==0) strcat(status,"0(8Unvalidated0) ");
-    if(u->mask & mask_unavail) strcat(status,"1(8Unavailble1)");
+    if(!exist(s)) strcpy(fstatus,"0(6File is OffLine0) ");
+    if(u->ats[0]==0) strcat(fstatus,"0(8Unvalidated0) ");
+    if(u->mask & mask_unavail) strcat(fstatus,"1(8Unavailble1)");
 
     while((fgets(s1,81,f))!=NULL&&!abort) {
         filter(s1,'\n');
@@ -146,7 +146,7 @@ int printfileinfo(uploadsrec *u, int dn)
             userdb_load(u->ownersys,&us);
         else
             strcpy(us.name,"PUBLIC");
-        stuff_in1(s,s1,(u->filename),(u->description),s3,s4,s2,(u->upby),status,(u->date),ctim(t),nam(&us,u->ownersys));
+        stuff_in1(s,s1,(u->filename),(u->description),s3,s4,s2,(u->upby),fstatus,(u->date),ctim(t),nam(&us,u->ownersys));
 
         plfmta(s,&abort);
     }
@@ -583,14 +583,14 @@ void gofer(void)
 
 void listgen(void)
 {
-    int new,sent=0,i;
+    int isnew,sent=0,i;
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
 
     file_mask(s);
     npr("5New Files Only? ");
-    new=yn();
+    isnew=yn();
 
-    genner("filelist.dom",s,new);
+    genner("filelist.dom",s,isnew);
     sprintf(s,"filelist.dom");
     add_arc("filelist","filelist.dom");
     sprintf(s1,"%s\\filelist.%s",cdir,xarc[ARC_NUMBER].extension);

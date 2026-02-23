@@ -254,7 +254,7 @@ void changedsl()
         s=subboards[i];
         if (s.attr & mattr_deleted) ok=0;
         else {
-            if (!slok(s.readacs,0)) ok=0;
+            if (!slok((char *)s.readacs,0)) ok=0;
             if (thisuser.age<s.age) ok=0;
             if (s.ar) if(!(thisuser.ar & s.ar)) ok=0;
             if ((s.attr & mattr_ansi_only) && (!okansi())) ok=0;

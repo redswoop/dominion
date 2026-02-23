@@ -23,7 +23,7 @@ static void addto(char *s, int i)
 void makeansi(unsigned char attr, char *s, unsigned char current_attr)
 {
     unsigned char catr;
-    char *temp = "04261537";
+    const char *temp = "04261537";
 
     catr = current_attr;
     s[0] = 0;

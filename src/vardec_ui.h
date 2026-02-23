@@ -130,7 +130,7 @@ typedef struct {
                         refresh,
                         replace,
                         verify,
-                        delete,
+                        do_delete,
                         unused,
                         fulldir,
                         subdir,

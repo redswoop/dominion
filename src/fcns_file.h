@@ -16,7 +16,7 @@ int printinfo(uploadsrec *u, int *abort,int number);
 void printtitle();
 int file_mask(char *s);
 int pauseline(int line,int *abort);
-int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int new);
+int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew);
 int changefarea(void);
 void listfiles(char ms[40]);
 int nscandir(int d, int *abort, int title,int *next);
@@ -138,5 +138,15 @@ void showprots();
 void insert_prot(int n);
 void delete_prot(int n);
 void protedit();
+
+/* File: file3.c (additional) */
+
+void modify_extended_description(char **sss);
+void verify_hangup(void);
+void addgif(uploadsrec *u, char *path);
+
+/* File: file.c (additional) */
+
+int dcs(void);
 
 #endif /* _FCNS_FILE_H_ */

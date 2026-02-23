@@ -3,13 +3,14 @@
 
 /* File: bbs.c */
 
-void main(int argc, char *argv[]);
+int main(int argc, char *argv[]);
 
 
 /* File: bbsutl.c */
 
 void far *malloca(unsigned long nbytes);
 void stuff_in(char *s, char *s1, char *f1, char *f2, char *f3, char *f4, char *f5);
+void stuff_in1(char *s, char *s1, char *f1, char *f2, char *f3, char *f4, char *f5, char *f6, char *f7, char *f8, char *f9, char *f0);
 void inli(char *s, char *rollover, int maxlen, int crend);
 int ainli(char *s, char *rollover, int maxlen, int crend,int slash,int back);
 int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int roll);
@@ -118,7 +119,7 @@ void cd_to(char *s);
 void get_dir(char *s, int be);
 int do_it(char cl[MAX_PATH_LEN]);
 int runprog(char *s, int swp);
-void alf(int f, char *s);
+void alf(int f, const char *s);
 char *create_chain_file(char *fn);
 int restore_data(char *s);
 void save_state(char *s, int state);
@@ -149,6 +150,7 @@ void dtitle(char msg[MAX_PATH_LEN]);
 void selfval(char *param);
 char *ctype(int which);
 int numctype(void);
+int numctypes(void);
 
 
 /* File: config.c */
@@ -158,7 +160,7 @@ void togglebit(long *byte,int bit);
 void bits(char *msg,int byte,int bit);
 void getselect(char *s,int row,int col,int len,int lc);
 void getselectt(unsigned short *i,int row,int col,int len);
-int getselectd(int *i,int row,int col,int len);
+int getselectd(int row,int col,int len);
 void setbit(int row, int col,char bits[16],int *byte);
 void getlist(int *val,char **list,int num);
 void filecfg();
@@ -203,5 +205,6 @@ void playmod(void);
 
 int get_dv_version(void);
 void start_dv_crit(void);
+void dv_pause(void);
 
 #endif /* _FCNS_SYS_H_ */

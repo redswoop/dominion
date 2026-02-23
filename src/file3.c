@@ -30,7 +30,7 @@ void delete_extended_description(char *fn)
     char *ss=NULL;
 
     r=w=0;
-    if ((ss=malloca(10240L))==NULL)
+    if ((ss=(char *)malloca(10240L))==NULL)
         return;
     l1=filelength(edlf);
     while (r<l1) {
@@ -66,7 +66,7 @@ char *read_extended_description(char *fn)
         lseek(edlf,l,SEEK_SET);
         l += (long) read(edlf,&ed,sizeof(ext_desc_type));
         if (strcmp(fn,ed.name)==0) {
-            ss=malloca((long) ed.len+10);
+            ss=(char *)malloca((long) ed.len+10);
             if (ss) {
                 read(edlf,ss,ed.len);
                 ss[ed.len]=0;
@@ -177,7 +177,7 @@ void modify_extended_description(char **sss)
         {
             if (*sss)
                 farfree(*sss);
-            if ((*sss=malloca(10240))==NULL)
+            if ((*sss=(char *)malloca(10240))==NULL)
                 return;
             *sss[0]=0;
             i=1;
@@ -267,7 +267,7 @@ void addgif(uploadsrec *u, char *path)
         pl("Adding to Extended description");
         if(u->mask & mask_extended) {
             ss=read_extended_description(fn);
-            ss1=malloca(sizeof(ss)+30);
+            ss1=(char *)malloca(sizeof(ss)+30);
             strcpy(ss1,ss);
             strcat(ss1,"\r");
             strcat(ss1,s);
@@ -424,7 +424,7 @@ void copyupfile(char fn[12],char todir[MAX_PATH_LEN],char fdir[MAX_PATH_LEN])
             unlink(s);
         } 
         else {
-            if((b=malloca(25*1024))==NULL) return;
+            if((b=(char *)malloca(25*1024))==NULL) return;
             d1=open(s,O_RDONLY | O_BINARY);
             d2=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
             l=filelength(d1);
@@ -606,7 +606,7 @@ void fdnupload_files(char *fn, int dn, int type)
  * the optional words (size, date/time) are ignored completely.
  */
 {
-    unsigned char s[255];
+    char s[255];
     char *fn1,*desc;
     FILE *f;
     int ok=1,abort=0,ok1,i;
@@ -648,8 +648,6 @@ void fdnupload_files(char *fn, int dn, int type)
     closedl();
 }
 
-
-void fdnupload_files(char *fn, int dn, int type);
 
 int fdnfilenet(void)
 {

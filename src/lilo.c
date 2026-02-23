@@ -510,7 +510,7 @@ void logon()
             sprintf(s4,"%-30.30s",nam(&thisuser,usernum));
             sprintf(s5,"%-30.30s",thisuser.comment);
 
-            stuff_in1(s,s1,s4,curspeed,s6,s3,thisuser.city,s5,date(),times(),s7);
+            stuff_in1(s,s1,s4,curspeed,s6,s3,thisuser.city,s5,date(),times(),s7,"");
             strcat(s,"\r\n");
 
             sprintf(s1,"%suser.log",syscfg.gfilesdir);
@@ -675,7 +675,7 @@ void scrollfile(void)
     sprintf(s,"%soneline.lst",syscfg.gfilesdir);
     i=open(s,O_RDWR|O_BINARY);
     l=filelength(i);
-    b=malloca(l);
+    b=(char *)malloca(l);
     read(i,b,l);
     close(i);
     l1=0;
@@ -748,7 +748,7 @@ void fastscreen(char fn[13])
     sprintf(s,"%s%s",syscfg.gfilesdir,fn);
     i=open(s,O_RDWR|O_BINARY);
     if(i<0) return;
-    ss=malloca(filelength(i));
+    ss=(char *)malloca(filelength(i));
     /* Skip TheDraw header: non-.bin files always have it;
        .bin files have it if filesize > 4000 */
     if(strstr(fn,".bin")==NULL || filelength(i) > 4000)

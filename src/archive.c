@@ -380,13 +380,13 @@ int adddiz(char *fn,uploadsrec *u)
         runprog(s,0);
         restorescreen(&screensave);
         if(!exist("file_id.diz")) return 0;
-        npr("2þ0 Description File Found in 7%s0, Adding\r\n",u1.filename);
+        npr("2ï¿½0 Description File Found in 7%s0, Adding\r\n",u1.filename);
         i=open("file_Id.diz",O_BINARY|O_RDWR);
         l=filelength(i);
-        ss=malloca(l);
+        ss=(char *)malloca(l);
         read(i,ss,l);
         close(i);
-        ss[l]=NULL;
+        ss[l]='\0';
         add_extended_description(u1.filename,ss);
         u1.mask |= mask_extended;
         farfree(ss);

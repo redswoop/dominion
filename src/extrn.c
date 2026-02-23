@@ -68,7 +68,7 @@ int runprog(char *s, int swp)
     checkhangup();
     if(swp) {
         sprintf(x,"/C %s",s);
-        swap(getenv("COMSPEC"),x,&f,"swap.dom");
+        swap((unsigned char *)getenv("COMSPEC"),(unsigned char *)x,&f,(unsigned char *)"swap.dom");
         rc=f;
     } 
     else {
@@ -83,7 +83,7 @@ int runprog(char *s, int swp)
 }
 
 
-void alf(int f, char *s)
+void alf(int f, const char *s)
 {
     char s1[100];
 

@@ -83,7 +83,7 @@ int JAMsysInitApiRec(JAMAPIRECptr apirec, CHAR8ptr pFile, UINT32 Size)
     if (!apirec || !pFile) return 0;
     memset(apirec, 0, sizeof(JAMAPIREC));
     strncpy(apirec->BaseName, pFile, sizeof(apirec->BaseName) - 1);
-    apirec->WorkBuf = malloc(Size);
+    apirec->WorkBuf = (CHAR8 *)malloc(Size);
     if (!apirec->WorkBuf) return 0;
     memset(apirec->WorkBuf, 0, Size);
     apirec->WorkLen = Size;
