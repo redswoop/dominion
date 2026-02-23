@@ -27,6 +27,7 @@
 
 #include "platform.h"
 #include "fcns.h"
+#include "conio.h"
 #include "bbsutl.h"
 #include "bbsutl2.h"
 #include "disk.h"

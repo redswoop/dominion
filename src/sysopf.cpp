@@ -1,6 +1,7 @@
 #include "sysopf.h"
 #include "platform.h"
 #include "fcns.h"
+#include "conio.h"
 #include "bbsutl.h"
 #include "timest.h"
 #include "disk.h"

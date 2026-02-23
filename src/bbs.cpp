@@ -2,6 +2,8 @@
 
 #include "platform.h"
 #include "fcns.h"
+#include "tcpio.h"
+#include "conio.h"
 #include "bbsutl2.h"
 #include "timest.h"
 #include "disk.h"

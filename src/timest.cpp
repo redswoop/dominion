@@ -1,6 +1,7 @@
 #include "timest.h"
 #include "platform.h"
 #include "fcns.h"
+#include "conio.h"
 #include "session.h"
 #include "system.h"
 #include "extrn.h"

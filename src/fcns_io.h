@@ -1,31 +1,6 @@
 #ifndef _FCNS_IO_H_
 #define _FCNS_IO_H_
 
-/* File: conio.c */
-
-void movecsr(int x,int y);
-int wherex();
-int wherey();
-void lf();
-void cr();
-void clrscrb();
-void bs();
-void reset_attr_cache(void);
-void out1chx(unsigned char ch);
-void out1ch(unsigned char ch);
-void outs(char *s);
-void copy_line(char *s, char *b, long *ptr, long len);
-void set_protect(int l);
-void savescreen(screentype *s);
-void restorescreen(screentype far *s);
-void temp_cmd(char *s, int ccc);
-char scan_to_char(unsigned char ch,char *s);
-int alt_key(unsigned char ch);
-void skey(unsigned char ch);
-void tleft(int dot);              /* time-left display */
-void topscreen(void);
-
-
 /* File: bbs_output.c */
 
 int strlenc(char *s);
@@ -62,7 +37,7 @@ unsigned char getkey();
 void backblue(void);
 void backspace();
 void pausescr();
-void mpl(int i);              /* moveable prompt line */
+void mpl(int i);
 void mpl1(int i);
 int input1(char *s, int maxlen, int lc, int crend);
 void inputdate(char *s,int time);
@@ -73,25 +48,8 @@ void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc);
 int ynn(int pos);
 int ny();
 int yn();
-char nek(char *s, int f);     /* next-key with io.echo */
+char nek(char *s, int f);
 char onek(char *s);
-
-
-/* File: tcpio.c */
-
-void dtr(int i);
-void outcomch(char ch);
-char peek1c();
-char get1c();
-int comhit();
-void dump();
-void set_baud(unsigned int rate);
-void initport(int port_num);
-void closeport();
-int cdet();
-void send_telnet_negotiation(int fd);
-void send_terminal_init(int fd);
-void send_terminal_restore(int fd);
 
 
 #endif /* _FCNS_IO_H_ */

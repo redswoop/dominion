@@ -1,6 +1,7 @@
 #include "utility.h"
 #include "platform.h"
 #include "fcns.h"
+#include "conio.h"
 #include "disk.h"
 #include "session.h"
 #include "system.h"

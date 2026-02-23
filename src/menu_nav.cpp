@@ -16,6 +16,7 @@
 
 #include "platform.h"
 #include "fcns.h"
+#include "conio.h"
 #include "bbsutl.h"
 #include "disk.h"
 #include "utility.h"

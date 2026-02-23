@@ -1,6 +1,7 @@
 #include "error.h"
 #include "platform.h"
 #include "fcns.h"
+#include "tcpio.h"
 #include "bbsutl.h"
 #include "timest.h"
 #include "session.h"

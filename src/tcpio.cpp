@@ -1,3 +1,4 @@
+#include "tcpio.h"
 #include "platform.h"
 #include "fcns.h"
 #include "session.h"

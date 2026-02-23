@@ -1,6 +1,7 @@
 #include "file3.h"
 #include "platform.h"
 #include "fcns.h"
+#include "conio.h"
 #include "file.h"
 #include "file1.h"
 #include "file2.h"

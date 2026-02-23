@@ -2,6 +2,8 @@
 #include "xinit.h"
 #include "platform.h"
 #include "fcns.h"
+#include "tcpio.h"
+#include "conio.h"
 #include "bbsutl.h"
 #include "timest.h"
 #include "disk.h"

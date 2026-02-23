@@ -8,6 +8,8 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "platform.h"
 #include "fcns.h"
+#include "tcpio.h"
+#include "conio.h"
 #include "bbsutl.h"
 #include "bbsutl2.h"
 #include "disk.h"

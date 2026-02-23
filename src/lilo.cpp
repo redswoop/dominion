@@ -2,6 +2,8 @@
 #include "lilo.h"
 #include "platform.h"
 #include "fcns.h"
+#include "tcpio.h"
+#include "conio.h"
 #include "bbsutl.h"
 #include "file1.h"
 #include "file.h"

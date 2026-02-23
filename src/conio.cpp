@@ -1,6 +1,8 @@
 #include "io_ncurses.h"  /* MUST come before vars.h */
 #include "platform.h"
+#include "conio.h"
 #include "fcns.h"
+#include "tcpio.h"
 #include "bbsutl.h"
 #include "file1.h"
 #include "bbsutl2.h"
