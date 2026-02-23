@@ -4,6 +4,7 @@
 #include "bbsutl.h"
 #include "disk.h"
 #include "utility.h"
+#include "file2.h"
 #include "utility1.h"
 #include "mm1.h"
 #include "session.h"

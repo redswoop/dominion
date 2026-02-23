@@ -1,6 +1,7 @@
 #include "bbsutl2.h"
 #include "platform.h"
 #include "fcns.h"
+#include "file1.h"
 #include "utility.h"
 #include "config.h"
 #include "stringed.h"

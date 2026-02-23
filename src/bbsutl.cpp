@@ -1,4 +1,5 @@
 #include "bbsutl.h"
+#include "file1.h"
 #include "platform.h"
 #include "fcns.h"
 #include "disk.h"

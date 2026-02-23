@@ -6,6 +6,7 @@
 #include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
+#include "file2.h"
 #include "config.h"
 #include "utility1.h"
 #include "stringed.h"

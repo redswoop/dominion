@@ -3,6 +3,7 @@
 #include "fcns.h"
 #include "bbsutl.h"
 #include "jam_bbs.h"
+#include "file3.h"
 #include "session.h"
 #include "system.h"
 #include "error.h"

@@ -6,6 +6,7 @@
 #include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
+#include "filesys.h"
 #include "utility1.h"
 #include "session.h"
 #include "system.h"

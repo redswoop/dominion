@@ -1,6 +1,7 @@
 #include "uedit.h"
 #include "platform.h"
 #include "fcns.h"
+#include "file1.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"

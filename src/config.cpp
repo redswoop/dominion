@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "platform.h"
 #include "fcns.h"
+#include "file1.h"
 #include "timest.h"
 #include "disk.h"
 #include "newuser.h"
