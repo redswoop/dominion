@@ -3,6 +3,8 @@
 #include "bbslist.h"
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl.h"
+#include "disk.h"
 #include "mm1.h"
 #include "session.h"
 #include "system.h"

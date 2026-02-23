@@ -27,6 +27,12 @@
 
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl.h"
+#include "bbsutl2.h"
+#include "disk.h"
+#include "utility.h"
+#include "jam_bbs.h"
+#include "msgbase.h"
 #include "config.h"
 #include "diredit.h"
 #include "newuser.h"

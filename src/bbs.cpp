@@ -2,6 +2,10 @@
 
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl2.h"
+#include "timest.h"
+#include "disk.h"
+#include "utility.h"
 #include "wfc.h"
 #include "mm1.h"
 #include "stringed.h"

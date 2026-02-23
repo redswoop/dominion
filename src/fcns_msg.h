@@ -3,65 +3,7 @@
 
 #include "jammb.h"
 
-/* File: jam.c */
-
-void errorjam(void);
-void getjamhdr(hdrinfo *hdr1);
-void show_message(int *next,int abort,char *buf,UINT32 len);
-void read_msg(long recnr,int *next);
-int DisplayMsgSubFld( void );
-void scanj(int msgnum,int *nextsub,int sb, int is_private);
-void rscanj(void);
-char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb);
-void replyj(int sb,int msgnum);
-void post(int sb);
-int okpost(void);
-void SaveJamMsg(hdrinfo *hdr,long len, char *b,int sb);
-int get_receiver(hdrinfo *hdr);
-int inputhdr(hdrinfo *hdr,int usehdr,int sb);
-void postjam(int sb,hdrinfo *hdr1,int usehdr);
-CHAR8 * GetSubFldStr( JAMSUBFIELD * pSubFld );
-int JamMsgInit( JAMAPIREC * pJam );
-int JamMsgDeinit( JAMAPIREC * pJam );
-int JamMsgWrite( JAMAPIREC * pJam, CHAR8 * pMsgTxt );
-int JamMsgAddSFldStr( JAMAPIREC * pJam, UINT16 SubFld, CHAR8 * Str, UINT32 * pSubFldPos );
-void JAMOpen(char *fn);
-void JAMClose(void);
-void readmailj(int msgnum,int sb);
-void addLastRead(int num);
-void saveLastRead(void);
-void nscan(int sb,int *next);
-void gnscan(void);
-void email(int u,char subject[MAX_PATH_LEN],int ask);
-void smail(char ms[MAX_PATH_LEN]);
-int findnextwaiting(int msgnum,int old,userrec *u);
-int findwaiting(void);
-int numwaiting(userrec *u);
-int getnextword(char *buf,long len, long *pos,char *s);
-void quote_jam(char *buf,long len,hdrinfo *hdr);
-int findnextthread(int msgnum);
-void editpost(UINT32 *attr);
-
-
-/* File: msgbase.c */
-
-int external_edit(char *fn1, char *direc, int numlines);
-int okfsed();
-void addline(char *b, char *s, long *ll);
-void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],char to[41],int reading, int msg_total,char comment[51],char subnum,int *abort);
-void osan(char *s, int *abort, int *next);
-void getorigin(int origin, originrec *orig);
-void upload_post();
-void extract_out(char *b, long len, hdrinfo *hdr);
-void load_workspace(char *fnx, int no_edit);
-void yourinfomsg();
-int sublist(char type);
-void get_quote();
-char *ini(char name[MAX_PATH_LEN]);
-void parseadd(char s[MAX_PATH_LEN],addressrec *a);
-void parse_email_info(char *s, unsigned short *un1);
-int inscan(int sb,userrec *u);
-void togglenws(int sb,userrec *u,int scan);
-
+/* All sections extracted to leaf headers:
+ * jam_bbs.h, msgbase.h, mm1.h, stringed.h */
 
 #endif /* _FCNS_MSG_H_ */

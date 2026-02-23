@@ -1,5 +1,7 @@
+#include "utility.h"
 #include "platform.h"
 #include "fcns.h"
+#include "disk.h"
 #include "session.h"
 #include "system.h"
 #include "stream_processor.h"

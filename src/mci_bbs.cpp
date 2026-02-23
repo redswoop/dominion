@@ -10,6 +10,11 @@
 #include "io_ncurses.h"  /* must come before vars.h */
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl.h"
+#include "bbsutl2.h"
+#include "timest.h"
+#include "utility.h"
+#include "jam_bbs.h"
 #include "stringed.h"
 #include "session.h"
 #include "system.h"

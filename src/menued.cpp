@@ -1,6 +1,8 @@
 #include "menued.h"
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl.h"
+#include "disk.h"
 #include "config.h"
 #include "mm1.h"
 #include "stringed.h"

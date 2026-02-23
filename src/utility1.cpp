@@ -1,6 +1,7 @@
 #include "utility1.h"
 #include "platform.h"
 #include "fcns.h"
+#include "utility.h"
 #include "session.h"
 #include "system.h"
 #pragma hdrstop

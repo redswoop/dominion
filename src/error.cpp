@@ -1,6 +1,8 @@
 #include "error.h"
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl.h"
+#include "timest.h"
 #include "session.h"
 #include "system.h"
 #pragma hdrstop

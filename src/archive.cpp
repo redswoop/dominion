@@ -1,5 +1,7 @@
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl.h"
+#include "disk.h"
 #include "stringed.h"
 #include "session.h"
 #include "system.h"

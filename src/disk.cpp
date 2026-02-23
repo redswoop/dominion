@@ -1,5 +1,8 @@
+#include "disk.h"
 #include "platform.h"
 #include "fcns.h"
+#include "bbsutl.h"
+#include "jam_bbs.h"
 #include "session.h"
 #include "system.h"
 #include "error.h"

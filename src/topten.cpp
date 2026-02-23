@@ -3,6 +3,7 @@
 #include "topten.h"
 #include "platform.h"
 #include "fcns.h"
+#include "utility.h"
 #include "session.h"
 #include "system.h"
 

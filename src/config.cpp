@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "platform.h"
 #include "fcns.h"
+#include "timest.h"
+#include "disk.h"
 #include "newuser.h"
 #include "stringed.h"
 #include "session.h"
