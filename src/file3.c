@@ -107,7 +107,7 @@ int print_extended(char *fn, int *abort, unsigned char numlist, int indent)
                         s[i]=32;
                     s[INDENTION]=0;
                 }
-                makeansi(col,s1,0);
+                if (okansi()) makeansi(col,s1,curatr); else s1[0]=0;
                 outstr(s1);
                 osan(s,abort,&next);
             }

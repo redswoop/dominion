@@ -860,7 +860,7 @@ void menuman(void)
         else if((!strcmp(s,"GRAPHICS"))) ex("OP","2");
         else if((!strcmp(s,"CLS"))) {
             if(okansi()) {
-                makeansi(15, test,0);
+                makeansi(15, test, curatr);
                 outstr(test);
             }
             outchr(12);

@@ -29,52 +29,59 @@ void initpointer(int init);
 void executemouse(int x,int y);
 
 
-/* File: com.c */
+/* File: ansi_attr.c (Layer 3 — no BBS globals) */
 
-unsigned char upcase(unsigned char ch);
+void makeansi(unsigned char attr, char *s, unsigned char current_attr);
+
+/* File: bbs_output.c */
+
 int strlenc(char *s);
-void savel(char *cl, char *atr, char *xl, char *cc);
-void restorel(char *cl, char *atr, char *xl, char *cc);
-void checkhangup();
-void addto(char *s, int i);
-void makeansi(unsigned char attr, char *s, int forceit);
 void setfgc(int i);
 void setbgc(int i);
+void setc(unsigned char ch);
+void ansic(int n);
 void stream_emit_char(unsigned char c);
 void outchr(unsigned char c);
 void outstr(char *s);
 void outstrm(char *s);
 void nl();
-void backblue(void);
-void backspace();
-void setc(unsigned char ch);
-void pausescr();
+void pl(char *s);
 void npr(char *fmt, ...);
 void lpr(char *fmt, ...);
 void logpr(char *fmt, ...);
-void pl(char *s);
+void prt(int i, char *s);
+void savel(char *cl, char *atr, char *xl, char *cc);
+void restorel(char *cl, char *atr, char *xl, char *cc);
+
+/* File: bbs_input.c */
+
 int kbhitb();
-int empty();
-void skey1(char *ch);
 char getchd();
 char getchd1();
+void checkhangup();
+int empty();
+void skey1(char *ch);
 char inkey();
+unsigned char getkey();
+
+/* File: bbs_ui.c */
+
+void backblue(void);
+void backspace();
+void pausescr();
 void mpl(int i);              /* moveable prompt line */
 void mpl1(int i);
-unsigned char getkey();
 int input1(char *s, int maxlen, int lc, int crend);
 void inputdate(char *s,int time);
 int inputfone(char *s);
 void input(char *s, int len);
 void inputl(char *s, int len);
+void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc);
 int ynn(int pos);
 int ny();
 int yn();
-void ansic(int n);
 char nek(char *s, int f);     /* next-key with echo */
 char onek(char *s);
-void prt(int i, char *s);
-void inputdat(char msg[MAX_PATH_LEN],char *s, int len,int lc);
 
 
 /* File: tcpio.c */

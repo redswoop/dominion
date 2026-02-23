@@ -2,6 +2,7 @@
 #define _IO_STREAM_H_
 
 #include <termios.h>
+#include "session_caps.h"
 
 #define IO_LOCAL  0
 #define IO_REMOTE 1
@@ -69,6 +70,9 @@ typedef struct {
     int  x_only;            /* transfer-only mode */
     char curspeed[MAX_PATH_LEN]; /* current connection speed string */
     int  global_handle;     /* global file handle */
+
+    /* Session capabilities (Phase 6) */
+    session_caps_t caps;    /* granular ANSI capability control */
 } io_session_t;
 
 extern io_session_t io;

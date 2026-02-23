@@ -271,6 +271,19 @@ void getuser()
     changedsl();
     reset_act_sl();
 
+    /* Populate session capabilities from user flags */
+    if (thisuser.sysstatus & sysstatus_ansi) {
+        io.caps.color = CAP_ON;
+        io.caps.cursor = CAP_ON;
+        io.caps.cp437 = CAP_ON;
+    } else {
+        io.caps.color = CAP_OFF;
+        io.caps.cursor = CAP_OFF;
+        io.caps.cp437 = CAP_OFF;
+    }
+    io.caps.fullscreen = (thisuser.sysstatus & sysstatus_full_screen)
+                         ? CAP_ON : CAP_OFF;
+
     if (count==5)
         hangup=1;
     checkit=0;

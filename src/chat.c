@@ -115,7 +115,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                     {
                         side0[wherey()][cp0++]=ch;
                         if(nifty.chatcolor==1) {
-                            makeansi(scfilt[ch],s2,0);
+                            if (okansi()) makeansi(scfilt[ch],s2,curatr); else s2[0]=0;
                             outstr(s2);
                         }
                         if(nifty.chatcolor==2) {
@@ -163,7 +163,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                     {
                         side1[wherey()-13][cp1++]=ch;
                         if(nifty.chatcolor==1) {
-                            makeansi(cfilt[ch],s2,0);
+                            if (okansi()) makeansi(cfilt[ch],s2,curatr); else s2[0]=0;
                             outstr(s2);
                         }
                         if(nifty.chatcolor==2) {

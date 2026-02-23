@@ -7,6 +7,12 @@
 
 
 
+unsigned char upcase(unsigned char ch)
+{
+    if(ch>=128) return(ch);
+    else return(toupper(ch));
+}
+
 void reset_act_sl()
 {
 #ifdef BACK
@@ -30,7 +36,7 @@ int sysop1()
 
 int okansi()
 {
-    return(thisuser.sysstatus & sysstatus_ansi);
+    return(io.caps.color != CAP_OFF);
 }
 
 

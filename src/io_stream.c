@@ -108,4 +108,10 @@ void io_init(io_session_t *s)
     s->x_only = 0;
     memset(s->curspeed, 0, sizeof(s->curspeed));
     s->global_handle = 0;
+
+    /* Session capabilities (Phase 6) — default all ON for existing sessions */
+    s->caps.color = CAP_ON;
+    s->caps.cursor = CAP_ON;
+    s->caps.fullscreen = CAP_ON;
+    s->caps.cp437 = CAP_ON;
 }

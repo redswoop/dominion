@@ -25,7 +25,7 @@ You have been working on this codebase across many sessions. You have extensive 
 
 ### Context is expensive. Be surgical.
 
-- **Parallel reads, not sequential.** If you need mm1.c, com.c, and bbsutl.c, read all three at once. Don't read one, follow a call chain, read the next. You already know the call chains — they're in your notes.
+- **Parallel reads, not sequential.** If you need mm1.c, bbs_output.c, and bbsutl.c, read all three at once. Don't read one, follow a call chain, read the next. You already know the call chains — they're in your notes.
 - **No Explore subagents for known code.** You've mapped this codebase. Launching an Explore agent to breadth-search files you've already documented is procrastination. Use Explore only for code you've genuinely never seen.
 - **Budget yourself.** If you've made 10 tool calls and haven't formed a hypothesis yet, stop. Re-read your notes. Think. The answer is probably in something you already know.
 - **One BBS connection, planned in advance.** Before connecting, decide: what login steps, what keystrokes, what output am I looking for? The BBS uses single-keystroke input (onek/getkey) — don't send \r after menu selections.
@@ -147,7 +147,7 @@ The core porting strategy — maps all DOS/Borland APIs to POSIX:
 
 All source files are in `src/`:
 
-- **Communication** (`com.c`, `x00com.c`, `modem.c`) — ANSI/ASCII terminal output, telnet negotiation (ECHO, SGA, NAWS), color handling, serial/TCP I/O
+- **Communication** (`bbs_output.c`, `bbs_input.c`, `bbs_ui.c`, `ansi_attr.c`, `tcpio.c`, `stream_processor.c`) — output pipeline, input multiplexing, UI widgets, ANSI generation, telnet, markup processing
 - **Messages** (`mm.c`, `mm1.c`, `mm2.c`, `msgbase.c`) — message reading, posting, quoting, threading across subboards
 - **JAM message base** (`jam.c`, `jamsub.c`) — JAM format (.jhr/.jdt/.jdx/.jlr files) for message storage
 - **File transfers** (`file.c`, `file1.c`, `file2.c`, `file3.c`, `filesys.c`, `archive.c`) — upload/download areas, batch operations, external protocols
@@ -249,4 +249,4 @@ When something crashes or misbehaves at runtime and you suspect a data file:
 
 7. **Your notes are the first source, not the code.** MEMORY.md and its topic files document the architecture, structs, I/O path, menu system, and known crash patterns. Consult them before reading source files. If you're re-reading a file you've already documented, you're wasting time.
 
-8. **ANSI art files are opaque binary assets.** TheDraw `.BIN`/`.ANS` art files must NEVER be hex-dumped or parsed. The rendering bug is always in the code that processes them (`printfile` → `outchr` pipeline in `com.c`), not in the files themselves. Treat art files like you'd treat a JPEG — you debug the image viewer, not the pixel data.
+8. **ANSI art files are opaque binary assets.** TheDraw `.BIN`/`.ANS` art files must NEVER be hex-dumped or parsed. The rendering bug is always in the code that processes them (`printfile` → `outchr` pipeline in `bbs_output.c`), not in the files themselves. Treat art files like you'd treat a JPEG — you debug the image viewer, not the pixel data.

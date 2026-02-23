@@ -24,6 +24,7 @@ Layer 2   Type Hierarchies (pure struct definitions)
           fido.h              FidoNet address structs
           jam.h → jamsys.h    JAM format definitions
           jammb.h → jam.h     JAM message base C API
+          session_caps.h      cap_mode_t enum, session_caps_t struct
 
 Layer 3   Leaf I/O & Data Modules (no BBS globals)
           ─────────────────────────────────────────────────
@@ -33,8 +34,12 @@ Layer 3   Leaf I/O & Data Modules (no BBS globals)
       │                             telnet IAC, keyboard, cursor
       │                       Test: tools/iotest.cpp (zero stubs)
       │
+      ├── ansi_attr.h/.c      Pure ANSI SGR escape generation
+      │                       Deps: platform.h (itoa only)
+      │                       No vars.h — testable in isolation
+      │
       ├── io_stream.h/.c      io_session_t struct + compat macros
-      │                       Deps: <termios.h>
+      │                       Deps: <termios.h>, session_caps.h
       │
       ├── io_ncurses.h/.c     ncurses init/shutdown, color mapping
       │                       Deps: <ncurses.h>, io_stream.h, cp437.h
@@ -70,12 +75,14 @@ Layer 4   Umbrella Headers (prototypes + global state)
 
 Layer 5   BBS Application Modules
           ─────────────────────────────────────────────────
-          All 41 files that #include vars.h:
+          All files that #include vars.h:
 
           Session:    bbs.c lilo.c xinit.c wfc.c error.c
-          I/O:        com.c tcpio.c conio.c
+          Output:     bbs_output.c stream_processor.c
+          Input:      bbs_input.c
+          UI:         bbs_ui.c bbsutl.c bbsutl2.c
+          IO:         tcpio.c conio.c
           Menus:      mm.c mm1.c mm2.c menued.c
-          UI:         bbsutl.c bbsutl2.c
           Messages:   msgbase.c jam.c
           Files:      file.c file1.c file2.c file3.c filesys.c archive.c
           Users:      disk.c newuser.c uedit.c
@@ -93,15 +100,17 @@ Layer 5   BBS Application Modules
    lower-level component.
 3. **terminal.h is a leaf.** It must NEVER include vars.h, vardec.h, fcns.h,
    or any BBS header. Its only non-system dependency is cp437.h.
-4. **Layer 3 modules are isolated.** They don't include vars.h. They can be
+4. **ansi_attr.h is a leaf.** It must NEVER include vars.h. Only depends on
+   platform.h for itoa(). Caller passes current_attr; no global state access.
+5. **Layer 3 modules are isolated.** They don't include vars.h. They can be
    tested and linked independently of the BBS.
-5. **vars.h is Layer 4.** Anything that includes vars.h is Layer 5 (BBS app).
+6. **vars.h is Layer 4.** Anything that includes vars.h is Layer 5 (BBS app).
    Goal: shrink Layer 5 by pushing logic down into Layer 3 modules.
 
 ## Include Ordering
 
 Files that use ncurses must include `io_ncurses.h` BEFORE `vars.h`:
-- com.c, conio.c, lilo.c, platform_stubs.c, xinit.c
+- bbs_output.c, bbs_input.c, bbs_ui.c, conio.c, lilo.c, platform_stubs.c, xinit.c
 
 This is because ncurses.h defines `echo()` and `getch()` as macros, and
 io_ncurses.h undefs them before io_stream.h redefines `echo` as `io.echo`.
@@ -112,13 +121,17 @@ io_ncurses.h undefs them before io_stream.h redefines `echo` as `io.echo`.
 Phase 1 (done):  terminal.h/.cpp — clean leaf, proves IO independence
                   iotest.cpp links terminal.o only (zero BBS objects)
 
-Phase 2 (next):  com.c/tcpio.c/conio.c use Terminal internally
-                  Their vars.h dependency shrinks to BBS-specific code
-                  (MCI, macros, palette lookup, pause, skey)
+Phase 2 (done):  BBS delegates raw I/O to Terminal via C bridge
+                  tcpio.c/conio.c use Terminal internally
 
-Phase 3:         Split com.c into bbs_io.cpp (BBS text processing)
-                  + Terminal (pure I/O). com.c dies.
+Phase 3 (done):  Extract stream_processor.c from com.c
+                  CGA true color in ANSI parser
 
-Phase 4:         conio.c splits: topscreen/skey → sysop_ui.cpp,
+Phase 4 (done):  Split com.c → ansi_attr.c (Layer 3 leaf)
+                  + bbs_output.c + bbs_input.c + bbs_ui.c (Layer 5)
+                  session_caps.h for granular capability control
+                  com.c deleted.
+
+Phase 5:         conio.c splits: topscreen/skey → sysop_ui.cpp,
                   screen ops already in Terminal
 ```

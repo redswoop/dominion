@@ -92,6 +92,7 @@ void nuv(void);
 
 /* File: utility.c */
 
+unsigned char upcase(unsigned char ch);
 void reset_act_sl();
 int sysop1();
 int okansi();

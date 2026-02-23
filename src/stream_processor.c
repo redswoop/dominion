@@ -206,7 +206,7 @@ void stream_putch(unsigned char c)
         else {
             sp_pipestr[sp_pipe - 1] = 0;
             sp_pipe = 0;
-            if (okansi())
+            if (io.caps.color != CAP_OFF)
                 term_set_attr((unsigned char)atoi(sp_pipestr));
         }
         /* fall through: current char c still needs processing */
@@ -228,7 +228,7 @@ void stream_putch(unsigned char c)
 
     if (sp_ac == 10) {
         sp_ac = 0;
-        if (okansi())
+        if (io.caps.color != CAP_OFF)
             term_set_attr(c);
         return;
     }
@@ -359,7 +359,7 @@ void stream_putch(unsigned char c)
         return;
     }
 
-    /* --- Normal character — hand off to com.c --- */
+    /* --- Normal character — hand off to bbs_output.c --- */
     stream_emit_char(c);
 }
 

@@ -150,10 +150,12 @@ int binli(char *s, char *rollover, int maxlen, int crend,int slash,int back,int 
     do {
         ch=getkey();
         if (nifty.chatcolor==1&&chatting) {
-            if (lastcon)
-                makeansi(scfilt[ch],s3,0);
-            else
-                makeansi(cfilt[ch],s3,0);
+            if (okansi()) {
+                if (lastcon)
+                    makeansi(scfilt[ch],s3,curatr);
+                else
+                    makeansi(cfilt[ch],s3,curatr);
+            } else s3[0]=0;
             outstr(s3);
         } 
         else if (nifty.chatcolor==2&&chatting) {

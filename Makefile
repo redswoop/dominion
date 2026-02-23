@@ -44,7 +44,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -Wno-unused-parameter \
            -fsigned-char -g -O0
 
 # The BBS core modules (from the original makefile)
-BBS_CORE = bbs com conio bbsutl file file1 mm \
+BBS_CORE = bbs ansi_attr bbs_output bbs_input bbs_ui conio bbsutl file file1 mm \
            utility extrn mm1 tcpio jam stream_processor
 
 BBS_MODULES = mm2 msgbase disk userdb menudb timest utility1 \
@@ -125,7 +125,7 @@ $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 	$(CC) -std=gnu89 -o $@ $<
 
 # Input function test — links against real BBS .o files to test input1/inputdat/getkey
-INPUTTEST_OBJS = $(OBJDIR)/com.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/stream_processor.o
+INPUTTEST_OBJS = $(OBJDIR)/bbs_output.o $(OBJDIR)/bbs_input.o $(OBJDIR)/bbs_ui.o $(OBJDIR)/ansi_attr.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/stream_processor.o
 $(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(INPUTTEST_OBJS) -lncurses
 
