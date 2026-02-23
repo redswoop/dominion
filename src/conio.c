@@ -382,7 +382,6 @@ void skey(unsigned char ch)
                 temp_cmd(getenv("DOMDL"),1);
                 break;
             case 131:
-                printf("\nFree Stack: %u",stackavail());
                 break;
             case 94:
             case 59: /* F1 */

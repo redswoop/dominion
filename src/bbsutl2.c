@@ -5,7 +5,6 @@
 #include "version.h"
 #pragma hdrstop
 
-#define frequency 500
 
 
 static auto& sys = System::instance();
@@ -90,7 +89,6 @@ void makewindow(int x, int y, int xlen, int ylen)
 
     xx=wherex();
     yy=wherey();
-    directvideo=1;
     textcolor(8);
     for (i=1; i<xlen-1; i++)
         s[i]=196;
@@ -339,20 +337,7 @@ void reprint()
 
 void setbeep(int i)
 {
-    int i1,i2;
-
-    if (i) {
-        i1 = 0x34DD / frequency;
-        i2 = inportb(0x61);
-        if (!(i2 & 0x03)) {
-            outportb(0x61, i2 | 0x03);
-            outportb(0x43, 0xB6);
-        }
-        outportb(0x42, i1 & 0x0F);
-        outportb(0x42, i1 >> 4);
-    } 
-    else
-        outportb(0x61, inportb(0x61) & 0xFC);
+    (void)i; /* PC speaker port I/O removed — no equivalent on macOS */
 }
 
 

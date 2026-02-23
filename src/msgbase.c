@@ -492,7 +492,6 @@ int inscan(int sb,userrec *u)
 
     sprintf(s,"%s%s.nws",sys.cfg.msgsdir,sys.subboards[sb].filename);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
-//    i=sopen(s,O_BINARY|O_RDWR|O_CREAT,SH_DENYRW|SH_DENYWR,S_IREAD|S_IWRITE);
 
     strcpy(s,u->realname);
     strlwr(s);
@@ -524,7 +523,6 @@ void togglenws(int sb,userrec *u,int scan)
     UINT32 ucrc;
 
     sprintf(s,"%s%s.nws",sys.cfg.msgsdir,sys.subboards[sb].filename);
-//    i=sopen(s,O_BINARY|O_RDWR|O_CREAT,SH_DENYRW|SH_DENYWR,S_IREAD|S_IWRITE);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     num=filelength(i)/sizeof(nws);
 

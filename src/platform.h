@@ -162,9 +162,6 @@ void cputs(const char *s);
 }
 #endif
 
-/* directvideo — no-op */
-#define directvideo  /* nothing */
-
 /* ================================================================== */
 /*  BORLAND DOS.H REPLACEMENTS                                        */
 /* ================================================================== */
@@ -198,20 +195,6 @@ struct dfree {
 };
 
 void getdfree(int drive, struct dfree *df);
-
-/* File time structure (Borland io.h) */
-struct ftime {
-    unsigned ft_tsec  : 5;
-    unsigned ft_min   : 6;
-    unsigned ft_hour  : 5;
-    unsigned ft_day   : 5;
-    unsigned ft_month : 4;
-    unsigned ft_year  : 7;
-};
-
-/* getftime/setftime — stubs (file times handled by OS) */
-#define getftime(fd, ft)  /* no-op */
-#define setftime(fd, ft)  /* no-op */
 
 /* disable/enable interrupts — no-op */
 #define disable()   /* no-op */
@@ -281,27 +264,10 @@ char *ultoa(unsigned long value, char *str, int radix);
 /* Memory functions that Borland put in alloc.h or mem.h */
 /* memmove, memcpy, memset are already in string.h */
 
-/* stackavail — always return plenty */
-#define stackavail()  (1024*1024)
-
-/* ================================================================== */
-/*  SOUND (PC SPEAKER) — NO-OP                                        */
-/* ================================================================== */
-
+/* PC speaker — no-op on macOS */
 #define sound(freq)   /* no-op */
 #define nosound()     /* no-op */
-
-/* delay — use usleep */
 #define delay(ms)     usleep((ms) * 1000)
-
-/* ================================================================== */
-/*  PORT I/O — NO-OP                                                   */
-/* ================================================================== */
-
-#define inportb(port)      (0)
-#define outportb(port, val) /* no-op */
-#define inport(port)       (0)
-#define outport(port, val) /* no-op */
 
 /* ================================================================== */
 /*  PROCESS FUNCTIONS                                                  */
@@ -338,9 +304,6 @@ char *strlwr(char *s);
 
 /* environ — available on macOS but needs declaration */
 extern char **environ;
-
-/* setdta — no-op */
-#define setdta(p)  /* no-op */
 
 /* --- Functions in platform_stubs.c that need prototypes for C++ --- */
 int  _chmod(const char *path, int func, ...);
