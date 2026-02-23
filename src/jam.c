@@ -778,11 +778,11 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     }
 
     if(sess.quote!=NULL)
-        farfree(sess.quote);
+        free(sess.quote);
     sess.quote=NULL;
 
     if(abort||!(*save)) {
-        farfree(lin);
+        free(lin);
         if (fsed)
             unlink(fnx);
         pl("Aborted.");
@@ -834,7 +834,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
 
     l1 += 1024;
     if ((b=(char *)malloca(l1))==NULL) {
-        farfree(lin);
+        free(lin);
         pl("Out of memory.");
         return NULL;
     }
@@ -869,7 +869,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     *len=l1;
 
     if (!fsed)
-        farfree((void *)lin);
+        free((void *)lin);
 
     io.charbufferpointer=0;
     io.charbuffer[0]=0;
@@ -895,7 +895,7 @@ void replyj(int sb,int msgnum)
 
     postjam(sb,&hdr,1);
     if(sess.quote!=NULL)
-        farfree(sess.quote);
+        free(sess.quote);
 }
 
 void post(int sb)
@@ -1094,7 +1094,7 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
     b=ninmsg(&hdr,&len,&save,sb);
 
     if(sess.quote!=NULL)
-        farfree(sess.quote);
+        free(sess.quote);
 
     if(!save)
         return;
@@ -1104,7 +1104,7 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
 
     SaveJamMsg(&hdr,len,b,sb);
 
-    farfree(b);
+    free(b);
 
     ++sess.user.msgpost;
     ++sess.user.posttoday;
@@ -1568,7 +1568,7 @@ void quote_jam(char *buf,long len,hdrinfo *hdr)
     int ret,justwrap=0,added=0,done=0;
 
     if(sess.quote!=NULL)
-        farfree(sess.quote);
+        free(sess.quote);
 
     nb=(char *)malloca(len+1000L);
 

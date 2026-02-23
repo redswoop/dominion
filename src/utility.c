@@ -99,7 +99,7 @@ void far *mallocx(unsigned long l)
 {
     void *x;
 
-    x=farmalloc(l);
+    x=malloc(l);
     if (!x) {
         err(3,"","In Mallocx");
     }

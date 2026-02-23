@@ -566,7 +566,7 @@ void genner(char *fn,char *spec, int type)
                             fprintf(out,"                    %s \n",s2);
                             p=strtok(NULL,"\n");
                         }
-                        farfree(b);
+                        free(b);
                     }
                 }
                 num++;

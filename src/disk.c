@@ -30,7 +30,7 @@ void read_in_file(char *fn, messagerec *m, int maxary)
         err(1,s,"In Read_in_file");
     }
     l=filelength(i);
-    buf=(char *) farmalloc(l);
+    buf=(char *) malloc(l);
     lseek(i,0L,SEEK_SET);
     if (buf==NULL) {
         err(3,"","In Read_in_file");
@@ -58,7 +58,7 @@ void read_in_file(char *fn, messagerec *m, int maxary)
         }
     }
 
-    farfree((void *) buf);
+    free((void *) buf);
 }
 
 double freek(int dr)
@@ -142,7 +142,7 @@ void set_global_handle(int i)
             if ((io.global_handle<0) || (!global_buf)) {
                 io.global_handle=0;
                 if (global_buf) {
-                    farfree(global_buf);
+                    free(global_buf);
                     global_buf=NULL;
                 }
             }
@@ -155,7 +155,7 @@ void set_global_handle(int i)
             close(io.global_handle);
             io.global_handle=0;
             if (global_buf) {
-                farfree(global_buf);
+                free(global_buf);
                 global_buf=NULL;
             }
         }
@@ -250,7 +250,7 @@ void showfile(char *fn)
 
     show_message(&i,abort,b,l);
 
-    farfree(b);
+    free(b);
 }
 
 void printmenu(int which)
@@ -274,7 +274,7 @@ void printmenu(int which)
 
     show_message(&i,abort,b,l1);
 
-    farfree(b);
+    free(b);
 }
 
 int printfile(char *fn)

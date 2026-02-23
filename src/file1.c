@@ -146,7 +146,7 @@ void upload_batch_file(int blind)
         if (ss) {
             add_extended_description(u.filename,ss);
             u.mask |= mask_extended;
-            farfree(ss);
+            free(ss);
         }
     }
 
@@ -705,7 +705,7 @@ void newul(int dn)
                     sess.batch.extdesc=1;
                     dliscan1(sess.batch.dir);
                     add_extended_description(sess.batch.filename,ss);
-                    farfree(ss);
+                    free(ss);
                     closedl();
                 }
                 batrec(0,sess.numbatch);

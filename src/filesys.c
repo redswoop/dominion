@@ -335,7 +335,7 @@ int upload_file(char *fn, int dn,int *ato)
     if(u.description[0]=='/') {
         modify_extended_description(&ss);
         add_extended_description(u.filename,ss);
-        farfree(ss);
+        free(ss);
         u.mask |= mask_extended;
         strcpy(s1,u.description+1);
         strcpy(u.description,s1);
@@ -619,7 +619,7 @@ void editfile()
                                 if (ss) {
                                     delete_extended_description(u.filename);
                                     add_extended_description(s,ss);
-                                    farfree(ss);
+                                    free(ss);
                                 }
                                 strcpy(u.filename,s);
                             } 
@@ -658,7 +658,7 @@ void editfile()
                     if (ss) {
                         prt(5,"Delete it? ");
                         if (yn()) {
-                            farfree(ss);
+                            free(ss);
                             delete_extended_description(u.filename);
                             u.mask &= ~mask_extended;
                         } 
@@ -668,7 +668,7 @@ void editfile()
                             if (ss) {
                                 delete_extended_description(u.filename);
                                 add_extended_description(u.filename,ss);
-                                farfree(ss);
+                                free(ss);
                             }
                         }
                     } 
@@ -676,7 +676,7 @@ void editfile()
                         modify_extended_description(&ss);
                         if (ss) {
                             add_extended_description(u.filename,ss);
-                            farfree(ss);
+                            free(ss);
                             u.mask |= mask_extended;
                         } 
                         else
@@ -685,7 +685,7 @@ void editfile()
                 } 
                 else
                     if (ss) {
-                    farfree(ss);
+                    free(ss);
                     u.mask |= mask_extended;
                 } 
                 else
@@ -773,7 +773,7 @@ void create_file()
     if(u.description[0]=='/') {
         modify_extended_description(&ss);
         add_extended_description(u.filename,ss);
-        farfree(ss);
+        free(ss);
         u.mask |= mask_extended;
         strcpy(s1,u.description+1);
         strcpy(u.description,s1);
@@ -934,7 +934,7 @@ void move_file(void)
             write(sess.dlf,(void *)&u1,sizeof(uploadsrec));
             if (ss) {
                 add_extended_description(u.filename,ss);
-                farfree(ss);
+                free(ss);
             }
 
             closedl();
@@ -962,7 +962,7 @@ void move_file(void)
                     close(d1);
                     close(d2);
                     unlink(s1);
-                    farfree(b);
+                    free(b);
                 }
             }
             nl();

@@ -12,7 +12,7 @@ void far *malloca(unsigned long nbytes)
 {
     void *buf;
 
-    buf=farmalloc(nbytes+1);
+    buf=malloc(nbytes+1);
     if (buf==NULL) {
         nl();
         npr("Not enough memory, needed %ld bytes.\r\n",nbytes);

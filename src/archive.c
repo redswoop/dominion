@@ -396,7 +396,7 @@ int adddiz(char *fn,uploadsrec *u)
         ss[l]='\0';
         add_extended_description(u1.filename,ss);
         u1.mask |= mask_extended;
-        farfree(ss);
+        free(ss);
         (*u)=u1;
         unlink("file_id.diz");
         return 1;

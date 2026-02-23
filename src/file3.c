@@ -56,7 +56,7 @@ void delete_extended_description(char *fn)
         }
         r += (sizeof(ext_desc_type) + ed.len);
     }
-    farfree(ss);
+    free(ss);
     chsize(sess.edlf,w);
 }
 
@@ -131,7 +131,7 @@ int print_extended(char *fn, int *abort, unsigned char numlist, int indent)
         if (wherex())
             nl();
     }
-    farfree(ss);
+    free(ss);
     io.mciok=mcih;
     return(numl);
 }
@@ -152,7 +152,7 @@ int count_extended(char *fn)
                 ++numl;
         }
     }
-    farfree(ss);
+    free(ss);
     return(numl);
 }
 
@@ -183,7 +183,7 @@ void modify_extended_description(char **sss)
         }
         {
             if (*sss)
-                farfree(*sss);
+                free(*sss);
             if ((*sss=(char *)malloca(10240))==NULL)
                 return;
             *sss[0]=0;
@@ -213,14 +213,14 @@ void modify_extended_description(char **sss)
             while ((i++<MAX_LINES) && (s1[0]));
             sess.user.screenchars=i1;
             if (*sss[0]==0) {
-                farfree(*sss);
+                free(*sss);
                 *sss=NULL;
             }
         }
         prt(5,"Is this what you want? ");
         i=!yn();
         if (i) {
-            farfree(*sss);
+            free(*sss);
             *sss=NULL;
         }
     } 
@@ -279,8 +279,8 @@ void addgif(uploadsrec *u, char *path)
             strcat(ss1,"\r");
             strcat(ss1,s);
             strcat(ss1,"\r");
-            farfree(ss);
-            farfree(ss1);
+            free(ss);
+            free(ss1);
         } 
         else {
             strcat(s,"\r");
@@ -445,7 +445,7 @@ void copyupfile(char fn[12],char todir[MAX_PATH_LEN],char fdir[MAX_PATH_LEN])
             close(d1);
             close(d2);
 
-            farfree(b);
+            free(b);
         }
     }
 }

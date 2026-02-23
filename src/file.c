@@ -446,7 +446,7 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
                         b[i2]=toupper(b[i2]);
                     if (strstr(b,ss)==NULL)
                         ok=0;
-                    farfree(b);
+                    free(b);
                 } 
                 else
                     ok=0;

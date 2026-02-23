@@ -543,7 +543,7 @@ void logon()
         }
 
         if (ss!=NULL)
-            farfree(ss);
+            free(ss);
     }
 
     if(outcom) {
@@ -765,7 +765,7 @@ void fastscreen(char fn[13])
     memcpy(io.scrn,ss,4000);
     term_render_scrn(0, 25);
     reset_attr_cache();
-    farfree(ss);
+    free(ss);
 }
 
 void lastfewcall(void)
@@ -799,7 +799,7 @@ void lastfewcall(void)
         } 
         while (pos<len);
     }
-    farfree(ss);
+    free(ss);
 
 }
 

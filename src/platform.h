@@ -257,9 +257,6 @@ char *itoa(int value, char *str, int radix);
 char *ltoa(long value, char *str, int radix);
 char *ultoa(unsigned long value, char *str, int radix);
 
-/* farmalloc/farfree — just malloc/free */
-#define farmalloc(n)  malloc(n)
-#define farfree(p)    free(p)
 
 /* Memory functions that Borland put in alloc.h or mem.h */
 /* memmove, memcpy, memset are already in string.h */

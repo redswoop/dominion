@@ -300,7 +300,7 @@ int alt_key(unsigned char ch)
         f=open(s,O_RDONLY | O_BINARY);
         if (f>0) {
             l=filelength(f);
-            ss=(char *)farmalloc(l+10);
+            ss=(char *)malloc(l+10);
             if (ss) {
                 read(f,ss,l);
                 close(f);
@@ -332,7 +332,7 @@ int alt_key(unsigned char ch)
                     else
                         ss1=strtok(NULL,"\r\n");
                 }
-                farfree(ss);
+                free(ss);
             }
             else
                 close(f);
@@ -727,7 +727,7 @@ void topscreen(void)
             read(i,b,linelen*160);
             close(i);
             memmove(&io.scrn[0],b,linelen*160);
-            farfree(b);
+            free(b);
             term_render_scrn(0, linelen);
         } else {
             close(i);

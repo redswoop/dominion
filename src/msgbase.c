@@ -267,7 +267,7 @@ void load_workspace(char *fnx, int no_edit)
     i5=open(s,O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
     write(i5, (void *)b,l);
     close(i5);
-    farfree(b);
+    free(b);
     if ((no_edit))
         sess.use_workspace=1;
     else

@@ -58,7 +58,7 @@ void write_automessage()
         i=open(s,O_BINARY|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
         write(i,b,len);
         close(i);
-        farfree(b);
+        free(b);
     }
 }
 
@@ -112,7 +112,7 @@ void addbbs(char *fn)
                 if (!strncmp(s1,s,12))
                     ok=0;
             }
-            farfree(ss);
+            free(ss);
             close(f);
         }
 
