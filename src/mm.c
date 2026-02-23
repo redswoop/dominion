@@ -570,8 +570,8 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
             badcommand('F',type[1]);
         } 
         break;
-    case 'S': 
-        sysopcmd(type[1],ms); 
+    case 'S':
+        sysopcmd(type[1],ms);
         break;
     case 'O': 
         othercmd(type[1],ms); 
@@ -785,7 +785,12 @@ void menuman(void)
         begx=wherex();
         i1=c=0;
         for(i=0;i<sess.maxcmd;i++) {
-            if(sess.tg[i].key[0]=='#') i1=1;
+            if(sess.tg[i].key[0]=='#') {
+                if(sess.tg[i].ms[0]=='M' || sess.tg[i].ms[0]=='F')
+                    i1=1;
+                else if(strlen(sess.tg[i].key)==1)
+                    avail[c++]='#';
+            }
             else {
                 if(strlen(sess.tg[i].key)==1)
                     avail[c++]=sess.tg[i].key[0];

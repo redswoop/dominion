@@ -232,7 +232,7 @@ void sysopcmd(char type,char ms[41])
     case 'O': 
         viewlog(); 
         break;
-    case '#': 
+    case '#':
         logtypes(3,"Edited Menus");
         if(ms[0]=='!') menued(sess.menuat);
         else menu("");

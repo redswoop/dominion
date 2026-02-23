@@ -79,6 +79,7 @@ int main(int argc, char **argv)
 
     strcpy(syscfg.systemname, "Dominion BBS");
     strcpy(syscfg.sysopname, "SysOp");
+    strcpy(syscfg.systempw, "SYSOP");
     strcpy(syscfg.systemphone, "000-000-0000");
 
     snprintf(syscfg.datadir,    sizeof(syscfg.datadir),    "%sdata/", base);
