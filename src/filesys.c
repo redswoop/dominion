@@ -360,7 +360,7 @@ int upload_file(char *fn, int dn,int *ato)
         u1.numbytes=numf;
         SETREC(0);
         write(dlf,(void *)&u1,sizeof(uploadsrec));
-        ++status.uptoday;
+        ++sys.status.uptoday;
         save_status();
         logpr("3+ 2Locally uploaded %s on %s",u.filename,d.name);
     }
@@ -801,7 +801,7 @@ void create_file()
         u1.numbytes=numf;
         SETREC(0);
         write(dlf,(void *)&u1,sizeof(uploadsrec));
-        ++status.uptoday;
+        ++sys.status.uptoday;
         save_status();
         logtypes(3,"Created File %s on %s",u.filename,d.name);
     }

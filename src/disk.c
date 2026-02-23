@@ -76,7 +76,7 @@ void save_status()
     cJSON *root;
 
     sprintf(path, "%sstatus.json", syscfg.datadir);
-    root = statusrec_to_json(&status);
+    root = statusrec_to_json(&sys.status);
     write_json_file(path, root);
     cJSON_Delete(root);
 }

@@ -78,7 +78,7 @@ void downloaded(char *fn)
                     thisuser.fpts -= (int) ((u.numbytes+1023)/10240)/nifty.fptsratio;
                 }
                 ++u.numdloads;
-                status.dltoday++;
+                sys.status.dltoday++;
                 SETREC(i);
                 write(dlf,(void *)&u,sizeof(uploadsrec));
                 closedl();
@@ -216,7 +216,7 @@ void upload_batch_file(int blind)
         SETREC(0);
         write(dlf,(void *)&u1,sizeof(uploadsrec));
 
-        ++status.uptoday;
+        ++sys.status.uptoday;
         save_status();
         pl(get_string2(35));
         copyupfile(stripfn(batch.filename),d.dpath,syscfg.batchdir);

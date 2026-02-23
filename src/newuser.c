@@ -588,7 +588,7 @@ void newuser()
         userdb_save(usernum,&thisuser);
         pl(" Done...");
         userdb_index_add(usernum,thisuser.name);
-        status.users = userdb_user_count();
+        sys.status.users = userdb_user_count();
         save_status();
         ok=0;
         topscreen();

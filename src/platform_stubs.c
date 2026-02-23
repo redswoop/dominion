@@ -259,15 +259,15 @@ int findfirst(const char *pathname, struct ffblk *ff, int attrib)
     char dirpath[512];
     const char *pattern;
     const char *slash;
-    const char *base;
+    const char *base_name;
 
     /* DOS NUL device: "path/nul" or "path\nul" means "does directory exist?" */
-    base = strrchr(pathname, '/');
-    if (!base) base = strrchr(pathname, '\\');
-    if (base) base++; else base = pathname;
-    if (strcasecmp(base, "nul") == 0) {
+    base_name = strrchr(pathname, '/');
+    if (!base_name) base_name = strrchr(pathname, '\\');
+    if (base_name) base_name++; else base_name = pathname;
+    if (strcasecmp(base_name, "nul") == 0) {
         struct stat st;
-        int len = (int)(base - pathname);
+        int len = (int)(base_name - pathname);
         if (len > 0) {
             strncpy(dirpath, pathname, len - 1);
             dirpath[len - 1] = 0;

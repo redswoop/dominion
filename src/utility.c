@@ -86,7 +86,7 @@ void frequent_init()
     unlink(dszlog);
     ltime=0;
     backdoor=0;
-    status.net_edit_stuff=topdata;
+    sys.status.net_edit_stuff=topdata;
 }
 
 
@@ -247,7 +247,7 @@ void changedsl()
     i2=0;
     i3=0;
     if(confmode)
-    if(!slok(conf[curconf].sl,0))
+    if(!slok(sys.conf[curconf].sl,0))
         jumpconf("");
     for (i=0; i<num_subs; i++) {
         ok=1;
@@ -259,7 +259,7 @@ void changedsl()
             if (s.ar) if(!(thisuser.ar & s.ar)) ok=0;
             if ((s.attr & mattr_ansi_only) && (!okansi())) ok=0;
             if(confmode)
-                if (!strchr(conf[curconf].flagstr,s.conf)&&s.conf!='@'&&!strchr(conf[curconf].flagstr,'@')) ok=0;
+                if (!strchr(sys.conf[curconf].flagstr,s.conf)&&s.conf!='@'&&!strchr(sys.conf[curconf].flagstr,'@')) ok=0;
         }
         if (ok) {
             s1.subnum=i;
@@ -279,7 +279,7 @@ void changedsl()
         d=directories[i];
         if (!slok(d.acs,1)) ok=0;
         if (d.dar) if ((d.dar & thisuser.dar)==0) ok=0;
-        if(!strchr(conf[curconf].flagstr,d.confnum)&&d.confnum!='@'&&!strchr(conf[curconf].flagstr,'@')) ok=0;
+        if(!strchr(sys.conf[curconf].flagstr,d.confnum)&&d.confnum!='@'&&!strchr(sys.conf[curconf].flagstr,'@')) ok=0;
         if (ok) {
             s1.subnum=i;
             if (i==0)

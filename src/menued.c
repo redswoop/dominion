@@ -361,7 +361,7 @@ void listmform(void)
 
 void menued(char fn[15])
 {
-    int i,x=0,y,z,type=status.net_version,d1=0;
+    int i,x=0,y,z,type=sys.status.net_version,d1=0;
     char ch,s[161],s1[161],done=0;
     menurec back;
     menu_data_t data;
@@ -587,6 +587,6 @@ void menued(char fn[15])
     if(!wfc)
         read_menu(menuat,0);
 
-    status.net_version=type;
+    sys.status.net_version=type;
     save_status();
 }

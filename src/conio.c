@@ -679,7 +679,7 @@ void topscreen(void)
     FILE *f;
     userrec u;
 
-    status.net_edit_stuff=topdata;
+    sys.status.net_edit_stuff=topdata;
 
     if(topdata==0) {
 /* asm: ax,0x1003 */
@@ -798,28 +798,28 @@ void topscreen(void)
             strcpy(s,thisuser.note);
             break;
         case 6:
-            sprintf(s,"%d",status.msgposttoday);
+            sprintf(s,"%d",sys.status.msgposttoday);
             break;
         case 7:
-            sprintf(s,"%d ",status.emailtoday);
+            sprintf(s,"%d ",sys.status.emailtoday);
             break;
         case 8:
             userdb_load(1,&u);
             sprintf(s,"%d",numwaiting(&u));
             break;
         case 9:
-            sprintf(s,"%d",status.fbacktoday);
+            sprintf(s,"%d",sys.status.fbacktoday);
         case 11:
-            sprintf(s,"%d",status.uptoday);
+            sprintf(s,"%d",sys.status.uptoday);
             break;
         case 12:
-            sprintf(s,"%d%%",10*status.activetoday/144);
+            sprintf(s,"%d%%",10*sys.status.activetoday/144);
             break;
         case 13:
-            sprintf(s,"%d",status.activetoday);
+            sprintf(s,"%d",sys.status.activetoday);
             break;
         case 14:
-            sprintf(s,"%d",status.callstoday);
+            sprintf(s,"%d",sys.status.callstoday);
             break;
         case 15:
             strcpy(s,thisuser.laston);
@@ -896,7 +896,7 @@ void topscreen(void)
             strcpy(s,thisuser.pw);
             break;
         case 45:
-            strcpy(s,status.lastuser);
+            strcpy(s,sys.status.lastuser);
             break;
         default:
             strcpy(s,"");

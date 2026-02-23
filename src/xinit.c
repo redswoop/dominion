@@ -220,13 +220,13 @@ void init(int show)
             printf("\n\n\n%sstatus.json not found!\n\n",syscfg.datadir);
             err(1,s,"In Init()");
         }
-        json_to_statusrec(st_root, &status);
+        json_to_statusrec(st_root, &sys.status);
         cJSON_Delete(st_root);
     }
-    status.wwiv_version=wwiv_num_version;
+    sys.status.wwiv_version=wwiv_num_version;
     userdb_init(syscfg.datadir, syscfg.maxusers);
     menudb_init(syscfg.menudir);
-    status.users = userdb_user_count();
+    sys.status.users = userdb_user_count();
 
     screensave.scrn1=(char *)mallocx(screenlen);
 
@@ -298,9 +298,9 @@ void init(int show)
         printf("\n\n%sConf.dat Not Found!\n\n",syscfg.datadir);
         err(1,s,"In Init()");
     }
-    num_conf=(read(i,(void *)&conf[0],20*sizeof(confrec)))/ sizeof(confrec);
-    if(conf[0].sl[0])
-        conf[0].sl[0]=0;
+    num_conf=(read(i,(void *)&sys.conf[0],20*sizeof(confrec)))/ sizeof(confrec);
+    if(sys.conf[0].sl[0])
+        sys.conf[0].sl[0]=0;
     close(i);
 
     sprintf(s,"%sarchive.dat",syscfg.datadir);
@@ -331,14 +331,14 @@ void init(int show)
     cursub=0;
     fwaiting=numwaiting(&thisuser);
 
-    sl1(2,status.date1);
+    sl1(2,sys.status.date1);
 
     if (ok_modem_stuff)
         initport(syscfg.primaryport);
     if (syscfg.sysconfig & sysconfig_no_local)
         topdata=0;
     else
-        topdata=status.net_edit_stuff;
+        topdata=sys.status.net_edit_stuff;
 
     ss=getenv("PROMPT");
     strcpy(newprompt,"PROMPT=BBS: ");
@@ -383,9 +383,9 @@ void init(int show)
     if (last_time<0.0)
         last_time+=24.0*3600.0;
     do_event=0;
-    if (status.callernum!=65535) {
-        status.callernum1=(long)status.callernum;
-        status.callernum=65535;
+    if (sys.status.callernum!=65535) {
+        sys.status.callernum1=(long)sys.status.callernum;
+        sys.status.callernum=65535;
         save_status();
     }
     frequent_init();

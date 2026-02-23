@@ -68,7 +68,7 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         sprintf(s, "%-4d", thisuser.ontoday);
         break;
     case '+':
-        sprintf(s, "%s", status.lastuser);
+        sprintf(s, "%s", sys.status.lastuser);
         break;
     case '@':
         strcpy(s, get_string(sysop2() ? 4 : 5));
@@ -78,17 +78,17 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         break;
 
     case 'a':
-        userdb_load(status.amsguser, &u);
-        if (status.amsganon == 1) {
+        userdb_load(sys.status.amsguser, &u);
+        if (sys.status.amsganon == 1) {
             if (so()) {
                 strcpy(s, " ");
-                strcat(s, nam(&u, status.amsguser));
+                strcat(s, nam(&u, sys.status.amsguser));
                 strcat(s, " ");
             } else {
                 strcpy(s, "Anonymous!");
             }
         } else {
-            strcpy(s, nam(&u, status.amsguser));
+            strcpy(s, nam(&u, sys.status.amsguser));
         }
         break;
     case 'b':
@@ -172,7 +172,7 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         sprintf(s, "%d", thisuser.fpts);
         break;
     case 'G':
-        sprintf(s, "%s", conf[curconf].name);
+        sprintf(s, "%s", sys.conf[curconf].name);
         break;
     case 'H':
         sprintf(s, "%s", pnam(&thisuser));

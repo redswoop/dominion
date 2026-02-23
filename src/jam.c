@@ -1101,7 +1101,7 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
 
     ++thisuser.msgpost;
     ++thisuser.posttoday;
-    ++status.msgposttoday;
+    ++sys.status.msgposttoday;
     save_status();
     topscreen();
 

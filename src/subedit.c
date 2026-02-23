@@ -401,7 +401,7 @@ void confdata(int n, char *s)
     char x,y,k,i,s1[MAX_PATH_LEN];
     confrec r;
 
-    r=conf[n];
+    r=sys.conf[n];
     noc(s1,r.name);
     sprintf(s,"3%2d  3%-40s 3%-8s 3%s",n,s1,r.sl,r.flagstr);
 }
@@ -429,7 +429,7 @@ void modify_conf(int n)
     int i,i1,done;
 
     done=0;
-    r=conf[n];
+    r=sys.conf[n];
 
     do {
         outchr(12);
@@ -447,15 +447,15 @@ void modify_conf(int n)
         case ']': 
             if((n>=0) && (n<num_conf-1))
             { 
-                conf[n++]=r;
-                r=conf[n];
+                sys.conf[n++]=r;
+                r=sys.conf[n];
             } 
             break;
 
         case '[': 
             if(n>0) { 
-                conf[n--]=r;
-                r=conf[n];
+                sys.conf[n--]=r;
+                r=sys.conf[n];
             } 
             break;
         case 'J': 
@@ -464,8 +464,8 @@ void modify_conf(int n)
             input(s,3);
             if(s[0]) {
                 i=atoi(s);
-                conf[n]=r;
-                r=conf[i];
+                sys.conf[n]=r;
+                r=sys.conf[i];
             } 
             break;
         case 'Q':
@@ -499,7 +499,7 @@ void modify_conf(int n)
 
     } 
     while ((!done) && (!hangup));
-    conf[n]=r;
+    sys.conf[n]=r;
     if (!wfc)
         changedsl();
 }
@@ -513,12 +513,12 @@ void insert_conf(int n)
     long l1,l2,l3;
 
     for (i=num_conf-1; i>=n; i--)
-        conf[i+1]=conf[i];
+        sys.conf[i+1]=sys.conf[i];
 
     strcpy(r.name,">New Conference<");
     strcpy(r.sl,"s20");
     strcpy(r.flagstr,"");
-    conf[n]=r;
+    sys.conf[n]=r;
     ++num_conf;
     modify_conf(n);
 }
@@ -531,7 +531,7 @@ void delete_conf(int n)
     long l1,l2;
 
     for (i=n; i<num_conf; i++)
-        conf[i]=conf[i+1];
+        sys.conf[i]=sys.conf[i+1];
     --num_conf;
     if (!wfc)
         changedsl();
@@ -583,7 +583,7 @@ void confedit()
             i=atoi(s);
             if ((s[0]!=0) && (i>=0) && (i<num_conf)) {
                 nl();
-                sprintf(s1,"Delete %s? ",conf[i].name);
+                sprintf(s1,"Delete %s? ",sys.conf[i].name);
                 prt(5,s1);
                 if (yn())
                     delete_conf(i);
@@ -594,6 +594,6 @@ void confedit()
     while ((!done) && (!hangup));
     sprintf(s,"%sconf.dat",syscfg.datadir);
     f=open(s,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
-    write(f,(void *)&conf[0], num_conf * sizeof(confrec));
+    write(f,(void *)&sys.conf[0], num_conf * sizeof(confrec));
     close(f);
 }

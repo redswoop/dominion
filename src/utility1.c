@@ -34,7 +34,7 @@ int finduser1(char *sx)
             if (ch=='Y')
                 i2=i1;
             if (ch=='Q')
-                i=status.users;
+                i=sys.status.users;
         }
     }
     return(i2);

@@ -48,7 +48,7 @@ void editpost(UINT32 *attr);
 int external_edit(char *fn1, char *direc, int numlines);
 int okfsed();
 void addline(char *b, char *s, long *ll);
-void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],char to[41],int reading, int nummsgs,char comment[51],char subnum,int *abort);
+void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],char to[41],int reading, int msg_total,char comment[51],char subnum,int *abort);
 void osan(char *s, int *abort, int *next);
 void getorigin(int origin, originrec *orig);
 void upload_post();

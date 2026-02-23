@@ -17,7 +17,7 @@ void deluser(int un)
     if ((u.inact & inact_deleted)==0) {
         rsm(un,&u);
         userdb_index_remove(u.name);
-        status.users = userdb_user_count();
+        sys.status.users = userdb_user_count();
         save_status();
         u.inact |= inact_deleted;
         u.waiting=0;
@@ -416,7 +416,7 @@ void uedit(int usern)
                     if (u.inact & inact_deleted) {
                         u.inact ^= inact_deleted;
                         userdb_index_add(un,u.name);
-                        status.users = userdb_user_count();
+                        sys.status.users = userdb_user_count();
                         save_status();
                         userdb_save(un,&u);
                     }
@@ -435,7 +435,7 @@ void uedit(int usern)
                     if (u.inact & inact_lockedout) {
                     u.inact ^= inact_lockedout;
                     userdb_index_add(un,u.name);
-                    status.users = userdb_user_count();
+                    sys.status.users = userdb_user_count();
                     save_status();
                     userdb_save(un,&u);
                 }
@@ -457,7 +457,7 @@ void uedit(int usern)
                     userdb_index_remove(u.name);
                     strcpy(u.name,s);
                     userdb_index_add(un,u.name);
-                    status.users = userdb_user_count();
+                    sys.status.users = userdb_user_count();
                     save_status();
                     userdb_save(un,&u);
                 }

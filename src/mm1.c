@@ -402,7 +402,7 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
             curok=0;
             break;
         case '@': 
-            if(!strchr(conf[curconf].flagstr,s[1])) curok=0; 
+            if(!strchr(sys.conf[curconf].flagstr,s[1])) curok=0; 
             break;
         case '#': 
             if(!sysop2()) curok=0; 

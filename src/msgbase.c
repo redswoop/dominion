@@ -44,7 +44,7 @@ void addline(char *b, char *s, long *ll)
 
 
 
-void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],char to[41],int reading, int nummsgs,char comment[51],char subnum,int *abort)
+void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],char to[41],int reading, int msg_total,char comment[51],char subnum,int *abort)
 {
     FILE *f;
     char s[255],s1[255],s2[10],s3[10],s4[41];
@@ -85,7 +85,7 @@ void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],c
 
         strcpy(s4,noc2(subboards[usub[subnum].subnum].name));
         sprintf(s2,"%3d",reading);
-        sprintf(s3,"%3d",nummsgs);
+        sprintf(s3,"%3d",msg_total);
 
         stuff_in1(s1,s,title,name,date,to,"",comment,s2,s3,s4,"");
         pla(s1,abort);

@@ -92,7 +92,7 @@ int slok(char val[31],char menu)
             curok=0;
             break;
         case '@': 
-            if(!strchr(conf[curconf].flagstr,s[1])) curok=0; 
+            if(!strchr(sys.conf[curconf].flagstr,s[1])) curok=0; 
             break;
         case '#': 
             if(!sysop2()) curok=0; 
@@ -147,12 +147,12 @@ void msgcommand(char type,char ms[40])
             logtypes(1,"NewScaned Message Area 4%s",subboards[usub[cursub].subnum].name);
         } 
         else if(ms[0]=='A') {
-            strcpy(s,conf[curconf].flagstr);
-            strcpy(conf[curconf].flagstr,"@");
+            strcpy(s,sys.conf[curconf].flagstr);
+            strcpy(sys.conf[curconf].flagstr,"@");
             changedsl();
             logtypes(1,"NewScaned All Conferences");
             gnscan();
-            strcpy(conf[curconf].flagstr,s);
+            strcpy(sys.conf[curconf].flagstr,s);
             changedsl();
         }
         else if(!ms[0]) {
@@ -161,12 +161,12 @@ void msgcommand(char type,char ms[40])
             c=onek("\rYNA");
             switch(c) {
             case 'A': 
-                strcpy(s,conf[curconf].flagstr);
-                strcpy(conf[curconf].flagstr,"@");
+                strcpy(s,sys.conf[curconf].flagstr);
+                strcpy(sys.conf[curconf].flagstr,"@");
                 changedsl();
                 logtypes(1,"NewScaned Messages All Conferences");
                 gnscan();
-                strcpy(conf[curconf].flagstr,s);
+                strcpy(sys.conf[curconf].flagstr,s);
                 changedsl();
                 break;
             case 'Y':
@@ -525,12 +525,12 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
                 break;
             } 
             else if(ms[0]=='A') {
-                strcpy(s,conf[curconf].flagstr);
-                strcpy(conf[curconf].flagstr,"@");
+                strcpy(s,sys.conf[curconf].flagstr);
+                strcpy(sys.conf[curconf].flagstr,"@");
                 changedsl();
                 logtypes(1,"NewScaned File Areas on All Conferences");
                 nscanall();
-                strcpy(conf[curconf].flagstr,s);
+                strcpy(sys.conf[curconf].flagstr,s);
                 changedsl();
             }
             else if(!ms[0]) {
@@ -539,12 +539,12 @@ int ex(char type[2],char ms[MAX_PATH_LEN])
                 c=onek("\rYNA");
                 switch(c) {
                 case 'A': 
-                    strcpy(s,conf[curconf].flagstr);
-                    strcpy(conf[curconf].flagstr,"@");
+                    strcpy(s,sys.conf[curconf].flagstr);
+                    strcpy(sys.conf[curconf].flagstr,"@");
                     changedsl();
                     logtypes(1,"NewScaned File Areas on All Conferences");
                     nscanall();
-                    strcpy(conf[curconf].flagstr,s);
+                    strcpy(sys.conf[curconf].flagstr,s);
                     changedsl();
                     break;
                 case 'Y':

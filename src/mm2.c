@@ -110,8 +110,8 @@ void amsgcommand(char type)
 #endif
         break;
     case 'A':
-        if(status.amsguser)
-            email(status.amsguser,"Reply to AutoMessage",1);
+        if(sys.status.amsguser)
+            email(sys.status.amsguser,"Reply to AutoMessage",1);
         break;
     default: 
         badcommand('J',type);

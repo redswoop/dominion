@@ -64,7 +64,7 @@ int getcaller(void)
             switch(ch) {
             case   1: 
                 input(s,3); 
-                status.activetoday=atoi(s); 
+                sys.status.activetoday=atoi(s); 
                 break;
             case ' ':
                 if(!ok_local()) {
@@ -413,25 +413,25 @@ void wfcs(void)
             cprintf(wwiv_version);
             break;
         case 2:
-            cprintf("%d",status.callstoday);
+            cprintf("%d",sys.status.callstoday);
             break;
         case 3:
-            cprintf("%d%%",(10*status.activetoday/144));
+            cprintf("%d%%",(10*sys.status.activetoday/144));
             break;
         case 4:
-            cprintf("%d",status.msgposttoday);
+            cprintf("%d",sys.status.msgposttoday);
             break;
         case 5:
             cprintf("%svailable",sysop2()?"A":"Una");
             break;
         case 6:
-            cprintf("%s",status.lastuser);
+            cprintf("%s",sys.status.lastuser);
             break;
         case 7:
-            cprintf("%d",status.uptoday);
+            cprintf("%d",sys.status.uptoday);
             break;
         case 8:
-            cprintf("%d",status.dltoday);
+            cprintf("%d",sys.status.dltoday);
             break;
         case 9:
             l=(long) freek(_getdrive());
@@ -441,7 +441,7 @@ void wfcs(void)
             cprintf("%d",fwaiting);
             break;
         case 11:
-            bargraph(10*status.activetoday/144);
+            bargraph(10*sys.status.activetoday/144);
             break;
         case 12:
             timex=x;

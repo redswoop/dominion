@@ -342,7 +342,7 @@ void logon()
 
     setcolors(&thisuser);
 
-    if (strcmp(date(),status.date1)!=0) {
+    if (strcmp(date(),sys.status.date1)!=0) {
         if (live_user) {
             nl();
             pl(get_string(38));
@@ -358,7 +358,7 @@ void logon()
         sysoplog("7! 0User LockedOut!  Hungup.");
     }
 
-    if (strcmp(status.date1,thisuser.laston)==0)
+    if (strcmp(sys.status.date1,thisuser.laston)==0)
         ++thisuser.ontoday;
     else {
         thisuser.ontoday=1;
@@ -377,8 +377,8 @@ void logon()
     msgreadlogon=0;
 
     if (outcom) {
-        ++status.callernum1;
-        ++status.callstoday;
+        ++sys.status.callernum1;
+        ++sys.status.callstoday;
     }
 
 
@@ -488,7 +488,7 @@ void logon()
 
         if ((actsl!=255) || (outcom)) {
             sprintf(s,"5%ld0: 7%s 0%s %s   4%s 0- %d",
-            status.callernum1,
+            sys.status.callernum1,
             nam(&thisuser,usernum),
             times(),
             date(),
@@ -504,7 +504,7 @@ void logon()
             if (ff) { fgets(s1,161,ff); fclose(ff); }
             else s1[0]=0;
 
-            itoa(status.callernum1,s6,10);
+            itoa(sys.status.callernum1,s6,10);
             itoa(thisuser.ontoday,s3,10);
             itoa(modem_speed,s7,10);
             sprintf(s4,"%-30.30s",nam(&thisuser,usernum));
@@ -579,16 +579,16 @@ void logoff()
         return;
 
     thisuser.lastrate=modem_speed;
-    strcpy(thisuser.laston,status.date1);
+    strcpy(thisuser.laston,sys.status.date1);
     thisuser.illegal=0;
     if ((timer()-session.timeon)<-30.0)
         session.timeon-=24.0*3600.0;
     ton=timer()-session.timeon;
     thisuser.timeon += ton;
     thisuser.timeontoday += (ton-extratimecall);
-    status.activetoday += (int) (ton/60.0);
+    sys.status.activetoday += (int) (ton/60.0);
     if(outcom)
-        strcpy(status.lastuser,nam(&thisuser,usernum));
+        strcpy(sys.status.lastuser,nam(&thisuser,usernum));
     save_status();
 
 

@@ -43,7 +43,7 @@ typedef struct {
     char maxcmd;
 
     /* Session timing */
-    double timeon, extratimecall, last_time, xtime, time_event;
+    double timeon, extratimecall;
     long hanguptime1, nscandate, timelastchar1;
 
     /* Session flags */
@@ -53,11 +53,10 @@ typedef struct {
     int express, expressabort;
     int msgr, msgreadlogon;
     int fwaiting, fsenttoday;
-    int topdata, sysop_alert, ltime, do_event;
+    int topdata, sysop_alert, ltime;
     int already_on, arcling, bchanged;
     int dlf, edlf, numf, num_listed;
-    int gat_section, global_xx, wfc;
-    int ARC_NUMBER, MAX_BATCH;
+    int gat_section;
 
     /* Batch transfer */
     batchrec batch;
@@ -74,7 +73,6 @@ typedef struct {
     char chatsoundon;
     char newprompt[161];
     char dszlog[MAX_PATH_LEN];
-    char xdate[9];
     char filelistformat[100];
     char filelistformat2[100];
     char filelistformat3[100];

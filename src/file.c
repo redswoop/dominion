@@ -698,7 +698,7 @@ int checkdl(uploadsrec u,int dn)
 void finddescription(char ms[41])
 {
     uploadsrec u;
-    int i,i2,abort,d,ocd,num=0,next=0,sp=0;
+    int i,i2,abort,d,ocd,num=0,next=0,sp_found=0;
     long len=0;
 
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN],wh[41],*p;
@@ -745,15 +745,15 @@ void finddescription(char ms[41])
             num+=lfs(s,s1,&abort,&len,0);
             break;
         }
-        sp=0;
+        sp_found=0;
         i=0;
-        while(!sp&&i<64 && !abort && !hangup &&udir[i].subnum!=-1) {
+        while(!sp_found&&i<64 && !abort && !hangup &&udir[i].subnum!=-1) {
             if(strcmp(p,udir[i].keys)==0)
-                sp=1;
+                sp_found=1;
             else
                 i++;
         }
-        if(sp) {
+        if(sp_found) {
             curdir=i;
             num+=lfs(s,s1,&abort,&len,0);
         }
@@ -886,11 +886,11 @@ void nnscan(char ms[41])
         ex("FP","");
 
     if(global) {
-        strcpy(s,conf[curconf].flagstr);
-        strcpy(conf[curconf].flagstr,"");
+        strcpy(s,sys.conf[curconf].flagstr);
+        strcpy(sys.conf[curconf].flagstr,"");
         changedsl();
         nscanall();
-        strcpy(conf[curconf].flagstr,s);
+        strcpy(sys.conf[curconf].flagstr,s);
         changedsl();
     } 
     else

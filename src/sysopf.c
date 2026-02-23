@@ -11,7 +11,7 @@ void reset_files(int show)
 {
     (void)show;
     userdb_rebuild_index();
-    status.users = userdb_user_count();
+    sys.status.users = userdb_user_count();
     save_status();
 }
 
@@ -24,7 +24,7 @@ void get_status()
     sprintf(s,"%sstatus.json",syscfg.datadir);
     st_root = read_json_file(s);
     if (st_root) {
-        json_to_statusrec(st_root, &status);
+        json_to_statusrec(st_root, &sys.status);
         cJSON_Delete(st_root);
     } 
     else
@@ -106,22 +106,22 @@ void beginday()
 
     pl("Updating Logs");
     logpr("");
-    logpr("1�1>0Totals for 7%s1<1�",status.date1); 
-    logpr("   0Calls             1: 7%d",status.callstoday); 
-    logpr("   0Message Posted    1: 7%d",status.msgposttoday);
-    logpr("   0FeedBack          1: 7%d",status.fbacktoday);
-    logpr("   0Uploads           1: 7%d",status.uptoday);
-    logpr("   0Downloads         1: 7%d",status.dltoday);
-    logpr("   0Total Time Active 1: 7%d",status.activetoday);
+    logpr("1�1>0Totals for 7%s1<1�",sys.status.date1); 
+    logpr("   0Calls             1: 7%d",sys.status.callstoday); 
+    logpr("   0Message Posted    1: 7%d",sys.status.msgposttoday);
+    logpr("   0FeedBack          1: 7%d",sys.status.fbacktoday);
+    logpr("   0Uploads           1: 7%d",sys.status.uptoday);
+    logpr("   0Downloads         1: 7%d",sys.status.dltoday);
+    logpr("   0Total Time Active 1: 7%d",sys.status.activetoday);
     logpr("");
-    strcpy(z.date,status.date1);
-    z.active=status.activetoday;
-    z.calls=status.callstoday;
-    z.posts=status.msgposttoday;
-    z.email=status.emailtoday;
-    z.fback=status.fbacktoday;
-    z.up=status.uptoday;
-    z.dl=status.dltoday;
+    strcpy(z.date,sys.status.date1);
+    z.active=sys.status.activetoday;
+    z.calls=sys.status.callstoday;
+    z.posts=sys.status.msgposttoday;
+    z.email=sys.status.emailtoday;
+    z.fback=sys.status.fbacktoday;
+    z.up=sys.status.uptoday;
+    z.dl=sys.status.dltoday;
     sprintf(s,"%shistory.dat",syscfg.datadir);
     f=open(s,O_RDWR|O_BINARY);
     lseek(f,(nifty.systemtype-1)*sizeof(zlogrec),SEEK_SET);
@@ -137,14 +137,14 @@ void beginday()
     sprintf(s1,"%s%s.log",syscfg.gfilesdir,s);
     unlink(s1);
 
-    status.callstoday=0;
-    status.msgposttoday=0;
-    status.emailtoday=0;
-    status.fbacktoday=0;
-    status.uptoday=0;
-    status.dltoday=0;
-    status.activetoday=0;
-    strcpy(status.date1,date());
+    sys.status.callstoday=0;
+    sys.status.msgposttoday=0;
+    sys.status.emailtoday=0;
+    sys.status.fbacktoday=0;
+    sys.status.uptoday=0;
+    sys.status.dltoday=0;
+    sys.status.activetoday=0;
+    strcpy(sys.status.date1,date());
     sl1(2,date());
     sprintf(s,"%suser.log",syscfg.gfilesdir);
     unlink(s);

@@ -42,8 +42,8 @@ void write_automessage()
     upload_post();
     b=ninmsg(&hdr,&len,&save,0);
     if(save) {
-        status.amsganon=0;
-        status.amsguser=usernum;
+        sys.status.amsganon=0;
+        sys.status.amsguser=usernum;
         logtypes(2,"Changed Automessage");
         sprintf(s,"%sauto.msg",syscfg.gfilesdir);
         unlink(s);
@@ -270,7 +270,7 @@ void jumpconf(char ms[41])
     int i,ok,type=0;
 
     if(atoi(ms)) {
-        if(slok(conf[atoi(ms)].sl,0)) {
+        if(slok(sys.conf[atoi(ms)].sl,0)) {
             curconf=atoi(ms);
             changedsl();
             return;
@@ -281,12 +281,12 @@ void jumpconf(char ms[41])
     dtitle("Conferences Available: ");
     for(c=0;c<num_conf;c++) {
         ok=1;
-        if(!slok(conf[c].sl,0)) ok=0;
+        if(!slok(sys.conf[c].sl,0)) ok=0;
         if(type=='M'||type=='F')
-            if(conf[c].type!=type&&conf[c].type)
+            if(sys.conf[c].type!=type&&sys.conf[c].type)
                 ok=0;
         if(ok)
-            npr("0<%d> %s\r\n",c+1,conf[c].name);
+            npr("0<%d> %s\r\n",c+1,sys.conf[c].name);
     }
     nl();
     outstr("Select: ");
@@ -296,7 +296,7 @@ void jumpconf(char ms[41])
     if(i==0) return;
     i--;
     if(i>num_conf) return;
-    if(slok(conf[i].sl,0)) curconf=i;
+    if(slok(sys.conf[i].sl,0)) curconf=i;
     else {
         pl("Unavailable Conference");
         curconf=0;
