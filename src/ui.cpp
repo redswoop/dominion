@@ -932,29 +932,70 @@ void ui_run(const UIConfig& config)
         return;
     }
 
-    /* Sysop console banner */
-    if (have_console) {
-        console.setAttr(0x0B);
-        console.puts(config.banner ? config.banner : "uitest");
-        console.setAttr(0x07);
-        if (listen_fd >= 0)
-            console.printf(" | Listening on port %d", config.listen_port);
-        else
-            console.puts(" | Local only (no -P flag)");
-        console.newline();
-        console.setAttr(0x03);
-        console.puts("Press Q to quit");
-        console.newline();
-        console.newline();
-    } else {
-        std::fprintf(stderr, "uitest: listening on port %d (no console, kill to stop)\n",
-                     config.listen_port);
+    if (!have_console) {
+        std::fprintf(stderr, "%s: listening on port %d (no console, kill to stop)\n",
+                     config.banner ? config.banner : "uitest", config.listen_port);
     }
+
+    /*
+     * Layout (25-row terminal):
+     *   rows  0-23 : session mirror — shows screen buffer of viewed session
+     *   row   24   : status bar    — fixed, always drawn by console
+     *
+     * Console Terminal keeps ncurses ownership at all times.
+     * Session Terminals write to TCP + their own screen buffer; no ncurses.
+     * The sysop views one session at a time via [ and ] keys.
+     */
+    static const int MIRROR_ROWS = 24;
+    static const int STATUS_ROW  = 24;
 
     std::vector<Session*> sessions;
     int next_session_id = 1;
     bool running = true;
-    Session* mirrored = nullptr;  /* session currently mirroring to console */
+    int viewed_id = -1;   /* ID of session shown in mirror area; -1 = none */
+    bool need_refresh = true;
+
+    /* -- Draw status bar at STATUS_ROW -- */
+    auto draw_status = [&]() {
+        if (!have_console) return;
+        char buf[128];
+        if (sessions.empty()) {
+            std::snprintf(buf, sizeof(buf), " %s | No sessions | Q quit",
+                          config.banner ? config.banner : "uitest");
+        } else {
+            /* Build session indicator strip: [1*][2][3] */
+            char inds[64] = {};
+            for (auto* s : sessions) {
+                char ind[10];
+                std::snprintf(ind, sizeof(ind), "[%d%s]",
+                              s->id, s->id == viewed_id ? "*" : "");
+                std::strncat(inds, ind, sizeof(inds) - std::strlen(inds) - 1);
+            }
+            int n = (int)sessions.size();
+            std::snprintf(buf, sizeof(buf), " %s  %d session%s  [ prev  ] next  Q quit",
+                          inds, n, n == 1 ? "" : "s");
+        }
+        /* Pad/truncate to exactly 80 columns */
+        int len = (int)std::strlen(buf);
+        if (len < 80) std::memset(buf + len, ' ', 80 - len);
+        buf[80] = '\0';
+        console.drawStatusLine(STATUS_ROW, buf, 0x17);  /* white on blue */
+    };
+
+    /* -- Render viewed session buffer into mirror area, then redraw status -- */
+    auto render_view = [&]() {
+        if (!have_console) return;
+        Session* vs = nullptr;
+        for (auto* s : sessions)
+            if (s->id == viewed_id) { vs = s; break; }
+        if (!vs)
+            console.clearArea(0, MIRROR_ROWS);
+        else
+            console.renderBuffer(vs->term.screenBuffer(), 0, MIRROR_ROWS);
+        draw_status();
+    };
+
+    render_view();  /* initial draw: blank mirror + status bar */
 
     while (running) {
         /* -- Build poll set -- */
@@ -979,7 +1020,7 @@ void ui_run(const UIConfig& config)
             nfds++;
         }
 
-        /* Slots 2+: session fds */
+        /* Slots 2+: active session fds */
         int session_base = nfds;
         for (auto* s : sessions) {
             if (s->active) {
@@ -994,21 +1035,35 @@ void ui_run(const UIConfig& config)
 
         /* -- Sysop keystroke -- */
         if (stdin_slot >= 0 && (fds[stdin_slot].revents & POLLIN)) {
-            if (mirrored) {
-                /* Console ncurses is owned by session — read stdin directly.
-                 * stdin is already in raw mode from ncurses init. */
-                unsigned char ch = 0;
-                if (read(STDIN_FILENO, &ch, 1) == 1) {
-                    if (ch == 'Q' || ch == 'q') {
-                        running = false;
-                        break;
+            unsigned char ch = console.localGetKeyNB();
+            if (ch == 'Q' || ch == 'q') {
+                running = false;
+                break;
+            } else if (ch == '[') {
+                /* Previous session */
+                if (!sessions.empty()) {
+                    int idx = (int)sessions.size() - 1;
+                    for (int i = 0; i < (int)sessions.size(); i++) {
+                        if (sessions[i]->id == viewed_id) {
+                            idx = (i == 0) ? (int)sessions.size() - 1 : i - 1;
+                            break;
+                        }
                     }
+                    viewed_id = sessions[idx]->id;
+                    need_refresh = true;
                 }
-            } else {
-                unsigned char ch = console.localGetKeyNB();
-                if (ch == 'Q' || ch == 'q') {
-                    running = false;
-                    break;
+            } else if (ch == ']') {
+                /* Next session */
+                if (!sessions.empty()) {
+                    int idx = 0;
+                    for (int i = 0; i < (int)sessions.size(); i++) {
+                        if (sessions[i]->id == viewed_id) {
+                            idx = (i + 1 < (int)sessions.size()) ? i + 1 : 0;
+                            break;
+                        }
+                    }
+                    viewed_id = sessions[idx]->id;
+                    need_refresh = true;
                 }
             }
         }
@@ -1026,23 +1081,13 @@ void ui_run(const UIConfig& config)
                     s->term.setRemote(cfd);
                     s->term.sendTelnetNegotiation();
                     s->term.sendTerminalInit();
-
-                    /* Mirror first session to sysop console */
-                    if (have_console && !mirrored) {
-                        s->term.adoptLocal(console);
-                        mirrored = s;
-                    }
-
                     s->current_ui = config.on_connect(*s);
                     fire_on_enter(*s);
                     sessions.push_back(s);
-
-                    if (have_console && mirrored != s) {
-                        console.setAttr(0x0A);
-                        console.printf("Session %d connected (fd=%d)", s->id, cfd);
-                        console.newline();
-                        console.setAttr(0x07);
-                    }
+                    /* Auto-view first session */
+                    if (viewed_id == -1)
+                        viewed_id = s->id;
+                    need_refresh = true;
                 }
             }
         }
@@ -1058,42 +1103,31 @@ void ui_run(const UIConfig& config)
 
             unsigned char ch = s->term.remoteGetKey();
             if (ch == 0) {
-                /* Check if disconnected (remoteGetKey returns 0 and
-                 * detaches remote on EOF) */
-                if (!s->term.remoteConnected()) {
+                /* remoteGetKey returns 0 and detaches on EOF */
+                if (!s->term.remoteConnected())
                     s->active = false;
-                }
                 continue;
             }
             dispatch_input(*s, ch);
+            /* If sysop is watching this session, refresh the mirror */
+            if (s->id == viewed_id)
+                need_refresh = true;
         }
 
         /* -- Reap dead sessions -- */
         for (auto it = sessions.begin(); it != sessions.end(); ) {
             Session* s = *it;
             if (!s->active) {
-                /* Release ncurses back to console if this was the mirrored session */
-                bool was_mirrored = (mirrored == s);
-                if (was_mirrored) {
-                    s->term.releaseLocal(console);
-                    mirrored = nullptr;
-                }
-
-                if (have_console) {
-                    if (was_mirrored) {
-                        /* Redraw console banner after mirroring ends */
-                        console.clearScreen();
-                        console.setAttr(0x0B);
-                        console.puts(config.banner ? config.banner : "uitest");
-                        console.setAttr(0x07);
-                        if (listen_fd >= 0)
-                            console.printf(" | Listening on port %d", config.listen_port);
-                        console.newline();
-                    }
-                    console.setAttr(0x0C);
-                    console.printf("Session %d disconnected", s->id);
-                    console.newline();
-                    console.setAttr(0x07);
+                /* If this was the viewed session, pick a neighbor */
+                if (s->id == viewed_id) {
+                    auto nxt = std::next(it);
+                    if (nxt != sessions.end())
+                        viewed_id = (*nxt)->id;
+                    else if (it != sessions.begin())
+                        viewed_id = (*std::prev(it))->id;
+                    else
+                        viewed_id = -1;
+                    need_refresh = true;
                 }
                 s->term.sendTerminalRestore();
                 s->term.closeRemote();
@@ -1103,14 +1137,16 @@ void ui_run(const UIConfig& config)
                 ++it;
             }
         }
+
+        /* -- Refresh console display -- */
+        if (need_refresh) {
+            render_view();
+            need_refresh = false;
+        }
     }
 
     /* Shutdown: close all sessions */
     for (auto* s : sessions) {
-        if (mirrored == s) {
-            s->term.releaseLocal(console);
-            mirrored = nullptr;
-        }
         s->term.sendTerminalRestore();
         s->term.closeRemote();
         delete s;

@@ -94,6 +94,9 @@ public:
     void setScreenBuffer(char *buf) { scrn_ = buf; ownsScrn_ = false; }
     void scrnPut(int x, int y, unsigned char ch, unsigned char attr);
     void renderScrn(int startRow, int numRows);
+    void renderBuffer(const char *buf, int startRow, int numRows);  /* render external 80×25×2 buffer */
+    void drawStatusLine(int row, const char *text, int attr);       /* draw fixed row with color */
+    void clearArea(int startRow, int numRows);                      /* blank a range of rows */
 
     /* -- ncurses ownership transfer (console mirroring) -- */
     void adoptLocal(Terminal& from);   /* take ncurses ownership from another Terminal */

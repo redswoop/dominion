@@ -413,6 +413,44 @@ void Terminal::renderScrn(int startRow, int numRows)
 }
 
 
+void Terminal::renderBuffer(const char *buf, int startRow, int numRows)
+{
+    if (!buf || !ncActive_) return;
+    for (int row = startRow; row < startRow + numRows; row++) {
+        move(row, 0);
+        for (int col = 0; col < 80; col++) {
+            int off = (row * 80 + col) * 2;
+            unsigned char ch = (unsigned char)buf[off];
+            unsigned char at = (unsigned char)buf[off + 1];
+            attrset(ncAttr(at));
+            addstr(cp437_to_utf8[ch ? ch : ' ']);
+        }
+    }
+    refresh();
+}
+
+void Terminal::drawStatusLine(int row, const char *text, int attr)
+{
+    if (!ncActive_) return;
+    move(row, 0);
+    attrset(ncAttr(attr));
+    clrtoeol();
+    if (text) addstr(text);
+    refresh();
+}
+
+void Terminal::clearArea(int startRow, int numRows)
+{
+    if (!ncActive_) return;
+    attrset(ncAttr(0x07));
+    for (int r = startRow; r < startRow + numRows; r++) {
+        move(r, 0);
+        clrtoeol();
+    }
+    refresh();
+}
+
+
 /* ================================================================== */
 /*  Screen primitives                                                  */
 /* ================================================================== */
