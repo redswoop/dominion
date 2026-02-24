@@ -391,7 +391,7 @@ void searchrum(void)
         if(strstr(strupr(r.rumour),strupr(scan))) {
             if(r.an&&!cs()) strcpy(s,"Anonymous");
             else {
-                i2=finduser(r.by);
+                i2=UserDB::instance().finduser(r.by);
                 if(i2) {
                     { auto p = UserDB::instance().get(i2); if (p) u = *p; }
                     strcpy(s,u.display_name(i2).c_str());

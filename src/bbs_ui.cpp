@@ -805,7 +805,7 @@ int finduser1(char *sx)
     if (sx[0]==0)
         return(0);
 
-    int i = finduser(sx);
+    int i = UserDB::instance().finduser(sx);
     if (i>0)
         return(i);
 

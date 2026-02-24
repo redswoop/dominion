@@ -240,9 +240,9 @@ std::optional<int> UserDB::resolve(const std::string& input)
 }
 
 
-unsigned int finduser(const char *s)
+unsigned int UserDB::finduser(const char *s)
 {
-    auto r = UserDB::instance().resolve(s);
+    auto r = resolve(s);
     if (!r) return 0;
     if (*r == -1) return (unsigned int)-1;  /* "NEW" */
     return *r;

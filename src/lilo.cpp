@@ -54,7 +54,7 @@ int getmuser()
 
     nl();
     inputdat("Name/User Number",s,31,0);
-    sess.usernum=finduser(s);
+    sess.usernum=UserDB::instance().finduser(s);
     if(sess.usernum) {
         if(sess.backdoor) return 1;
         { auto __p = UserDB::instance().get(sess.usernum); if (__p) sess.user = *__p; };
@@ -234,7 +234,7 @@ void getuser()
         outstr(get_string(3));
 
         input(s,30);
-        sess.usernum=finduser(s);
+        sess.usernum=UserDB::instance().finduser(s);
         if ((net_only) && (sess.usernum!=-2))
             sess.usernum=0;
         if (sess.usernum>0) {

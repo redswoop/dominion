@@ -48,6 +48,9 @@ public:
     /* String-to-id resolution: handles "NEW", numeric IDs, name lookup */
     std::optional<int> resolve(const std::string& input);
 
+    /* Legacy adapter: resolve() → unsigned int (0=not found, -1="NEW") */
+    unsigned int finduser(const char *s);
+
 private:
     UserDB() = default;
     std::string datadir_;
@@ -61,8 +64,5 @@ private:
     std::vector<IndexEntry> index_;
 };
 
-
-/* User lookup — thin adapter: optional<int> → unsigned int (0=not found) */
-unsigned int finduser(const char *s);
 
 #endif /* _USERDB_H_ */

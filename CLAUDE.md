@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Design Principles
+
+Follow Lakos design principles documented in the auto-memory file `lakos.md`: method vs utility placement, value types, levelization, minimal interface.
+
 ## Refactoring
 
 When refactoring, refer to refactor.md

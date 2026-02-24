@@ -57,7 +57,7 @@ int check_name(const char *nn)
         ok=0;
     if (nn[0]<65)
         ok=0;
-    if (finduser(nn)!=0)
+    if (UserDB::instance().finduser(nn)!=0)
         ok=0;
     if (strchr(nn,'@')!=NULL)
         ok=0;
@@ -749,7 +749,7 @@ void readform(char fn[8],char i[31])
     }
 
     fnin=fopen(s,"rt");
-    i1=finduser(i);
+    i1=UserDB::instance().finduser(i);
     if(i1>0) {
         auto p = UserDB::instance().get(i1); if (p) u = *p;
     }
