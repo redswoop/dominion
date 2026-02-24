@@ -721,6 +721,9 @@ void Terminal::executeAnsi()
                         *pCuratr_ = (*pCuratr_ & 0x8f) | ((clrlst[args[count] - 40] - '0') << 4);
                 }
             }
+            /* Inject true-color override after SGR updates curatr */
+            if (remote_.active)
+                injectTrueColor(*pCuratr_);
             break;
         }
     }
@@ -772,6 +775,29 @@ void Terminal::injectTrueColor(unsigned char cga_attr)
 
 
 /* ================================================================== */
+/*  ncurses ownership transfer                                         */
+/* ================================================================== */
+
+void Terminal::adoptLocal(Terminal& from)
+{
+    ncActive_ = from.ncActive_;
+    use16colors_ = from.use16colors_;
+    lastAttr_ = -1;  /* force re-sync on next emitAttr */
+    from.ncActive_ = false;
+    from.lastAttr_ = -1;
+}
+
+void Terminal::releaseLocal(Terminal& to)
+{
+    to.ncActive_ = ncActive_;
+    to.use16colors_ = use16colors_;
+    to.lastAttr_ = -1;
+    ncActive_ = false;
+    lastAttr_ = -1;
+}
+
+
+/* ================================================================== */
 /*  ANSI art file sender                                               */
 /* ================================================================== */
 
@@ -783,92 +809,19 @@ void Terminal::sendAnsiFile(const std::string& path)
     struct stat st;
     if (fstat(fd, &st) < 0) { close(fd); return; }
 
-    /* Read entire file and send byte by byte through remotePutch
-     * for CP437→UTF-8 conversion of art characters.
-     *
-     * CGA true-color fixup: After each SGR sequence, we track the
-     * resulting CGA attribute and inject true-color fg+bg overrides.
-     * This fixes two issues:
-     *   1. \033[0m resets bg to terminal default (not necessarily black)
-     *   2. \033[1;30m (intense black = dark grey) renders wrong on most
-     *      terminals that map bold+black to something other than CGA grey.
-     * Same approach as setAttr() but applied to raw ANSI art.
-     * See terminal-rendering.md. */
+    /* Read entire file and send through putch() which handles everything:
+     * - Remote output via remotePutch() (CP437→UTF-8)
+     * - ANSI accumulation → executeAnsi() → updates *pCuratr_ + ncurses
+     * - True-color injection (executeAnsi injects after SGR processing)
+     * - Printable chars → out1chx() → ncurses + screen buffer */
     size_t sz = (size_t)st.st_size;
     std::vector<unsigned char> buf(sz);
     ssize_t n = read(fd, buf.data(), sz);
     close(fd);
     if (n <= 0) return;
 
-    /* ANSI-to-CGA color map (same as clrlst in executeAnsi):
-     * ANSI index 0-7 → CGA color number */
-    static const int ansi2cga[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };
-
-    /* State machine: parse SGR sequences, track CGA attr, inject true color */
-    enum { NORMAL, GOT_ESC, CSI_PARAMS } state = NORMAL;
-    std::vector<int> params;
-    int cur_param = 0;
-    bool have_digit = false;
-    unsigned char cga_attr = 0x07;  /* starts as light grey on black */
-
-    for (ssize_t i = 0; i < n; i++) {
-        unsigned char c = buf[i];
-
-        switch (state) {
-        case NORMAL:
-            remotePutch(c);
-            if (c == 0x1B) state = GOT_ESC;
-            break;
-
-        case GOT_ESC:
-            remotePutch(c);
-            if (c == '[') {
-                state = CSI_PARAMS;
-                params.clear();
-                cur_param = 0;
-                have_digit = false;
-            } else {
-                state = NORMAL;
-            }
-            break;
-
-        case CSI_PARAMS:
-            remotePutch(c);
-            if (c >= '0' && c <= '9') {
-                cur_param = cur_param * 10 + (c - '0');
-                have_digit = true;
-            } else if (c == ';') {
-                params.push_back(have_digit ? cur_param : 0);
-                cur_param = 0;
-                have_digit = false;
-            } else {
-                /* Final byte — sequence complete */
-                params.push_back(have_digit ? cur_param : 0);
-                if (c == 'm') {
-                    /* SGR: apply params to CGA attr (same logic as executeAnsi) */
-                    if (params.empty() || (params.size() == 1 && params[0] == 0))
-                        params = {0};
-                    for (int p : params) {
-                        if (p == 0)       cga_attr = 0x07;
-                        else if (p == 1)  cga_attr |= 0x08;
-                        else if (p == 5)  cga_attr |= 0x80;
-                        else if (p == 7) {
-                            int base = cga_attr & 0x77;
-                            cga_attr = (cga_attr & 0x88) | (base << 4) | (base >> 4);
-                        }
-                        else if (p == 8)  cga_attr = 0x00;
-                        else if (p >= 30 && p <= 37)
-                            cga_attr = (cga_attr & 0xf8) | ansi2cga[p - 30];
-                        else if (p >= 40 && p <= 47)
-                            cga_attr = (cga_attr & 0x8f) | (ansi2cga[p - 40] << 4);
-                    }
-                    injectTrueColor(cga_attr);
-                }
-                state = NORMAL;
-            }
-            break;
-        }
-    }
+    for (ssize_t i = 0; i < n; i++)
+        putch(buf[i]);
 }
 
 

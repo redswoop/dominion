@@ -196,6 +196,7 @@ using SessionInitFn = std::function<ActiveUI(Session&)>;
 
 struct UIConfig {
     int listen_port = 0;          /* 0 = local only */
+    const char *banner = nullptr; /* server name for console banner (e.g. "formtest") */
     SessionInitFn on_connect;     /* builds initial navigator for new session */
 };
 

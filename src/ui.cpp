@@ -935,7 +935,7 @@ void ui_run(const UIConfig& config)
     /* Sysop console banner */
     if (have_console) {
         console.setAttr(0x0B);
-        console.puts("uitest");
+        console.puts(config.banner ? config.banner : "uitest");
         console.setAttr(0x07);
         if (listen_fd >= 0)
             console.printf(" | Listening on port %d", config.listen_port);
@@ -954,6 +954,7 @@ void ui_run(const UIConfig& config)
     std::vector<Session*> sessions;
     int next_session_id = 1;
     bool running = true;
+    Session* mirrored = nullptr;  /* session currently mirroring to console */
 
     while (running) {
         /* -- Build poll set -- */
@@ -993,10 +994,22 @@ void ui_run(const UIConfig& config)
 
         /* -- Sysop keystroke -- */
         if (stdin_slot >= 0 && (fds[stdin_slot].revents & POLLIN)) {
-            unsigned char ch = console.localGetKeyNB();
-            if (ch == 'Q' || ch == 'q') {
-                running = false;
-                break;
+            if (mirrored) {
+                /* Console ncurses is owned by session — read stdin directly.
+                 * stdin is already in raw mode from ncurses init. */
+                unsigned char ch = 0;
+                if (read(STDIN_FILENO, &ch, 1) == 1) {
+                    if (ch == 'Q' || ch == 'q') {
+                        running = false;
+                        break;
+                    }
+                }
+            } else {
+                unsigned char ch = console.localGetKeyNB();
+                if (ch == 'Q' || ch == 'q') {
+                    running = false;
+                    break;
+                }
             }
         }
 
@@ -1013,11 +1026,18 @@ void ui_run(const UIConfig& config)
                     s->term.setRemote(cfd);
                     s->term.sendTelnetNegotiation();
                     s->term.sendTerminalInit();
+
+                    /* Mirror first session to sysop console */
+                    if (have_console && !mirrored) {
+                        s->term.adoptLocal(console);
+                        mirrored = s;
+                    }
+
                     s->current_ui = config.on_connect(*s);
                     fire_on_enter(*s);
                     sessions.push_back(s);
 
-                    if (have_console) {
+                    if (have_console && mirrored != s) {
                         console.setAttr(0x0A);
                         console.printf("Session %d connected (fd=%d)", s->id, cfd);
                         console.newline();
@@ -1052,7 +1072,24 @@ void ui_run(const UIConfig& config)
         for (auto it = sessions.begin(); it != sessions.end(); ) {
             Session* s = *it;
             if (!s->active) {
+                /* Release ncurses back to console if this was the mirrored session */
+                bool was_mirrored = (mirrored == s);
+                if (was_mirrored) {
+                    s->term.releaseLocal(console);
+                    mirrored = nullptr;
+                }
+
                 if (have_console) {
+                    if (was_mirrored) {
+                        /* Redraw console banner after mirroring ends */
+                        console.clearScreen();
+                        console.setAttr(0x0B);
+                        console.puts(config.banner ? config.banner : "uitest");
+                        console.setAttr(0x07);
+                        if (listen_fd >= 0)
+                            console.printf(" | Listening on port %d", config.listen_port);
+                        console.newline();
+                    }
                     console.setAttr(0x0C);
                     console.printf("Session %d disconnected", s->id);
                     console.newline();
@@ -1070,6 +1107,10 @@ void ui_run(const UIConfig& config)
 
     /* Shutdown: close all sessions */
     for (auto* s : sessions) {
+        if (mirrored == s) {
+            s->term.releaseLocal(console);
+            mirrored = nullptr;
+        }
         s->term.sendTerminalRestore();
         s->term.closeRemote();
         delete s;

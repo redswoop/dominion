@@ -95,6 +95,10 @@ public:
     void scrnPut(int x, int y, unsigned char ch, unsigned char attr);
     void renderScrn(int startRow, int numRows);
 
+    /* -- ncurses ownership transfer (console mirroring) -- */
+    void adoptLocal(Terminal& from);   /* take ncurses ownership from another Terminal */
+    void releaseLocal(Terminal& to);   /* give ncurses ownership back */
+
     /* -- ANSI art file -- */
     void sendAnsiFile(const std::string& path);  /* CP437 + CGA true-color */
 

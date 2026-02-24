@@ -265,6 +265,7 @@ int main(int argc, char *argv[])
 
     UIConfig config;
     config.listen_port = port;
+    config.banner = "uitest";
     config.on_connect = [](Session& s) -> ActiveUI {
         return make_main_menu();
     };
