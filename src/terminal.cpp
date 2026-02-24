@@ -430,7 +430,9 @@ void Terminal::renderBuffer(const char *buf, int startRow, int numRows)
             int off = (row * 80 + col) * 2;
             unsigned char ch = (unsigned char)buf[off];
             unsigned char at = (unsigned char)buf[off + 1];
-            attrset(ncAttr(at));
+            /* Render zero-attr cells as normal white-on-black (0x07),
+             * not black-on-black which is invisible. */
+            attrset(ncAttr(at ? at : 0x07));
             addstr(cp437_to_utf8[ch ? ch : ' ']);
         }
     }

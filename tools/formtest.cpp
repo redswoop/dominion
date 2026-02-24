@@ -185,7 +185,6 @@ static ScreenForm make_newuser_form()
         s.term.newline();
         s.term.newline();
 
-        /* Values are already formatted by the widgets — just display them */
         const char* labels[] = {
             "Name", "Real Name", "Sex", "Birthdate", "Phone",
             "Street", "City", "Comment", "Computer", "Password"
@@ -194,7 +193,6 @@ static ScreenForm make_newuser_form()
             "name", "realname", "sex", "birthdate", "phone",
             "street", "city", "comment", "comptype", "password"
         };
-
         for (int i = 0; i < 10; i++) {
             s.term.setAttr(0x03);
             s.term.printf("%-12s", labels[i]);
@@ -207,10 +205,13 @@ static ScreenForm make_newuser_form()
 
         s.term.newline();
         s.term.setAttr(0x0E);
-        s.term.puts("Press any key to disconnect...");
-        /* Wait for a key, then quit */
-        s.term.getKey();
-        ui_quit(s);
+        s.term.puts("Press Q to disconnect.");
+        s.term.newline();
+
+        /* Non-blocking: push a dismiss navigator instead of blocking on getKey() */
+        Navigator done;
+        done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
+        ui_push(s, done);
     };
 
     form.on_cancel = [](Session& s) {
@@ -219,10 +220,13 @@ static ScreenForm make_newuser_form()
         s.term.puts("Registration cancelled.");
         s.term.newline();
         s.term.newline();
-        s.term.setAttr(0x07);
-        s.term.puts("Press any key to disconnect...");
-        s.term.getKey();
-        ui_quit(s);
+        s.term.setAttr(0x0E);
+        s.term.puts("Press Q to disconnect.");
+        s.term.newline();
+
+        Navigator done;
+        done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
+        ui_push(s, done);
     };
 
     return form;
