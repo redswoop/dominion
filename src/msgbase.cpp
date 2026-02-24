@@ -6,8 +6,8 @@
 #include "bbsutl.h"
 #include "disk.h"
 #include "utility.h"
+#include "userdb.h"
 #include "file2.h"
-#include "utility1.h"
 #include "mm1.h"
 #include "session.h"
 #include "system.h"
@@ -39,7 +39,7 @@ int okfsed()
 
     if (!okansi())
         ok=0;
-    if (!sess.user.defed)
+    if (!sess.user.defed())
         ok=0;
     return(ok);
 }
@@ -64,9 +64,9 @@ void showmsgheader(char a,char title[MAX_PATH_LEN],char name[41],char date[41],c
 
     io.mciok=1;
     if(sys.subboards[sess.usub[subnum].subnum].attr & mattr_fidonet)
-        sprintf(s,"%smsgnet%d.fmt",sys.cfg.gfilesdir,sess.user.mlisttype);
+        sprintf(s,"%smsgnet%d.fmt",sys.cfg.gfilesdir,sess.user.mlisttype());
     else
-        sprintf(s,"%smsg%d.fmt",sys.cfg.gfilesdir,sess.user.mlisttype);
+        sprintf(s,"%smsg%d.fmt",sys.cfg.gfilesdir,sess.user.mlisttype());
 
     if(!exist(s)) {
         npr("By: %-30s, To:%s\r\n",name,to);
@@ -294,12 +294,12 @@ void yourinfomsg()
     auto& sess = Session::instance();
     nl();
     dtitle("Your Message Status");
-    npr("0Total Posts   5: 4%d\r\n",sess.user.msgpost);
-    npr("0Posts Today   5: 4%d\r\n",sess.user.posttoday);
-    npr("0FeedBack      5: 4%d\r\n",sess.user.feedbacksent);
-    npr("0Email Sent    5: 4%d\r\n",sess.user.emailsent);
-    npr("0Messages Read 5: 4%d\r\n",sess.user.msgread);
-    npr("0Mail Waiting  5: 4%d\r\n",sess.user.waiting);
+    npr("0Total Posts   5: 4%d\r\n",sess.user.msgpost());
+    npr("0Posts Today   5: 4%d\r\n",sess.user.posttoday());
+    npr("0FeedBack      5: 4%d\r\n",sess.user.feedbacksent());
+    npr("0Email Sent    5: 4%d\r\n",sess.user.emailsent());
+    npr("0Messages Read 5: 4%d\r\n",sess.user.msgread());
+    npr("0Mail Waiting  5: 4%d\r\n",sess.user.waiting());
     npr("0Your PCR      5: 4%.0f%%\r\n",post_ratio()*100);
     npr("0Required PCR  5: 4%.0f%%\r\n",sys.cfg.post_call_ratio*100);
     nl();
@@ -340,7 +340,7 @@ int sublist(char type)
         itoa(sys.nummsgs,s2,10);
 
         i1=0;
-        if(inscan(i,&sess.user))
+        if(inscan(i,sess.user))
             i1=1;
 
         if(i1)
@@ -496,7 +496,7 @@ typedef struct {
     char scan;
 } newscanrec;
 
-int inscan(int sb,userrec *u)
+int inscan(int sb, const User& u)
 {
     auto& sys = System::instance();
     char s[MAX_PATH_LEN];
@@ -508,7 +508,7 @@ int inscan(int sb,userrec *u)
     sprintf(s,"%s%s.nws",sys.cfg.msgsdir,sys.subboards[sb].filename);
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
 
-    strcpy(s,u->realname);
+    strcpy(s,u.realname());
     strlwr(s);
     ucrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
     num=filelength(i)/sizeof(nws);
@@ -529,7 +529,7 @@ int inscan(int sb,userrec *u)
 }
 
 
-void togglenws(int sb,userrec *u,int scan)
+void togglenws(int sb, User& u, int scan)
 {
     auto& sys = System::instance();
     char s[MAX_PATH_LEN];
@@ -542,7 +542,7 @@ void togglenws(int sb,userrec *u,int scan)
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     num=filelength(i)/sizeof(nws);
 
-    strcpy(s,u->realname);
+    strcpy(s,u.realname());
     strlwr(s);
     ucrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 

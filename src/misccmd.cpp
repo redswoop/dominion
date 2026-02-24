@@ -8,7 +8,7 @@
 #include "bbsutl.h"
 #include "file1.h"
 #include "timest.h"
-#include "bbsutl2.h"
+#include "lilo.h"
 #include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
@@ -30,11 +30,11 @@ void list_users()
     auto& sys = System::instance();
     auto& sess = Session::instance();
     subboardrec s;
-    userrec u;
+    User u;
     int i,nu,abort,ok,num;
     char st[161];
 
-    if (sess.usub[sess.cursub].subnum==-1||(sess.user.restrict & restrict_userlist)) {
+    if (sess.usub[sess.cursub].subnum==-1||(sess.user.restrict_flags() & restrict_userlist)) {
         nl();
         pl("Sorry, you cannot currently view the user list");
         nl();
@@ -47,21 +47,21 @@ void list_users()
     npr("0%-30s 1[0%-40s1]\r\n","Users Name","Comment");
     abort=0;
     num=0;
-    for (i=0; (i<userdb_user_count()) && (!abort) && (!io.hangup); i++) {
-        smalrec sr;
-        userdb_get_entry(i, &sr);
-        userdb_load(sr.number,&u);
+    for (i=1; (i<=UserDB::instance().max_id()) && (!abort) && (!io.hangup); i++) {
+        auto p = UserDB::instance().get(i);
+        if (!p) continue;
+        u = *p;
         ok=1;
-        if (u.age<s.age)
+        if (u.age()<s.age)
             ok=0;
-        if ((s.ar!=0) && ((u.ar & s.ar)==0))
+        if ((s.ar!=0) && ((u.ar() & s.ar)==0))
             ok=0;
-        if(u.inact & inact_lockedout)
+        if(u.inact() & inact_lockedout)
             ok=0;
-        if(u.exempt & exempt_userlist)
+        if(u.exempt() & exempt_userlist)
             ok=0;
         if (ok) {
-            npr("3%-30s 1[0%-40s1]\r\n",nam(&u,sr.number),u.comment);
+            npr("3%-30s 1[0%-40s1]\r\n",u.display_name(i).c_str(),u.comment());
             ++num;
         }
     }
@@ -83,22 +83,22 @@ void yourinfo()
     outchr(12);
     dtitle("Your Information");
 
-    npr("0Your Handle is 5%s0, Your Voice Phone Number is 5%s0\r\n",nam(&sess.user,sess.usernum),sess.user.phone);
-    npr("Your Acting Security Level is 5%d0, And Your Transfer Level is 5%d0\r\n",sess.actsl,sess.user.dsl);
+    npr("0Your Handle is 5%s0, Your Voice Phone Number is 5%s0\r\n",sess.user.display_name(sess.usernum).c_str(),sess.user.phone());
+    npr("Your Acting Security Level is 5%d0, And Your Transfer Level is 5%d0\r\n",sess.actsl,sess.user.dsl());
     nl();
-    npr("You have Downloaded 5%d0 files, And Uploaded 5%d0 files\r\n",sess.user.downloaded,sess.user.uploaded);
-    npr("You have posted 5%d0 times, and Called 5%d0 times\r\n",sess.user.msgpost,sess.user.logons);
+    npr("You have Downloaded 5%d0 files, And Uploaded 5%d0 files\r\n",sess.user.downloaded(),sess.user.uploaded());
+    npr("You have posted 5%d0 times, and Called 5%d0 times\r\n",sess.user.msgpost(),sess.user.logons());
     nl();
     npr("You have 5%d0 minutes left for this call\r\n",(int)((nsl()+30)/60.0));
-    sprintf(s,"0, And have been on 5%d0 times today.",sess.user.ontoday);
-    npr("You last called 5%s%s0\r\n",sess.user.laston,sess.user.ontoday?s:"");
+    sprintf(s,"0, And have been on 5%d0 times today.",sess.user.ontoday());
+    npr("You last called 5%s%s0\r\n",sess.user.laston(),sess.user.ontoday()?s:"");
     nl();
     npr("System is 5%s\r\n",wwiv_version);
     getorigin(sys.subboards[sess.usub[sess.cursub].subnum].origin,&orig);
     if(orig.add.zone)
         npr("Network is %s, Address %d:%d/%d\r\n",orig.netname,orig.add.zone,orig.add.net,orig.add.node);
     nl();
-    if(sess.user.helplevel==2)
+    if(sess.user.helplevel()==2)
         pausescr();
 }
 

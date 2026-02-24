@@ -9,15 +9,18 @@
 #include "bbs_output.h"
 #include "bbs_input.h"
 #include "bbs_ui.h"
-#include "bbsutl.h"
 #include "session.h"
 #include "system.h"
 #include "acs.h"
 #include "file.h"
+#include "timest.h"
 
 
 extern int fastlogon;
 
+/* Forward declarations for functions defined later in this file */
+int sysop2();
+int checkacs(int w);
 
 void acs_fill_context(acs_context_t *ctx)
 {
@@ -25,18 +28,18 @@ void acs_fill_context(acs_context_t *ctx)
     auto& sess = Session::instance();
     memset(ctx, 0, sizeof(*ctx));
     ctx->sl          = sess.actsl;
-    ctx->dsl         = sess.user.dsl;
-    ctx->age         = sess.user.age;
-    ctx->exempt      = sess.user.exempt;
-    ctx->ar          = sess.user.ar;
-    ctx->dar         = sess.user.dar;
+    ctx->dsl         = sess.user.dsl();
+    ctx->age         = sess.user.age();
+    ctx->exempt      = sess.user.exempt();
+    ctx->ar          = sess.user.ar();
+    ctx->dar         = sess.user.dar();
     ctx->usernum     = sess.usernum;
     ctx->modem_speed = sess.modem_speed;
     ctx->is_sysop    = sysop2();
     ctx->is_backdoor = sess.backdoor;
     ctx->fastlogon   = fastlogon;
     ctx->can_post    = postr_ok();
-    ctx->helplevel   = sess.user.helplevel;
+    ctx->helplevel   = sess.user.helplevel();
     ctx->conf_flagstr = sys.conf[sess.curconf].flagstr;
 }
 
@@ -151,4 +154,109 @@ int slok(char val[31],char menu)
     if (!menu) ctx.can_post = 0;  /* 'C' always denies in execution mode */
 
     return acs_check(val, &ctx);
+}
+
+
+int sysop2()
+{
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
+    int ok;
+
+    ok=1;
+    if (sess.user.restrict_flags() & restrict_chat)
+        ok=0;
+    if (sys.cfg.sysoplowtime != sys.cfg.sysophightime) {
+        if (sys.cfg.sysophightime>sys.cfg.sysoplowtime) {
+            if ((timer()<=(sys.cfg.sysoplowtime*60.0)) || (timer()>=(sys.cfg.sysophightime*60.0)))
+                ok=0;
+        }
+        else {
+            if ((timer()<=(sys.cfg.sysoplowtime*60.0)) && (timer()>=(sys.cfg.sysophightime*60.0)))
+                ok=0;
+        }
+    }
+    return(ok);
+}
+
+
+int checkacs(int w)
+{
+    auto& sys = System::instance();
+    int i;
+    char s[MAX_PATH_LEN];
+    acsrec acs;
+
+    sprintf(s,"%sacs.dat",sys.cfg.datadir);
+    i=open(s,O_BINARY|O_RDWR);
+    read(i,&acs,sizeof(acs));
+    close(i);
+
+    switch(w) {
+    case 0:  i=slok(acs.epcr,3); break;
+    case 1:  i=slok(acs.eratio,3); break;
+    case 2:  i=slok(acs.efpts,3); break;
+    case 3:  i=slok(acs.etc,3); break;
+    case 4:  i=slok(acs.syspw,3); break;
+    case 5:  i=slok(acs.showpw,3); break;
+    case 6:  i=slok(acs.callcmd,3); break;
+    case 7:  i=slok(acs.readunval,3); break;
+    case 8:  i=slok(acs.cosysop,3); break;
+    case 9:  i=slok(acs.sysop,3); break;
+    case 10: i=slok(acs.echat,3); break;
+    case 11: i=slok(acs.dlunval,3); break;
+    case 12: i=slok(acs.anyul,3); break;
+    case 13: i=slok(acs.readanon,3); break;
+    case 14: i=slok(acs.delmsg,3); break;
+    case 15: i=slok(acs.zapmail,3); break;
+    }
+
+    return i;
+}
+
+
+int so()
+{
+    if (checkacs(9))
+        return(1);
+    else
+        return(0);
+}
+
+
+int cs()
+{
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
+    slrec ss;
+
+    ss=sys.cfg.sl[sess.actsl];
+    if (so())
+        return(1);
+    if ((ss.ability & ability_cosysop)||checkacs(8))
+        return(1);
+    else
+        return(0);
+}
+
+
+int lcs()
+{
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
+    slrec ss;
+
+    ss=sys.cfg.sl[sess.actsl];
+    if (cs())
+        return(1);
+    if (ss.ability & ability_limited_cosysop) {
+        if (sess.user.subop()==255)
+            return(1);
+        if (sess.user.subop()==sess.usub[sess.cursub].subnum)
+            return(1);
+        else
+            return(0);
+    }
+    else
+        return(0);
 }

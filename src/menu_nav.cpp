@@ -20,6 +20,7 @@
 #include "bbs_ui.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
 #include "disk.h"
 #include "utility.h"
 #include "mm1.h"
@@ -188,7 +189,7 @@ void menuman(void)
     tleft(1);
 
     if (sess.usub[sess.cursub].subnum == -1) sess.cursub = 0;
-    helpl = sess.user.helplevel;
+    helpl = sess.user.helplevel();
     if (sess.pp.helplevel) helpl = sess.pp.helplevel - 1;
     if (!io.charbufferpointer)
         switch (helpl) {
@@ -243,7 +244,7 @@ void menuman(void)
     avail[c] = 0;
 
     if (sess.pp.boarder == 0) {
-        if (sess.user.sysstatus & sysstatus_fullline)
+        if (sess.user.sysstatus() & sysstatus_fullline)
             ss = smkey(avail, i1, 1, 1, 1);
         else
             ss = smkey(avail, i1, 1, 0, 0);

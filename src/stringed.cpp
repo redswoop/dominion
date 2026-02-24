@@ -4,7 +4,7 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "bbsutl.h"
-#include "bbsutl2.h"
+#include "acs.h"
 #include "disk.h"
 #include "utility.h"
 #include "session.h"
@@ -112,7 +112,6 @@ char *get_say(int which)
     int i,tot=0,i1;
     long l;
     rumourrec arum;
-    userrec u;
 
     sprintf(s1,"%srumours.dat",sys.cfg.datadir);
     if(!exist(s1)) return("Sorry, I have Nothing To Say.  Add a Rumor.");
@@ -158,7 +157,7 @@ void addsay(void)
     rumourrec astring;
 
     s[0]=0;
-    if(sess.user.restrict & restrict_rumours) {
+    if(sess.user.restrict_flags() & restrict_rumours) {
         pl("Sorry, You are Restricted from Posting Rumours");
         return;
     }
@@ -167,7 +166,7 @@ void addsay(void)
     if(!s[0]) return;
     logpr("5�> Added Rumor 0: %s",s);
     strcpy(astring.rumour,s);
-    strcpy(astring.by,nam(&sess.user,sess.usernum));
+    strcpy(astring.by,sess.user.display_name(sess.usernum).c_str());
     nl();
     npr("5Anonymous? ");
     astring.an=yn();
@@ -267,7 +266,6 @@ void liststring(int type,int where)
     int i,num=0,i1;
     stringrec astring;
     rumourrec r;
-    userrec u;
 
     io.mciok=0;
     if(type==1)
@@ -377,7 +375,7 @@ void searchrum(void)
     char s[161],scan[31];
     int i,num,i1,i2;
     long l;
-    userrec u;
+    User u;
     rumourrec r;
 
     nl();
@@ -395,8 +393,8 @@ void searchrum(void)
             else {
                 i2=finduser(r.by);
                 if(i2) {
-                    userdb_load(i2,&u);
-                    strcpy(s,nam(&u,i2));
+                    { auto p = UserDB::instance().get(i2); if (p) u = *p; }
+                    strcpy(s,u.display_name(i2).c_str());
                 }
             }
             npr("Text Found in rumour number 7%d0, by 2%s\r\n",i1,s);

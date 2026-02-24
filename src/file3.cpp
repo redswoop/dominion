@@ -210,9 +210,9 @@ void modify_extended_description(char **sss)
             pl(s);
             nl();
             s[0]=0;
-            i1=sess.user.screenchars;
-            if (sess.user.screenchars>(76-INDENTION))
-                sess.user.screenchars=76-INDENTION;
+            i1=sess.user.screenchars();
+            if (sess.user.screenchars()>(76-INDENTION))
+                sess.user.set_screenchars(76-INDENTION);
             do {
                 ansic(2);
                 npr("%d: ",i);
@@ -228,7 +228,7 @@ void modify_extended_description(char **sss)
                 }
             } 
             while ((i++<MAX_LINES) && (s1[0]));
-            sess.user.screenchars=i1;
+            sess.user.set_screenchars(i1);
             if (*sss[0]==0) {
                 free(*sss);
                 *sss=NULL;
@@ -429,7 +429,7 @@ void batchdled(int stay)
     } 
     while(!done);
 
-    if(sess.user.helplevel==2) pausescr();
+    if(sess.user.helplevel()==2) pausescr();
 }
 
 void copyupfile(char fn[12],char todir[MAX_PATH_LEN],char fdir[MAX_PATH_LEN])

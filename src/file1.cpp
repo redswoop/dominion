@@ -14,7 +14,7 @@
 #include "utility.h"
 #include "timest.h"
 #include "userdb.h"
-#include "utility1.h"
+#include "shortmsg.h"
 #include "mm1.h"
 #include "stringed.h"
 #include "session.h"
@@ -89,7 +89,7 @@ void downloaded(char *fn)
     auto& sess = Session::instance();
     int i,i1;
     uploadsrec u;
-    userrec ur;
+    User ur;
     char s[MAX_PATH_LEN];
 
     for (i1=0; i1<sess.numbatch; i1++) {
@@ -102,9 +102,9 @@ void downloaded(char *fn)
                 SETREC(i);
                 read(sess.dlf,(void *)&u,sizeof(uploadsrec));
                 if(!(sys.directories[sess.batch.dir].mask & mask_no_ratio)) {
-                    ++sess.user.downloaded;
-                    sess.user.dk += (int) ((u.numbytes+1023)/1024);
-                    sess.user.fpts -= (int) ((u.numbytes+1023)/10240)/sys.nifty.fptsratio;
+                    sess.user.set_downloaded(sess.user.downloaded() + 1);
+                    sess.user.set_dk(sess.user.dk() + (int) ((u.numbytes+1023)/1024));
+                    sess.user.set_fpts(sess.user.fpts() - (int) ((u.numbytes+1023)/10240)/sys.nifty.fptsratio);
                 }
                 ++u.numdloads;
                 sys.status.dltoday++;
@@ -112,11 +112,11 @@ void downloaded(char *fn)
                 write(sess.dlf,(void *)&u,sizeof(uploadsrec));
                 closedl();
                 npr("2� 4%s 0Succesfully Transfered. 4%4ldK0, 2%3d Points\r\n",u.filename,((u.numbytes+1023)/1024),u.points);
-                sprintf(s,"%s downloaded '%s' on %s",nam(&sess.user,sess.usernum), u.filename, date());
+                sprintf(s,"%s downloaded '%s' on %s",sess.user.display_name(sess.usernum).c_str(), u.filename, date());
                 ssm(u.ownerusr,0,s);
-                userdb_load(u.ownerusr,&ur);
-                ur.fpts+=sys.nifty.fcom;
-                userdb_save(u.ownerusr,&ur);
+                { auto p = UserDB::instance().get(u.ownerusr); if (p) ur = *p; }
+                ur.set_fpts(ur.fpts() + sys.nifty.fcom);
+                UserDB::instance().store(u.ownerusr, ur);
                 sprintf(s,"\tYou recieved %d commision points",sys.nifty.fcom);
                 ssm(u.ownerusr,0,s);
                 logtypes(4,"Downloaded %s from %s - %ldk",u.filename,sys.directories[sess.batch.dir].name,(u.numbytes+1023)/1024);
@@ -174,7 +174,7 @@ void upload_batch_file(int blind)
         }
     }
 
-    strcpy(u.upby,nam(&sess.user,sess.usernum));
+    strcpy(u.upby,sess.user.display_name(sess.usernum).c_str());
     strcpy(u.date,date());
 
 
@@ -236,10 +236,10 @@ void upload_batch_file(int blind)
         u1.numbytes=sess.numf;
         u1.daten=l;
         if(ok==1) {
-            ++sess.user.uploaded;
-            sess.user.uk += (int) ((u.numbytes+1023)/1024);
+            sess.user.set_uploaded(sess.user.uploaded() + 1);
+            sess.user.set_uk(sess.user.uk() + (int) ((u.numbytes+1023)/1024));
             if((d.mask & mask_autocredit)) {
-                sess.user.fpts += (int) ((u.numbytes+1023)/10240);
+                sess.user.set_fpts(sess.user.fpts() + (int) ((u.numbytes+1023)/10240));
                 u.ats[0]=1;
                 u.points=(int) ((u.numbytes+1023)/10240);
             }
@@ -416,7 +416,7 @@ void batchul(int t)
 
     savescreen(&sess.screensave);
     clrscr();
-    printf("[0;33;44;1m[K%s Is Uploading[0;1m\n\n",nam(&sess.user,sess.usernum));
+    printf("[0;33;44;1m[K%s Is Uploading[0;1m\n\n",sess.user.display_name(sess.usernum).c_str());
     printf("%s\r\n",s);
     runprog(s,exist("lowlife"));
     restorescreen(&sess.screensave);
@@ -424,7 +424,7 @@ void batchul(int t)
     topscreen();
     ti=timer()-ti;
     if (ti<0) ti += 24.0*3600.0;
-    sess.user.extratime += ti;
+    sess.user.set_extratime(sess.user.extratime() + ti);
 }
 
 void batchdl(int t)
@@ -435,11 +435,11 @@ void batchdl(int t)
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],sx1[40],sx2[40],sx3[40],s2[80];
 
 
-    if (nsl()<=sess.batchtime&&!(sess.user.exempt & exempt_time)) {
+    if (nsl()<=sess.batchtime&&!(sess.user.exempt() & exempt_time)) {
         nl();
         pl(get_string(66));
         batchdled(1);
-        if(nsl()<=sess.batchtime&&!(sess.user.exempt & exempt_time))
+        if(nsl()<=sess.batchtime&&!(sess.user.exempt() & exempt_time))
             return;
     }
 
@@ -449,7 +449,7 @@ void batchdl(int t)
         if(sess.batch.sending) i+=sess.batch.points;
     }
 
-    if((sess.user.fpts<i)&&!(sess.user.exempt & exempt_ratio)&&(sys.nifty.nifstatus & nif_fpts)) {
+    if((sess.user.fpts()<i)&&!(sess.user.exempt() & exempt_ratio)&&(sys.nifty.nifstatus & nif_fpts)) {
         nl();
         pl(get_string(65));
         batchdled(1);
@@ -458,7 +458,7 @@ void batchdl(int t)
             batrec(1,f);
             if(sess.batch.sending) i+=sess.batch.points;
         }
-        if((sess.user.fpts<i)&&!(sess.user.exempt & exempt_ratio)&&(sys.nifty.nifstatus & nif_fpts))
+        if((sess.user.fpts()<i)&&!(sess.user.exempt() & exempt_ratio)&&(sys.nifty.nifstatus & nif_fpts))
             return;
     }
 
@@ -500,7 +500,7 @@ void batchdl(int t)
     savescreen(&sess.screensave);
     clrscr();
     cd_to(sys.cfg.batchdir);
-    printf("[0;44;1m[K%s Is Downloading\n[0;1m\n\n",nam(&sess.user,sess.usernum));
+    printf("[0;44;1m[K%s Is Downloading\n[0;1m\n\n",sess.user.display_name(sess.usernum).c_str());
     printf("%s\r\n",s);
     cd_to(sys.cfg.batchdir);
     runprog(s,exist("Lowlife"));
@@ -670,7 +670,7 @@ void newul(int dn)
     sprintf(s,"Upload - %ldk free.",l);
     dtitle(s);
     nl();
-    if(sess.user.helplevel==2) printfile("ulhelp");
+    if(sess.user.helplevel()==2) printfile("ulhelp");
     pl(get_string(62));
     mpl(78);
     input(s,78);
@@ -829,7 +829,7 @@ void upload(char ms[41])
     if(sys.cfg.newuploads==255); 
     else dir=sys.cfg.newuploads;
 
-    if(sess.user.restrict & restrict_upload) dir=0;
+    if(sess.user.restrict_flags() & restrict_upload) dir=0;
 
     if(sys.cfg.sysconfig & sysconfig_all_sysop) dir=0;
 

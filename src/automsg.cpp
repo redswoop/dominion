@@ -48,7 +48,7 @@ void write_automessage()
     long len;
     char *b,s[MAX_PATH_LEN];
 
-    if(sess.user.restrict & restrict_automessage) {
+    if(sess.user.restrict_flags() & restrict_automessage) {
         pl("7You are restricted from changing the AutoMessage");
         pausescr();
         return;

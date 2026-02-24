@@ -6,6 +6,7 @@
 #include "bbsutl.h"
 #include "disk.h"
 #include "utility.h"
+#include "userdb.h"
 #include "config.h"
 #include "stringed.h"
 #include "session.h"
@@ -278,7 +279,7 @@ void swap_subs(int sub1, int sub2)
     int i,i1,i2,nu;
     unsigned long tl,tl1;
     subboardrec sbt;
-    userrec u;
+    User u;
 
 
     sbt=sys.subboards[sub1];
@@ -293,7 +294,7 @@ void insert_sub(int n,int config)
     auto& sys = System::instance();
     subboardrec r;
     int i,i1,nu;
-    userrec u;
+    User u;
     long l1,l2,l3;
 
     for (i=sys.num_subs-1; i>=n; i--)
@@ -333,7 +334,7 @@ void delete_sub(int n)
 {
     auto& sys = System::instance();
     int i,i1,i2,nu;
-    userrec u;
+    User u;
     long l1,l2;
     char s[MAX_PATH_LEN];
 
@@ -528,7 +529,7 @@ void insert_conf(int n)
     auto& sys = System::instance();
     confrec r;
     int i,i1,nu;
-    userrec u;
+    User u;
     long l1,l2,l3;
 
     for (i=sys.num_conf-1; i>=n; i--)
@@ -547,7 +548,7 @@ void delete_conf(int n)
 {
     auto& sys = System::instance();
     int i,i1,nu;
-    userrec u;
+    User u;
     long l1,l2;
 
     for (i=n; i<sys.num_conf; i++)

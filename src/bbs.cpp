@@ -6,7 +6,6 @@
 #include "bbs_ui.h"
 #include "tcpio.h"
 #include "conio.h"
-#include "bbsutl2.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
@@ -164,7 +163,6 @@ int main(int argc, char *argv[])
 
 
     do {
-        bbsCRC();
         if (sess.already_on)
             gotcaller(ui, us);
         else
@@ -181,8 +179,6 @@ int main(int argc, char *argv[])
             reset_act_sl();
             changedsl();
         }
-
-        bbsCRC();
 
         if (!io.hangup) {
             logon();
@@ -218,9 +214,7 @@ wfc_label:
             pl("User Has Logged Off");
             nl();
             while ((!kbhitb()) && (fabs(timer()-dt)<60.0)) {
-                setbeep(1);
                 wait1(9);
-                setbeep(0);
                 wait1(18);
             }
             clrscrb();
@@ -229,7 +223,6 @@ wfc_label:
     } 
     while ((!sys.endday) && (!sys.ooneuser));
 
-    bbsCRC();
     outs("\x0c");
     end_bbs(sys.oklevel);
 

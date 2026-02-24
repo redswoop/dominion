@@ -31,7 +31,7 @@
 #include "bbs_ui.h"
 #include "conio.h"
 #include "bbsutl.h"
-#include "bbsutl2.h"
+#include "sysoplog.h"
 #include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
@@ -484,15 +484,13 @@ void othercmd(char type,char ms[40])
             input_ansistat();
             break;
         case '3':
-            if (sess.user.sysstatus & sysstatus_pause_on_page)
-                sess.user.sysstatus ^= sysstatus_pause_on_page;
+            sess.user.set_sysstatus_flag(sysstatus_pause_on_page, false);
             prt(5,"Pause each screenfull? ");
-            if (yn()) sess.user.sysstatus |= sysstatus_pause_on_page;
+            if (yn()) sess.user.set_sysstatus_flag(sysstatus_pause_on_page, true);
             nl();
-            if (sess.user.sysstatus & sysstatus_pause_on_message)
-                sess.user.sysstatus ^= sysstatus_pause_on_message;
+            sess.user.set_sysstatus_flag(sysstatus_pause_on_message, false);
             prt(5,"Pause each screenfull while reading messages? ");
-            if (yn()) sess.user.sysstatus |= sysstatus_pause_on_message;
+            if (yn()) sess.user.set_sysstatus_flag(sysstatus_pause_on_message, true);
             break;
         case '4':
             modify_mailbox();
@@ -510,7 +508,7 @@ void othercmd(char type,char ms[40])
             break;
         case '9':
             outstr("5Use the FullScreen Editor? ");
-            sess.user.defed=yn();
+            sess.user.set_defed(yn());
             break;
         case '0':
             getmsgformat();
@@ -518,7 +516,7 @@ void othercmd(char type,char ms[40])
         case 'A':
             pl("Enter your Default Protocol, 0 for none.");
             i=get_protocol(1);
-            if(i>=0||i==-2) sess.user.defprot=i;
+            if(i>=0||i==-2) sess.user.set_defprot(i);
             break;
         case 'B':
             break;
@@ -535,18 +533,17 @@ void othercmd(char type,char ms[40])
             print_cur_stat();
             break;
         case 'G':
-            change_colors(&sess.user);
+            change_colors(sess.user);
             break;
         case 'H':
-            inputdat("Enter your Comment",s,sizeof(sess.user.comment),1);
-            if(s[0]) strcpy(sess.user.comment,s);
+            inputdat("Enter your Comment",s,40,1);
+            if(s[0]) sess.user.set_comment(s);
             break;
         case 'J':
-            if(sess.user.sysstatus & sysstatus_fullline)
-                sess.user.sysstatus ^= sysstatus_fullline;
+            sess.user.set_sysstatus_flag(sysstatus_fullline, false);
             npr("5Would you like Hotkey Input? ");
             if(!ny())
-                sess.user.sysstatus |= sysstatus_fullline;
+                sess.user.set_sysstatus_flag(sysstatus_fullline, true);
             nl();
             break;
         }

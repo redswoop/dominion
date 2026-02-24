@@ -5,7 +5,7 @@
  * in System. Previously accessed via compatibility macros in vars.h
  * (#define thisuser session.user, etc.) — now accessed directly.
  *
- * Layer 3: depends on io_stream.h, vardec_user.h, vardec_ui.h
+ * Layer 3: depends on io_stream.h, user.h, vardec_ui.h
  */
 
 #ifndef _SESSION_H_
@@ -13,7 +13,7 @@
 
 /* vardec headers MUST come before io_stream.h — io_stream.h macros
  * (incom, outcom, etc.) would corrupt struct member names */
-#include "vardec_user.h"
+#include "user.h"
 #include "vardec_ui.h"
 #include "io_stream.h"
 
@@ -24,7 +24,7 @@ public:
     io_session_t io;            /* I/O, screen, parser, capabilities */
 
     /* User identity */
-    userrec user;               /* current user record (was thisuser) */
+    User user;                  /* current user record (was thisuser/userrec) */
     int usernum;                /* 1-based user index */
     unsigned char actsl;        /* active security level */
     usersubrec usub[MAX_SUBS];
@@ -85,6 +85,14 @@ public:
 
     /* Misc */
     unsigned short com_speed, modem_speed;
+
+    /* Session operations (implemented in utility.cpp) */
+    void reset_act_sl();
+    int okansi();
+    void frequent_init();
+    double ratio();
+    double post_ratio();
+    void changedsl();
 
 private:
     Session();

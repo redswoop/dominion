@@ -4,7 +4,6 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "utility.h"
-#include "bbsutl2.h"
 #include "disk.h"
 #include "config.h"
 #include "newuser.h"
@@ -94,7 +93,7 @@ void del_nuv(unsigned int user)
 }
 
 
-int enter_nuv(userrec tu,int un,int form)
+int enter_nuv(const User& tu,int un,int form)
 {
     auto& sys = System::instance();
     char s[MAX_PATH_LEN];
@@ -113,9 +112,9 @@ int enter_nuv(userrec tu,int un,int form)
     }
 
     nu.num = un;
-    nu.age = tu.age;
-    strcpy(nu.name,tu.name);
-    strcpy(nu.firston,tu.firston);
+    nu.age = tu.age();
+    strcpy(nu.name,tu.name());
+    strcpy(nu.firston,tu.firston());
 
     nu.vote_yes = 0;
     nu.vote_no = 0;
@@ -136,7 +135,7 @@ int enter_nuv(userrec tu,int un,int form)
         infoform(sys.nifty.nuvinf,0);
         printfile("nuvmsg");
     }
-    logtypes(2,"%s added to NUV",nam(&tu,un));
+    logtypes(2,"%s added to NUV",tu.display_name(un).c_str());
     return i;
 }
 
@@ -151,7 +150,7 @@ int avoted(unsigned int user)
 
     read_nuv(user,"nuv.dat",&v);
 
-    strcpy(s,nam(&sess.user,sess.usernum));
+    strcpy(s,sess.user.display_name(sess.usernum).c_str());
 
     for (i=0; i < v.vcmt_num; i++)
         if (!strcmp(v.vote_comment[i].name,s))
@@ -164,18 +163,18 @@ void print_nuv(nuvdata v)
     auto& sys = System::instance();
     char s[151];
     int i;
-    userrec u;
+    User u;
 
-    userdb_load(v.num,&u);
+    { auto p = UserDB::instance().get(v.num); if (p) u = *p; }
     outchr(12);
-    npr("3Voting On5: 3%s\r\n",nam(&u,v.num));
+    npr("3Voting On5: 3%s\r\n",u.display_name(v.num).c_str());
     nl();
 
     npr("3Yes Votes5: 2%d 3- Required: 3%d \r\n",v.vote_yes,sys.nifty.nuvyes);
     npr("3No Votes 5: 2%d 3- Required: 3%d \r\n",v.vote_no,sys.nifty.nuvbad);
     npr("3First on 5: 2%s\r\n",v.firston);
     nl();
-    npr("3Comments On 5: 3%s3...",nam(&u,v.num));
+    npr("3Comments On 5: 3%s3...",u.display_name(v.num).c_str());
     nl();
 
     for (i = 0; i < v.vcmt_num; i=i+1) {
@@ -194,7 +193,7 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
     nuvdata vn;
     char s[MAX_PATH_LEN],cmt[MAX_PATH_LEN];
     int vv=0,done=0;
-    userrec u;
+    User u;
 
     read_nuv(user,"nuv.dat",&vn);
 
@@ -234,8 +233,8 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
             done=1; 
             break;
         case 'I':
-            userdb_load(vn.num,&u);
-            readform(sys.nifty.nuvinf,u.name);
+            { auto p = UserDB::instance().get(vn.num); if (p) u = *p; }
+            readform(sys.nifty.nuvinf,const_cast<char*>(u.name()));
             break;
 
         case 'Y':
@@ -273,9 +272,9 @@ int vote_nuv(unsigned int user, nuvdata *resn,int *done1)
         else if(vv==-1)
             vn.vote_no++;
 
-        strcpy(vn.vote_comment[vn.vcmt_num].name,nam(&sess.user,sess.usernum));
+        strcpy(vn.vote_comment[vn.vcmt_num].name,sess.user.display_name(sess.usernum).c_str());
         vn.vote_comment[vn.vcmt_num].vote = vv;
-        vn.vote_comment[vn.vcmt_num].sl = sess.user.sl;
+        vn.vote_comment[vn.vcmt_num].sl = sess.user.sl();
 
         vn.vote_comment[vn.vcmt_num].say[0]=0;
 
@@ -301,55 +300,55 @@ void val_nuv(unsigned int user)
     auto& sys = System::instance();
     int i,i1;
     nuvdata valn;
-    userrec u;
+    User u;
     int work;
 
 
     read_nuv(user,"nuv.dat",&valn);
     del_nuv(user);
     i1 = valn.num;
-    userdb_load(i1,&u);
-    u.nuv=-1;
+    { auto p = UserDB::instance().get(i1); if (p) u = *p; }
+    u.set_nuv_status((unsigned long)-1);
 
     if (valn.vote_no >= sys.nifty.nuvbad) {
         switch(sys.nifty.nuvaction) {
         case 0:
             pl("7Deleting User");
             deluser(i1);
-            logtypes(3,"NUV Deleted %s",nam(&u,i1));
+            logtypes(3,"NUV Deleted %s",u.display_name(i1).c_str());
             nl();
             break;
         case 1:
             pl("7Locking Out User");
-            u.inact |= inact_lockedout;
-            logtypes(3,"NUV Locking Out %s",nam(&u,i1));
-            userdb_save(i1,&u);
-            u.nuv=0;
+            u.set_inact(u.inact() | inact_lockedout);
+            logtypes(3,"NUV Locking Out %s",u.display_name(i1).c_str());
+            UserDB::instance().store(i1, u);
+            u.set_nuv_status(0);
             nl();
             break;
         case 2:
             pl("7Bad Validating User");
-            u.sl=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].sl;
-            u.dsl=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].dsl;
-            u.ar=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].ar;
-            u.dar=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].dar;
-            u.restrict=sys.cfg.autoval[sys.nifty.nuvbadlevel-1].restrict;
-            logtypes(3,"NUV Bad Validated %s",nam(&u,i1));
-            u.nuv=0;
-            userdb_save(i1,&u);
+            u.set_sl(sys.cfg.autoval[sys.nifty.nuvbadlevel-1].sl);
+            u.set_dsl(sys.cfg.autoval[sys.nifty.nuvbadlevel-1].dsl);
+            u.set_ar(sys.cfg.autoval[sys.nifty.nuvbadlevel-1].ar);
+            u.set_dar(sys.cfg.autoval[sys.nifty.nuvbadlevel-1].dar);
+            u.set_restrict(sys.cfg.autoval[sys.nifty.nuvbadlevel-1].restrict);
+            logtypes(3,"NUV Bad Validated %s",u.display_name(i1).c_str());
+            u.set_nuv_status(0);
+            UserDB::instance().store(i1, u);
             break;
         }
     }
     else {
         pl("7Validating User");
-        u.sl=sys.cfg.autoval[sys.nifty.nuvlevel-1].sl;
-        u.dsl=sys.cfg.autoval[sys.nifty.nuvlevel-1].dsl;
-        u.ar=sys.cfg.autoval[sys.nifty.nuvlevel-1].ar;
-        u.dar=sys.cfg.autoval[sys.nifty.nuvlevel-1].dar;
-        u.restrict=sys.cfg.autoval[sys.nifty.nuvlevel-1].restrict;
-        logtypes(3,"NUV Validated %s",nam(&u,i1));
-        u.nuv=0;
-        userdb_save(i1,&u);
+        u.set_sl(sys.cfg.autoval[sys.nifty.nuvlevel-1].sl);
+        u.set_dsl(sys.cfg.autoval[sys.nifty.nuvlevel-1].dsl);
+        u.set_ar(sys.cfg.autoval[sys.nifty.nuvlevel-1].ar);
+        u.set_dar(sys.cfg.autoval[sys.nifty.nuvlevel-1].dar);
+        u.set_restrict(sys.cfg.autoval[sys.nifty.nuvlevel-1].restrict);
+        logtypes(3,"NUV Validated %s",u.display_name(i1).c_str());
+        u.set_nuv_status(0);
+        UserDB::instance().store(i1, u);
     }
 }
 
@@ -357,7 +356,7 @@ void nuv(void)
 {
     auto& sys = System::instance();
     nuvdata newuser;
-    userrec u;
+    User u;
     char s[MAX_PATH_LEN];
     int i,cnt,done=0,sh=0,done1;
 
@@ -404,8 +403,8 @@ void nuv(void)
             nl();
             for(i=0;i<cnt;i++) {
                 read_nuv(i,"nuv.dat",&newuser);
-                userdb_load(newuser.num,&u);
-                npr("1<1%d1> 0%-35s 3[3%.3s3] 5[5%s5]\r\n",i,nam(&u,newuser.num),u.phone,u.comment);
+                { auto p = UserDB::instance().get(newuser.num); if (p) u = *p; }
+                npr("1<1%d1> 0%-35s 3[3%.3s3] 5[5%s5]\r\n",i,u.display_name(newuser.num).c_str(),u.phone(),u.comment());
             }
             nl();
             pausescr();

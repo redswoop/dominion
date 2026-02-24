@@ -1,9 +1,9 @@
 #ifndef _PERSONAL_H_
 #define _PERSONAL_H_
 
-#include "vardec_user.h"
+#include "user.h"
 
-void change_colors(userrec *u1);
+void change_colors(User& u1);
 void print_cur_stat();
 char *cn(char c);
 char *describe(char col);
@@ -13,7 +13,7 @@ void list_macro(char *s);
 void make_macros();
 void input_pw1();
 void getfileformat();
-void setcolors(userrec *uu);
+void setcolors(User& uu);
 void input_ansistat();
 void selecthelplevel();
 void getmsgformat();

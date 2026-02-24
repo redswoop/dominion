@@ -22,7 +22,7 @@ void addbbs(char *fn)
     long l,l1;
     FILE *format;
 
-    if(sess.user.restrict & restrict_bbslist) {
+    if(sess.user.restrict_flags() & restrict_bbslist) {
         pl("7You are restricted from adding to the BBSlist");
         pausescr();
         return;

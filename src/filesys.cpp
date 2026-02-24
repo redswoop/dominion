@@ -12,9 +12,8 @@
 #include "disk.h"
 #include "utility.h"
 #include "timest.h"
-#include "bbsutl2.h"
 #include "config.h"
-#include "utility1.h"
+#include "shortmsg.h"
 #include "stringed.h"
 #include "session.h"
 #include "userdb.h"
@@ -232,7 +231,7 @@ void valfiles()
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN],*ss,s3[MAX_PATH_LEN],ch;
     int i,cp,done,valall=0;
     uploadsrec u;
-    userrec uu;
+    User uu;
 
     strcpy(s,"*.*");
     align(s);
@@ -253,10 +252,10 @@ void valfiles()
                 write(sess.dlf,(void *)&u,sizeof(uploadsrec));
                 sprintf(s2,"%s was Validated on %s",u.filename,date());
                 ssm(u.ownerusr,0,s2);
-                userdb_load(u.ownerusr,&uu);
+                { auto p = UserDB::instance().get(u.ownerusr); if (p) uu = *p; }
                 u.points=((u.numbytes+1023)/10240);
-                uu.fpts+=u.points;
-                userdb_save(u.ownerusr,&uu);
+                uu.set_fpts(uu.fpts() + u.points);
+                UserDB::instance().store(u.ownerusr, uu);
                 logtypes(3,"Validated file 4%s0 to 4%d0 points",u.filename,u.points);
             } 
             else {
@@ -283,9 +282,9 @@ void valfiles()
                     write(sess.dlf,(void *)&u,sizeof(uploadsrec));
                     sprintf(s2,"%s was Validated on %s",u.filename,date());
                     ssm(u.ownerusr,0,s2);
-                    userdb_load(u.ownerusr,&uu);
-                    uu.fpts+=u.points;
-                    userdb_save(u.ownerusr,&uu);
+                    { auto p = UserDB::instance().get(u.ownerusr); if (p) uu = *p; }
+                    uu.set_fpts(uu.fpts() + u.points);
+                    UserDB::instance().store(u.ownerusr, uu);
                     logtypes(3,"Validated file 4%s0 to 4%d0 points",u.filename,u.points);
                     break;
                 case 'N': 
@@ -330,7 +329,7 @@ int upload_file(char *fn, int dn,int *ato)
     l=filelength(f);
     u.numbytes=l;
     close(f);
-    strcpy(u.upby,nam(&sess.user,sess.usernum));
+    strcpy(u.upby,sess.user.display_name(sess.usernum).c_str());
     strcpy(u.date,date());
     npr("0%s5:3 %4ldk 5:2 ",u.filename,(u.numbytes+1023)/1024);
     if(!*ato) {
@@ -366,8 +365,8 @@ int upload_file(char *fn, int dn,int *ato)
     if (u.description[0]==0)
         strcpy(u.description,get_string(85));
     if(ok) {
-        sess.user.fpts+=(u.numbytes+1023)/10240;
-        ++sess.user.uploaded;
+        sess.user.set_fpts(sess.user.fpts() + (u.numbytes+1023)/10240);
+        sess.user.set_uploaded(sess.user.uploaded() + 1);
         if (strstr(u.filename,".GIF"))
             addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
@@ -375,7 +374,7 @@ int upload_file(char *fn, int dn,int *ato)
         strcat(ff,stripfn(u.filename));
         adddiz(ff,&u);
         u.points=((l+1023)/10240);
-        sess.user.uk += ((l+1023)/1024);
+        sess.user.set_uk(sess.user.uk() + ((l+1023)/1024));
         time(&l);
         u.daten=l;
         for (i=sess.numf; i>=1; i--) {
@@ -458,7 +457,7 @@ void removefile(void)
     int i,i1,ok,rm,abort,rdlp,type;
     char ch,s[MAX_PATH_LEN],s1[MAX_PATH_LEN],spec[13];
     uploadsrec u;
-    userrec uu;
+    User uu;
 
     nl();
     file_mask(spec);
@@ -495,12 +494,12 @@ void removefile(void)
                     strcat(s1,u.filename);
                     unlink(s1);
                     if ((rdlp) && (u.ownersys==0)) {
-                        userdb_load(u.ownerusr,&uu);
-                        if ((uu.inact & inact_deleted)==0) {
-                            --uu.uploaded;
-                            uu.uk -= ((u.numbytes+1023)/1024);
-                            uu.fpts-=u.points;
-                            userdb_save(u.ownerusr,&uu);
+                        { auto p = UserDB::instance().get(u.ownerusr); if (p) uu = *p; }
+                        if ((uu.inact() & inact_deleted)==0) {
+                            uu.set_uploaded(uu.uploaded() - 1);
+                            uu.set_uk(uu.uk() - ((u.numbytes+1023)/1024));
+                            uu.set_fpts(uu.fpts() - u.points);
+                            UserDB::instance().store(u.ownerusr, uu);
                         }
                     }
                 }
@@ -536,7 +535,7 @@ void editfile()
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN],*ss,s3[MAX_PATH_LEN],ch,changed;
     int i,cp,done,type,m,dd,y,i1;
     uploadsrec u;
-    userrec ur;
+    User ur;
     struct date d;
     struct time t;
 
@@ -576,8 +575,8 @@ void editfile()
                     if(i) {
                         u.ownersys=i;
                         nl();
-                        userdb_load(u.ownersys,&ur);
-                        npr("3File now private for 0%s\r\n",nam(&ur,u.ownersys));
+                        { auto p = UserDB::instance().get(u.ownersys); if (p) ur = *p; }
+                        npr("3File now private for 0%s\r\n",ur.display_name(u.ownersys).c_str());
                         changed=1;
                     }
                 }
@@ -797,7 +796,7 @@ void create_file()
         u.numbytes=l;
         close(f);
     }
-    strcpy(u.upby,nam(&sess.user,sess.usernum));
+    strcpy(u.upby,sess.user.display_name(sess.usernum).c_str());
     strcpy(u.date,date());
     npr("0%s5:3 %4ldk 5:2 ",u.filename,(u.numbytes+1023)/1024);
     mpl(39);
@@ -816,8 +815,8 @@ void create_file()
     npr("5Create this file? ");
     ok=yn();
     if(ok) {
-        sess.user.fpts+=(u.numbytes+1023)/10240;
-        ++sess.user.uploaded;
+        sess.user.set_fpts(sess.user.fpts() + (u.numbytes+1023)/10240);
+        sess.user.set_uploaded(sess.user.uploaded() + 1);
         if (strstr(u.filename,".GIF"))
             addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
@@ -825,7 +824,7 @@ void create_file()
         strcat(ff,stripfn(u.filename));
         adddiz(ff,&u);
         u.points=((l+1023)/10240);
-        sess.user.uk += ((l+1023)/1024);
+        sess.user.set_uk(sess.user.uk() + ((l+1023)/1024));
         time(&l);
         u.daten=l;
         for (i=sess.numf; i>=1; i--) {

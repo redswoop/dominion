@@ -72,7 +72,7 @@ typedef struct {
 } directoryrec;
 
 
-/* smalrec (User Index) moved to vardec_user.h */
+/* smalrec (User Index) moved to user.h */
 
 /* Message Base Index */
 typedef struct {

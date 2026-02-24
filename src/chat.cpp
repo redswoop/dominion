@@ -6,6 +6,8 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
+#include "userdb.h"
 #include "file1.h"
 #include "timest.h"
 #include "disk.h"
@@ -130,7 +132,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
         if ((ch>=32)) {
             if (side==0)
             {
-                if ((wherex()<(sess.user.screenchars-1)) && (cp0<maxlen))
+                if ((wherex()<(sess.user.screenchars()-1)) && (cp0<maxlen))
                 {
                     if (wherey() < 11)
                     {
@@ -168,17 +170,17 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                         outstr(s2);
                         s2[0]=0;
                     }
-                    if (wherex()==(sess.user.screenchars-1))
+                    if (wherex()==(sess.user.screenchars()-1))
                         done=1;
                 } 
                 else {
-                    if (wherex()>=(sess.user.screenchars-1))
+                    if (wherex()>=(sess.user.screenchars()-1))
                         done=1;
                 }
             }
             else
             {
-                if ((wherex()<(sess.user.screenchars-1)) && (cp1<maxlen) )
+                if ((wherex()<(sess.user.screenchars()-1)) && (cp1<maxlen) )
                 {
                     if (wherey() < 23)
                     {
@@ -216,11 +218,11 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                         outstr(s2);
                         s2[0]=0;
                     }
-                    if (wherex()==(sess.user.screenchars-1))
+                    if (wherex()==(sess.user.screenchars()-1))
                         done=1;
                 } 
                 else {
-                    if (wherex()>=(sess.user.screenchars-1))
+                    if (wherex()>=(sess.user.screenchars()-1))
                         done=1;
                 }
             }
@@ -388,7 +390,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                 if (side==0)
                 {
                     i=5-(cp0 % 5);
-                    if (((cp0+i)<maxlen) && ((wherex()+i)<sess.user.screenchars))
+                    if (((cp0+i)<maxlen) && ((wherex()+i)<sess.user.screenchars()))
                     {
                         i=5-((wherex()+1) % 5);
                         for (i1=0; i1<i; i1++)
@@ -401,7 +403,7 @@ void two_way_chat(char *s, char *rollover, int maxlen, int crend)
                 else
                     {
                     i=5-(cp1 % 5);
-                    if (((cp1+i)<maxlen) && ((wherex()+i)<sess.user.screenchars))
+                    if (((cp1+i)<maxlen) && ((wherex()+i)<sess.user.screenchars()))
                     {
                         i=5-((wherex()+1) % 5);
                         for (i1=0; i1<i; i1++)
@@ -584,7 +586,7 @@ void chat1(char *chatline, int two_way)
                 lseek(cf,0L,SEEK_END);
                 sprintf(s2,"\r\n\r\nChat file opened %s %s\r\n",date(),times());
                 write(cf,(void *)s2,strlen(s2));
-                sprintf(s2,"User: %s\r\n",nam(&sess.user,sess.usernum));
+                sprintf(s2,"User: %s\r\n",sess.user.display_name(sess.usernum).c_str());
                 write(cf,(void *)s2,strlen(s2));
                 if(sess.chatreason[0]) {
                     sprintf(s2,"%s\r\n",sess.chatreason);
@@ -647,7 +649,7 @@ void reqchat1(char reason[MAX_PATH_LEN])
     nl();
     ok=sysop2();
     if(checkacs(10)) ok=1;
-    if (restrict_chat & sess.user.restrict)
+    if (restrict_chat & sess.user.restrict_flags())
         ok=0;
     if (ok) {
         if (io.chatcall) {
@@ -715,7 +717,7 @@ void reqchat(char reason[MAX_PATH_LEN])
     nl();
 
     ok=sysop2();
-    if (restrict_chat & sess.user.restrict)
+    if (restrict_chat & sess.user.restrict_flags())
         ok=0;
 #ifdef MOD
     playmod();

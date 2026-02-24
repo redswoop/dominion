@@ -20,4 +20,15 @@ int yn();
 char nek(char *s, int f);
 char onek(char *s);
 
+void outsat(const char *s, int x, int y);
+void editdata(char *str,int len,int xcoord,int ycoord);
+int editdig(char *str,int len,int xcoord,int ycoord);
+void editline(char *s, int len, int status, int *returncode, char *ss);
+void pr_wait(int i1);
+void clickat(long byte,long bit,int x, int y);
+int click(long *byt,long bit,int x, int y);
+
+/* Interactive user search with Y/N/Q confirmation prompts */
+int finduser1(char *sx);
+
 #endif /* _BBS_UI_H_ */

@@ -41,22 +41,22 @@ void yourinfodl()
 
     nl();
     dtitle("Your Transfer Status");
-    npr("0Downloads     5: 4%ldk in %d files\r\n",sess.user.dk, sess.user.downloaded);
-    npr("0Uploads       5: 4%ldk in %d files\r\n",sess.user.uk, sess.user.uploaded);
-    npr("0File Points   5: 4%d\r\n",sess.user.fpts);
+    npr("0Downloads     5: 4%ldk in %d files\r\n",sess.user.dk(), sess.user.downloaded());
+    npr("0Uploads       5: 4%ldk in %d files\r\n",sess.user.uk(), sess.user.uploaded());
+    npr("0File Points   5: 4%d\r\n",sess.user.fpts());
     npr("0Your KB Ratio 5: 4%.0f%%\r\n",ratio()*100);
     npr("0Required Ratio5: 4%.0f%%\r\n",sys.cfg.req_ratio*100);
     nl();
     strcpy(s,"0Special Flags: 7 ");
-    if(sess.user.exempt & exempt_ratio)
+    if(sess.user.exempt() & exempt_ratio)
         npr("%sNo Ratio/File Point Check!\r\n",s);
-    if(sess.user.exempt & exempt_post)
+    if(sess.user.exempt() & exempt_post)
         npr("%sNo Post Call Ratio Check!\r\n",s);
-    if(sess.user.exempt & exempt_time)
+    if(sess.user.exempt() & exempt_time)
         npr("%sNo Time Check!\r\n",s);
     nl();
 
-    if(sess.user.helplevel==2) pausescr();
+    if(sess.user.helplevel()==2) pausescr();
 }
 
 
@@ -144,7 +144,7 @@ int printfileinfo(uploadsrec *u, int dn)
     auto& sys = System::instance();
     auto& sess = Session::instance();
     char s[161],s1[MAX_PATH_LEN],s2[11],s3[11],s4[11],fstatus[MAX_PATH_LEN];
-    userrec us;
+    User us;
     double t;
     int i,abort=0;
     FILE *f;
@@ -169,10 +169,11 @@ int printfileinfo(uploadsrec *u, int dn)
         sprintf(s2,"%s",ctim(t));
 
         if(u->ownersys)
-            userdb_load(u->ownersys,&us);
+            { auto p = UserDB::instance().get(u->ownersys); if (p) us = *p; }
         else
-            strcpy(us.name,"PUBLIC");
-        stuff_in1(s,s1,(u->filename),(u->description),s3,s4,s2,(u->upby),fstatus,(u->date),ctim(t),nam(&us,u->ownersys));
+            us.set_name("PUBLIC");
+        { char _uname[80]; strcpy(_uname, us.display_name(u->ownersys).c_str());
+        stuff_in1(s,s1,(u->filename),(u->description),s3,s4,s2,(u->upby),fstatus,(u->date),ctim(t),_uname); }
 
         plfmta(s,&abort);
     }
@@ -191,7 +192,7 @@ void displayformat()
     char s[161],s1[161],s2[51];
     FILE *f;
 
-    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype);
+    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype());
     f=fopen(s,"rt");
     fgets(s,81,f);
     fclose(f);
@@ -234,7 +235,7 @@ void ascii_send(char *fn, int *sent, double *percent)
             *sent=1;
         else {
             *sent=0;
-            sess.user.dk += ((pos+1023L)/1024L);
+            sess.user.set_dk(sess.user.dk() + ((pos+1023L)/1024L));
         }
         *percent=((double) pos)/((double)max);
     } 
@@ -316,7 +317,7 @@ int get_batchprotocol(int dl,int *hang)
     int i1,prot;
 
 
-    prot=sess.user.defprot;
+    prot=sess.user.defprot();
     if(!sys.proto[prot].description[0]||prot<0) prot=get_protocol(1);
     if(dl);
     *hang=0;
@@ -330,7 +331,7 @@ top:
     case 13: 
         return(prot);
     case 'X': 
-        return(sess.user.defprot=get_protocol(1));
+        { int p = get_protocol(1); sess.user.set_defprot(p); return(p); }
     case 'A': 
         return(-1);
     case 'B': 
@@ -427,7 +428,7 @@ int extern_prot(int pn, char *fn1, int sending)
     if (s[0]) {
         set_protect(0);
         clrscr();
-        printf("[0;37;1;44m[KCurrent user: %s\n\n[0;1m",nam(&sess.user,sess.usernum));
+        printf("[0;37;1;44m[KCurrent user: %s\n\n[0;1m",sess.user.display_name(sess.usernum).c_str());
         outs(s);
         outs("\r\n");
         if (incom) {
@@ -518,7 +519,7 @@ int dirlist(char type)
         sprintf(s3,"Download%s",(d.mask & mask_no_uploads)?"":"/Upload");
 
         i1=0;
-        if (sess.user.nscn[sess.udir[i].subnum]>=0) i1=1;
+        if (sess.user.nscn()[sess.udir[i].subnum]>=0) i1=1;
 
         if(i1)
             stuff_in2(s,s1,noc2(d.name),40,sess.udir[i].keys,2,s2,3,s3,15,"",0);

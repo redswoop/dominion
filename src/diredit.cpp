@@ -235,7 +235,7 @@ void insert_dir(int n,char path[60], int temp,int config)
     auto& sys = System::instance();
     directoryrec r;
     int i,i1,nu;
-    userrec u;
+    User u;
     long l1,l2,l3;
 
     if(!temp) {
@@ -258,13 +258,13 @@ void insert_dir(int n,char path[60], int temp,int config)
     sys.directories[n]=r;
     if(!temp) {
         ++sys.num_dirs;
-        userdb_load(1,&u);
-        nu=userdb_max_num() + 1;
+        { auto p = UserDB::instance().get(1); if (p) u = *p; }
+        nu=UserDB::instance().max_id() + 1;
         for (i=1; i<nu; i++) {
-            userdb_load(i,&u);
+            { auto p = UserDB::instance().get(i); if (p) u = *p; }
             for(i1=n;i1<200;i1++)
-                u.nscn[i1]=u.nscn[i1+1];
-            userdb_save(i,&u);
+                u.nscn_mut()[i1]=u.nscn()[i1+1];
+            UserDB::instance().store(i, u);
         }
     }
 
@@ -277,20 +277,20 @@ void delete_dir(int n)
 {
     auto& sys = System::instance();
     int i,i1,nu;
-    userrec u;
+    User u;
     long l1,l2;
 
     for (i=n; i<sys.num_dirs; i++)
         sys.directories[i]=sys.directories[i+1];
     --sys.num_dirs;
-    userdb_load(1,&u);
-    nu=userdb_max_num() + 1;
+    { auto p = UserDB::instance().get(1); if (p) u = *p; }
+    nu=UserDB::instance().max_id() + 1;
 
     for (i=1; i<nu; i++) {
-        userdb_load(i,&u);
+        { auto p = UserDB::instance().get(i); if (p) u = *p; }
         for(i1=200;i1<n;i--)
-            u.nscn[i1]=u.nscn[i1-1];
-        userdb_save(i,&u);
+            u.nscn_mut()[i1]=u.nscn()[i1-1];
+        UserDB::instance().store(i, u);
     }
 
     if (!sys.wfc)

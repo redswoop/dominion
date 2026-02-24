@@ -6,14 +6,15 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
 #include "file1.h"
-#include "bbsutl2.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
 #include "session.h"
 #include "system.h"
 #include "cmd_registry.h"
+#include "acs.h"
 #include "sysopf.h"
 #include "userdb.h"
 
@@ -125,22 +126,22 @@ char *create_chain_file(char *fn)
     f=open(fn,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
     itoa(sess.usernum,s,10);
     alf(f,s);
-    alf(f,sess.user.name);
-    alf(f,sess.user.realname);
-    alf(f,sess.user.callsign);
-    itoa(sess.user.age,s,10);
+    alf(f,sess.user.name());
+    alf(f,sess.user.realname());
+    alf(f,sess.user.callsign());
+    itoa(sess.user.age(),s,10);
     alf(f,s);
-    s[0]=sess.user.sex;
+    s[0]=sess.user.sex();
     s[1]=0;
     alf(f,s);
-    sprintf(s,"%10.2f",sess.user.fpts);
+    sprintf(s,"%10.2f",sess.user.fpts());
     alf(f,s);
-    alf(f,sess.user.laston);
-    itoa(sess.user.screenchars,s,10);
+    alf(f,sess.user.laston());
+    itoa(sess.user.screenchars(),s,10);
     alf(f,s);
-    itoa(sess.user.screenlines,s,10);
+    itoa(sess.user.screenlines(),s,10);
     alf(f,s);
-    itoa(sess.user.sl,s,10);
+    itoa(sess.user.sl(),s,10);
     alf(f,s);
     if (cs())
         alf(f,"1");
@@ -182,13 +183,13 @@ char *create_chain_file(char *fn)
         l += 3600*24;
     ltoa(l,s,10);
     alf(f,s);
-    ltoa(sess.user.uk,s,10);
+    ltoa(sess.user.uk(),s,10);
     alf(f,s);
-    itoa(sess.user.uploaded,s,10);
+    itoa(sess.user.uploaded(),s,10);
     alf(f,s);
-    ltoa(sess.user.dk,s,10);
+    ltoa(sess.user.dk(),s,10);
     alf(f,s);
-    itoa(sess.user.downloaded,s,10);
+    itoa(sess.user.downloaded(),s,10);
     alf(f,s);
     alf(f,"8N1");
     sprintf(s,"%u",sess.com_speed);
@@ -266,7 +267,7 @@ int restore_data(char *s)
         set_global_handle(1);
     }
 
-    userdb_load(sess.usernum,&sess.user);
+    { auto __p = UserDB::instance().get(sess.usernum); if (__p) sess.user = *__p; };
     sess.useron=1;
     changedsl();
     topscreen();
@@ -355,11 +356,11 @@ void dorinfo_def(void)
     sprintf(s,"%u BAUD,8,N,1",sess.com_speed);
     alf(f,s);
     alf(f,"0");
-    alf(f,sess.user.name);
+    alf(f,sess.user.name());
     alf(f,"");
-    alf(f,sess.user.city);
+    alf(f,sess.user.city());
     alf(f,okansi()?"1":"0");
-    itoa(sess.user.sl,s,10);
+    itoa(sess.user.sl(),s,10);
     alf(f,s);
     l=(long) (sess.timeon);
     if (l<0)
@@ -393,21 +394,21 @@ void write_door_sys(int rname)
     alf(fp,cs()?"Y":"N");
     alf(fp,"N");
 
-    alf(fp,rname?sess.user.realname:sess.user.name);
-    alf(fp,sess.user.city);
-    alf(fp,sess.user.phone);
-    alf(fp,sess.user.phone);
-    alf(fp,sess.user.pw);
-    sprintf(s,"%d",sess.user.sl); 
+    alf(fp,rname?sess.user.realname():sess.user.name());
+    alf(fp,sess.user.city());
+    alf(fp,sess.user.phone());
+    alf(fp,sess.user.phone());
+    alf(fp,sess.user.password());
+    sprintf(s,"%d",sess.user.sl()); 
     alf(fp,s);
     alf(fp,"0");
-    alf(fp,sess.user.laston);
+    alf(fp,sess.user.laston());
     sprintf(s,"%6.0f",nsl());
     alf(fp,s);
     sprintf(s,"%6.0f",nsl()/60.0);
     alf(fp,s);
     alf(fp,okansi()?"GR":"NG");
-    sprintf(s,"%d",sess.user.screenlines); 
+    sprintf(s,"%d",sess.user.screenlines()); 
     alf(fp,s);
     alf(fp,"Y");
     alf(fp,"123456");
@@ -416,11 +417,11 @@ void write_door_sys(int rname)
     sprintf(s,"%d",sess.usernum); 
     alf(fp,s);
     alf(fp,"X");
-    sprintf(s,"%d",sess.user.uploaded); 
+    sprintf(s,"%d",sess.user.uploaded()); 
     alf(fp,s);
-    sprintf(s,"%d",sess.user.downloaded); 
+    sprintf(s,"%d",sess.user.downloaded()); 
     alf(fp,s);
-    sprintf(s,"%d",sess.user.dk); 
+    sprintf(s,"%d",sess.user.dk()); 
     alf(fp,s);
     alf(fp,"999999");
     close(fp);

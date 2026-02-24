@@ -5,12 +5,13 @@
 #include "bbs_ui.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "filesys.h"
-#include "utility1.h"
+#include "shortmsg.h"
 #include "session.h"
 #include "userdb.h"
 #include "system.h"
@@ -70,8 +71,8 @@ void reset_files(int show)
 {
     auto& sys = System::instance();
     (void)show;
-    userdb_rebuild_index();
-    sys.status.users = userdb_user_count();
+    UserDB::instance().rebuild_index();
+    sys.status.users = UserDB::instance().user_count();
     save_status();
 }
 
@@ -114,11 +115,11 @@ void chuser()
     input(s,30);
     i=finduser1(s);
     if (i>0) {
-        userdb_save(sess.usernum,&sess.user);
-        userdb_load(i,&sess.user);
+        UserDB::instance().store(sess.usernum, sess.user);
+        { auto __p = UserDB::instance().get(i); if (__p) sess.user = *__p; }
         sess.usernum=i;
         sess.actsl=255;
-        logtypes(3,"Changed to 4%s",nam(&sess.user,sess.usernum));
+        logtypes(3,"Changed to 4%s",sess.user.display_name(sess.usernum).c_str());
         topscreen();
     } 
     else
@@ -251,7 +252,7 @@ void beginday()
     }
 
     fk=freek1(sys.cfg.datadir);
-    nus=sys.cfg.maxusers-userdb_user_count();
+    nus=sys.cfg.maxusers-UserDB::instance().user_count();
 
     if (fk<512.0) {
         sprintf(s,"2! 0Only %dk free in data directory.",(int) fk);
@@ -348,7 +349,7 @@ void viewlog()
 void glocolor(void)
 {
     auto& sess = Session::instance();
-    userrec u;
+    User u;
     int x,uu,i;
     char s[MAX_PATH_LEN];
 
@@ -378,7 +379,7 @@ void glocolor(void)
     outstr("5Continue? "); 
     if(!yn()) return;
 
-    userdb_save(sess.usernum,&sess.user);
+    UserDB::instance().store(sess.usernum, sess.user);
 
     dtitle("Setting Users to: ");
     if(sl!=-1)     npr("Sl    : %d\r\n",sl);
@@ -390,42 +391,42 @@ void glocolor(void)
     if(resetptr)   pl("Reseting Message Ponters");
     if(fixneg)     pl("Fixing negative DL/UL/Fpts");
 
-    for(x=1;x<=userdb_user_count();x++) {
-        userdb_load(x,&u);
+    for(x=1;x<=UserDB::instance().user_count();x++) {
+        { auto p = UserDB::instance().get(x); if (p) u = *p; }
         if(fixneg) {
-            if((long)u.dk<0)
-                u.dk=0;
-            if((long)u.uk<0)
-                u.uk=0;
-            if(u.fpts<0)
-                u.fpts=0;
+            if((long)u.dk()<0)
+                u.set_dk(0);
+            if((long)u.uk()<0)
+                u.set_uk(0);
+            if(u.fpts()<0)
+                u.set_fpts(0);
         }
-        if(sl!=-1) u.sl=sl;
-        if(dsl!=-1) u.dsl=dsl;
+        if(sl!=-1) u.set_sl(sl);
+        if(dsl!=-1) u.set_dsl(dsl);
         if(color) {
-            setcolors(&u);
-            u.sysstatus ^= sysstatus_ansi;
-            u.sysstatus ^= sysstatus_color;
-            u.sysstatus ^= sysstatus_avatar;
+            setcolors(u);
+            u.set_sysstatus(u.sysstatus() ^ sysstatus_ansi);
+            u.set_sysstatus(u.sysstatus() ^ sysstatus_color);
+            u.set_sysstatus(u.sysstatus() ^ sysstatus_avatar);
         }
-        if(format) u.flisttype=99;
-        if(prot) u.defprot=99;
-        if(resetpc) u.comp_type=99;
-        u.lastsub=0;
-        u.lastdir=0;
-        u.lastconf=1;
+        if(format) u.set_flisttype(99);
+        if(prot) u.set_defprot(99);
+        if(resetpc) u.set_comp_type(99);
+        u.set_lastsub(0);
+        u.set_lastdir(0);
+        u.set_lastconf(1);
         if(address) {
-            u.city[0]=0;
-            u.street[0]=0;
+            u.set_city("");
+            u.set_street("");
         }
         if(resetptr) {
             for(i=0;i<200;i++)
-                u.qscn[i]=0;
+                u.qscn_mut()[i]=0;
         }
-        userdb_save(x,&u);
+        UserDB::instance().store(x, u);
     }
 
-    userdb_load(sess.usernum,&sess.user);
+    { auto __p = UserDB::instance().get(sess.usernum); if (__p) sess.user = *__p; };
 
     reset_files(1);
 }

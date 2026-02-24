@@ -9,5 +9,7 @@
 #define MCI_BBS_H_
 
 void mci_bbs_init(void);
+void setmci(char ch);
+extern char MCISTR[161];
 
 #endif /* MCI_BBS_H_ */

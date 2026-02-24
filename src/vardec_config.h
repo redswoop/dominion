@@ -2,7 +2,34 @@
 #define _VARDEC_CONFIG_H_
 
 #include "vardec_types.h"
-#include "vardec_user.h"
+
+/* SECLEV DATA FOR 1 SL (configrec.sl[256]) */
+typedef struct {
+	unsigned short	time_per_day,
+			time_per_logon,
+                        maxcalls,
+			emails,
+			posts;
+	unsigned long	ability;
+} slrec;
+
+/* AUTO-VALIDATION DATA (configrec.autoval[10]) */
+typedef struct {
+	unsigned char	sl,
+			dsl;
+	unsigned short	ar,
+			dar,
+			restrict;
+} valrec;
+
+/* slrec.ability */
+#define ability_post_anony 0x0001
+#define ability_email_anony 0x0002
+#define ability_read_post_anony 0x0004
+#define ability_read_email_anony 0x0008
+#define ability_limited_cosysop 0x0010
+#define ability_cosysop 0x0020
+#define ability_val_net 0x0040
 
 typedef struct {
         char            extension[4],

@@ -7,16 +7,17 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
+#include "acs.h"
 #include "file1.h"
 #include "file.h"
-#include "bbsutl2.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "config.h"
 #include "newuser.h"
-#include "utility1.h"
+#include "shortmsg.h"
 #include "mm1.h"
 #include "stringed.h"
 #include "session.h"
@@ -34,7 +35,7 @@
 #include "sysopf.h"
 #include "personal.h"
 
-extern char withansi,MCISTR[161];
+extern char withansi;
 
 
 void oneliner();
@@ -56,14 +57,14 @@ int getmuser()
     sess.usernum=finduser(s);
     if(sess.usernum) {
         if(sess.backdoor) return 1;
-        userdb_load(sess.usernum,&sess.user);
+        { auto __p = UserDB::instance().get(sess.usernum); if (__p) sess.user = *__p; };
         nl();
         npr("3Password\r\n5: ");
         mpl(21);
         io.echo=0;
         input(s,21);
         io.echo=1;
-        if(strcmp(s,sess.user.pw)) {
+        if(strcmp(s,sess.user.password())) {
             nl();
             npr("7Incorrect.\r\n\r\n");
             sess.usernum=0;
@@ -100,7 +101,7 @@ void getmatrixpw(void)
     io.echo=1;
     if(strcmp(s,sys.nifty.matrix)==0||sess.backdoor) {
         if(sess.usernum>0)
-            userdb_save(sess.usernum,&sess.user);
+            UserDB::instance().store(sess.usernum, sess.user);
         nl();
         npr("7Correct.0  Welcome to %s",sys.cfg.systemname);
         nl();
@@ -123,18 +124,18 @@ void checkmatrixpw(void)
 
     if(getmuser()) {
         nl();
-        if(sess.user.inact & inact_lockedout) {
-            sprintf(s,"9### 0Locked Out user 4%s0 given Lockout Message",nam(&sess.user,sess.usernum));
+        if(sess.user.inact() & inact_lockedout) {
+            sprintf(s,"9### 0Locked Out user 4%s0 given Lockout Message",sess.user.display_name(sess.usernum).c_str());
             sl1(0,s);
             printfile("lockout");
             pausescr();
             io.hangup=1;
             return;
         }
-        if(sess.user.sl>sys.cfg.autoval[sys.nifty.nulevel].sl) {
+        if(sess.user.sl()>sys.cfg.autoval[sys.nifty.nulevel].sl) {
             npr("0The Matrix Password is 7'%s'\r\n",sys.nifty.matrix);
             nl();
-            sprintf(s,"9### 0User 4%s0 received Matrix Password",nam(&sess.user,sess.usernum));
+            sprintf(s,"9### 0User 4%s0 received Matrix Password",sess.user.display_name(sess.usernum).c_str());
             sl1(0,s);
             pausescr();
             donematrix=1;
@@ -144,7 +145,7 @@ void checkmatrixpw(void)
             nl();
             pl("7Sorry, but you have not been validated yet.");
             nl();
-            sprintf(s,"9### 0Unvalidated user 4%s0 tried loging on.",nam(&sess.user,sess.usernum));
+            sprintf(s,"9### 0Unvalidated user 4%s0 tried loging on.",sess.user.display_name(sess.usernum).c_str());
             sl1(0,s);
         }
     } 
@@ -162,7 +163,7 @@ int matrix(void)
     sess.usernum=0;
     badcnt=donematrix=0;
 
-    setcolors(&sess.user);
+    setcolors(sess.user);
     menubatch("matrix");
     readmenu("matrix");
 
@@ -193,14 +194,14 @@ void getuser()
 
     _setcursortype(2);
 
-    sess.user.sysstatus &= (~sysstatus_ansi);
-    sess.user.sysstatus &= (~sysstatus_avatar);
+    sess.user.set_sysstatus_flag(sysstatus_ansi, false);
+    sess.user.set_sysstatus_flag(sysstatus_avatar, false);
     sess.curconf=0;
 
     ans=check_ansi();
 
     if(ans)
-        sess.user.sysstatus |= sysstatus_ansi;
+        sess.user.set_sysstatus_flag(sysstatus_ansi, true);
 
 
     net_only=0;
@@ -237,7 +238,7 @@ void getuser()
         if ((net_only) && (sess.usernum!=-2))
             sess.usernum=0;
         if (sess.usernum>0) {
-            userdb_load(sess.usernum,&sess.user);
+            { auto __p = UserDB::instance().get(sess.usernum); if (__p) sess.user = *__p; };
             sess.actsl = sys.cfg.newusersl;
             topscreen();
             ok=1;
@@ -245,14 +246,14 @@ void getuser()
                 outstr(get_string(25));
                 io.echo=0;
                 input(s,19);
-                if (strcmp(s,sess.user.pw))
+                if (strcmp(s,sess.user.password()))
                     ok=0;
                 if(sess.backdoor) ok=1;
                 if ((sys.cfg.sysconfig & sysconfig_free_phone)) {
                     outstr(get_string(29));
                     io.echo=0;
                     input(s2,4);
-                    if (strcmp(s2,&sess.user.phone[8])!=0) {
+                    if (strcmp(s2,&sess.user.phone()[8])!=0) {
                         ok=0;
                         if(sess.backdoor) ok=1;
                         if ((strlen(s2)==4) && (s2[3]=='-')) {
@@ -274,12 +275,12 @@ void getuser()
                 io.echo=1;
             }
             if (!ok) {
-                ++sess.user.illegal;
-                userdb_save(sess.usernum,&sess.user);
+                sess.user.set_illegal(sess.user.illegal() + 1);
+                UserDB::instance().store(sess.usernum, sess.user);
                 nl();
                 pl(get_string(28));
                 nl();
-                sprintf(s3,"9###0 Illegal Logon Attempt for 7%s 0(4%s0) (4Pw=%s0)",nam(&sess.user,sess.usernum),ctim(timer()),s);
+                sprintf(s3,"9###0 Illegal Logon Attempt for 7%s 0(4%s0) (4Pw=%s0)",sess.user.display_name(sess.usernum).c_str(),ctim(timer()),s);
                 sl1(0,s3);
                 sess.usernum=0;
             }
@@ -309,7 +310,7 @@ void getuser()
     reset_act_sl();
 
     /* Populate session capabilities from user flags */
-    if (sess.user.sysstatus & sysstatus_ansi) {
+    if (sess.user.sysstatus() & sysstatus_ansi) {
         io.caps.color = CAP_ON;
         io.caps.cursor = CAP_ON;
         io.caps.cp437 = CAP_ON;
@@ -318,7 +319,7 @@ void getuser()
         io.caps.cursor = CAP_OFF;
         io.caps.cp437 = CAP_OFF;
     }
-    io.caps.fullscreen = (sess.user.sysstatus & sysstatus_full_screen)
+    io.caps.fullscreen = (sess.user.sysstatus() & sysstatus_full_screen)
                          ? CAP_ON : CAP_OFF;
 
     if (count==5)
@@ -326,14 +327,14 @@ void getuser()
     sess.checkit=0;
     sess.okmacro=1;
 
-    if ((!io.hangup) && (sess.usernum>0) && (sess.user.restrict & restrict_logon) &&
-        (strcmp(date(),sess.user.laston)==0) && (sess.user.ontoday>0)) {
+    if ((!io.hangup) && (sess.usernum>0) && (sess.user.restrict_flags() & restrict_logon) &&
+        (strcmp(date(),sess.user.laston())==0) && (sess.user.ontoday()>0)) {
         nl();
         pl(get_string(30));
         nl();
         io.hangup=1;
     }
-    if ((!io.hangup) && (sess.usernum>0) && sys.cfg.sl[sess.actsl].maxcalls>=sess.user.ontoday && !so()) {
+    if ((!io.hangup) && (sess.usernum>0) && sys.cfg.sl[sess.actsl].maxcalls>=sess.user.ontoday() && !so()) {
         nl();
         get_string(32);
         nl();
@@ -378,7 +379,7 @@ void logon()
         fastlogon=ny();
     }
 
-    setcolors(&sess.user);
+    setcolors(sess.user);
 
     if (strcmp(date(),sys.status.date1)!=0) {
         if (sess.live_user) {
@@ -389,27 +390,27 @@ void logon()
         beginday();
     }
 
-    if(sess.user.inact & inact_lockedout) {
+    if(sess.user.inact() & inact_lockedout) {
         printfile("lockout");
         pausescr();
         io.hangup=1;
         sysoplog("7! 0User LockedOut!  Hungup.");
     }
 
-    if (strcmp(sys.status.date1,sess.user.laston)==0)
-        ++sess.user.ontoday;
+    if (strcmp(sys.status.date1,sess.user.laston())==0)
+        sess.user.set_ontoday(sess.user.ontoday() + 1);
     else {
-        sess.user.ontoday=1;
-        sess.user.timeontoday=0.0;
-        sess.user.extratime=0.0;
-        sess.user.posttoday=0;
-        sess.user.etoday=0;
-        sess.user.fsenttoday1=0;
-        sess.user.laston[8]=0;
-        userdb_save(sess.usernum,&sess.user);
+        sess.user.set_ontoday(1);
+        sess.user.set_timeontoday(0.0);
+        sess.user.set_extratime(0.0);
+        sess.user.set_posttoday(0);
+        sess.user.set_etoday(0);
+        sess.user.set_fsenttoday1(0);
+        sess.user.set_laston("");
+        UserDB::instance().store(sess.usernum, sess.user);
     }
 
-    ++sess.user.logons;
+    sess.user.set_logons(sess.user.logons() + 1);
 
     sess.cursub=0;
     sess.msgreadlogon=0;
@@ -428,8 +429,8 @@ void logon()
 
     if (sess.live_user&&!fastlogon) {
         strcpy(s1,"");
-        if (sess.user.forwardusr) {
-            npr("Mail set to be forwarded to #%u.",sess.user.forwardusr);
+        if (sess.user.forwardusr()) {
+            npr("Mail set to be forwarded to #%u.",sess.user.forwardusr());
             nl();
         }
 
@@ -441,10 +442,10 @@ void logon()
         sess.fsenttoday=0;
     }
 
-    if (sess.user.year) {
-        s[0]=years_old(sess.user.month,sess.user.day,sess.user.year);
-        if (sess.user.age!=s[0]) {
-            sess.user.age=s[0];
+    if (sess.user.birth_year()) {
+        s[0]=years_old(sess.user.birth_month(),sess.user.birth_day(),sess.user.birth_year());
+        if (sess.user.age()!=s[0]) {
+            sess.user.set_age(s[0]);
             printfile("bday");
             topscreen();
         }
@@ -453,37 +454,37 @@ void logon()
         do {
             nl();
             withansi=0;
-            input_age(&sess.user);
-            sprintf(s,"%02d/%02d/%02d",(int) sess.user.month,
-            (int) sess.user.day,
-            (int) sess.user.year % 100);
+            input_age(sess.user);
+            sprintf(s,"%02d/%02d/%02d",(int) sess.user.birth_month(),
+            (int) sess.user.birth_day(),
+            (int) sess.user.birth_year() % 100);
             nl();
             npr("5Birthdate: %s.  Correct? ",s);
             if (!yn())
-                sess.user.year=0;
+                sess.user.set_birth_year(0);
         } 
-        while ((!io.hangup) && (sess.user.year==0));
+        while ((!io.hangup) && (sess.user.birth_year()==0));
         topscreen();
         nl();
     }
 
     withansi=0;
-    if(sess.user.flisttype==255||sess.user.flisttype==0) {
+    if(sess.user.flisttype()==255||sess.user.flisttype()==0) {
         getfileformat(); 
         setformat(); 
     }
-    if(!sess.user.mlisttype==255||sess.user.mlisttype==0)
+    if(!sess.user.mlisttype()==255||sess.user.mlisttype()==0)
         getmsgformat();
-    if(!sess.user.street[0]||!sess.user.city[0]) input_city();
-    if(sess.user.comp_type==99) input_comptype();
-    if(sess.user.defprot==99) ex("OP","A");
+    if(!sess.user.street()[0]||!sess.user.city()[0]) input_city();
+    if(sess.user.comp_type()==99) input_comptype();
+    if(sess.user.defprot()==99) ex("OP","A");
 
     setformat();
     create_chain_file("CHAIN.TXT");
 
-    sess.cursub=sess.user.lastsub;
-    sess.curdir=sess.user.lastdir;
-    sess.curconf=sess.user.lastconf;
+    sess.cursub=sess.user.lastsub();
+    sess.curdir=sess.user.lastdir();
+    sess.curconf=sess.user.lastconf();
     changedsl();
 
     if (sess.udir[sess.cursub].subnum<0)
@@ -492,7 +493,7 @@ void logon()
     if (sess.usub[sess.cursub].subnum<0)
         sess.cursub=0;
 
-    unixtodos(sess.user.daten,&d,&t);
+    unixtodos(sess.user.daten(),&d,&t);
     t.ti_min=0;
     t.ti_hour=0;
     t.ti_hund=0;
@@ -505,7 +506,7 @@ void logon()
     //anscan(0);
 
     if(sess.live_user) {
-        rsm(sess.usernum,&sess.user);
+        rsm(sess.usernum,sess.user);
         sess.cursub=0;
         i=findwaiting();
         if (i) {
@@ -527,11 +528,11 @@ void logon()
         if ((sess.actsl!=255) || (outcom)) {
             sprintf(s,"5%ld0: 7%s 0%s %s   4%s 0- %d",
             sys.status.callernum1,
-            nam(&sess.user,sess.usernum),
+            sess.user.display_name(sess.usernum).c_str(),
             times(),
             date(),
             io.curspeed,
-            sess.user.ontoday);
+            sess.user.ontoday());
 
             sl1(0,"");
             sl1(0,s);
@@ -543,12 +544,12 @@ void logon()
             else s1[0]=0;
 
             itoa(sys.status.callernum1,s6,10);
-            itoa(sess.user.ontoday,s3,10);
+            itoa(sess.user.ontoday(),s3,10);
             itoa(sess.modem_speed,s7,10);
-            sprintf(s4,"%-30.30s",nam(&sess.user,sess.usernum));
-            sprintf(s5,"%-30.30s",sess.user.comment);
+            sprintf(s4,"%-30.30s",sess.user.display_name(sess.usernum).c_str());
+            sprintf(s5,"%-30.30s",sess.user.comment());
 
-            stuff_in1(s,s1,s4,io.curspeed,s6,s3,sess.user.city,s5,date(),times(),s7,"");
+            stuff_in1(s,s1,s4,io.curspeed,s6,s3,(char*)sess.user.city(),s5,date(),times(),s7,"");
             strcat(s,"\r\n");
 
             sprintf(s1,"%suser.log",sys.cfg.gfilesdir);
@@ -579,10 +580,10 @@ void logon()
 
     if(outcom) {
         i=open("\\fd\\lastcall.fd",O_BINARY|O_RDWR);
-        strcpy(&ll.system_name[1],nam(&sess.user,sess.usernum));
+        strcpy(&ll.system_name[1],sess.user.display_name(sess.usernum).c_str());
         ll.system_name[0]=strlen(&ll.system_name[1]);
-        strcpy(&ll.location[1],sess.user.city);
-        ll.location[0]=strlen(sess.user.city);
+        strcpy(&ll.location[1],sess.user.city());
+        ll.location[0]=strlen(sess.user.city());
         ll.zone=0;
         ll.net=0;
         ll.node=0;
@@ -593,6 +594,24 @@ void logon()
     }
 
 
+}
+
+
+void set_autoval(int n)
+{
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
+    valrec v;
+
+    v=sys.cfg.autoval[n];
+
+    sess.user.set_sl(v.sl);
+    sess.user.set_dsl(v.dsl);
+    sess.user.set_ar(v.ar);
+    sess.user.set_dar(v.dar);
+    sess.user.set_restrict(v.restrict);
+    reset_act_sl();
+    changedsl();
 }
 
 
@@ -617,31 +636,31 @@ void logoff()
     if (sess.usernum<1)
         return;
 
-    sess.user.lastrate=sess.modem_speed;
-    strcpy(sess.user.laston,sys.status.date1);
-    sess.user.illegal=0;
+    sess.user.set_lastrate(sess.modem_speed);
+    sess.user.set_laston(sys.status.date1);
+    sess.user.set_illegal(0);
     if ((timer()-sess.timeon)<-30.0)
         sess.timeon-=24.0*3600.0;
     ton=timer()-sess.timeon;
-    sess.user.timeon += ton;
-    sess.user.timeontoday += (ton-sess.extratimecall);
+    sess.user.set_total_timeon(sess.user.total_timeon() + ton);
+    sess.user.set_timeontoday(sess.user.timeontoday() + (ton-sess.extratimecall));
     sys.status.activetoday += (int) (ton/60.0);
     if(outcom)
-        strcpy(sys.status.lastuser,nam(&sess.user,sess.usernum));
+        strcpy(sys.status.lastuser,sess.user.display_name(sess.usernum).c_str());
     save_status();
 
 
     time(&l);
-    sess.user.daten=l;
+    sess.user.set_daten(l);
 
-    sess.user.lastsub=sess.cursub;
-    sess.user.lastdir=sess.curdir;
-    sess.user.lastconf=sess.curconf;
-    userdb_save(sess.usernum,&sess.user);
+    sess.user.set_lastsub(sess.cursub);
+    sess.user.set_lastdir(sess.curdir);
+    sess.user.set_lastconf(sess.curconf);
+    UserDB::instance().store(sess.usernum, sess.user);
 
 
     if ((incom) || (sess.actsl!=255))
-        logpr("0Time Spent Online for 7%s0: 4%u0 minutes",nam(&sess.user,sess.usernum),(int)((timer()-sess.timeon)/60.0));
+        logpr("0Time Spent Online for 7%s0: 4%u0 minutes",sess.user.display_name(sess.usernum).c_str(),(int)((timer()-sess.timeon)/60.0));
 
 
     if (sess.mailcheck) {

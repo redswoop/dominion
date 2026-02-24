@@ -278,9 +278,6 @@ int spawnvpe(int mode, const char *path, const char *const argv[], const char *c
 /*  STRING COMPATIBILITY                                               */
 /* ================================================================== */
 
-/* BBS strnstr conflicts with macOS strnstr */
-#define strnstr bbs_strnstr
-
 /* Borland had these; POSIX has strcasecmp instead */
 #define stricmp(a,b)   strcasecmp(a,b)
 #define strcmpi(a,b)   strcasecmp(a,b)

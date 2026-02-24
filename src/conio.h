@@ -12,7 +12,7 @@ void bs();
 void reset_attr_cache(void);
 void out1chx(unsigned char ch);
 void out1ch(unsigned char ch);
-void outs(char *s);
+void outs(const char *s);
 void copy_line(char *s, char *b, long *ptr, long len);
 void set_protect(int l);
 void savescreen(screentype *s);

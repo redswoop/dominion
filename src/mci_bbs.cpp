@@ -13,8 +13,10 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "bbsutl.h"
+#include "conio.h"
+#include "tcpio.h"
 #include "file1.h"
-#include "bbsutl2.h"
+#include "acs.h"
 #include "timest.h"
 #include "utility.h"
 #include "jam_bbs.h"
@@ -43,7 +45,7 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
     auto& sess = Session::instance();
     (void)ctx;
     char s[161];
-    userrec u;
+    User u;
 
     s[0] = '\0';
 
@@ -76,13 +78,13 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         strcpy(s, post_ratio() >= sys.cfg.post_call_ratio ? "Passed" : "Failed");
         break;
     case '*':
-        sprintf(s, "%-4d", sess.user.msgpost);
+        sprintf(s, "%-4d", sess.user.msgpost());
         break;
     case '(':
-        sprintf(s, "%-4d", sess.user.logons);
+        sprintf(s, "%-4d", sess.user.logons());
         break;
     case ')':
-        sprintf(s, "%-4d", sess.user.ontoday);
+        sprintf(s, "%-4d", sess.user.ontoday());
         break;
     case '+':
         sprintf(s, "%s", sys.status.lastuser);
@@ -91,34 +93,34 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         strcpy(s, get_string(sysop2() ? 4 : 5));
         break;
     case '-':
-        sprintf(s, "%s [%s]", nam(&sess.user, sess.usernum), sess.user.comment);
+        sprintf(s, "%s [%s]", sess.user.display_name(sess.usernum).c_str(), sess.user.comment());
         break;
 
     case 'a':
-        userdb_load(sys.status.amsguser, &u);
+        { auto p = UserDB::instance().get(sys.status.amsguser); if (p) u = *p; }
         if (sys.status.amsganon == 1) {
             if (so()) {
                 strcpy(s, " ");
-                strcat(s, nam(&u, sys.status.amsguser));
+                strcat(s, u.display_name(sys.status.amsguser).c_str());
                 strcat(s, " ");
             } else {
                 strcpy(s, "Anonymous!");
             }
         } else {
-            strcpy(s, nam(&u, sys.status.amsguser));
+            strcpy(s, u.display_name(sys.status.amsguser).c_str());
         }
         break;
     case 'b':
-        strcpy(s, sys.proto[sess.user.defprot].description);
+        strcpy(s, sys.proto[sess.user.defprot()].description);
         break;
     case 'c':
-        sprintf(s, "%d", sess.user.timebank);
+        sprintf(s, "%d", sess.user.timebank());
         break;
     case 'd':
-        sprintf(s, "%d", numwaiting(&sess.user));
+        sprintf(s, "%d", numwaiting(sess.user));
         break;
     case 'e':
-        strcpy(s, sess.user.comment);
+        strcpy(s, sess.user.comment());
         break;
     case 'f':
         sprintf(s, "%d", sys.nummsgs - sess.msgr);
@@ -183,49 +185,49 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
             strcpy(s, "No Dirs");
         break;
     case 'E':
-        sprintf(s, "%s", sess.user.laston);
+        sprintf(s, "%s", sess.user.laston());
         break;
     case 'F':
-        sprintf(s, "%d", sess.user.fpts);
+        sprintf(s, "%d", sess.user.fpts());
         break;
     case 'G':
         sprintf(s, "%s", sys.conf[sess.curconf].name);
         break;
     case 'H':
-        sprintf(s, "%s", pnam(&sess.user));
+        sprintf(s, "%s", sess.user.display_name().c_str());
         break;
     case 'I':
         s[0] = '\0';
         break;
     case 'J':
-        sprintf(s, "%d", sess.user.dsl);
+        sprintf(s, "%d", sess.user.dsl());
         break;
     case 'K':
-        sprintf(s, "%-4ld", sess.user.uk);
+        sprintf(s, "%-4ld", sess.user.uk());
         break;
     case 'L':
         sprintf(s, "%d", sess.usernum);
         break;
     case 'N':
-        strcpy(s, nam(&sess.user, sess.usernum));
+        strcpy(s, sess.user.display_name(sess.usernum).c_str());
         break;
     case 'O':
-        sprintf(s, "%-4d", sess.user.downloaded);
+        sprintf(s, "%-4d", sess.user.downloaded());
         break;
     case 'Q':
         sprintf(s, "%d", sess.numf);
         break;
     case 'R':
-        sprintf(s, "%s", sess.user.realname);
+        sprintf(s, "%s", sess.user.realname());
         break;
     case 'S':
-        itoa(sess.user.sl, s, 10);
+        itoa(sess.user.sl(), s, 10);
         break;
     case 'T':
         strcpy(s, ctim(nsl()));
         break;
     case 'U':
-        sprintf(s, "%-4d", sess.user.uploaded);
+        sprintf(s, "%-4d", sess.user.uploaded());
         break;
     case 'V':
         sprintf(s, "%d", sess.msgr);
@@ -234,7 +236,7 @@ static bool bbs_mci_resolve(char code, char *buf, int bufsize, void *ctx)
         sprintf(s, "%d", sys.nummsgs);
         break;
     case 'X':
-        sprintf(s, "%-4ld", sess.user.dk);
+        sprintf(s, "%-4ld", sess.user.dk());
         break;
 
     /* --- Side-effect codes: return 0, handled by setmci() --- */
@@ -298,4 +300,40 @@ void mci_bbs_init(void)
     mci_register_name("filepoints", 'F');
     mci_register_name("pause", 'P');
     mci_register_name("newline", 'M');
+}
+
+
+/***********************************************************************
+ * MCI dispatch (moved from bbsutl.cpp)
+ ***********************************************************************/
+
+char MCISTR[161];
+
+void setmci(char ch)
+{
+    char buf[161];
+
+    /* Try the resolver for pure data codes */
+    if (mci_resolve(ch, buf, sizeof(buf))) {
+        strcpy(MCISTR, buf);
+        return;
+    }
+
+    /* Side-effect and mutation codes — handle inline */
+    MCISTR[0] = '\0';
+    switch (ch) {
+    case '`':  out1ch('`'); if (outcom) outcomch('`'); break;
+    case '\\': io.mciok = 0; break;
+    case 'M':  nl(); break;
+    case 'P':  pausescr(); break;
+    case 'Y':  delay(500); break;
+    case 'Z':  outstr(get_say(0)); break;
+    case 'g':  mci_topten_advance(); break;
+    case 'j':  mci_topten_set_type(0); break;
+    case 'k':  mci_topten_set_type(1); break;
+    case 'l':  mci_topten_set_type(2); break;
+    case 'm':  mci_topten_set_type(3); break;
+    case 'n':  mci_topten_set_type(4); break;
+    default:   break;
+    }
 }

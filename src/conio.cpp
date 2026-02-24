@@ -6,8 +6,10 @@
 #include "bbs_ui.h"
 #include "tcpio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
 #include "file1.h"
-#include "bbsutl2.h"
+#include "uedit.h"
+#include "acs.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
@@ -142,14 +144,12 @@ void out1ch(unsigned char ch)
     else
         if (ch==7)
             if (outcom==0) {
-                setbeep(1);
                 wait1(4);
-                setbeep(0);
             }
 }
 
 
-void outs(char *s)
+void outs(const char *s)
 {
     int i;
     char ch;
@@ -228,7 +228,7 @@ void set_protect(int l)
     }
     io.topline=l;
     if (using_modem)
-        io.screenlinest=sess.user.screenlines;
+        io.screenlinest=sess.user.screenlines();
     else
         io.screenlinest=io.defscreenbottom+1-io.topline;
 }
@@ -443,15 +443,15 @@ void skey(unsigned char ch)
                 topscreen();
                 break;
             case 65: /* F7 */
-                sess.user.extratime-=5.0*60.0;
+                sess.user.set_extratime(sess.user.extratime() - 5.0*60.0);
                 tleft(0);
                 break;
             case 66: /* F8 */
-                sess.user.extratime+=5.0*60.0;
+                sess.user.set_extratime(sess.user.extratime() + 5.0*60.0);
                 tleft(0);
                 break;
             case 67: /* F9 */
-                if (sess.user.sl!=255) {
+                if (sess.user.sl()!=255) {
                     if (sess.actsl!=255) {
                         sess.actsl=255;
                         logpr("7!! 0Temp SysOp Access given at 4%s",times());
@@ -525,7 +525,7 @@ void skey(unsigned char ch)
                     if(toupper(getche())=='Y')
                         save_state("exitdata.dom",1);
                     sl1(1,"");
-                    userdb_save(sess.usernum,&sess.user);
+                    UserDB::instance().store(sess.usernum, sess.user);
                     sysoplog("7SysOp BBS Exit");
                     pr_wait(1);
                     if (ok_modem_stuff)
@@ -572,7 +572,7 @@ void skey(unsigned char ch)
             case 44:
                 save_state("exitdata.dom",1);
                 sl1(1,"");
-                userdb_save(sess.usernum,&sess.user);
+                UserDB::instance().store(sess.usernum, sess.user);
                 sysoplog("SysOp Quick BBS Exit");
                 pr_wait(1);
                 if (ok_modem_stuff)
@@ -637,7 +637,7 @@ void tleft(int dot)
                 break;
 
             case 2:
-                if ((sess.actsl==255) && (sess.user.sl!=255) && !sess.backdoor)
+                if ((sess.actsl==255) && (sess.user.sl()!=255) && !sess.backdoor)
                     strcpy(s,arg);
                 break;
 
@@ -680,8 +680,8 @@ void tleft(int dot)
     reset_attr_cache();
 
     if ((dot) && (sess.useron))
-        if ((nsln==0.0) && (sess.user.sl!=255)) {
-            if(sess.user.timebank) {
+        if ((nsln==0.0) && (sess.user.sl()!=255)) {
+            if(sess.user.timebank()) {
                 bank2(60);
                 nsln=nsl();
                 if(nsln>0.0) return;
@@ -701,7 +701,7 @@ void topscreen(void)
     char *screen;
     zlogrec z[3];
     FILE *f;
-    userrec u;
+    User u;
 
     sys.status.net_edit_stuff=sess.topdata;
 
@@ -763,15 +763,15 @@ void topscreen(void)
 
     strcpy(rst,restrict_string);
     for (i=0; i<=15; i++) {
-        if (sess.user.ar & (1 << i))
+        if (sess.user.ar() & (1 << i))
             ar[i]='A'+i;
         else
             ar[i]='a'+i;
-        if (sess.user.dar & (1 << i))
+        if (sess.user.dar() & (1 << i))
             dar[i]='A'+i;
         else
             dar[i]='a'+i;
-        if (sess.user.restrict & (1 << i))
+        if (sess.user.restrict_flags() & (1 << i))
             restrict[i]=rst[i];
         else
             restrict[i]=32;
@@ -780,13 +780,13 @@ void topscreen(void)
     ar[16]=0;
     restrict[16]=0;
 
-    if(sess.user.exempt & exempt_ratio) lo[0]='R';
+    if(sess.user.exempt() & exempt_ratio) lo[0]='R';
     else lo[0]=32;
-    if(sess.user.exempt & exempt_time)  lo[1]='T';
+    if(sess.user.exempt() & exempt_time)  lo[1]='T';
     else lo[1]=32;
-    if(sess.user.exempt & exempt_userlist)  lo[2]='U';
+    if(sess.user.exempt() & exempt_userlist)  lo[2]='U';
     else lo[2]=32;
-    if(sess.user.exempt & exempt_post)  lo[3]='P';
+    if(sess.user.exempt() & exempt_post)  lo[3]='P';
     else lo[3]=32;
     lo[4]=0;
 
@@ -807,19 +807,19 @@ void topscreen(void)
 
         switch (type) {
         case 0:
-            strcpy(s,nam(&sess.user,sess.usernum));
+            strcpy(s,sess.user.display_name(sess.usernum).c_str());
             break;
         case 1:
             sprintf(s,"%d",sess.modem_speed);
             break;
         case 3:
-            strcpy(s,sess.user.street);
+            strcpy(s,sess.user.street());
             break;
         case 4:
-            strcpy(s,sess.user.city);
+            strcpy(s,sess.user.city());
             break;
         case 5:
-            strcpy(s,sess.user.note);
+            strcpy(s,sess.user.note());
             break;
         case 6:
             sprintf(s,"%d",sys.status.msgposttoday);
@@ -828,8 +828,8 @@ void topscreen(void)
             sprintf(s,"%d ",sys.status.emailtoday);
             break;
         case 8:
-            userdb_load(1,&u);
-            sprintf(s,"%d",numwaiting(&u));
+            { auto p = UserDB::instance().get(1); if (p) u = *p; }
+            sprintf(s,"%d",numwaiting(u));
             break;
         case 9:
             sprintf(s,"%d",sys.status.fbacktoday);
@@ -846,28 +846,28 @@ void topscreen(void)
             sprintf(s,"%d",sys.status.callstoday);
             break;
         case 15:
-            strcpy(s,sess.user.laston);
+            strcpy(s,sess.user.laston());
             break;
         case 16:
             sprintf(s,"%s",sess.chatreason[0]? "On":"Off");
             break;
         case 18:
-            sprintf(s,sess.user.realname);
+            sprintf(s,sess.user.realname());
             break;
         case 19:
-            strcpy(s,sess.user.comment);
+            strcpy(s,sess.user.comment());
             break;
         case 21:
-            sprintf(s,"%d",sess.user.sl);
+            sprintf(s,"%d",sess.user.sl());
             break;
         case 22:
-            sprintf(s,"%d",sess.user.msgpost);
+            sprintf(s,"%d",sess.user.msgpost());
             break;
         case 23:
-            sprintf(s,"%d",sess.user.uploaded);
+            sprintf(s,"%d",sess.user.uploaded());
             break;
         case 24:
-            sprintf(s,"%d",sess.user.fpts);
+            sprintf(s,"%d",sess.user.fpts());
             break;
         case 25:
             strcpy(s,lo);
@@ -882,28 +882,28 @@ void topscreen(void)
             strcpy(s,dar);
             break;
         case 29:
-            sprintf(s,"%d",sess.user.dsl);
+            sprintf(s,"%d",sess.user.dsl());
             break;
         case 30:
-            sprintf(s,"%d",sess.user.logons);
+            sprintf(s,"%d",sess.user.logons());
             break;
         case 31:
-            sprintf(s,"%d",sess.user.downloaded);
+            sprintf(s,"%d",sess.user.downloaded());
             break;
         case 32:
-            sprintf(s,"%d",sess.user.timebank);
+            sprintf(s,"%d",sess.user.timebank());
             break;
         case 37:
-            strcpy(s,sess.user.phone);
+            strcpy(s,sess.user.phone());
             break;
         case 38:
-            sprintf(s,"%d",sess.user.age);
+            sprintf(s,"%d",sess.user.age());
             break;
         case 39:
-            sprintf(s,"%c",sess.user.sex);
+            sprintf(s,"%c",sess.user.sex());
             break;
         case 40:
-            strcpy(s,getComputerType(sess.user.comp_type));
+            strcpy(s,getComputerType(sess.user.comp_type()));
             break;
         case 41:
             sprintf(s,"%s    %4d    %4d    %4d     %3d     %3d    %3d  %3d%%",z[wz].date,z[wz].calls,z[wz].active,z[wz].posts,z[wz].email,z[wz].fback,z[wz].up,10*z[wz].active/144);
@@ -911,13 +911,13 @@ void topscreen(void)
             if(wz==3) wz=0;
             break;
         case 42:
-            sprintf(s,"%ld",sess.user.uk);
+            sprintf(s,"%ld",sess.user.uk());
             break;
         case 43:
-            sprintf(s,"%ld",sess.user.dk);
+            sprintf(s,"%ld",sess.user.dk());
             break;
         case 44:
-            strcpy(s,sess.user.pw);
+            strcpy(s,sess.user.password());
             break;
         case 45:
             strcpy(s,sys.status.lastuser);

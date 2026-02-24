@@ -2,7 +2,7 @@
 #define _MSGBASE_H_
 
 #include "vardec_msgfile.h"
-#include "vardec_user.h"
+#include "user.h"
 #include "jammb.h"
 
 int external_edit(char *fn1, char *direc, int numlines);
@@ -20,7 +20,7 @@ void get_quote();
 char *ini(char name[MAX_PATH_LEN]);
 void parseadd(char s[MAX_PATH_LEN],addressrec *a);
 void parse_email_info(char *s, unsigned short *un1);
-int inscan(int sb,userrec *u);
-void togglenws(int sb,userrec *u,int scan);
+int inscan(int sb, const User& u);
+void togglenws(int sb, User& u, int scan);
 
 #endif /* _MSGBASE_H_ */

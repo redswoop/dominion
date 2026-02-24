@@ -395,7 +395,7 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
         }
         switch(toupper(s[0])) {
         case 'A': 
-            if(!(sess.user.ar & (1 << toupper(s[1])-'A'))) curok=0; 
+            if(!(sess.user.ar() & (1 << toupper(s[1])-'A'))) curok=0; 
             break;
         case 'B': 
             if((sess.modem_speed/100)<atoi(s+1)) curok=0; 
@@ -404,13 +404,13 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
             if(!postr_ok()) curok=0; 
             break;
         case 'D': 
-            if(sess.user.dsl<atoi(s+1)) curok=0; 
+            if(sess.user.dsl()<atoi(s+1)) curok=0; 
             break;
         case 'G': 
-            if(sess.user.age<atoi(s+1)) curok=0; 
+            if(sess.user.age()<atoi(s+1)) curok=0; 
             break;
         case 'I': 
-            if(!(sess.user.dar & (1 << toupper(s[1])-'A'))) curok=0;
+            if(!(sess.user.dar() & (1 << toupper(s[1])-'A'))) curok=0;
             break;
         case 'S': 
             if(sess.actsl<atoi(s+1)) curok=0; 
@@ -440,7 +440,7 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
             if(qyn) curok=0; 
             break;
         case 'H':
-            if(atoi(s+1)!=sess.user.helplevel) curok=0;
+            if(atoi(s+1)!=sess.user.helplevel()) curok=0;
             break;
         case 'M':
             if(!stricmp(s+1,sys.subboards[sess.usub[sess.cursub].subnum].filename)) curok=0;
@@ -450,10 +450,10 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
             break;
         case 'E':
             switch(s[1]) {
-                case 'R': if(!(sess.user.exempt & exempt_ratio)) curok=0; break;
-                case 'T': if(!(sess.user.exempt & exempt_time)) curok=0; break;
-                case 'U': if(!(sess.user.exempt & exempt_userlist)) curok=0; break;
-                case 'P': if(!(sess.user.exempt & exempt_post)) curok=0; break;
+                case 'R': if(!(sess.user.exempt() & exempt_ratio)) curok=0; break;
+                case 'T': if(!(sess.user.exempt() & exempt_time)) curok=0; break;
+                case 'U': if(!(sess.user.exempt() & exempt_userlist)) curok=0; break;
+                case 'P': if(!(sess.user.exempt() & exempt_post)) curok=0; break;
             }
         default:
             i=0;

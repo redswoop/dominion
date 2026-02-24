@@ -21,13 +21,11 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "bbsutl.h"
-#include "bbsutl2.h"
+#include "mci_bbs.h"
 #include "session.h"
 #include "system.h"
 #include "terminal_bridge.h"
 #include "stream_processor.h"
-
-extern char MCISTR[161];
 
 
 /***********************************************************************

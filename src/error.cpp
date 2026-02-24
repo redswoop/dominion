@@ -5,6 +5,7 @@
 #include "bbs_ui.h"
 #include "tcpio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
 #include "timest.h"
 #include "session.h"
 #include "system.h"

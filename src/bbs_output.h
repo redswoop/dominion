@@ -18,5 +18,9 @@ void logpr(char *fmt, ...);
 void prt(int i, char *s);
 void savel(char *cl, char *atr, char *xl, char *cc);
 void restorel(char *cl, char *atr, char *xl, char *cc);
+void checka(int *abort, int *next, int act);
+void pla(char *s, int *abort);
+void mla(char *s, int *abort);
+void reprint();
 
 #endif /* _BBS_OUTPUT_H_ */

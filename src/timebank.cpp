@@ -23,7 +23,7 @@ void add_time(int limit)
     double nsln;
 
     nsln=nsl();
-    npr("0Time in Bank: 5%d\r\n",sess.user.timebank);
+    npr("0Time in Bank: 5%d\r\n",sess.user.timebank());
     npr("0Bank Limit  : 5%d\r\n",limit);
     nl();
     npr("5%.0f0 minutes left online.\r\n",nsln/60.0);
@@ -41,15 +41,15 @@ void add_time(int limit)
         pausescr();
         return;
     }
-    if ((minutes + sess.user.timebank) > limit) {
+    if ((minutes + sess.user.timebank()) > limit) {
         nl();
         npr("7You may only have up to %d minutes in your account at once.\r\n", limit);
         nl();
         pausescr();
         return;
     }
-    sess.user.timebank += minutes;
-    userdb_save(sess.usernum,&sess.user);
+    sess.user.set_timebank(sess.user.timebank() + minutes);
+    UserDB::instance().store(sess.usernum, sess.user);
     logtypes(2,"Deposit 3%d0 minutes.", minutes);
     nl();
     npr("%d minute%c deposited.", minutes,((minutes > 1) ? 's' : 0));
@@ -63,7 +63,7 @@ void add_time(int limit)
         minutes -= (int)(sess.extratimecall / 60.0);
         sess.extratimecall = 0.0;
     }
-    sess.user.extratime -= (float)(minutes * 60);
+    sess.user.set_extratime(sess.user.extratime() - (float)(minutes * 60));
     pausescr();
 }
 
@@ -75,7 +75,7 @@ void remove_time()
 
     nl();
     nl();
-    npr( "Time in account: %d minutes.\r\n", sess.user.timebank);
+    npr( "Time in account: %d minutes.\r\n", sess.user.timebank());
     nl();
     ansic(0);
     outstr("How many minutes would you like to withdraw? ");
@@ -85,7 +85,7 @@ void remove_time()
     if (minutes<1) return;
 
     if (io.hangup) return;
-    if (minutes > sess.user.timebank) {
+    if (minutes > sess.user.timebank()) {
         nl();
         nl();
         prt(7, "You don't have that much time in the account!");
@@ -95,8 +95,8 @@ void remove_time()
         return;
     }
     logtypes(2,"Withdrew 3%d0 minutes.", minutes);
-    sess.user.extratime += (float)(minutes * 60);
-    sess.user.timebank -= minutes;
+    sess.user.set_extratime(sess.user.extratime() + (float)(minutes * 60));
+    sess.user.set_timebank(sess.user.timebank() - minutes);
     nl();
     nl();
     npr("4%d minute%c withdrawn.", minutes,((minutes > 1) ? 's' :0));
@@ -115,7 +115,7 @@ void bank2(int limit)
         dtitle("Dominion Time Bank");
         nl();
         tleft(0);
-        npr("0Time in Bank: 5%d\r\n",sess.user.timebank);
+        npr("0Time in Bank: 5%d\r\n",sess.user.timebank());
         npr("0Bank Limit  : 5%d\r\n",limit);
         nl();
         outstr(get_string(72));
@@ -129,7 +129,7 @@ void bank2(int limit)
             add_time(limit);
             break;
         case 'W':
-            if(sess.user.restrict & restrict_timebank) {
+            if(sess.user.restrict_flags() & restrict_timebank) {
                 nl();
                 pl(get_string(53));
                 nl();

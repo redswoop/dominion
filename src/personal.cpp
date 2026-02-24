@@ -5,13 +5,14 @@
 #include "bbs_ui.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
 #include "file2.h"
 #include "config.h"
-#include "utility1.h"
+#include "shortmsg.h"
 #include "stringed.h"
 #include "session.h"
 #include "userdb.h"
@@ -23,14 +24,12 @@
 #pragma hdrstop
 
 
-void change_colors(userrec *u1)
+void change_colors(User& u1)
 {
     auto& sys = System::instance();
     int i,done,i1,i2;
     char s[MAX_PATH_LEN],ch,nc,*ss,s1[MAX_PATH_LEN];
-    userrec u;
 
-    u=*u1;
     done=0;
     do {
         outchr(12);
@@ -41,7 +40,7 @@ void change_colors(userrec *u1)
         else if(!ss[0]) done=1;
         else {
             i=atoi(ss);
-            if (u.sysstatus & sysstatus_color)  {
+            if (u1.sysstatus() & sysstatus_color)  {
                 color_list();
                 ansic(0);
                 nl();
@@ -58,16 +57,16 @@ void change_colors(userrec *u1)
                 nl();
                 prt(5,"Inversed? ");
                 if (yn()) {
-                    if ((u.colors[1] & 0x70) == 0)
-                        nc=0 | ((u.colors[1] & 0x07) << 4);
+                    if ((u1.colors()[1] & 0x70) == 0)
+                        nc=0 | ((u1.colors()[1] & 0x07) << 4);
                     else
-                        nc=(u.colors[1] & 0x70);
+                        nc=(u1.colors()[1] & 0x70);
                 } 
                 else {
-                    if ((u.colors[1] & 0x70) == 0)
-                        nc=0 | (u.colors[1] & 0x07);
+                    if ((u1.colors()[1] & 0x70) == 0)
+                        nc=0 | (u1.colors()[1] & 0x07);
                     else
-                        nc=((u.colors[1] & 0x70) >> 4);
+                        nc=((u1.colors()[1] & 0x70) >> 4);
                 }
             }
             prt(5,"Intensified? ");
@@ -87,7 +86,7 @@ void change_colors(userrec *u1)
                 if(io.colblock)
                     sys.nifty.defaultcol[i]=nc;
                 else {
-                    u.colors[i]=nc;
+                    u1.colors_mut()[i]=nc;
                 }
             } 
             else {
@@ -96,8 +95,6 @@ void change_colors(userrec *u1)
         }
     } 
     while ((!done) && (!io.hangup));
-
-    *u1=u;
 }
 
 
@@ -106,25 +103,25 @@ void print_cur_stat()
     auto& sys = System::instance();
     auto& sess = Session::instance();
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[MAX_PATH_LEN];
-    userrec ur;
+    User ur;
 
     outchr(12);
     dtitle("Preferences");
 
     npr("0Screen size       : %d X %d\r\n",
-    sess.user.screenchars,
-    sess.user.screenlines);
+    sess.user.screenchars(),
+    sess.user.screenlines());
 
-    if(sess.user.sysstatus & sysstatus_avatar) strcpy(s,"Avatar ");
+    if(sess.user.sysstatus() & sysstatus_avatar) strcpy(s,"Avatar ");
     else
-        if(sess.user.sysstatus & sysstatus_ansi) strcpy(s,"Ansi ");
+        if(sess.user.sysstatus() & sysstatus_ansi) strcpy(s,"Ansi ");
     else strcpy(s,"Ascii");
-    if(sess.user.sysstatus & sysstatus_color) strcat(s,"Colour");
+    if(sess.user.sysstatus() & sysstatus_color) strcat(s,"Colour");
     else strcat(s,"Mono");
 
     npr("Graphics          : %s\r\n",s);
     npr("Help Level        : ");
-    switch(sess.user.helplevel) {
+    switch(sess.user.helplevel()) {
     case 0: 
         pl("Expert"); 
         break;
@@ -135,36 +132,36 @@ void print_cur_stat()
         pl("Idiot"); 
         break;
     }
-    npr("Comment           : %s\r\n",sess.user.comment);
+    npr("Comment           : %s\r\n",sess.user.comment());
     npr("Pause on screen   : %s\r\n",
-    (sess.user.sysstatus & sysstatus_pause_on_page)?"On":"Off");
+    (sess.user.sysstatus() & sysstatus_pause_on_page)?"On":"Off");
     outstr("Mailbox           : ");
-    if ((sess.user.forwardusr==0))
+    if ((sess.user.forwardusr()==0))
         pl("Normal");
     else {
         {
-            if (sess.user.forwardusr==255) {
+            if (sess.user.forwardusr()==255) {
                 pl("Closed");
             } 
             else {
-                userdb_load(sess.user.forwardusr,&ur);
-                if (ur.inact & inact_deleted) {
-                    sess.user.forwardusr=0;
+                { auto p = UserDB::instance().get(sess.user.forwardusr()); if (p) ur = *p; }
+                if (ur.inact() & inact_deleted) {
+                    sess.user.set_forwardusr(0);
                     pl("Normal");
                 } 
                 else {
-                    sprintf(s,"Forward to %s",nam(&ur,sess.user.forwardusr));
+                    sprintf(s,"Forward to %s",ur.display_name(sess.user.forwardusr()).c_str());
                     pl(s);
                 }
             }
         }
     }
-    npr("Default Protocol  : %s\r\n",sys.proto[sess.user.defprot].description);
-    npr("File List Format  : Type %d\r\n",sess.user.flisttype);
-    npr("Hotkeys           : %s\r\n",(sess.user.sysstatus & sysstatus_fullline)?"No":"Yes");
+    npr("Default Protocol  : %s\r\n",sys.proto[sess.user.defprot()].description);
+    npr("File List Format  : Type %d\r\n",sess.user.flisttype());
+    npr("Hotkeys           : %s\r\n",(sess.user.sysstatus() & sysstatus_fullline)?"No":"Yes");
 
     nl();
-    if(sess.user.helplevel==2) pausescr();
+    if(sess.user.helplevel()==2) pausescr();
 }
 
 
@@ -199,7 +196,7 @@ char *describe(char col)
     char s1[MAX_PATH_LEN];
 
 
-    if (sess.user.sysstatus & sysstatus_color) {
+    if (sess.user.sysstatus() & sysstatus_color) {
         strcpy(s1,cn(col&0x07));
         sprintf(s,"%s on %s", s1, cn((col>>4)&0x07));
     } 
@@ -265,22 +262,22 @@ void config_qscan(int dl)
                 on=-1;
             for (i=0; dl?sess.udir[i].subnum!=-1:sess.usub[i].subnum!=-1; i++)
                 if(!dl)
-                    togglenws(i,&sess.user,on);
+                    togglenws(i,sess.user,on);
                 else
-                    sess.user.nscn[i]=on;
+                    sess.user.nscn_mut()[i]=on;
         } else if (atoi(s))
             for (i=0; dl?i<MAX_DIRS:i<MAX_SUBS; i++) {
                 if(!dl) {
                     if (strcmp(sess.usub[i].keys,s)==0) {
-                        on=inscan(i,&sess.user);
-                        togglenws(i,&sess.user,!on);
+                        on=inscan(i,sess.user);
+                        togglenws(i,sess.user,!on);
                     }
                 } else {
                     if (strcmp(sess.udir[i].keys,s)==0) {
-                        if(sess.user.nscn[sess.udir[i].subnum]<0)
-                            sess.user.nscn[sess.udir[i].subnum]=0;
+                        if(sess.user.nscn()[sess.udir[i].subnum]<0)
+                            sess.user.nscn_mut()[sess.udir[i].subnum]=0;
                         else
-                            sess.user.nscn[sess.udir[i].subnum]=-1;
+                            sess.user.nscn_mut()[sess.udir[i].subnum]=-1;
                     }
                 }
             }
@@ -320,16 +317,16 @@ void make_macros()
     do {
         outchr(12);
         pl("Ctrl-A macro: ");
-        list_macro(&(sess.user.macros[2][0]));
+        list_macro(sess.user.macro_mut(2));
         nl();
         pl("Ctrl-D macro: ");
-        list_macro(&(sess.user.macros[0][0]));
+        list_macro(sess.user.macro_mut(0));
         nl();
         pl("Ctrl-F macro: ");
-        list_macro(&(sess.user.macros[1][0]));
+        list_macro(sess.user.macro_mut(1));
         nl();
         pl("Ctrl-Y macro: ");
-        list_macro(&(sess.user.macros[3][0]));
+        list_macro(sess.user.macro_mut(3));
         nl();
         outstr("5Macro Editor 0(3A,D,F,Y,Q=Quit0)5 : ");
         ch=onek("QADFY");
@@ -339,8 +336,8 @@ void make_macros()
             else if(ch=='A') i1=2;
             else if(ch=='D') i1=0;
             else if(ch=='F') i1=1;
-            strcpy(s,&(sess.user.macros[i1][0]));
-            sess.user.macros[i1][0]=0;
+            strcpy(s, sess.user.macro_mut(i1));
+            sess.user.macro_mut(i1)[0]=0;
             done1=0;
             i=0;
             nl();
@@ -385,13 +382,13 @@ void make_macros()
             nl();
             prt(5,"Is this OK? ");
             if (yn()) {
-                strcpy(&(sess.user.macros[i1][0]),tempmac);
+                strcpy(sess.user.macro_mut(i1),tempmac);
                 nl();
                 pl("Macro saved.");
             } 
             else {
                 nl();
-                strcpy(&(sess.user.macros[i1][0]),s);
+                strcpy(sess.user.macro_mut(i1),s);
                 pl("Nothing saved.");
             }
         }
@@ -414,7 +411,7 @@ void input_pw1()
         outstr(": ");
         io.echo=0;
         input(s,19);
-        if (strcmp(s,sess.user.pw)) {
+        if (strcmp(s,sess.user.password())) {
             nl();
             pl("Incorrect.");
             nl();
@@ -440,7 +437,7 @@ void input_pw1()
                 nl();
             } 
             else {
-                strcpy(sess.user.pw,s);
+                sess.user.set_password(s);
                 nl();
                 pl("Password changed.");
                 nl();
@@ -469,13 +466,13 @@ void modify_mailbox()
     if (yn()) {
         prt(5,"Are you sure? ");
         if (yn()) {
-            sess.user.forwardusr=-1;
+            sess.user.set_forwardusr((unsigned short)-1);
             return;
         }
     }
     prt(5,"Do you want to forward your mail? ");
     if (!yn()) {
-        sess.user.forwardusr=0;
+        sess.user.set_forwardusr(0);
         return;
     }
     nl();
@@ -485,14 +482,14 @@ void modify_mailbox()
     input(s,40);
     i=finduser1(s);
     if (i==sess.usernum) {
-        sess.user.forwardusr=0;
+        sess.user.set_forwardusr(0);
         nl();
         pl("Forwarding reset.");
         nl();
         return;
     }
     if (i>0) {
-        sess.user.forwardusr=i;
+        sess.user.set_forwardusr(i);
         nl();
         pl("Saved.");
         nl();
@@ -533,10 +530,10 @@ void getfileformat()
     nl();
     outstr(get_string(79));
     input(s,3);
-    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')&&!strchr(s,'A')) sess.user.flisttype=atoi(s);
-    else if(!s[0]) { 
-        sess.user.flisttype=1; 
-        return; 
+    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')&&!strchr(s,'A')) sess.user.set_flisttype(atoi(s));
+    else if(!s[0]) {
+        sess.user.set_flisttype(1);
+        return;
     }
     else if(strchr(s,'A')) {
         outchr(12);
@@ -545,7 +542,10 @@ void getfileformat()
         npr("3Enter Your File Format\r\n5:0 ");
         inli(s,s1,81,1);
         if(s[0]) {
-            stuff_in1(s1,s,"Dom30a  .Zip","Dominion BBS 3.0"," 300","   0","  1",nam(&sess.user,sess.usernum),date(),"100","00:14:26","");
+            char dname[64];
+            strncpy(dname, sess.user.display_name(sess.usernum).c_str(), 63);
+            dname[63] = 0;
+            stuff_in1(s1,s,"Dom30a  .Zip","Dominion BBS 3.0"," 300","   0","  1",dname,date(),"100","00:14:26","");
             npr("%s\r\n\r\n",s1);
             outstr("5Is this what you want? ");
             if(ny()) {
@@ -569,51 +569,48 @@ void getfileformat()
                 s1[ch]=0;
                 fprintf(f,"%c%s\n",i+1,s1);
                 fprintf(f,"%c%s\n",i1+1,s1);
-                sprintf(s,"Added by: %s on %s\n",nam(&sess.user,sess.usernum),date());
+                sprintf(s,"Added by: %s on %s\n",sess.user.display_name(sess.usernum).c_str(),date());
                 fputs(s,f);
                 fclose(f);
-                sess.user.flisttype=c;
+                sess.user.set_flisttype(c);
                 logtypes(2,"Added File Format: 4%d",c);
             }
         }
     }
-    if(!sess.user.flisttype) sess.user.flisttype=1;
+    if(!sess.user.flisttype()) sess.user.set_flisttype(1);
 }
 
-void setcolors(userrec *uu)
+void setcolors(User& uu)
 {
     auto& sys = System::instance();
-    userrec u;
     int i;
 
-    u=*uu;
-    if(u.sysstatus &  sysstatus_color) {
+    if(uu.sysstatus() &  sysstatus_color) {
         for(i=0;i<20;i++)
-            u.colors[i]=sys.nifty.defaultcol[i];
-    } 
-    else {
-        u.colors[0]=15;
-        u.colors[1]=7;
-        u.colors[2]=7;
-        u.colors[3]=15;
-        u.colors[4]=15;
-        u.colors[5]=7;
-        u.colors[6]=16*7;
-        u.colors[7]=15;
-        u.colors[8]=143;
-        u.colors[9]=15;
-        u.colors[10]=16*7;
-        u.colors[11]=7;
-        u.colors[12]=15;
-        u.colors[13]=7;
-        u.colors[14]=15;
-        u.colors[15]=7;
-        u.colors[16]=143;
-        u.colors[17]=16*7;
-        u.colors[18]=143;
-        u.colors[19]=7;
+            uu.colors_mut()[i]=sys.nifty.defaultcol[i];
     }
-    *uu=u;
+    else {
+        uu.colors_mut()[0]=15;
+        uu.colors_mut()[1]=7;
+        uu.colors_mut()[2]=7;
+        uu.colors_mut()[3]=15;
+        uu.colors_mut()[4]=15;
+        uu.colors_mut()[5]=7;
+        uu.colors_mut()[6]=16*7;
+        uu.colors_mut()[7]=15;
+        uu.colors_mut()[8]=143;
+        uu.colors_mut()[9]=15;
+        uu.colors_mut()[10]=16*7;
+        uu.colors_mut()[11]=7;
+        uu.colors_mut()[12]=15;
+        uu.colors_mut()[13]=7;
+        uu.colors_mut()[14]=15;
+        uu.colors_mut()[15]=7;
+        uu.colors_mut()[16]=143;
+        uu.colors_mut()[17]=16*7;
+        uu.colors_mut()[18]=143;
+        uu.colors_mut()[19]=7;
+    }
 }
 
 
@@ -623,17 +620,10 @@ void input_ansistat()
     int i,c,c2;
     char ch;
 
-    if(sess.user.sysstatus & sysstatus_ansi)
-        togglebit((long *)&sess.user.sysstatus,sysstatus_ansi);
-
-    if(sess.user.sysstatus & sysstatus_color)
-        togglebit((long *)&sess.user.sysstatus,sysstatus_color);
-
-    if(sess.user.sysstatus & sysstatus_avatar)
-        togglebit((long *)&sess.user.sysstatus,sysstatus_avatar);
-
-    if(sess.user.sysstatus & sysstatus_rip)
-        togglebit((long *)&sess.user.sysstatus,sysstatus_rip);
+    sess.user.set_sysstatus_flag(sysstatus_ansi, false);
+    sess.user.set_sysstatus_flag(sysstatus_color, false);
+    sess.user.set_sysstatus_flag(sysstatus_avatar, false);
+    sess.user.set_sysstatus_flag(sysstatus_rip, false);
 
     nl();
 
@@ -649,21 +639,21 @@ void input_ansistat()
 
     if (yn()) {
         nl();
-        sess.user.sysstatus |= sysstatus_ansi;
+        sess.user.set_sysstatus_flag(sysstatus_ansi, true);
         outstr("Do you want color? ");
         if (ny())
-            togglebit((long *)&sess.user.sysstatus,sysstatus_color);
+            sess.user.set_sysstatus_flag(sysstatus_color, true);
         ansic(0);
         nl();
         outstr("Do you want Avatar? (No if unsure): ");
         if(yn())
-            togglebit((long *)&sess.user.sysstatus,sysstatus_avatar);
+            sess.user.set_sysstatus_flag(sysstatus_avatar, true);
         nl();
         outstr("Do you want RIPscript support? ");
         if(yn())
-            togglebit((long *)&sess.user.sysstatus,sysstatus_rip);
+            sess.user.set_sysstatus_flag(sysstatus_rip, true);
     }
-    setcolors(&sess.user);
+    setcolors(sess.user);
 }
 
 void selecthelplevel()
@@ -677,14 +667,14 @@ void selecthelplevel()
     c=onek("ERI\r");
     switch(c) {
     case 'R':
-    case '\r': 
-        sess.user.helplevel=1; 
+    case '\r':
+        sess.user.set_helplevel(1);
         break;
-    case 'E': 
-        sess.user.helplevel=0; 
+    case 'E':
+        sess.user.set_helplevel(0);
         break;
-    case 'I': 
-        sess.user.helplevel=2; 
+    case 'I':
+        sess.user.set_helplevel(2);
         break;
     }
     ansic(0);
@@ -724,11 +714,11 @@ void getmsgformat()
     nl();
     outstr(get_string(79));
     input(s,3);
-    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')) sess.user.mlisttype=atoi(s);
-    else if(!s[0]) { 
-        sess.user.mlisttype=1;
-        return; 
+    if(s[0]&&atoi(s)<c&&!strchr(s,'Q')) sess.user.set_mlisttype(atoi(s));
+    else if(!s[0]) {
+        sess.user.set_mlisttype(1);
+        return;
     }
 
-    if(!sess.user.mlisttype) sess.user.mlisttype=1;
+    if(!sess.user.mlisttype()) sess.user.set_mlisttype(1);
 }

@@ -7,6 +7,7 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
@@ -244,16 +245,16 @@ void init(int show)
         cJSON_Delete(st_root);
     }
     sys.status.wwiv_version=wwiv_num_version;
-    userdb_init(sys.cfg.datadir, sys.cfg.maxusers);
+    UserDB::instance().init(sys.cfg.datadir, sys.cfg.maxusers);
     menudb_init(sys.cfg.menudir);
-    sys.status.users = userdb_user_count();
+    sys.status.users = UserDB::instance().user_count();
 
-    sess.screensave.scrn1=(char *)mallocx(io.screenlen);
+    sess.screensave.scrn1=(char *)malloca(io.screenlen);
 
     read_in_file("mnudata.dat",(sys.menus),50);
 
-    sys.subboards=(subboardrec *) mallocx(200*sizeof(subboardrec));
-    sys.directories=(directoryrec *)mallocx(200*sizeof(directoryrec));
+    sys.subboards=(subboardrec *) malloca(200*sizeof(subboardrec));
+    sys.directories=(directoryrec *)malloca(200*sizeof(directoryrec));
     if(!sys.restoring_shrink&&!show)
         dotopinit("config.dat",40);
 
@@ -346,9 +347,9 @@ void init(int show)
             close(f);
           }*/
 
-    userdb_load(1,&sess.user);
+    { auto __p = UserDB::instance().get(1); if (__p) sess.user = *__p; };
     sess.cursub=0;
-    sess.fwaiting=numwaiting(&sess.user);
+    sess.fwaiting=numwaiting(sess.user);
 
     sl1(2,sys.status.date1);
 

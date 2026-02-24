@@ -13,7 +13,7 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "bbsutl.h"
-#include "bbsutl2.h"
+#include "sysoplog.h"
 #include "disk.h"
 #include "utility.h"
 #include "session.h"
@@ -21,6 +21,7 @@
 #include "terminal_bridge.h"
 #include "stream_processor.h"
 #include "ansi_attr.h"
+#include "stringed.h"
 #include "misccmd.h"
 
 #pragma hdrstop
@@ -76,14 +77,14 @@ void ansic(int n)
     if(io.colblock)
         c=sys.nifty.defaultcol[n];
     else
-        c = sess.user.colors[n];
+        c = sess.user.colors()[n];
 
     if (c == io.curatr) return;
 
     setc(c);
 
     if (okansi())
-        makeansi(sess.user.colors[0],io.endofline, io.curatr);
+        makeansi(sess.user.colors()[0],io.endofline, io.curatr);
     else
         io.endofline[0] = 0;
 }
@@ -126,12 +127,12 @@ void stream_emit_char(unsigned char c)
         if (c == 12 && okansi()) outstrm("\x1b[0;1m");
         if (c == 10) {
             ++io.lines_listed;
-            if (((sysstatus_pause_on_page & sess.user.sysstatus)) &&
+            if (((sysstatus_pause_on_page & sess.user.sysstatus())) &&
                 (io.lines_listed >= io.screenlinest - 1) && !io.listing) {
                 pausescr();
                 io.lines_listed = 0;
             }
-            else if (((sysstatus_pause_on_message & sess.user.sysstatus)) &&
+            else if (((sysstatus_pause_on_message & sess.user.sysstatus())) &&
                 (io.lines_listed >= io.screenlinest - 1) && readms) {
                 pausescr();
                 io.lines_listed = 0;
@@ -149,13 +150,7 @@ void outchr(unsigned char c)
     if (io.global_handle && io.echo)
         global_char(c);
 
-    if (io.chatcall && !io.x_only && !(sys.cfg.sysconfig & sysconfig_no_beep))
-        setbeep(1);
-
     stream_putch(c);
-
-    if (io.chatcall)
-        setbeep(0);
 }
 
 
@@ -294,4 +289,111 @@ void restorel(char *cl, char *atr, char *xl, char *cc)
     }
     setc(*cc);
     strcpy(io.endofline, xl);
+}
+
+
+void checka(int *abort, int *next, int act)
+{
+    char ch,s[10];
+
+    while ((!empty()) && (!(*abort)) && (!io.hangup)) {
+        checkhangup();
+        ch=inkey();
+        io.lines_listed=0;
+        if(act&&ch!=32) {
+            *abort=1;
+            sprintf(s,";%c",ch);
+            io.charbufferpointer=1;
+            strcpy(io.charbuffer,&s[0]);
+        }
+        else
+            switch(ch) {
+        case 14:
+            *next=1;
+        case 3:
+        case 32:
+        case 24:
+            *abort=1;
+            pl(get_string(26));
+            break;
+        case 'P':
+        case 'p':
+        case 19:
+            ch=getkey();
+            break;
+        }
+    }
+}
+
+
+void pla(char *s, int *abort)
+{
+    int i,next;
+
+    i=0;
+    checkhangup();
+    if (io.hangup)
+        *abort=1;
+    checka(abort,&next,0);
+    while ((s[i]) && (!(*abort))) {
+        outchr(s[i++]);
+        checka(abort,&next,0);
+    }
+    if (!(*abort))
+        nl();
+}
+
+void mla(char *s, int *abort)
+{
+    int i,next,x,slen;
+
+    i=0;
+    checkhangup();
+    if (io.hangup)
+        *abort=1;
+    checka(abort,&next,1);
+
+    if(s[0]=='\xF1') {
+            dtitle(&s[1]);
+        return;
+    }
+
+    if(s[0]=='\x98') {
+                   printfile(&s[1]);
+        return;
+    }
+
+    if(s[0]=='\x96') {
+            i++;
+        slen=strlenc(s);
+        x=79;
+        x-=slen;
+        x/=2;
+        for(slen=0;slen<x-2;slen++)
+            outchr(' ');
+    }
+
+    while ((s[i]) && (!(*abort))) {
+        outchr(s[i++]);
+        checka(abort,&next,1);
+    }
+}
+
+
+void reprint()
+{
+    char xl[MAX_PATH_LEN], cl[MAX_PATH_LEN], atr[MAX_PATH_LEN], cc, ansistr_1[MAX_PATH_LEN];
+    int ansiptr_1;
+
+    ansiptr_1=io.ansiptr;
+    io.ansiptr=0;
+    io.ansistr[ansiptr_1]=0;
+    strcpy(ansistr_1,io.ansistr);
+
+    savel(cl, atr, xl, &cc);
+    nl();
+    restorel(cl, atr, xl, &cc);
+
+    strcpy(io.ansistr,ansistr_1);
+    io.ansiptr=ansiptr_1;
 }

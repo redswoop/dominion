@@ -59,4 +59,15 @@ int acs_check(const char *acs_string, const acs_context_t *ctx);
  * menu==1: display mode (respects 'C'). */
 int slok(char val[31],char menu);
 
+/* Permission checks by acs.dat index (0-15). */
+int checkacs(int w);
+
+/* Privilege checks — wrappers around checkacs/slok. */
+int so();   /* is sysop */
+int cs();   /* is co-sysop */
+int lcs();  /* is limited co-sysop */
+
+/* Sysop availability (time window + restrict_chat). */
+int sysop2();
+
 #endif /* _ACS_H_ */

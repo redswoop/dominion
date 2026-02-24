@@ -3,7 +3,7 @@
 
 #include "jammb.h"
 #include "vardec_msgfile.h"
-#include "vardec_user.h"
+#include "user.h"
 #include "vardec_types.h"
 
 void errorjam(void);
@@ -35,9 +35,9 @@ void nscan(int sb,int *next);
 void gnscan(void);
 void email(int u,char subject[MAX_PATH_LEN],int ask);
 void smail(char ms[MAX_PATH_LEN]);
-int findnextwaiting(int msgnum,int old,userrec *u);
+int findnextwaiting(int msgnum, int old, const User& u);
 int findwaiting(void);
-int numwaiting(userrec *u);
+int numwaiting(const User& u);
 int getnextword(char *buf,long len, long *pos,char *s);
 void quote_jam(char *buf,long len,hdrinfo *hdr);
 int findnextthread(int msgnum);

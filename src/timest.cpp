@@ -108,8 +108,8 @@ double nsl()
         xx=sys.cfg.sl[sess.actsl];
         tpl=((double) xx.time_per_logon) * 60.0;
         tpd=((double) xx.time_per_day) * 60.0;
-        tlc = tpl - tot + (sess.user.extratime) + sess.extratimecall;
-        tlt = tpd - tot - ((double) sess.user.timeontoday) + (sess.user.extratime);
+        tlc = tpl - tot + (sess.user.extratime()) + sess.extratimecall;
+        tlt = tpd - tot - ((double) sess.user.timeontoday()) + (sess.user.extratime());
 
         tlt=(((tlc)<(tlt)) ? (tlc) : (tlt));
         if (tlt<0.0)

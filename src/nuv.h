@@ -2,7 +2,9 @@
 #define _NUV_H_
 
 #include "vardec_types.h"
-#include "vardec_user.h"
+#ifdef __cplusplus
+#include "user.h"
+#endif
 
 typedef struct {
         int vote,
@@ -29,7 +31,9 @@ int num_nuv(char *fn);
 void read_nuv(unsigned int user, char *fn, nuvdata *newuser);
 void write_nuv(unsigned int user, char *fn, nuvdata *newuser);
 void del_nuv(unsigned int user);
-int enter_nuv(userrec tu,int un,int form);
+#ifdef __cplusplus
+int enter_nuv(const User& tu,int un,int form);
+#endif
 int avoted(unsigned int user);
 void print_nuv(nuvdata v);
 int vote_nuv(unsigned int user, nuvdata *resn,int *done1);

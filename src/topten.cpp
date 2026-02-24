@@ -33,7 +33,7 @@ char *sti(int i)
 void updtopten(void)
 {
     auto& sys = System::instance();
-    userrec u;
+    User u;
     int i,i1,stop,num_users;
     char s1[161],s2[161],s3[10],s4[10],sname[31],s[5][10][31],ch;
 
@@ -66,21 +66,21 @@ void updtopten(void)
         timeon_per_user[i] = 0;
     }
 
-    num_users = userdb_max_num();
+    num_users = UserDB::instance().max_id();
 
     for (i = 0; i < 5; i++)
         for (i1 = 0; i1 < 10; i1++)
             strcpy(s[i][i1], "None");
 
     for (i = 1; i <= num_users; i++) {
-        userdb_load(i, &u);
-        if(u.inact & inact_deleted)
+        { auto p = UserDB::instance().get(i); if (p) u = *p; else continue; }
+        if(u.inact() & inact_deleted)
             continue;
 
-        if (u.msgpost >= low_posts_on_list) {
+        if (u.msgpost() >= low_posts_on_list) {
             low_posts_on_list = posts_per_user[9];
             for (i1 = 0; i1 < 10; i1++)
-                if (u.msgpost >= posts_per_user[i1]) {
+                if (u.msgpost() >= posts_per_user[i1]) {
                     stop = i1;
                     i1 = 10;
                 }
@@ -89,14 +89,14 @@ void updtopten(void)
                     posts_per_user[i1-1];
                 strcpy(s[0][i1], s[0][i1-1]);
             }
-            posts_per_user[stop] = u.msgpost;
-            strcpy(s[0][stop], nam(&u,i));
+            posts_per_user[stop] = u.msgpost();
+            strcpy(s[0][stop], u.display_name(i).c_str());
         }
 
-        if (u.logons >= low_logons_on_list) {
+        if (u.logons() >= low_logons_on_list) {
             low_logons_on_list = logons_per_user[9];
             for (i1 = 0; i1 < 10; i1++)
-                if (u.logons >= logons_per_user[i1]) {
+                if (u.logons() >= logons_per_user[i1]) {
                     stop = i1;
                     i1 = 10;
                 }
@@ -105,14 +105,14 @@ void updtopten(void)
                     logons_per_user[i1-1];
                 strcpy(s[1][i1], s[1][i1-1]);
             }
-            logons_per_user[stop] = u.logons;
-            strcpy(s[1][stop], nam(&u,i));
+            logons_per_user[stop] = u.logons();
+            strcpy(s[1][stop], u.display_name(i).c_str());
         }
 
-        if (u.uk >= low_upk_on_list) {
+        if (u.uk() >= low_upk_on_list) {
             low_upk_on_list = up_k_per_user[9];
             for (i1 = 0; i1 < 10; i1++)
-                if (u.uk >= up_k_per_user[i1]&&u.uk>0) {
+                if (u.uk() >= up_k_per_user[i1]&&u.uk()>0) {
                     stop = i1;
                     i1 = 10;
                 }
@@ -121,15 +121,15 @@ void updtopten(void)
                     up_k_per_user[i1-1];
                 strcpy(s[2][i1], s[2][i1-1]);
             }
-            up_k_per_user[stop] = u.uk;
-            strcpy(s[2][stop], nam(&u,i));
+            up_k_per_user[stop] = u.uk();
+            strcpy(s[2][stop], u.display_name(i).c_str());
         }
 
 
-        if (u.dk >= low_dnk_on_list) {
+        if (u.dk() >= low_dnk_on_list) {
             low_dnk_on_list = dn_k_per_user[9];
             for (i1 = 0; i1 < 10; i1++)
-                if (u.dk >= dn_k_per_user[i1]&&u.dk>0) {
+                if (u.dk() >= dn_k_per_user[i1]&&u.dk()>0) {
                     stop = i1;
                     i1 = 10;
                 }
@@ -138,14 +138,14 @@ void updtopten(void)
                     dn_k_per_user[i1-1];
                 strcpy(s[3][i1], s[3][i1-1]);
             }
-            dn_k_per_user[stop] = u.dk;
-            strcpy(s[3][stop], nam(&u,i));
+            dn_k_per_user[stop] = u.dk();
+            strcpy(s[3][stop], u.display_name(i).c_str());
         }
 
-        if (u.timeon >= low_time_on_list) {
+        if (u.total_timeon() >= low_time_on_list) {
             low_time_on_list = timeon_per_user[9];
             for (i1 = 0; i1 < 10; i1++)
-                if (u.timeon >= timeon_per_user[i1]) {
+                if (u.total_timeon() >= timeon_per_user[i1]) {
                     stop = i1;
                     i1 = 10;
                 }
@@ -154,8 +154,8 @@ void updtopten(void)
                     timeon_per_user[i1-1];
                 strcpy(s[4][i1], s[4][i1-1]);
             }
-            timeon_per_user[stop] = u.timeon;
-            strcpy(s[4][stop], nam(&u,i));
+            timeon_per_user[stop] = u.total_timeon();
+            strcpy(s[4][stop], u.display_name(i).c_str());
         }
     }
 
@@ -174,7 +174,6 @@ void updtopten(void)
 char *topten(int type)
 {
     auto& sys = System::instance();
-    userrec u;
     int i,i1,stop,num_users,ok;
     char s1[161],s2[161],s3[10],s4[10],sname[31],s[5][10][31],ch;
     static char retstr[41];

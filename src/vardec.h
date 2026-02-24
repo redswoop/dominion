@@ -2,7 +2,7 @@
 #define _VARDEC_H_
 
 #include "vardec_types.h"
-#include "vardec_user.h"
+#include "user.h"
 #include "vardec_config.h"
 #include "vardec_msgfile.h"
 #include "vardec_ui.h"

@@ -6,6 +6,8 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "bbsutl.h"
+#include "sysoplog.h"
+#include "acs.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
@@ -48,14 +50,14 @@ int getcaller(void)
     sess.usernum=0;
     sys.wfc=0;
     hold=0;
-    userdb_load(1,&sess.user);
+    { auto __p = UserDB::instance().get(1); if (__p) sess.user = *__p; };
     sess.usernum=1;
     reset_act_sl();
     sess.cursub=0;
-    sess.fwaiting=numwaiting(&sess.user);
-    if (sess.user.inact & inact_deleted) {
-        sess.user.screenchars=80;
-        sess.user.screenlines=25;
+    sess.fwaiting=numwaiting(sess.user);
+    if (sess.user.inact() & inact_deleted) {
+        sess.user.set_screenchars(80);
+        sess.user.set_screenlines(25);
     }
     io.screenlinest=io.defscreenbottom+1;
     d=(1.0+timer()) / 102.723;
@@ -115,10 +117,10 @@ int getcaller(void)
                     }
                     if ((ch=='F') && (ok_local())) {
                         outs("Fast\r\n");
-                        userdb_load(1,&sess.user);
+                        { auto __p = UserDB::instance().get(1); if (__p) sess.user = *__p; };
                         reset_act_sl();
                         sess.com_speed=sess.modem_speed=sys.cfg.baudrate[sys.cfg.primaryport];
-                        if (sess.user.inact & inact_deleted) {
+                        if (sess.user.inact() & inact_deleted) {
                             out1ch(12);
                             break;
                         }
@@ -209,11 +211,11 @@ int getcaller(void)
                 if (ok_local()) {
                     clrscrb();
                     sess.usernum=1;
-                    if (sess.user.waiting) {
+                    if (sess.user.waiting()) {
                             sess.okskey=1;
                         readmailj(0,0);
                         sess.okskey=0;
-                        userdb_save(1,&sess.user);
+                        UserDB::instance().store(1, sess.user);
                         }
                 }
                 wfcs();
@@ -233,7 +235,7 @@ int getcaller(void)
                     post(sess.cursub=0);
                     sess.okskey=0;
                     sess.useron=0;
-                    userdb_save(1,&sess.user);
+                    UserDB::instance().store(1, sess.user);
                 }
                 wfcs();
                 break;
@@ -246,7 +248,7 @@ int getcaller(void)
                 if(!ok_local()) break;
                 clrscr();
                 sess.usernum=1;
-                userdb_load(1,&sess.user);
+                { auto __p = UserDB::instance().get(1); if (__p) sess.user = *__p; };
                 changedsl();
                 getcmdtype();
                 pausescr();
@@ -267,8 +269,8 @@ int getcaller(void)
             if (!incom) {
                 _setcursortype(0);
                 frequent_init();
-                userdb_load(1,&sess.user);
-                sess.fwaiting=numwaiting(&sess.user);
+                { auto __p = UserDB::instance().get(1); if (__p) sess.user = *__p; };
+                sess.fwaiting=numwaiting(sess.user);
                 reset_act_sl();
                 sess.usernum=1;
             }
@@ -331,12 +333,12 @@ void gotcaller(unsigned int ms, unsigned int cs)
         outcom=1;
         send_terminal_init(client_fd);
     }
-    userdb_load(1,&sess.user);
+    { auto __p = UserDB::instance().get(1); if (__p) sess.user = *__p; };
     reset_act_sl();
     sess.usernum=1;
-    if (sess.user.inact & inact_deleted) {
-        sess.user.screenchars=80;
-        sess.user.screenlines=25;
+    if (sess.user.inact() & inact_deleted) {
+        sess.user.set_screenchars(80);
+        sess.user.set_screenlines(25);
     }
     io.screenlinest=25;
     clrscrb();

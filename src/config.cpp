@@ -1068,13 +1068,13 @@ void acscfg(void)
 void defcoled()
 {
     int i;
-    userrec u;
+    User u;
 
     outchr(12);
-    userdb_load(1,&u);
+    { auto p = UserDB::instance().get(1); if (p) u = *p; }
 
     io.colblock=1;
-    change_colors(&u);
+    change_colors(u);
     io.colblock=0;
 }
 #endif

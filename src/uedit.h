@@ -1,12 +1,13 @@
 #ifndef _UEDIT_H_
 #define _UEDIT_H_
 
-#include "vardec_user.h"
+#include "user.h"
 
 void deluser(int un);
-void addtrash(userrec u);
-void print_data(int un, userrec *u,int lng);
+void addtrash(const User& u);
+void print_data(int un, const User& u, int lng);
 int usearch(int un,char val[41]);
 void uedit(int usern);
+void val_cur_user(int wait);
 
 #endif /* _UEDIT_H_ */

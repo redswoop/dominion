@@ -13,7 +13,6 @@
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
-#include "bbsutl2.h"
 #include "jam_bbs.h"
 #include "mm1.h"
 #include "stringed.h"
@@ -24,6 +23,7 @@
 #include "misccmd.h"
 #include "sysopf.h"
 #include "personal.h"
+#include "userdb.h"
 #pragma hdrstop
 
 #define FDEC
@@ -41,7 +41,7 @@ char *getfhead(int bot)
     static char s[161];
     FILE *ff;
 
-    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype);
+    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype());
     ff=fopen(s,"rt");
     if (!ff) { strcpy(s,""); return(s); }
 
@@ -64,11 +64,11 @@ int ratio_ok()
     int ok=1;
     char s[101];
 
-    if (!(sess.user.exempt & exempt_ratio)&&!checkacs(1))
+    if (!(sess.user.exempt() & exempt_ratio)&&!checkacs(1))
         ok=filer_ok();
 
     if(ok)
-        if (!(sess.user.exempt & exempt_post)&&checkacs(0))
+        if (!(sess.user.exempt() & exempt_post)&&checkacs(0))
             ok=postr_ok();
 
     return(ok);
@@ -81,9 +81,9 @@ int postr_ok()
     int ok=1;
     char s[101];
 
-    if(!sess.user.pcr) {
+    if(!sess.user.pcr()) {
 
-        if (!(sess.user.exempt & exempt_post))
+        if (!(sess.user.exempt() & exempt_post))
             if ((sys.cfg.post_call_ratio>0.0001) && (post_ratio()<sys.cfg.post_call_ratio)) {
                 ok=0;
                 nl();
@@ -94,12 +94,12 @@ int postr_ok()
             }
     } 
     else {
-        if (!(sess.user.exempt & exempt_post))
-            if ((sess.user.pcr>0.0001) && (post_ratio()<sess.user.pcr)) {
+        if (!(sess.user.exempt() & exempt_post))
+            if ((sess.user.pcr()>0.0001) && (post_ratio()<sess.user.pcr())) {
                 ok=0;
                 nl();
                 sprintf(s,"Your post/call ratio is %-5.3f.  You need a ratio of %-5.3f to download.",
-                post_ratio(), sess.user.pcr);
+                post_ratio(), sess.user.pcr());
                 pl(s);
                 nl();
             }
@@ -112,7 +112,7 @@ int filer_ok()
 {
     auto& sys = System::instance();
     auto& sess = Session::instance();
-    if(!sess.user.ratio) {
+    if(!sess.user.ul_dl_ratio()) {
         if ((sys.cfg.req_ratio>0.0001) && (ratio()<sys.cfg.req_ratio)) {
             nl();
             npr("Your File ratio is %-5.3f.  You need a ratio of %-5.3f to download.\r\n",
@@ -123,10 +123,10 @@ int filer_ok()
         return 1;
     } 
     else {
-        if ((sess.user.ratio>0.0001) && (ratio()<sess.user.ratio)) {
+        if ((sess.user.ul_dl_ratio()>0.0001) && (ratio()<sess.user.ul_dl_ratio())) {
             nl();
             npr("Your File ratio is %-5.3f.  You need a ratio of %-5.3f to download.\r\n",
-            ratio(), sess.user.ratio);
+            ratio(), sess.user.ul_dl_ratio());
             nl();
             return 0;
         }
@@ -137,7 +137,7 @@ int filer_ok()
 
 int dcs() {
     auto& sess = Session::instance();
-    if (sess.user.dsl>=100)
+    if (sess.user.dsl()>=100)
         return(1);
     else
         return(0);
@@ -490,7 +490,7 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
         }
 
         if(ok)
-            if((sess.num_listed+count_extended(u.filename))>sess.user.screenlines-6) {
+            if((sess.num_listed+count_extended(u.filename))>sess.user.screenlines()-6) {
                 if(!nonstop) {
                     if(!pauseline(1,abort))
                         topofpage=i+1;
@@ -519,7 +519,7 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
         }
 
         if(!nonstop)
-        if(sess.num_listed>sess.user.screenlines-6) {
+        if(sess.num_listed>sess.user.screenlines()-6) {
             if(!pauseline(1,abort))
                 topofpage=i+1;
             else
@@ -619,7 +619,7 @@ void nscanall()
     setformat();
     for (sess.curdir=0; (sess.curdir<200) && (!abort) && (sess.udir[sess.curdir].subnum!=-1) && !io.hangup; sess.curdir++) {
         i1=sess.udir[sess.curdir].subnum;
-        if (sess.user.nscn[i1]>=0)
+        if (sess.user.nscn()[i1]>=0)
             num+=nscandir(sess.curdir,&abort,1,&next);
     }
     if (!abort) {
@@ -685,7 +685,7 @@ int checkdl(uploadsrec u,int dn)
     auto& sess = Session::instance();
     double t;
     char s[MAX_PATH_LEN];
-    userrec us;
+    User us;
 
     tleft(1);
 
@@ -697,7 +697,7 @@ int checkdl(uploadsrec u,int dn)
     if(sess.modem_speed)
         t=((double) (((u.numbytes)+127)/128)) * (1620.0)/((double) (sess.modem_speed));
 
-    if(t>nsl()&&!dcs()&&!(sess.user.exempt & exempt_time)&&!checkacs(3)) {
+    if(t>nsl()&&!dcs()&&!(sess.user.exempt() & exempt_time)&&!checkacs(3)) {
         pl(get_string(87));
         printfile("nodl");
         return 0;
@@ -711,7 +711,7 @@ int checkdl(uploadsrec u,int dn)
         return 0;
     }
 
-    if(!u.ats[0] && !dcs() /*&& !(sess.user.exempt & exempt_dlvalfile)*/&&!checkacs(11)) {
+    if(!u.ats[0] && !dcs() /*&& !(sess.user.exempt() & exempt_dlvalfile)*/&&!checkacs(11)) {
         npr("%s",get_string(43));
         return 0;
     }
@@ -723,9 +723,9 @@ int checkdl(uploadsrec u,int dn)
 
 
     if(!(sys.directories[dn].mask & mask_no_ratio)) {
-        if(!dcs()&&!(sess.user.exempt & exempt_ratio)&&!checkacs(2)) {
+        if(!dcs()&&!(sess.user.exempt() & exempt_ratio)&&!checkacs(2)) {
             if(sys.nifty.nifstatus & nif_fpts)
-                if(sess.user.fpts*sys.nifty.fptsratio<u.points) {
+                if(sess.user.fpts()*sys.nifty.fptsratio<u.points) {
                     nl();
                     npr("%s",get_string(27));
                     printfile("nodl");
@@ -829,7 +829,7 @@ void setformat()
     char s[161],s1[161];
     int i=0;
 
-    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype);
+    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype());
     ff=fopen(s,"rt");
     fgets(sess.filelistformat,99,ff);
     filter(sess.filelistformat,'\n');

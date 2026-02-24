@@ -5,12 +5,10 @@
 #include "bbs_ui.h"
 #include "conio.h"
 #include "bbsutl.h"
-#include "bbsutl2.h"
 #include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
 #include "config.h"
-#include "utility1.h"
 #include "stringed.h"
 #include "session.h"
 #include "system.h"
@@ -50,7 +48,7 @@ void replyj(int sb,int msgnum);
 void addLastRead(int num);
 void saveLastRead(void);
 void post(int sb);
-int findnextwaiting(int msgnum,int old,userrec *u);
+int findnextwaiting(int msgnum,int old,const User& u);
 int findnextthread(int msgnum);
 int findlastthread(int msgnum);
 void quote_jam(char *buf,long len,hdrinfo *hdr);
@@ -186,12 +184,12 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
             if ((printit) || (ansi) || (p>=80)) {
                 printit=0;
                 if (centre ) {
-                    i1=(sess.user.screenchars-wherex()-p1)/2;
+                    i1=(sess.user.screenchars()-wherex()-p1)/2;
                     for (i=0; (i<i1) && (!abort) && (!io.hangup); i++)
                         osan(" ",&abort,next);
                 }
                 if (p) {
-                    if ((wherex() + p1 >= sess.user.screenchars) && (!centre) && (!ansi))
+                    if ((wherex() + p1 >= sess.user.screenchars()) && (!centre) && (!ansi))
                         nl();
                     s[p]=0;
                     outstr(s);
@@ -320,11 +318,11 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
 
     sess.curlsub=sess.usub[sb].subnum;
 
-    strcpy(s,sess.user.realname);
+    strcpy(s,sess.user.realname());
     strlwr(s);
     ucrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
-    strcpy(s,pnam(&sess.user));
+    strcpy(s,sess.user.display_name().c_str());
     strlwr(s);
     hcrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
@@ -362,7 +360,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             if(disp) {
                 JAMmbFetchMsgHdr(&sys.JamRec, msgnum,0);
                 getjamhdr(&hdr);
-                if(stristr(hdr.subject,findtitle)==NULL)
+                if(strcasestr(hdr.subject,findtitle)==NULL)
                     disp=0;
                 else
                     disp=1;
@@ -418,7 +416,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             if(!is_private)
                 msgnum++;
             else
-                msgnum=findnextwaiting(msgnum,1,&sess.user);
+                msgnum=findnextwaiting(msgnum,1,sess.user);
             if(!msgnum)
                 done=1;
             disp=1;
@@ -448,13 +446,13 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             *nextsub=0;
         }
         else if(s[0]=='Z') {
-            i=inscan(sb,&sess.user);
+            i=inscan(sb,sess.user);
             if(i) {
                 pl("Removing `B from Newscan");
-                togglenws(sb,&sess.user,0);
+                togglenws(sb,sess.user,0);
             } else {
                 pl("Adding `B to Newscan");
-                togglenws(sb,&sess.user,1);
+                togglenws(sb,sess.user,1);
             }
         } 
         else if(s[0]=='@') {
@@ -501,7 +499,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             done=1;
             npr("5Kill %s from Newscan? ",sys.subboards[sess.curlsub].name);
             if(yn())
-                sess.user.qscn[sess.curlsub]=-1;*/
+                sess.user.qscn()[sess.curlsub]=-1;*/
             pl("This command is temporarily disabled cause glenn keeps crashing my board");
         }
         else if(s[0]=='K') {
@@ -552,9 +550,9 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
                 JAMmbFetchMsgHdr(&sys.JamRec, msgnum,0);
                 getjamhdr(&hdr);
 
-                if(!stricmp(sess.user.name,hdr.who_from)||!stricmp(sess.user.realname,hdr.who_from))
+                if(!stricmp(sess.user.name(),hdr.who_from)||!stricmp(sess.user.realname(),hdr.who_from))
                     sprintf(s,"3[3%d3] ",msgnum);
-                else if(!stricmp(sess.user.name,hdr.who_to)||!stricmp(sess.user.realname,hdr.who_to))
+                else if(!stricmp(sess.user.name(),hdr.who_to)||!stricmp(sess.user.realname(),hdr.who_to))
                     sprintf(s,"6[2%d6] ",msgnum);
                 else
                     sprintf(s,"1(1%d1) ",msgnum);
@@ -632,7 +630,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
     char *lin, *b;
     int real_name=0,fsed=0,anony=0;
     hdrinfo hdr;
-    userrec u;
+    User u;
     addressrec add;
     originrec o;
 
@@ -693,8 +691,8 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
                     if(result==2)
                         outstr("[A\r");
                     strcpy(ro,&(lin[(curli)*LEN]));
-                    if(strlen(ro)>sess.user.screenchars-1)
-                        ro[sess.user.screenchars-2]=0;
+                    if(strlen(ro)>sess.user.screenchars()-1)
+                        ro[sess.user.screenchars()-2]=0;
                 }
             }
 
@@ -737,7 +735,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
                                     --i5;
                                 else
                                     ++i5;
-                            for (i4=0; (i4<(sess.user.screenchars-i5)/2) && (!i2); i4++)
+                            for (i4=0; (i4<(sess.user.screenchars()-i5)/2) && (!i2); i4++)
                                 osan(" ",&i2,&i1);
                         }
                         pla(s1,&i2);
@@ -878,14 +876,14 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
 
 
     if(real_name)
-        strcpy(hdr.who_from,sess.user.realname);
+        strcpy(hdr.who_from,sess.user.realname());
     else if(anony)
         strcpy(hdr.who_from,"Anonymous");
     else
-        strcpy(hdr.who_from,pnam(&sess.user));
+        strcpy(hdr.who_from,sess.user.display_name().c_str());
 
     if(!anony)
-        strcpy(hdr.comment,sess.user.comment);
+        strcpy(hdr.comment,sess.user.comment());
     else
         strcpy(hdr.comment,"I am Ambiguous");
 
@@ -943,7 +941,7 @@ int okpost(void)
         return 0;
     }
 
-    if ((restrict_post & sess.user.restrict) || (sess.user.posttoday>=sys.cfg.sl[sess.actsl].posts)) {
+    if ((restrict_post & sess.user.restrict_flags()) || (sess.user.posttoday()>=sys.cfg.sl[sess.actsl].posts)) {
         nl();
         pl("Too many messages posted today.");
         nl();
@@ -958,7 +956,7 @@ int okpost(void)
     }
 
     if (sys.subboards[sess.curlsub].attr & mattr_fidonet) {
-        if (sess.user.restrict & restrict_net) {
+        if (sess.user.restrict_flags() & restrict_net) {
             nl();
             pl("You can't post on networked message areas.");
             nl();
@@ -1013,7 +1011,7 @@ int get_receiver(hdrinfo *hdr)
 {
     unsigned short i,i1;
     char s[MAX_PATH_LEN];
-    userrec u;
+    User u;
 
     inputdat("Receiver",s,41,1);
 
@@ -1029,7 +1027,7 @@ int get_receiver(hdrinfo *hdr)
             if(!s[0])
                 return 0;
             parseadd(s,&hdr->t);
-        } 
+        }
         else {
             i=atoi(s);
             if(!i) {
@@ -1037,8 +1035,8 @@ int get_receiver(hdrinfo *hdr)
                 if(!i)
                     return 1;
             }
-            userdb_load(i,&u);
-            strcpy(hdr->who_to,pnam(&u));
+            { auto p = UserDB::instance().get(i); if (p) u = *p; }
+            strcpy(hdr->who_to,u.display_name().c_str());
         }
     } 
     else {
@@ -1092,7 +1090,7 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
     char *b,s[MAX_PATH_LEN];
     long len;
     int i,save;
-    userrec u;
+    User u;
 
     sess.curlsub=sess.usub[sb].subnum;
 
@@ -1137,8 +1135,8 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
 
     free(b);
 
-    ++sess.user.msgpost;
-    ++sess.user.posttoday;
+    sess.user.set_msgpost(sess.user.msgpost() + 1);
+    sess.user.set_posttoday(sess.user.posttoday() + 1);
     ++sys.status.msgposttoday;
     save_status();
     topscreen();
@@ -1148,7 +1146,7 @@ void postjam(int sb,hdrinfo *hdr1,int usehdr)
 
     save_status();
     if ((sys.subboards[sess.curlsub].attr & mattr_fidonet)|| (sys.subboards[sess.curlsub].attr & mattr_netmail) ) {
-        ++sess.user.postnet;
+        sess.user.set_postnet(sess.user.postnet() + 1);
         i = open("DMRESCAN.NOW", O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
         close(i);
     }
@@ -1384,7 +1382,7 @@ void readmailj(int msgnum,int sb)
     if(!msgnum)
         msgnum++;
 
-    msgnum=findnextwaiting(msgnum,1,&sess.user);
+    msgnum=findnextwaiting(msgnum,1,sess.user);
 
     scanj(msgnum,&i,sb,1);
 }
@@ -1453,7 +1451,7 @@ void gnscan(void)
 
     pl(get_string(15));
     for(i=0;i<200&&sess.usub[i].subnum!=-1&&i<sess.umaxsubs&&!io.hangup&&next;i++) {
-        if(inscan(i,&sess.user)&&!(sys.subboards[sess.usub[i].subnum].attr & mattr_private))
+        if(inscan(i,sess.user)&&!(sys.subboards[sess.usub[i].subnum].attr & mattr_private))
             nscan(sess.cursub=sess.usub[i].subnum,&next);
     }
     pl(get_string(16));
@@ -1463,14 +1461,14 @@ void email(int u,char subject[MAX_PATH_LEN],int ask)
 {
     auto& sess = Session::instance();
     hdrinfo hdr;
-    userrec ur;
+    User ur;
 
-    userdb_load(u,&ur);
-    if ((ur.inact & inact_deleted))
+    { auto p = UserDB::instance().get(u); if (p) ur = *p; }
+    if ((ur.inact() & inact_deleted))
         return;
 
     if(ask) {
-        npr("5Send Mail to %s? ",nam(&ur,u));
+        npr("5Send Mail to %s? ",ur.display_name(u).c_str());
         if(!ny())
             return;
     }
@@ -1479,7 +1477,7 @@ void email(int u,char subject[MAX_PATH_LEN],int ask)
         strcpy(hdr.subject,subject);
     else
         hdr.subject[0]=0;
-    strcpy(hdr.who_from,pnam(&ur));
+    strcpy(hdr.who_from,ur.display_name().c_str());
 
     postjam(sess.cursub,&hdr,1);
 }
@@ -1507,18 +1505,18 @@ void smail(char ms[MAX_PATH_LEN])
         post(sess.cursub);
 }
 
-int findnextwaiting(int msgnum,int old,userrec *u)
+int findnextwaiting(int msgnum,int old,const User& u)
 {
     auto& sys = System::instance();
     int found=0;
     UINT32 ucrc,hcrc;
     char s[MAX_PATH_LEN];
 
-    strcpy(s,u->realname);
+    strcpy(s,u.realname());
     strlwr(s);
     ucrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
-    strcpy(s,pnam(u));
+    strcpy(s,u.display_name().c_str());
     strlwr(s);
     hcrc=JAMsysCrc32( s,strlen(s), ( UINT32 ) -1L );
 
@@ -1554,19 +1552,19 @@ int findwaiting(void)
     sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);
 
     JAMOpen(s);
-    i=findnextwaiting(0,0,&sess.user);
+    i=findnextwaiting(0,0,sess.user);
     JAMClose();
     return i;
 }
 
-int numwaiting(userrec *u)
+int numwaiting(const User& u)
 {
     auto& sys = System::instance();
     auto& sess = Session::instance();
     char s[MAX_PATH_LEN];
     int i=0,i1=0;
 
-    if(u->inact & inact_deleted)
+    if(u.inact() & inact_deleted)
         return 0;
 
     sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);

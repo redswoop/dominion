@@ -8,7 +8,8 @@
 cJSON *read_json_file(const char *path);
 int write_json_file(const char *path, cJSON *root);
 
-/* userrec serialization */
+/* userrec serialization — legacy, kept for C tools (mkconfig).
+ * BBS code uses User::to_json() / User::from_json() instead. */
 cJSON *userrec_to_json(userrec *u);
 void json_to_userrec(cJSON *j, userrec *u);
 
