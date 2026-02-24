@@ -15,12 +15,9 @@
 #include <cstring>
 #include <cctype>
 #include <unistd.h>
-#include <fcntl.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/stat.h>
-#include <algorithm>
 
 /* Max simultaneous sessions */
 static const int MAX_SESSIONS = 16;
@@ -91,107 +88,6 @@ KeyEvent translate_key(Session& s, unsigned char ch)
 }
 
 /* ================================================================== */
-/*  ANSI file sender                                                   */
-/* ================================================================== */
-
-void send_ansi_file(Terminal& t, const std::string& path)
-{
-    int fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) return;
-
-    struct stat st;
-    if (fstat(fd, &st) < 0) { close(fd); return; }
-
-    /* Read entire file and send byte by byte through remotePutch
-     * for CP437→UTF-8 conversion of art characters.
-     *
-     * CGA true-color fixup: After each SGR sequence, we track the
-     * resulting CGA attribute and inject true-color fg+bg overrides.
-     * This fixes two issues:
-     *   1. \033[0m resets bg to terminal default (not necessarily black)
-     *   2. \033[1;30m (intense black = dark grey) renders wrong on most
-     *      terminals that map bold+black to something other than CGA grey.
-     * Same approach as Terminal::setAttr() but applied to raw ANSI art.
-     * See terminal-rendering.md. */
-    size_t sz = (size_t)st.st_size;
-    std::vector<unsigned char> buf(sz);
-    ssize_t n = read(fd, buf.data(), sz);
-    close(fd);
-    if (n <= 0) return;
-
-    /* ANSI-to-CGA color map (same as clrlst in terminal.cpp executeAnsi):
-     * ANSI index 0-7 → CGA color number */
-    static const int ansi2cga[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };
-
-    /* State machine: parse SGR sequences, track CGA attr, inject true color */
-    enum { NORMAL, GOT_ESC, CSI_PARAMS } state = NORMAL;
-    std::vector<int> params;
-    int cur_param = 0;
-    bool have_digit = false;
-    unsigned char cga_attr = 0x07;  /* current CGA attribute — starts as light grey on black */
-
-    for (ssize_t i = 0; i < n; i++) {
-        unsigned char c = buf[i];
-
-        switch (state) {
-        case NORMAL:
-            t.remotePutch(c);
-            if (c == 0x1B) state = GOT_ESC;
-            break;
-
-        case GOT_ESC:
-            t.remotePutch(c);
-            if (c == '[') {
-                state = CSI_PARAMS;
-                params.clear();
-                cur_param = 0;
-                have_digit = false;
-            } else {
-                state = NORMAL;
-            }
-            break;
-
-        case CSI_PARAMS:
-            t.remotePutch(c);
-            if (c >= '0' && c <= '9') {
-                cur_param = cur_param * 10 + (c - '0');
-                have_digit = true;
-            } else if (c == ';') {
-                params.push_back(have_digit ? cur_param : 0);
-                cur_param = 0;
-                have_digit = false;
-            } else {
-                /* Final byte — sequence complete */
-                params.push_back(have_digit ? cur_param : 0);
-                if (c == 'm') {
-                    /* SGR: apply params to CGA attr (same logic as
-                     * Terminal::executeAnsi case 'm') */
-                    if (params.empty() || (params.size() == 1 && params[0] == 0))
-                        params = {0};  /* \033[m = \033[0m */
-                    for (int p : params) {
-                        if (p == 0)       cga_attr = 0x07;
-                        else if (p == 1)  cga_attr |= 0x08;
-                        else if (p == 5)  cga_attr |= 0x80;
-                        else if (p == 7) {
-                            int base = cga_attr & 0x77;
-                            cga_attr = (cga_attr & 0x88) | (base << 4) | (base >> 4);
-                        }
-                        else if (p == 8)  cga_attr = 0x00;
-                        else if (p >= 30 && p <= 37)
-                            cga_attr = (cga_attr & 0xf8) | ansi2cga[p - 30];
-                        else if (p >= 40 && p <= 47)
-                            cga_attr = (cga_attr & 0x8f) | (ansi2cga[p - 40] << 4);
-                    }
-                    t.injectTrueColor(cga_attr);
-                }
-                state = NORMAL;
-            }
-            break;
-        }
-    }
-}
-
-/* ================================================================== */
 /*  Navigation helpers                                                 */
 /* ================================================================== */
 
@@ -199,6 +95,21 @@ static void begin_field(Session& s, Form& form);
 
 /* Forward declarations for ScreenForm (defined below) */
 static void sf_init(Session& s, ScreenForm& form);
+
+/* Perform form exit transition before calling the consumer's callback */
+static void form_exit(Session& s, FormExit exit)
+{
+    switch (exit) {
+    case FormExit::Clear:
+        s.term.clearScreen();
+        break;
+    case FormExit::Scroll:
+        s.term.newline();
+        break;
+    case FormExit::None:
+        break;
+    }
+}
 
 static void fire_on_enter(Session& s)
 {
@@ -248,6 +159,7 @@ static void begin_field(Session& s, Form& form)
     if (s.current_field_index >= (int)form.fields.size()) {
         /* All fields gathered — submit */
         s.form_state.completed = true;
+        form_exit(s, form.exit);
         if (form.on_submit)
             form.on_submit(s, s.form_state);
         return;
@@ -284,8 +196,8 @@ static void dispatch_form_input(Session& s, Form& form, unsigned char ch)
     switch (f.kind) {
     case InputKind::TextInput:
         if (ch == 27) {  /* ESC — abort */
-            s.term.newline();
             s.form_state.completed = false;
+            form_exit(s, form.exit);
             if (form.on_abort)
                 form.on_abort(s);
             return;
@@ -310,8 +222,8 @@ static void dispatch_form_input(Session& s, Form& form, unsigned char ch)
 
     case InputKind::Choice:
         if (ch == 27) {
-            s.term.newline();
             s.form_state.completed = false;
+            form_exit(s, form.exit);
             if (form.on_abort)
                 form.on_abort(s);
             return;
@@ -708,8 +620,24 @@ static int sf_validate_all(ScreenForm& form, const FormResult& r, const char*& e
                     return i;
                 }
             }
-            /* External validator */
-            if (f.validate && !f.validate(it->second)) {
+            /* External validator — pass raw value, not formatted display.
+             * Date/Phone store formatted strings; strip back to digits. */
+            std::string raw_val = it->second;
+            if (std::holds_alternative<DateField>(f.widget) ||
+                std::holds_alternative<PhoneField>(f.widget)) {
+                raw_val.clear();
+                for (char c : it->second)
+                    if (c >= '0' && c <= '9') raw_val += c;
+            } else if (auto* sel = std::get_if<SelectField>(&f.widget)) {
+                /* Stored value is the label — pass the key char */
+                for (auto& opt : sel->options) {
+                    if (opt.second == it->second) {
+                        raw_val = std::string(1, opt.first);
+                        break;
+                    }
+                }
+            }
+            if (f.validate && !f.validate(raw_val)) {
                 errmsg = "Invalid input. Please try again.";
                 return i;
             }
@@ -728,7 +656,7 @@ static void sf_init(Session& s, ScreenForm& form)
     /* Clear screen and send background art */
     s.term.clearScreen();
     if (!form.background_file.empty())
-        send_ansi_file(s.term, form.background_file);
+        s.term.sendAnsiFile(form.background_file);
 
     /* Focus the first field */
     sf_focus_field(s, form);
@@ -741,6 +669,7 @@ static void dispatch_screen_form_input(Session& s, ScreenForm& form, KeyEvent ev
     if (s.current_field_index >= (int)form.fields.size()) {
         if (ev.key == Key::Escape) {
             s.form_state.completed = false;
+            form_exit(s, form.exit);
             if (form.on_cancel) form.on_cancel(s);
             return;
         }
@@ -774,6 +703,7 @@ static void dispatch_screen_form_input(Session& s, ScreenForm& form, KeyEvent ev
                     return;
                 }
                 s.form_state.completed = true;
+                form_exit(s, form.exit);
                 if (form.on_submit)
                     form.on_submit(s, s.form_state);
                 return;
@@ -820,6 +750,7 @@ static void dispatch_screen_form_input(Session& s, ScreenForm& form, KeyEvent ev
             break;
         case Key::Escape:
             s.form_state.completed = false;
+            form_exit(s, form.exit);
             if (form.on_cancel) form.on_cancel(s);
             break;
         default: break;
@@ -830,6 +761,7 @@ static void dispatch_screen_form_input(Session& s, ScreenForm& form, KeyEvent ev
     else if (auto* sel = std::get_if<SelectField>(&f.widget)) {
         if (ev.key == Key::Escape) {
             s.form_state.completed = false;
+            form_exit(s, form.exit);
             if (form.on_cancel) form.on_cancel(s);
         } else if (ev.key == Key::Tab || ev.key == Key::Enter || ev.key == Key::Down) {
             sf_leave_field(s, form, +1);
@@ -857,6 +789,7 @@ static void dispatch_screen_form_input(Session& s, ScreenForm& form, KeyEvent ev
          * with leading-digit auto-pad for 2-digit segments. */
         if (ev.key == Key::Escape) {
             s.form_state.completed = false;
+            form_exit(s, form.exit);
             if (form.on_cancel) form.on_cancel(s);
         } else if (ev.key == Key::ShiftTab || ev.key == Key::Up) {
             sf_leave_field(s, form, -1);
@@ -900,6 +833,7 @@ static void dispatch_screen_form_input(Session& s, ScreenForm& form, KeyEvent ev
         /* Store raw digits only, display formatted */
         if (ev.key == Key::Escape) {
             s.form_state.completed = false;
+            form_exit(s, form.exit);
             if (form.on_cancel) form.on_cancel(s);
         } else if (ev.key == Key::ShiftTab || ev.key == Key::Up) {
             sf_leave_field(s, form, -1);

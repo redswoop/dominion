@@ -70,6 +70,14 @@ struct Navigator {
     std::vector<NavAction> actions;
 };
 
+/* --- Form exit behavior --- */
+
+enum class FormExit {
+    Clear,      /* reset attrs + clear screen + home cursor (fullscreen default) */
+    Scroll,     /* let content scroll off — inline/sequential forms */
+    None,       /* do nothing — consumer manages screen transition */
+};
+
 /* --- Sequential Form --- */
 
 struct FormField {
@@ -89,6 +97,7 @@ struct FormResult {
 
 struct Form {
     std::string id;
+    FormExit exit = FormExit::None;  /* sequential forms: usually None or Scroll */
     std::function<void(Session&)> on_enter;   /* called when form becomes active */
     std::vector<FormField> fields;
     std::function<void(Session&, const FormResult&)> on_submit;
@@ -144,6 +153,7 @@ struct ScreenField {
 struct ScreenForm {
     std::string id;
     std::string background_file;      /* .ans file path */
+    FormExit exit = FormExit::Clear;  /* fullscreen default: clear screen on exit */
     int cmd_row = 0, cmd_col = 0;     /* command line position (0-based) */
     int cmd_width = 60;               /* command line clear width */
     int twoline_field = 0;            /* field index focused on Down/Tab from command line */
@@ -196,8 +206,5 @@ void ui_run(const UIConfig& config);
 void ui_push(Session& s, ActiveUI ui);
 void ui_pop(Session& s);
 void ui_quit(Session& s);
-
-/* Utility: send an ANSI/CP437 art file to the terminal */
-void send_ansi_file(Terminal& t, const std::string& path);
 
 #endif /* UI_H_ */

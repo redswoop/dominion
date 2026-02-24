@@ -18,8 +18,11 @@
 #include <cstdarg>
 #include <cctype>
 #include <csignal>
+#include <vector>
 #include <unistd.h>
+#include <fcntl.h>
 #include <locale.h>
+#include <sys/stat.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -506,6 +509,10 @@ void Terminal::clearScreen()
     lastAttr_ = -1;
     scrollUp(*pTopLine_, *pScreenBottom_, 0);
     moveCursor(0, 0);
+
+    /* Clear remote terminal: reset attributes, force black bg, clear, home */
+    if (remote_.active)
+        remoteWriteRaw("\033[0m\033[40m\033[2J\033[H");
 }
 
 void Terminal::clearToEol()
@@ -736,13 +743,9 @@ void Terminal::setAttr(unsigned char attr)
         /* Send ANSI sequence to remote */
         if (remote_.active) {
             remoteWriteRaw(buf);
-            /* Inject true color foreground to bypass terminal palette.
+            /* Inject true color fg+bg to bypass terminal palette.
              * Ensures CGA-accurate colors regardless of terminal profile. */
-            int fgi = attr & 0x0F;
-            char tc[24];
-            std::snprintf(tc, sizeof(tc), "\x1b[38;2;%d;%d;%dm",
-                          cgaRGB[fgi][0], cgaRGB[fgi][1], cgaRGB[fgi][2]);
-            remoteWriteRaw(tc);
+            injectTrueColor(attr);
         }
 
         /* Update curatr only — do NOT call emitAttr() here.
@@ -769,13 +772,114 @@ void Terminal::injectTrueColor(unsigned char cga_attr)
 
 
 /* ================================================================== */
+/*  ANSI art file sender                                               */
+/* ================================================================== */
+
+void Terminal::sendAnsiFile(const std::string& path)
+{
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) return;
+
+    struct stat st;
+    if (fstat(fd, &st) < 0) { close(fd); return; }
+
+    /* Read entire file and send byte by byte through remotePutch
+     * for CP437→UTF-8 conversion of art characters.
+     *
+     * CGA true-color fixup: After each SGR sequence, we track the
+     * resulting CGA attribute and inject true-color fg+bg overrides.
+     * This fixes two issues:
+     *   1. \033[0m resets bg to terminal default (not necessarily black)
+     *   2. \033[1;30m (intense black = dark grey) renders wrong on most
+     *      terminals that map bold+black to something other than CGA grey.
+     * Same approach as setAttr() but applied to raw ANSI art.
+     * See terminal-rendering.md. */
+    size_t sz = (size_t)st.st_size;
+    std::vector<unsigned char> buf(sz);
+    ssize_t n = read(fd, buf.data(), sz);
+    close(fd);
+    if (n <= 0) return;
+
+    /* ANSI-to-CGA color map (same as clrlst in executeAnsi):
+     * ANSI index 0-7 → CGA color number */
+    static const int ansi2cga[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };
+
+    /* State machine: parse SGR sequences, track CGA attr, inject true color */
+    enum { NORMAL, GOT_ESC, CSI_PARAMS } state = NORMAL;
+    std::vector<int> params;
+    int cur_param = 0;
+    bool have_digit = false;
+    unsigned char cga_attr = 0x07;  /* starts as light grey on black */
+
+    for (ssize_t i = 0; i < n; i++) {
+        unsigned char c = buf[i];
+
+        switch (state) {
+        case NORMAL:
+            remotePutch(c);
+            if (c == 0x1B) state = GOT_ESC;
+            break;
+
+        case GOT_ESC:
+            remotePutch(c);
+            if (c == '[') {
+                state = CSI_PARAMS;
+                params.clear();
+                cur_param = 0;
+                have_digit = false;
+            } else {
+                state = NORMAL;
+            }
+            break;
+
+        case CSI_PARAMS:
+            remotePutch(c);
+            if (c >= '0' && c <= '9') {
+                cur_param = cur_param * 10 + (c - '0');
+                have_digit = true;
+            } else if (c == ';') {
+                params.push_back(have_digit ? cur_param : 0);
+                cur_param = 0;
+                have_digit = false;
+            } else {
+                /* Final byte — sequence complete */
+                params.push_back(have_digit ? cur_param : 0);
+                if (c == 'm') {
+                    /* SGR: apply params to CGA attr (same logic as executeAnsi) */
+                    if (params.empty() || (params.size() == 1 && params[0] == 0))
+                        params = {0};
+                    for (int p : params) {
+                        if (p == 0)       cga_attr = 0x07;
+                        else if (p == 1)  cga_attr |= 0x08;
+                        else if (p == 5)  cga_attr |= 0x80;
+                        else if (p == 7) {
+                            int base = cga_attr & 0x77;
+                            cga_attr = (cga_attr & 0x88) | (base << 4) | (base >> 4);
+                        }
+                        else if (p == 8)  cga_attr = 0x00;
+                        else if (p >= 30 && p <= 37)
+                            cga_attr = (cga_attr & 0xf8) | ansi2cga[p - 30];
+                        else if (p >= 40 && p <= 47)
+                            cga_attr = (cga_attr & 0x8f) | (ansi2cga[p - 40] << 4);
+                    }
+                    injectTrueColor(cga_attr);
+                }
+                state = NORMAL;
+            }
+            break;
+        }
+    }
+}
+
+
+/* ================================================================== */
 /*  Output                                                             */
 /* ================================================================== */
 
 void Terminal::putch(unsigned char c)
 {
-    /* Remote output (skip tabs — they expand locally) */
-    if (remote_.active && c != 9)
+    /* Remote output (skip tabs and form feed — handled specially below) */
+    if (remote_.active && c != 9 && c != 12)
         remotePutch(c);
 
     /* ANSI escape accumulation */
@@ -799,10 +903,8 @@ void Terminal::putch(unsigned char c)
             putch(' ');
     }
     else {
+        /* Form feed (12) → clearScreen() which handles both local + remote */
         out1ch(c);
-        /* After form feed, reset remote terminal attributes */
-        if (c == 12 && remote_.active)
-            remoteWriteRaw("\x1b[0;1m");
     }
 }
 

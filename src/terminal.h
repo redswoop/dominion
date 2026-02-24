@@ -14,6 +14,7 @@
 #ifndef TERMINAL_H_
 #define TERMINAL_H_
 
+#include <string>
 #include <termios.h>
 
 class Terminal {
@@ -93,6 +94,9 @@ public:
     void setScreenBuffer(char *buf) { scrn_ = buf; ownsScrn_ = false; }
     void scrnPut(int x, int y, unsigned char ch, unsigned char attr);
     void renderScrn(int startRow, int numRows);
+
+    /* -- ANSI art file -- */
+    void sendAnsiFile(const std::string& path);  /* CP437 + CGA true-color */
 
     /* -- Helpers for input UI -- */
     void backspace();               /* BS, space, BS */

@@ -179,8 +179,7 @@ static ScreenForm make_newuser_form()
 
     /* --- Submit/Cancel --- */
     form.on_submit = [](Session& s, const FormResult& r) {
-        /* Clear remote terminal properly */
-        s.term.remoteWriteRaw("\033[0m\033[40m\033[2J\033[H");
+        /* Screen already cleared by FormExit::Clear */
         s.term.setAttr(0x0B);
         s.term.puts("=== New User Registration Complete ===");
         s.term.newline();
@@ -215,7 +214,7 @@ static ScreenForm make_newuser_form()
     };
 
     form.on_cancel = [](Session& s) {
-        s.term.remoteWriteRaw("\033[0m\033[40m\033[2J\033[H");
+        /* Screen already cleared by FormExit::Clear */
         s.term.setAttr(0x0C);
         s.term.puts("Registration cancelled.");
         s.term.newline();
