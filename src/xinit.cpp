@@ -89,8 +89,10 @@ void init(int show)
     /* Initialize default text attribute to white-on-black */
     io.curatr=0x07;
 
-    /* Initialize ncurses via Terminal class */
+    /* Initialize ncurses via Terminal class.
+     * BBS requires 80x25; resize to that after ncurses is up. */
     nc_active = term_init_local();
+    if (nc_active) term_resize(25, 80);
     if (io.scrn)
         term_set_screen_buffer(io.scrn);
     if (!nc_active)

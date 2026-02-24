@@ -87,6 +87,9 @@ void term_render_scrn(int start_row, int num_rows);
 /* -- State binding (Phase 3: share memory with BBS io_session_t) -- */
 void term_bind_state(int *ca, int *tl, int *sb);
 
+/* -- Resize -- */
+void term_resize(int rows, int cols);
+
 /* -- Direct access for transition period -- */
 void *term_instance(void);  /* returns Terminal* */
 

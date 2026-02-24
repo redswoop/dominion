@@ -938,16 +938,18 @@ void ui_run(const UIConfig& config)
     }
 
     /*
-     * Layout (25-row terminal):
-     *   rows  0-23 : session mirror — shows screen buffer of viewed session
-     *   row   24   : status bar    — fixed, always drawn by console
-     *
+     * Layout: last row = status bar, everything above = session mirror.
      * Console Terminal keeps ncurses ownership at all times.
      * Session Terminals write to TCP + their own screen buffer; no ncurses.
      * The sysop views one session at a time via [ and ] keys.
+     *
+     * Use actual terminal height so the status bar lands on the visible
+     * last row regardless of terminal size (no hardcoded 25).
      */
-    static const int MIRROR_ROWS = 24;
-    static const int STATUS_ROW  = 24;
+    int console_rows = have_console ? console.ncLines() : 25;
+    if (console_rows < 2) console_rows = 2;
+    const int MIRROR_ROWS = console_rows - 1;   /* rows 0 .. MIRROR_ROWS-1 */
+    const int STATUS_ROW  = console_rows - 1;   /* last row */
 
     std::vector<Session*> sessions;
     int next_session_id = 1;

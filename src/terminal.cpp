@@ -157,7 +157,6 @@ bool Terminal::initLocal()
     idlok(stdscr, TRUE);
     erase();
     refresh();
-    resizeterm(25, 80);
 
     g_crash_term = this;
     signal(SIGSEGV, crash_handler);
@@ -168,6 +167,15 @@ bool Terminal::initLocal()
     signal(SIGINT,  crash_handler);
 
     return true;
+}
+
+int Terminal::ncLines() const { return ncActive_ ? LINES : 0; }
+int Terminal::ncCols()  const { return ncActive_ ? COLS  : 0; }
+
+void Terminal::resize(int rows, int cols)
+{
+    if (!ncActive_) return;
+    resizeterm(rows, cols);
 }
 
 void Terminal::shutdown()

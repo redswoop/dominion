@@ -85,6 +85,9 @@ public:
     void setScreenBottom(int b) { *pScreenBottom_ = b; }
     void setCursorPos(int x, int yabs) { cx_ = x; cy_ = yabs; }
     bool localActive() const { return ncActive_; }
+    int  ncLines() const;   /* actual ncurses LINES (0 if not active) */
+    int  ncCols()  const;   /* actual ncurses COLS  (0 if not active) */
+    void resize(int rows, int cols);  /* resize ncurses window */
 
     /* -- State binding (Phase 3: share memory with BBS io_session_t) -- */
     void bindState(int *curatr, int *topLine, int *screenBottom);
