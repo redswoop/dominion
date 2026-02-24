@@ -52,6 +52,7 @@ public:
     void emitAttr(int attr);
     int ncAttr(int dosAttr);
     void ncPutCp437(unsigned char ch);
+    void injectTrueColor(unsigned char cga_attr);  /* send true-color fg+bg for CGA attr */
 
     /* -- Input -- */
     bool keyReady();                /* any input from any source? */

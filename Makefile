@@ -101,7 +101,7 @@ $(OBJDIR):
 
 # --- Tool targets ---
 # termtest and inputtest excluded — need Phase C migration (vars.h → session/system singletons)
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/rawinput $(BUILDDIR)/iotest $(BUILDDIR)/uitest
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/rawinput $(BUILDDIR)/iotest $(BUILDDIR)/uitest $(BUILDDIR)/formtest
 
 $(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp | $(BUILDDIR)
 	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp
@@ -149,6 +149,10 @@ $(OBJDIR)/ui.o: $(SRCDIR)/ui.cpp $(SRCDIR)/ui.h $(SRCDIR)/terminal.h | $(OBJDIR)
 $(BUILDDIR)/uitest: $(TOOLDIR)/uitest.cpp $(OBJDIR)/ui.o $(OBJDIR)/terminal.o | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/terminal.o -lncurses
 
+# Form test — fullscreen positioned forms, ZERO BBS dependencies
+$(BUILDDIR)/formtest: $(TOOLDIR)/formtest.cpp $(OBJDIR)/ui.o $(OBJDIR)/terminal.o | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/terminal.o -lncurses
+
 # --- Data sync from dist/ into build/ ---
 data: | $(BUILDDIR)
 	@for d in $(DATA_DIRS); do mkdir -p $(BUILDDIR)/$$d; done
@@ -193,7 +197,7 @@ clean:
 	rm -f $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump
 	rm -f $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump
 	rm -f $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest
-	rm -f $(BUILDDIR)/iotest $(BUILDDIR)/uitest
+	rm -f $(BUILDDIR)/iotest $(BUILDDIR)/uitest $(BUILDDIR)/formtest
 
 # Remove just objects (keep binary + data for quick relink)
 clean-obj:

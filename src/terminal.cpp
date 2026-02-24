@@ -754,6 +754,19 @@ void Terminal::setAttr(unsigned char attr)
     }
 }
 
+void Terminal::injectTrueColor(unsigned char cga_attr)
+{
+    if (!remote_.active) return;
+    int fgi = cga_attr & 0x0F;
+    int bgi = (cga_attr >> 4) & 0x07;
+    char buf[64];
+    std::snprintf(buf, sizeof(buf),
+                  "\x1b[38;2;%d;%d;%dm\x1b[48;2;%d;%d;%dm",
+                  cgaRGB[fgi][0], cgaRGB[fgi][1], cgaRGB[fgi][2],
+                  cgaRGB[bgi][0], cgaRGB[bgi][1], cgaRGB[bgi][2]);
+    remoteWriteRaw(buf);
+}
+
 
 /* ================================================================== */
 /*  Output                                                             */
