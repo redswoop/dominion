@@ -478,6 +478,113 @@ static ScreenForm make_branching_demo(Session* sp)
 }
 
 /* ================================================================== */
+/*  Demo 4: Login Flow (sequential + retry)                            */
+/* ================================================================== */
+
+static void push_login(Session* sp);
+
+static ScreenForm make_login_form(Session* sp)
+{
+    ScreenForm form;
+    form.id = "login";
+    form.mode = FormMode::Sequential;
+    form.exit = FormExit::None;
+
+    /* Username */
+    {
+        ScreenField f;
+        f.name = "username";
+        f.widget = TextField{.max_chars = 30};
+        f.width = 30;
+        f.required = true;
+        f.prompt = "Your Handle or #:";
+        form.fields.push_back(f);
+    }
+
+    /* Password — only if not NEW */
+    {
+        ScreenField f;
+        f.name = "password";
+        f.widget = TextField{.max_chars = 20, .masked = true};
+        f.width = 20;
+        f.required = true;
+        f.prompt = "Password:";
+        f.when = [](const FormResult& r) {
+            auto it = r.values.find("username");
+            if (it == r.values.end()) return true;
+            std::string u = it->second;
+            for (auto& c : u) c = std::toupper(c);
+            return u != "NEW";
+        };
+        form.fields.push_back(f);
+    }
+
+    form.on_submit = [sp](Terminal& term, SFContext& /*ctx*/, const FormResult& r) {
+        auto uit = r.values.find("username");
+        std::string username = (uit != r.values.end()) ? uit->second : "";
+        std::string upper = username;
+        for (auto& c : upper) c = std::toupper(c);
+
+        if (upper == "NEW") {
+            term.newline();
+            term.setAttr(0x0E);
+            term.puts("Entering new user registration...");
+            term.newline();
+            term.newline();
+            ui_push(*sp, make_screen_demo(sp));
+            return;
+        }
+
+        auto pit = r.values.find("password");
+        std::string password = (pit != r.values.end()) ? pit->second : "";
+
+        if (password == "password") {
+            term.newline();
+            term.setAttr(0x0A);
+            term.printf("Welcome, %s!", username.c_str());
+            term.newline();
+            term.newline();
+            term.setAttr(0x0E);
+            term.puts("Press Q to disconnect.");
+            term.newline();
+
+            Navigator done;
+            done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
+            ui_push(*sp, done);
+        } else {
+            term.newline();
+            term.setAttr(0x0C);
+            term.puts("Invalid password!");
+            term.newline();
+            term.newline();
+            push_login(sp);
+        }
+    };
+
+    form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
+        term.newline();
+        term.setAttr(0x07);
+        term.puts("Goodbye.");
+        term.newline();
+
+        Navigator done;
+        done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
+        ui_push(*sp, done);
+    };
+
+    return form;
+}
+
+static void push_login(Session* sp)
+{
+    sp->term.setAttr(0x0B);
+    sp->term.puts("== Dominion BBS v3.1 ==");
+    sp->term.newline();
+    sp->term.newline();
+    ui_push(*sp, make_login_form(sp));
+}
+
+/* ================================================================== */
 /*  Main menu                                                          */
 /* ================================================================== */
 
@@ -508,6 +615,11 @@ static Navigator make_main_menu(Session* sp)
         s.term.puts("Conditional Branching (file search)");
         s.term.newline();
         s.term.setAttr(0x0E);
+        s.term.puts("[4] ");
+        s.term.setAttr(0x07);
+        s.term.puts("Login Flow (sequential + retry)");
+        s.term.newline();
+        s.term.setAttr(0x0E);
         s.term.puts("[Q] ");
         s.term.setAttr(0x07);
         s.term.puts("Quit");
@@ -525,6 +637,11 @@ static Navigator make_main_menu(Session* sp)
         }},
         {'3', "Branching", [sp](Session& s) {
             ui_push(s, make_branching_demo(sp));
+        }},
+        {'4', "Login", [sp](Session& s) {
+            s.term.clearScreen();
+            s.term.gotoXY(0, 0);
+            push_login(sp);
         }},
         {'Q', "Quit", [](Session& s) { ui_quit(s); }},
     };
@@ -565,6 +682,14 @@ int main(int argc, char *argv[])
     } else if (test_name && std::strcmp(test_name, "branch") == 0) {
         config.on_connect = [](Session& s) -> ActiveUI {
             return make_branching_demo(&s);
+        };
+    } else if (test_name && std::strcmp(test_name, "login") == 0) {
+        config.on_connect = [](Session& s) -> ActiveUI {
+            s.term.setAttr(0x0B);
+            s.term.puts("== Dominion BBS v3.1 ==");
+            s.term.newline();
+            s.term.newline();
+            return make_login_form(&s);
         };
     } else {
         /* Interactive menu */
