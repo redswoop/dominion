@@ -190,6 +190,23 @@ static bool date_needs_autopad(const DateSeg& seg, char first_digit)
 }
 
 /* ================================================================== */
+/*  Mode detection and conditional visibility                          */
+/* ================================================================== */
+
+static bool sf_is_sequential(ScreenForm& form)
+{
+    if (form.mode == FormMode::Sequential) return true;
+    if (form.mode == FormMode::Screen) return false;
+    /* Auto: sequential if no background file */
+    return form.background_file.empty();
+}
+
+static bool sf_field_visible(ScreenField& f, const FormResult& state)
+{
+    return !f.when || f.when(state);
+}
+
+/* ================================================================== */
 /*  Screen rendering helpers                                           */
 /* ================================================================== */
 
@@ -357,8 +374,12 @@ static void sf_leave_field(Terminal& term, SFContext& ctx, ScreenForm& form, int
         ctx.form_state.values[f.name] = ctx.input_buffer;
     }
 
-    /* Move to next/prev field */
+    /* Move to next/prev field, skipping fields where when() is false */
     int next = ctx.current_field_index + direction;
+    while (next >= 0 && next < (int)form.fields.size() &&
+           !sf_field_visible(form.fields[next], ctx.form_state))
+        next += direction;
+
     if (next < 0) next = 0;
     if (next >= (int)form.fields.size()) {
         /* Past last field — enter command line mode */
@@ -396,6 +417,7 @@ static int sf_validate_all(ScreenForm& form, const FormResult& r, const char*& e
 {
     for (int i = 0; i < (int)form.fields.size(); i++) {
         ScreenField& f = form.fields[i];
+        if (!sf_field_visible(f, r)) continue;
         auto it = r.values.find(f.name);
         bool empty = (it == r.values.end() || it->second.empty());
 
@@ -437,10 +459,363 @@ static int sf_validate_all(ScreenForm& form, const FormResult& r, const char*& e
 }
 
 /* ================================================================== */
+/*  Sequential mode helpers                                            */
+/* ================================================================== */
+
+/* Find the next visible field at or after `start` (direction +1) or
+ * at or before `start` (direction -1).  Returns -1 if none. */
+static int sf_next_visible(ScreenForm& form, const FormResult& state, int start, int dir)
+{
+    int i = start;
+    while (i >= 0 && i < (int)form.fields.size()) {
+        if (sf_field_visible(form.fields[i], state)) return i;
+        i += dir;
+    }
+    return -1;
+}
+
+/* Format a display string for a field value (shared between screen/seq) */
+static std::string sf_format_display(ScreenField& f, const std::string& buf)
+{
+    if (auto* df = std::get_if<DateField>(&f.widget))
+        return format_date(buf, df->format);
+    if (std::holds_alternative<PhoneField>(f.widget))
+        return format_phone(buf);
+    if (auto* sel = std::get_if<SelectField>(&f.widget)) {
+        for (auto& opt : sel->options)
+            if (buf.size() == 1 && std::toupper(buf[0]) == opt.first)
+                return opt.second;
+        return buf;
+    }
+    auto* tf = std::get_if<TextField>(&f.widget);
+    if (tf && tf->masked)
+        return std::string(buf.size(), '*');
+    return buf;
+}
+
+static void sf_seq_render_value(Terminal& term, SFContext& ctx,
+                                ScreenField& f, const std::string& buf)
+{
+    term.gotoXY(ctx.inline_start_x, ctx.inline_start_y);
+    term.setAttr(0x0F);
+    for (int i = 0; i < f.width; i++) term.putch(' ');
+    term.gotoXY(ctx.inline_start_x, ctx.inline_start_y);
+    std::string display = sf_format_display(f, buf);
+    int limit = f.width;
+    for (int i = 0; i < (int)display.size() && i < limit; i++)
+        term.putch((unsigned char)display[i]);
+}
+
+static void sf_seq_position_cursor(Terminal& term, SFContext& ctx,
+                                   ScreenField& f, const std::string& buf)
+{
+    std::string display = sf_format_display(f, buf);
+    term.gotoXY(ctx.inline_start_x + (int)display.size(), ctx.inline_start_y);
+}
+
+/* Forward declarations for mutual recursion */
+static void sf_seq_focus_field(Terminal& term, SFContext& ctx, ScreenForm& form);
+static void form_exit_action(Terminal& term, FormExit exit);
+
+static void sf_seq_leave_field(Terminal& term, SFContext& ctx, ScreenForm& form)
+{
+    ScreenField& f = form.fields[ctx.current_field_index];
+
+    /* Restore echo before leaving */
+    if (ctx.echo) *ctx.echo = 1;
+
+    /* Store value */
+    if (auto* df = std::get_if<DateField>(&f.widget)) {
+        ctx.form_state.values[f.name] = ctx.input_buffer.empty()
+            ? ctx.input_buffer
+            : format_date(ctx.input_buffer, df->format);
+    } else if (std::holds_alternative<PhoneField>(f.widget)) {
+        ctx.form_state.values[f.name] = ctx.input_buffer.empty()
+            ? ctx.input_buffer
+            : format_phone(ctx.input_buffer);
+    } else {
+        ctx.form_state.values[f.name] = ctx.input_buffer;
+    }
+
+    /* Per-field immediate validation */
+    auto it = ctx.form_state.values.find(f.name);
+    bool empty = (it == ctx.form_state.values.end() || it->second.empty());
+
+    if (f.required && empty) {
+        term.newline();
+        term.setAttr(0x0C);
+        term.puts("  This field is required.");
+        term.newline();
+        /* Re-prompt same field */
+        sf_seq_focus_field(term, ctx, form);
+        return;
+    }
+
+    if (!empty) {
+        /* Built-in date validation */
+        if (auto* df = std::get_if<DateField>(&f.widget)) {
+            std::string digits;
+            for (char c : it->second)
+                if (c >= '0' && c <= '9') digits += c;
+            if (!date_validate(df->format, digits)) {
+                term.newline();
+                term.setAttr(0x0C);
+                term.puts("  Invalid date.");
+                term.newline();
+                ctx.form_state.values[f.name].clear();
+                sf_seq_focus_field(term, ctx, form);
+                return;
+            }
+        }
+
+        /* External validator */
+        std::string raw_val = it->second;
+        if (std::holds_alternative<DateField>(f.widget) ||
+            std::holds_alternative<PhoneField>(f.widget)) {
+            raw_val.clear();
+            for (char c : it->second)
+                if (c >= '0' && c <= '9') raw_val += c;
+        }
+        if (f.validate && !f.validate(raw_val)) {
+            term.newline();
+            term.setAttr(0x0C);
+            term.puts("  Invalid input. Please try again.");
+            term.newline();
+            ctx.form_state.values[f.name].clear();
+            sf_seq_focus_field(term, ctx, form);
+            return;
+        }
+    }
+
+    /* Advance to next visible field */
+    term.newline();
+    int next = sf_next_visible(form, ctx.form_state,
+                               ctx.current_field_index + 1, +1);
+    if (next < 0) {
+        /* Past last field — auto-submit */
+        const char* errmsg = nullptr;
+        int fail = sf_validate_all(form, ctx.form_state, errmsg);
+        if (fail >= 0) {
+            term.setAttr(0x0C);
+            term.puts("  ");
+            term.puts(errmsg);
+            term.newline();
+            ctx.current_field_index = fail;
+            sf_seq_focus_field(term, ctx, form);
+            return;
+        }
+        ctx.form_state.completed = true;
+        form_exit_action(term, form.exit);
+        if (form.on_submit)
+            form.on_submit(term, ctx, ctx.form_state);
+        return;
+    }
+
+    ctx.current_field_index = next;
+    sf_seq_focus_field(term, ctx, form);
+}
+
+static void sf_seq_focus_field(Terminal& term, SFContext& ctx, ScreenForm& form)
+{
+    /* Skip to next visible field */
+    int idx = sf_next_visible(form, ctx.form_state,
+                              ctx.current_field_index, +1);
+    if (idx < 0) {
+        /* No visible fields remaining — auto-submit */
+        ctx.form_state.completed = true;
+        form_exit_action(term, form.exit);
+        if (form.on_submit)
+            form.on_submit(term, ctx, ctx.form_state);
+        return;
+    }
+    ctx.current_field_index = idx;
+
+    ScreenField& f = form.fields[idx];
+
+    /* Set echo mode */
+    auto* tf_check = std::get_if<TextField>(&f.widget);
+    if (ctx.echo)
+        *ctx.echo = (tf_check && tf_check->masked) ? 0 : 1;
+
+    /* Restore edit buffer from stored value */
+    auto it = ctx.form_state.values.find(f.name);
+    if (it != ctx.form_state.values.end() && !it->second.empty()) {
+        if (std::holds_alternative<DateField>(f.widget) ||
+            std::holds_alternative<PhoneField>(f.widget)) {
+            ctx.input_buffer.clear();
+            for (char c : it->second)
+                if (c >= '0' && c <= '9') ctx.input_buffer += c;
+        } else {
+            ctx.input_buffer = it->second;
+        }
+    } else {
+        ctx.input_buffer.clear();
+    }
+
+    /* Print prompt */
+    term.setAttr(form.prompt_attr);
+    if (!f.prompt.empty()) {
+        term.puts(f.prompt.c_str());
+        term.putch(' ');
+    }
+
+    /* For inline select, show options after prompt */
+    if (auto* sel = std::get_if<SelectField>(&f.widget)) {
+        term.setAttr(0x03);
+        term.putch('(');
+        for (int i = 0; i < (int)sel->options.size(); i++) {
+            if (i > 0) term.putch('/');
+            term.setAttr(form.prompt_attr);
+            term.putch(sel->options[i].first);
+            term.setAttr(0x03);
+        }
+        term.puts(") ");
+    }
+
+    /* Record cursor position for field input */
+    ctx.inline_start_x = term.cursorX();
+    ctx.inline_start_y = term.cursorY();
+
+    /* Render existing value if re-entering field */
+    term.setAttr(form.input_attr);
+    if (!ctx.input_buffer.empty()) {
+        sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+        sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+    }
+}
+
+static void sf_seq_init(Terminal& term, SFContext& ctx, ScreenForm& form)
+{
+    ctx.form_state    = FormResult();
+    ctx.current_field_index = 0;
+    ctx.input_buffer.clear();
+    ctx.cancelled     = false;
+    ctx.sequential    = true;
+
+    /* No clear, no background — start at cursor */
+    sf_seq_focus_field(term, ctx, form);
+}
+
+static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
+                            ScreenForm& form, KeyEvent ev)
+{
+    if (ctx.current_field_index >= (int)form.fields.size()) return;
+
+    ScreenField& f = form.fields[ctx.current_field_index];
+
+    /* --- Escape: cancel in all widget types --- */
+    if (ev.key == Key::Escape) {
+        ctx.form_state.completed = false;
+        term.newline();
+        form_exit_action(term, form.exit);
+        if (form.on_cancel) form.on_cancel(term, ctx);
+        ctx.cancelled = true;
+        return;
+    }
+
+    /* --- Text --- */
+    if (auto* tf = std::get_if<TextField>(&f.widget)) {
+        int max = tf->max_chars > 0 ? tf->max_chars : f.width;
+        switch (ev.key) {
+        case Key::Char:
+            if ((int)ctx.input_buffer.size() < max) {
+                ctx.input_buffer += ev.ch;
+                if (tf->masked)
+                    term.putch('*');
+                else
+                    term.putch((unsigned char)ev.ch);
+            }
+            break;
+        case Key::Backspace:
+            if (!ctx.input_buffer.empty()) {
+                ctx.input_buffer.pop_back();
+                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+            }
+            break;
+        case Key::Enter:
+            sf_seq_leave_field(term, ctx, form);
+            break;
+        default: break;
+        }
+    }
+
+    /* --- Select --- */
+    else if (auto* sel = std::get_if<SelectField>(&f.widget)) {
+        if (ev.key == Key::Char) {
+            char upper = (char)std::toupper(ev.ch);
+            for (auto& opt : sel->options) {
+                if (opt.first == upper) {
+                    ctx.input_buffer = std::string(1, upper);
+                    sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                    sf_seq_leave_field(term, ctx, form);
+                    return;
+                }
+            }
+        }
+    }
+
+    /* --- Date --- */
+    else if (auto* df = std::get_if<DateField>(&f.widget)) {
+        if (ev.key == Key::Backspace) {
+            if (!ctx.input_buffer.empty()) {
+                ctx.input_buffer.pop_back();
+                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+            }
+        } else if (ev.key == Key::Enter) {
+            sf_seq_leave_field(term, ctx, form);
+        } else if (ev.key == Key::Char && ev.ch >= '0' && ev.ch <= '9') {
+            int total = date_total_digits(df->format);
+            if ((int)ctx.input_buffer.size() < total) {
+                DateSeg segs[3];
+                date_segments(df->format, segs);
+                int cur_seg = date_segment_at(df->format, (int)ctx.input_buffer.size());
+                std::string seg_digits = date_seg_digits(df->format, ctx.input_buffer, cur_seg);
+
+                if (seg_digits.empty() && date_needs_autopad(segs[cur_seg], ev.ch)) {
+                    ctx.input_buffer += '0';
+                    ctx.input_buffer += ev.ch;
+                } else {
+                    ctx.input_buffer += ev.ch;
+                }
+
+                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+
+                if ((int)ctx.input_buffer.size() >= total)
+                    sf_seq_leave_field(term, ctx, form);
+            }
+        }
+    }
+
+    /* --- Phone --- */
+    else if (std::holds_alternative<PhoneField>(f.widget)) {
+        if (ev.key == Key::Backspace) {
+            if (!ctx.input_buffer.empty()) {
+                ctx.input_buffer.pop_back();
+                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+            }
+        } else if (ev.key == Key::Enter) {
+            sf_seq_leave_field(term, ctx, form);
+        } else if (ev.key == Key::Char && ev.ch >= '0' && ev.ch <= '9') {
+            if ((int)ctx.input_buffer.size() < 10) {
+                ctx.input_buffer += ev.ch;
+                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                if ((int)ctx.input_buffer.size() == 10)
+                    sf_seq_leave_field(term, ctx, form);
+            }
+        }
+    }
+}
+
+/* ================================================================== */
 /*  Dispatch                                                           */
 /* ================================================================== */
 
-static void form_exit(Terminal& term, FormExit exit)
+static void form_exit_action(Terminal& term, FormExit exit)
 {
     switch (exit) {
     case FormExit::Clear:   term.clearScreen(); break;
@@ -452,11 +827,16 @@ static void form_exit(Terminal& term, FormExit exit)
 void sf_dispatch(Terminal& term, SFContext& ctx,
                  ScreenForm& form, KeyEvent ev)
 {
+    if (ctx.sequential) {
+        sf_seq_dispatch(term, ctx, form, ev);
+        return;
+    }
+
     /* Command line mode: past last field */
     if (ctx.current_field_index >= (int)form.fields.size()) {
         if (ev.key == Key::Escape) {
             ctx.form_state.completed = false;
-            form_exit(term, form.exit);
+            form_exit_action(term, form.exit);
             if (form.on_cancel) form.on_cancel(term, ctx);
             ctx.cancelled = true;
             return;
@@ -487,7 +867,7 @@ void sf_dispatch(Terminal& term, SFContext& ctx,
                     return;
                 }
                 ctx.form_state.completed = true;
-                form_exit(term, form.exit);
+                form_exit_action(term, form.exit);
                 if (form.on_submit)
                     form.on_submit(term, ctx, ctx.form_state);
                 return;
@@ -532,7 +912,7 @@ void sf_dispatch(Terminal& term, SFContext& ctx,
             sf_leave_field(term, ctx, form, -1);
             break;
         case Key::Escape:
-            form_exit(term, form.exit);
+            form_exit_action(term, form.exit);
             if (form.on_cancel) form.on_cancel(term, ctx);
             ctx.cancelled = true;
             break;
@@ -543,7 +923,7 @@ void sf_dispatch(Terminal& term, SFContext& ctx,
     /* --- Select --- */
     else if (auto* sel = std::get_if<SelectField>(&f.widget)) {
         if (ev.key == Key::Escape) {
-            form_exit(term, form.exit);
+            form_exit_action(term, form.exit);
             if (form.on_cancel) form.on_cancel(term, ctx);
             ctx.cancelled = true;
         } else if (ev.key == Key::Tab || ev.key == Key::Enter || ev.key == Key::Down) {
@@ -566,7 +946,7 @@ void sf_dispatch(Terminal& term, SFContext& ctx,
     /* --- Date --- */
     else if (auto* df = std::get_if<DateField>(&f.widget)) {
         if (ev.key == Key::Escape) {
-            form_exit(term, form.exit);
+            form_exit_action(term, form.exit);
             if (form.on_cancel) form.on_cancel(term, ctx);
             ctx.cancelled = true;
         } else if (ev.key == Key::ShiftTab || ev.key == Key::Up) {
@@ -606,7 +986,7 @@ void sf_dispatch(Terminal& term, SFContext& ctx,
     /* --- Phone --- */
     else if (std::holds_alternative<PhoneField>(f.widget)) {
         if (ev.key == Key::Escape) {
-            form_exit(term, form.exit);
+            form_exit_action(term, form.exit);
             if (form.on_cancel) form.on_cancel(term, ctx);
             ctx.cancelled = true;
         } else if (ev.key == Key::ShiftTab || ev.key == Key::Up) {
@@ -637,6 +1017,12 @@ void sf_dispatch(Terminal& term, SFContext& ctx,
 
 void sf_init(Terminal& term, SFContext& ctx, ScreenForm& form)
 {
+    ctx.sequential = sf_is_sequential(form);
+    if (ctx.sequential) {
+        sf_seq_init(term, ctx, form);
+        return;
+    }
+
     ctx.form_state    = FormResult();
     ctx.current_field_index = 0;
     ctx.input_buffer.clear();
@@ -685,4 +1071,21 @@ bool sf_run(Terminal& term, SFContext& ctx, ScreenForm& form)
     }
 
     return ctx.form_state.completed;
+}
+
+std::string sf_prompt(Terminal& term, SFContext& ctx, ScreenField& field)
+{
+    ScreenForm form;
+    form.mode = FormMode::Sequential;
+    form.exit = FormExit::None;
+    form.fields.push_back(field);
+
+    sf_run(term, ctx, form);
+
+    auto it = form.fields[0].name.empty()
+        ? ctx.form_state.values.begin()
+        : ctx.form_state.values.find(form.fields[0].name);
+    if (it != ctx.form_state.values.end())
+        return it->second;
+    return "";
 }

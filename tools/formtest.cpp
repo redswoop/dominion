@@ -1,15 +1,17 @@
 /*
- * formtest.cpp — Standalone test for fullscreen positioned forms
+ * formtest.cpp — Standalone test for ScreenForm: screen + sequential + branching
  *
- * Exercises ScreenForm: background ANSI art, positioned entry fields,
- * tab navigation, field-level validation.  Mimics the BBS new-user
- * registration form layout.
+ * Exercises all ScreenForm modes: fullscreen positioned fields (screen),
+ * prompt-by-prompt inline input (sequential), and conditional branching.
  *
  * ZERO BBS DEPENDENCIES — links only ui.o + screen_form.o + terminal.o.
  *
  * Build:  make build/formtest
- * Run:    build/formtest -P2024
+ * Run:    build/formtest -dbuild
  *         telnet localhost 2024
+ *
+ *         build/formtest -dbuild seq      (direct launch sequential demo)
+ *         build/formtest -dbuild branch   (direct launch branching demo)
  */
 
 #include "ui.h"
@@ -18,23 +20,13 @@
 #include <cstdlib>
 #include <cstring>
 
-/* ================================================================== */
-/*  Form definition                                                    */
-/* ================================================================== */
-
-/*
- * Field positions match the newans.ans ANSI art layout.
- * All coordinates are 0-based (col, row) for Terminal::gotoXY.
- *
- * The original newuser.cpp uses go(row_1based, col_1based) which maps
- * to gotoXY(col-1, row-1).  So goin(7,18) → gotoXY(17, 6).
- *
- * Command line ("gotop") is at row 2, col 4 → gotoXY(3, 1).
- */
-
 static std::string g_datadir;  /* path to afiles/ directory */
 
-static ScreenForm make_newuser_form(Session* sp)
+/* ================================================================== */
+/*  Demo 1: Screen Form (new user registration)                        */
+/* ================================================================== */
+
+static ScreenForm make_screen_demo(Session* sp)
 {
     ScreenForm form;
     form.id = "newuser";
@@ -53,8 +45,8 @@ static ScreenForm make_newuser_form(Session* sp)
         f.prompt = "Enter your handle or real name:";
         f.validate = [](const std::string& v) {
             if (v.empty()) return false;
-            if (v[0] < 'A') return false;           /* must start with letter */
-            if (v.back() == ' ') return false;       /* no trailing space */
+            if (v[0] < 'A') return false;
+            if (v.back() == ' ') return false;
             return true;
         };
         form.fields.push_back(f);
@@ -91,7 +83,6 @@ static ScreenForm make_newuser_form(Session* sp)
         f.row = 9; f.col = 17; f.width = 12;
         f.required = true;
         f.prompt = "Enter birthdate (MM/DD/YYYY):";
-        /* No external validator needed — Date widget validates segments */
         form.fields.push_back(f);
     }
 
@@ -179,7 +170,6 @@ static ScreenForm make_newuser_form(Session* sp)
 
     /* --- Submit/Cancel --- */
     form.on_submit = [sp](Terminal& term, SFContext& /*ctx*/, const FormResult& r) {
-        /* Screen already cleared by FormExit::Clear */
         term.setAttr(0x0B);
         term.puts("=== New User Registration Complete ===");
         term.newline();
@@ -205,31 +195,340 @@ static ScreenForm make_newuser_form(Session* sp)
 
         term.newline();
         term.setAttr(0x0E);
-        term.puts("Press Q to disconnect.");
+        term.puts("Press Q to return.");
         term.newline();
 
-        /* Non-blocking: push a dismiss navigator instead of blocking on getKey() */
         Navigator done;
-        done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
+        done.actions = {{'Q', "Return", [](Session& s) { ui_pop(s); ui_pop(s); }}};
         ui_push(*sp, done);
     };
 
     form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
-        /* Screen already cleared by FormExit::Clear */
         term.setAttr(0x0C);
         term.puts("Registration cancelled.");
         term.newline();
         term.newline();
         term.setAttr(0x0E);
-        term.puts("Press Q to disconnect.");
+        term.puts("Press Q to return.");
         term.newline();
 
         Navigator done;
-        done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
+        done.actions = {{'Q', "Return", [](Session& s) { ui_pop(s); ui_pop(s); }}};
         ui_push(*sp, done);
     };
 
     return form;
+}
+
+/* ================================================================== */
+/*  Demo 2: Sequential Form (all widget types)                         */
+/* ================================================================== */
+
+static ScreenForm make_sequential_demo(Session* sp)
+{
+    ScreenForm form;
+    form.id = "seq_demo";
+    form.mode = FormMode::Sequential;
+    form.exit = FormExit::None;
+
+    /* TextField */
+    {
+        ScreenField f;
+        f.name = "name";
+        f.widget = TextField{.max_chars = 30};
+        f.width = 30;
+        f.required = true;
+        f.prompt = "Your name:";
+        form.fields.push_back(f);
+    }
+
+    /* SelectField */
+    {
+        ScreenField f;
+        f.name = "color";
+        f.widget = SelectField{
+            .options = {{'R', "Red"}, {'G', "Green"}, {'B', "Blue"}},
+        };
+        f.width = 10;
+        f.prompt = "Favorite color:";
+        form.fields.push_back(f);
+    }
+
+    /* DateField */
+    {
+        ScreenField f;
+        f.name = "birthdate";
+        f.widget = DateField{.format = DateFormat::MonthDayFullYear};
+        f.width = 12;
+        f.required = true;
+        f.prompt = "Birthdate (MM/DD/YYYY):";
+        form.fields.push_back(f);
+    }
+
+    /* PhoneField */
+    {
+        ScreenField f;
+        f.name = "phone";
+        f.widget = PhoneField{};
+        f.width = 14;
+        f.required = true;
+        f.prompt = "Phone (XXX-XXX-XXXX):";
+        f.validate = [](const std::string& digits) {
+            return digits.size() == 10;
+        };
+        form.fields.push_back(f);
+    }
+
+    /* TextField masked (password) */
+    {
+        ScreenField f;
+        f.name = "password";
+        f.widget = TextField{.max_chars = 20, .masked = true};
+        f.width = 20;
+        f.required = true;
+        f.prompt = "Password (3+ chars):";
+        f.validate = [](const std::string& v) {
+            return v.size() >= 3;
+        };
+        form.fields.push_back(f);
+    }
+
+    form.on_submit = [sp](Terminal& term, SFContext& /*ctx*/, const FormResult& r) {
+        term.newline();
+        term.setAttr(0x0B);
+        term.puts("=== Sequential Form Results ===");
+        term.newline();
+        term.newline();
+
+        const char* labels[] = {"Name", "Color", "Birthdate", "Phone", "Password"};
+        const char* keys[]   = {"name", "color", "birthdate", "phone", "password"};
+        for (int i = 0; i < 5; i++) {
+            term.setAttr(0x03);
+            term.printf("%-12s", labels[i]);
+            term.setAttr(0x0F);
+            auto it = r.values.find(keys[i]);
+            if (it != r.values.end())
+                term.puts(it->second.c_str());
+            term.newline();
+        }
+
+        term.newline();
+        term.setAttr(0x0E);
+        term.puts("Press Q to return.");
+        term.newline();
+
+        Navigator done;
+        done.actions = {{'Q', "Return", [](Session& s) { ui_pop(s); ui_pop(s); }}};
+        ui_push(*sp, done);
+    };
+
+    form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
+        term.newline();
+        term.setAttr(0x0C);
+        term.puts("Cancelled.");
+        term.newline();
+        term.newline();
+        term.setAttr(0x0E);
+        term.puts("Press Q to return.");
+        term.newline();
+
+        Navigator done;
+        done.actions = {{'Q', "Return", [](Session& s) { ui_pop(s); ui_pop(s); }}};
+        ui_push(*sp, done);
+    };
+
+    return form;
+}
+
+/* ================================================================== */
+/*  Demo 3: Conditional Branching (file search)                        */
+/* ================================================================== */
+
+static ScreenForm make_branching_demo(Session* sp)
+{
+    ScreenForm form;
+    form.id = "branch_demo";
+    form.mode = FormMode::Sequential;
+    form.exit = FormExit::None;
+
+    /* Search type selector */
+    {
+        ScreenField f;
+        f.name = "search_type";
+        f.widget = SelectField{
+            .options = {{'U', "Uploader"}, {'D', "Date"}, {'K', "Keyword"}},
+        };
+        f.width = 15;
+        f.required = true;
+        f.prompt = "Search by:";
+        form.fields.push_back(f);
+    }
+
+    /* Uploader name — only when search_type == U */
+    {
+        ScreenField f;
+        f.name = "uploader";
+        f.widget = TextField{.max_chars = 30};
+        f.width = 30;
+        f.required = true;
+        f.prompt = "Uploader name:";
+        f.when = [](const FormResult& r) {
+            auto it = r.values.find("search_type");
+            return it != r.values.end() && it->second == "U";
+        };
+        form.fields.push_back(f);
+    }
+
+    /* Since date — only when search_type == D */
+    {
+        ScreenField f;
+        f.name = "since_date";
+        f.widget = DateField{.format = DateFormat::MonthDayFullYear};
+        f.width = 12;
+        f.required = true;
+        f.prompt = "Files since (MM/DD/YYYY):";
+        f.when = [](const FormResult& r) {
+            auto it = r.values.find("search_type");
+            return it != r.values.end() && it->second == "D";
+        };
+        form.fields.push_back(f);
+    }
+
+    /* Keyword — only when search_type == K */
+    {
+        ScreenField f;
+        f.name = "keyword";
+        f.widget = TextField{.max_chars = 40};
+        f.width = 40;
+        f.required = true;
+        f.prompt = "Search keyword:";
+        f.when = [](const FormResult& r) {
+            auto it = r.values.find("search_type");
+            return it != r.values.end() && it->second == "K";
+        };
+        form.fields.push_back(f);
+    }
+
+    form.on_submit = [sp](Terminal& term, SFContext& /*ctx*/, const FormResult& r) {
+        term.newline();
+        term.setAttr(0x0B);
+        term.puts("=== File Search Parameters ===");
+        term.newline();
+        term.newline();
+
+        auto st = r.values.find("search_type");
+        if (st != r.values.end()) {
+            term.setAttr(0x03);
+            term.puts("Search type: ");
+            term.setAttr(0x0F);
+            if (st->second == "U") {
+                term.puts("Uploader");
+                term.newline();
+                term.setAttr(0x03);
+                term.puts("Uploader:    ");
+                term.setAttr(0x0F);
+                auto v = r.values.find("uploader");
+                if (v != r.values.end()) term.puts(v->second.c_str());
+            } else if (st->second == "D") {
+                term.puts("Date");
+                term.newline();
+                term.setAttr(0x03);
+                term.puts("Since:       ");
+                term.setAttr(0x0F);
+                auto v = r.values.find("since_date");
+                if (v != r.values.end()) term.puts(v->second.c_str());
+            } else if (st->second == "K") {
+                term.puts("Keyword");
+                term.newline();
+                term.setAttr(0x03);
+                term.puts("Keyword:     ");
+                term.setAttr(0x0F);
+                auto v = r.values.find("keyword");
+                if (v != r.values.end()) term.puts(v->second.c_str());
+            }
+            term.newline();
+        }
+
+        term.newline();
+        term.setAttr(0x0E);
+        term.puts("Press Q to return.");
+        term.newline();
+
+        Navigator done;
+        done.actions = {{'Q', "Return", [](Session& s) { ui_pop(s); ui_pop(s); }}};
+        ui_push(*sp, done);
+    };
+
+    form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
+        term.newline();
+        term.setAttr(0x0C);
+        term.puts("Search cancelled.");
+        term.newline();
+        term.newline();
+        term.setAttr(0x0E);
+        term.puts("Press Q to return.");
+        term.newline();
+
+        Navigator done;
+        done.actions = {{'Q', "Return", [](Session& s) { ui_pop(s); ui_pop(s); }}};
+        ui_push(*sp, done);
+    };
+
+    return form;
+}
+
+/* ================================================================== */
+/*  Main menu                                                          */
+/* ================================================================== */
+
+static Navigator make_main_menu(Session* sp)
+{
+    Navigator nav;
+    nav.id = "main";
+    nav.on_enter = [](Session& s) {
+        s.term.clearScreen();
+        s.term.gotoXY(0, 0);
+        s.term.setAttr(0x0B);
+        s.term.puts("== ScreenForm Test ==");
+        s.term.newline();
+        s.term.newline();
+        s.term.setAttr(0x0E);
+        s.term.puts("[1] ");
+        s.term.setAttr(0x07);
+        s.term.puts("Screen Form (new user registration)");
+        s.term.newline();
+        s.term.setAttr(0x0E);
+        s.term.puts("[2] ");
+        s.term.setAttr(0x07);
+        s.term.puts("Sequential Form (all widget types)");
+        s.term.newline();
+        s.term.setAttr(0x0E);
+        s.term.puts("[3] ");
+        s.term.setAttr(0x07);
+        s.term.puts("Conditional Branching (file search)");
+        s.term.newline();
+        s.term.setAttr(0x0E);
+        s.term.puts("[Q] ");
+        s.term.setAttr(0x07);
+        s.term.puts("Quit");
+        s.term.newline();
+        s.term.newline();
+        s.term.setAttr(0x03);
+        s.term.puts("Choice: ");
+    };
+    nav.actions = {
+        {'1', "Screen", [sp](Session& s) {
+            ui_push(s, make_screen_demo(sp));
+        }},
+        {'2', "Sequential", [sp](Session& s) {
+            ui_push(s, make_sequential_demo(sp));
+        }},
+        {'3', "Branching", [sp](Session& s) {
+            ui_push(s, make_branching_demo(sp));
+        }},
+        {'Q', "Quit", [](Session& s) { ui_quit(s); }},
+    };
+    return nav;
 }
 
 /* ================================================================== */
@@ -238,30 +537,41 @@ static ScreenForm make_newuser_form(Session* sp)
 
 int main(int argc, char *argv[])
 {
-    int port = 0;
+    int port = 2024;
     g_datadir = ".";
+    const char* test_name = nullptr;
 
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-' && argv[i][1] == 'P')
             port = std::atoi(&argv[i][2]);
         else if (argv[i][0] == '-' && argv[i][1] == 'd')
             g_datadir = &argv[i][2];
-    }
-
-    if (port == 0) {
-        std::fprintf(stderr, "Usage: formtest -P<port> [-d<datadir>]\n");
-        std::fprintf(stderr, "  -P<port>     TCP port to listen on\n");
-        std::fprintf(stderr, "  -d<dir>      Data directory (contains afiles/)\n");
-        std::fprintf(stderr, "\nExample: formtest -P2024 -dbuild\n");
-        return 1;
+        else if (argv[i][0] != '-')
+            test_name = argv[i];
     }
 
     UIConfig config;
     config.listen_port = port;
     config.banner = "formtest";
-    config.on_connect = [](Session& s) -> ActiveUI {
-        return make_newuser_form(&s);
-    };
+
+    if (test_name && std::strcmp(test_name, "screen") == 0) {
+        config.on_connect = [](Session& s) -> ActiveUI {
+            return make_screen_demo(&s);
+        };
+    } else if (test_name && std::strcmp(test_name, "seq") == 0) {
+        config.on_connect = [](Session& s) -> ActiveUI {
+            return make_sequential_demo(&s);
+        };
+    } else if (test_name && std::strcmp(test_name, "branch") == 0) {
+        config.on_connect = [](Session& s) -> ActiveUI {
+            return make_branching_demo(&s);
+        };
+    } else {
+        /* Interactive menu */
+        config.on_connect = [](Session& s) -> ActiveUI {
+            return make_main_menu(&s);
+        };
+    }
 
     ui_run(config);
     return 0;
