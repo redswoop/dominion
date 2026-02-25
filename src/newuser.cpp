@@ -1,4 +1,6 @@
 #include "newuser.h"
+#include "newuser_form.h"
+#include "screen_form.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
@@ -25,6 +27,7 @@
 #pragma hdrstop
 
 
+/* go/goin are still used by cmd_registry.cpp and config.cpp */
 void go(int x,int y)
 {
     /* x = row (1-based), y = col (1-based) — ANSI convention */
@@ -42,7 +45,7 @@ void goin(int x,int y)
     go(x,y);
 }
 
-#define gotop() goin(2,4);
+#define gotop() goin(2,4)
 
 
 int check_name(const char *nn)
@@ -99,95 +102,71 @@ int check_name(const char *nn)
     }
     close(f);
 
-    if(!ok) { 
-        printfile("trashcan"); 
-        io.hangup=1; 
+    if(!ok) {
+        printfile("trashcan");
+        io.hangup=1;
     }
 
     return(ok);
 }
 
+/* withansi: still referenced from lilo.cpp (extern char withansi) */
 char withansi;
 
-void input_comment(void)
+/* input_sex: still called from uedit.cpp */
+void input_sex(User& u)
 {
-    auto& sess = Session::instance();
-    char s[MAX_PATH_LEN];
-
+    nl();
     if(withansi) gotop();
-    pl("0Enter your Comment");
-    if(withansi) goin(14,18); 
-    else
-        outchr(':');
-    inputl(s,35);
-    sess.user.set_comment(s);
+    outstr("0Sex <M>ale,<F>emale,<Y>es,<L>ots?0 ");
+    if(withansi) goin(9,18);
+    u.set_sex(onek("MFYL"));
 }
 
-void input_name(char *namer)
+/* input_age: still called from lilo.cpp */
+void input_age(User& u)
 {
-    auto& sess = Session::instance();
-    int ok,count;
-    char s[41];
+    int ok,y,m,d;
+    char s[10];
 
-    count=0;
     do {
-        nl();
         if(withansi) gotop();
-        outstr("0Enter a handle or your real name: ");
-        if (withansi) goin(7,18);
-        inputl(s,30);
-        sess.user.set_name(s);
-        strcpy(namer,sess.user.name());
-        { char _buf[31]; strcpy(_buf, sess.user.name()); strupr(_buf); sess.user.set_name(_buf); }
-        ok=check_name(sess.user.name());
-        if (!ok) {
-            nl();
-            if(withansi) gotop();
-            pl("I'm sorry, you can't use that name.");
-            delay(200);
-            ++count;
-            if (count==5)
-                io.hangup=1;
-        }
-    } 
-    while ((!ok) && (!io.hangup));
-}
-
-void input_realname(char *namer)
-{
-    auto& sess = Session::instance();
-    do {
+        pl("0Enter your birthdate, in 00/00/00 Form.");
+        if(withansi) goin(10,18);
+        else
+            outstr("3:0 ");
+        inputdate(s,0);
         nl();
-        if(withansi)  gotop();
-        pl("0Enter your real name, or = if same as alias.");
-        if(withansi) goin(8,18);
-        else outstr(": ");
-        { char _buf[21]; strcpy(_buf, sess.user.realname()); inputl(_buf,20); sess.user.set_realname(_buf); }
-
-        if (sess.user.realname()[0]==0) {
-            nl();
-            if(withansi) gotop();
-            pl("Sorry, you must enter your real name.");
-        }
-
-        if (sess.user.realname()[0]=='=') sess.user.set_realname(namer);
+        m=atoi(s);
+        d=atoi(&(s[3]));
+        y=atoi(&(s[6]))+1900;
+        if ((m>0) && (m<=12) && (d>0) && (d<32) && (y>=1900))
+            ok=1;
+        else ok=0;
     }
-    while ((sess.user.realname()[0]==0) && (!io.hangup));
+    while(!ok&&!io.hangup);
+
+    u.set_birth_month((unsigned short) m);
+    u.set_birth_day((unsigned short) d);
+    u.set_birth_year((unsigned short) (y-1900));
+    u.set_age(years_old(u.birth_month(),u.birth_day(),u.birth_year()));
+    nl();
 }
 
+/* input_city: still called from lilo.cpp */
 void input_city()
 {
     auto& sess = Session::instance();
-    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
+    char s[MAX_PATH_LEN];
     nl();
 
     do {
         if(withansi) gotop();
-        pl("0Enter Your Street Address");
+        pl("0Enter Your Street Address");
         if(withansi) goin(12,18);
-        else outstr("3:0");
+        else outstr("3:0");
         inputl(s,35);
-    } 
+    }
     while(!s[0] && !io.hangup);
     sess.user.set_street(s);
 
@@ -204,89 +183,7 @@ void input_city()
     while(!sess.user.city()[0]&&!io.hangup);
 }
 
-void input_phone()
-{
-    auto& sys = System::instance();
-    auto& sess = Session::instance();
-    int ok,i;
-
-    do {
-        nl();
-        if(withansi) gotop();
-        pl("0Enter your voice phone number");
-        if(withansi) goin(11,18); 
-        else
-            outstr("3:0");
-        { char _buf[13]; strcpy(_buf, sess.user.phone()); i=inputfone(_buf); sess.user.set_phone(_buf); }
-        if(i)
-            ok=1;
-        else {
-
-            ok=1;
-            if ((sys.cfg.sysconfig & sysconfig_free_phone)==0) {
-                if (strlen(sess.user.phone())!=12)
-                    ok=0;
-                if ((sess.user.phone()[3]!='-') || (sess.user.phone()[7]!='-'))
-                    ok=0;
-                /* 1993 area code rule (second digit must be 0 or 1) removed —
-                   no longer valid after mid-90s area code expansion */
-                for (i=0; i<12; i++)
-                    if ((i!=3) && (i!=7))
-                        if ((sess.user.phone()[i]<'0') || (sess.user.phone()[i]>'9'))
-                            ok=0;
-            }
-
-            if (!ok) {
-                nl();
-                if(withansi) gotop();
-                pl("Please enter a valid phone number in the correct format.");
-                delay(300);
-            }
-        }
-    } 
-    while ((!ok) && (!io.hangup));
-
-}
-
-void input_sex(User& u)
-{
-    nl();
-    if(withansi) gotop();
-    outstr("0Sex <M>ale,<F>emale,<Y>es,<L>ots?0 ");
-    if(withansi) goin(9,18);
-    u.set_sex(onek("MFYL"));
-}
-
-void input_age(User& u)
-{
-    int a,ok,y,m,d;
-    char s[10];
-
-    do {
-        if(withansi) gotop();
-        pl("0Enter your birthdate, in 00/00/00 Form.");
-        if(withansi) goin(10,18); 
-        else
-            outstr("3:0 ");
-        inputdate(s,0);
-        nl();
-        m=atoi(s);
-        d=atoi(&(s[3]));
-        y=atoi(&(s[6]))+1900;
-        if ((m>0) && (m<=12) && (d>0) && (d<32) && (y>=1900))
-            ok=1;
-        else ok=0;
-    } 
-    while(!ok&&!io.hangup);
-
-    u.set_birth_month((unsigned short) m);
-    u.set_birth_day((unsigned short) d);
-    u.set_birth_year((unsigned short) (y-1900));
-    u.set_age(years_old(u.birth_month(),u.birth_day(),u.birth_year()));
-    nl();
-}
-
-
+/* input_comptype: still called from lilo.cpp */
 void input_comptype()
 {
     auto& sess = Session::instance();
@@ -301,14 +198,14 @@ void input_comptype()
         numct=numComputerTypes();
         for (i=0; i<numct; i++) {
             if(withansi) go(8+i,57);
-            npr("0%d>2 %s\r\n",i+1,getComputerType(i));
+            npr("0%d>2 %s\r\n",i+1,getComputerType(i));
         }
         nl();
         if(withansi) gotop();
-        pl("2Enter your computer type");
-        if(withansi) goin(15,18); 
+        pl("2Enter your computer type");
+        if(withansi) goin(15,18);
         else
-            outstr("3:0");
+            outstr("3:0");
         input(c,2);
         ct=atoi(c);
 
@@ -316,7 +213,7 @@ void input_comptype()
         if ((ct<1) || (ct>i))
             ok=0;
 
-    } 
+    }
     while ((!ok) && (!io.hangup));
     sess.user.set_comp_type(ct-1);
     if (io.hangup)
@@ -331,8 +228,8 @@ void input_screensize()
 
     do {
         nl();
-        pl("0How wide is your screen (7chars, <CR>=800) ?");
-        outstr("3:0");
+        pl("0How wide is your screen (7chars, <CR>=800) ?");
+        outstr("3:0");
         input(s,2);
         x=atoi(s);
         if (s[0]==0)
@@ -342,13 +239,13 @@ void input_screensize()
             ok=0;
         else
             ok=1;
-    } 
+    }
     while ((!ok) && (!io.hangup));
 
     do {
         nl();
-        pl("0How tall is your screen (7lines, <CR>=250) ?");
-        outstr("3:0");
+        pl("0How tall is your screen (7lines, <CR>=250) ?");
+        outstr("3:0");
         input(s,2);
         y=atoi(s);
         if (s[0]==0)
@@ -358,38 +255,12 @@ void input_screensize()
             ok=0;
         else
             ok=1;
-    } 
+    }
     while ((!ok) && (!io.hangup));
 
     sess.user.set_screenchars(x);
     sess.user.set_screenlines(y);
     io.screenlinest=y;
-}
-
-void input_pw()
-{
-    auto& sess = Session::instance();
-    int ok;
-    char s[MAX_PATH_LEN];
-
-    do {
-        nl();
-        if(withansi) gotop();
-        pl("2Please enter a password, 3-20 chars.");
-        if(withansi) goin(16,18); 
-        else
-            outstr("3:0");
-        input(s,20);
-
-        ok=1;
-        if (strlen(s)<3)
-            ok=0;
-    } 
-    while ((!ok) && (!io.hangup));
-    if (ok)
-        sess.user.set_password(s);
-    else
-        pl("Password not changed.");
 }
 
 
@@ -398,11 +269,10 @@ void newuser()
     auto& sys = System::instance();
     auto& sess = Session::instance();
     int i,ok;
-    char s[255],s1[MAX_PATH_LEN],ch;
-    long l1,l2;
+    char s[255],s1[MAX_PATH_LEN];
     hdrinfo hdr;
 
-    sprintf(s,"7!! 0New User 4%s 0at 5%s0, %s Baud",date(),times(),io.curspeed);
+    sprintf(s,"7!! 0New User 4%s 0at 5%s0, %s Baud",date(),times(),io.curspeed);
     sl1(0,"");
     sl1(0,s);
     if (UserDB::instance().user_count()>=(int)sys.cfg.maxusers) {
@@ -433,7 +303,7 @@ void newuser()
                 sprintf(s1,"Wrong newuser password: %s",s);
                 sl1(0,s1);
             }
-        } 
+        }
         while ((!ok) && (!io.hangup) && (i++<4));
         if (!ok)
             io.hangup=1;
@@ -517,98 +387,24 @@ void newuser()
 
     if (!io.hangup) {
         if (incom) {
-            if (printfile("system")) sl1(0,"9# 0Aborted System Info Message!");
+            if (printfile("system")) sl1(0,"9# 0Aborted System Info Message!");
             pausescr();
-            if (printfile("newuser")) sl1(0,"9# 0Aborted Newuser Message!");
+            if (printfile("newuser")) sl1(0,"9# 0Aborted Newuser Message!");
             pausescr();
         }
-        outchr(12);
-        withansi=sess.user.sysstatus() & sysstatus_ansi;
-        if(withansi) {
-            int saved_incom = incom;
-            io.mciok=0;
-            incom=0;
-            printfile("newans.ans");
-            incom=saved_incom;
-        }
-        input_name(s);
-        input_realname(s);
-        input_sex(sess.user);
-        input_age(sess.user);
-        input_phone();
-        input_city();
-        input_comment();
-        input_comptype();
-        input_pw();
-        sess.user.set_helplevel(2);
-        sess.user.set_lastconf(1);
-        sess.user.set_lastsub(0);
-        sess.user.set_lastdir(0);
+
+        /* Run ScreenForm — clears screen, renders newans.ans, collects all
+           user fields.  on_submit calls newuser_form_apply() which populates
+           sess.user.  on_cancel sets hangup. */
+        ScreenForm form = make_newuser_form(std::string(sys.cfg.gfilesdir));
+        SFContext ctx;
+        ctx.hangup = &io.hangup;
+        ctx.echo   = &io.echo;
+        Terminal *term = (Terminal*)term_instance();
+        sf_run(*term, ctx, form);
     }
 
-    if (!io.hangup)
-    do {
-        nl();
-        if(!withansi) {
-            outchr(12);
-            npr("<1> Name            %s\r\n",sess.user.name());
-            npr("<2> Real Name       %s\r\n",sess.user.realname());
-            npr("<3> Sex             %c\r\n",sess.user.sex());
-            npr("<4> Birthdate       %02d/%02d/%02d\r\n",(int) sess.user.birth_month(),(int) sess.user.birth_day(),(int) sess.user.birth_year());
-            npr("<5> Phone Number    %s\r\n",sess.user.phone());
-            npr("<6> Address         %s\r\n%-20s%s\r\n",sess.user.street(),"",sess.user.city());
-            npr("<7> Computer type   %s\r\n",getComputerType(sess.user.comp_type()));
-            npr("<8> Comment         %s\r\n",sess.user.comment());
-            npr("<9> Password        %s\r\n",sess.user.password());
-            npr("<Q> No changes.");
-            nl();
-            nl();
-        }
-        if(withansi) gotop();
-        npr("New User Configuration (Q=Quit) ");
-        ch=onek("Q123456789");
-        ok=0;
-        switch(ch) {
-        case 'Q': 
-            ok=1; 
-            break;
-        case '1': 
-            input_name(s); 
-            break;
-        case '2': 
-            input_realname(s); 
-            break;
-        case '3': 
-            input_sex(sess.user);
-            break;
-        case '4':
-            input_age(sess.user); 
-            break;
-        case '5': 
-            input_phone(); 
-            break;
-        case '6': 
-            input_city(); 
-            break;
-        case '7': 
-            input_comment(); 
-            break;
-        case '8': 
-            input_comptype(); 
-            break;
-        case '9': 
-            input_pw(); 
-            break;
-        }
-    } 
-    while ((!ok) && (!io.hangup));
-
     outchr(12);
-    /* Set sensible defaults — skip the barrage of post-reg questions.
-       Users can change these later from the Options menu. */
-    sess.user.set_flisttype(1);
-    sess.user.set_helplevel(2);
-
 
     if (!io.hangup) {
         nl();
@@ -625,17 +421,17 @@ void newuser()
         save_status();
         ok=0;
         topscreen();
-        logpr("9!! 0Added New User 4%s0 to user list",sess.user.display_name(sess.usernum).c_str());
+        logpr("9!! 0Added New User 4%s0 to user list",sess.user.display_name(sess.usernum).c_str());
         nl();
-        npr("0Your user number is 3%d0.\r\n",sess.usernum);
-        npr("0Your password is '3%s0'\r\n",sess.user.password());
+        npr("0Your user number is 3%d0.\r\n",sess.usernum);
+        npr("0Your password is '3%s0'\r\n",sess.user.password());
         nl();
         pausescr();
-        sprintf(s,"7! 0Newuser 4%s 0at %s",sess.user.name(),times());
+        sprintf(s,"7! 0Newuser 4%s 0at %s",sess.user.name(),times());
         ssm(1,0,s);
         if(incom) {
             infoform(sys.nifty.nuinf,0);
-            if(printfile("feedback")) sl1(0,"9# 0Aborted Feedback Message!");
+            if(printfile("feedback")) sl1(0,"9# 0Aborted Feedback Message!");
             email(1,"NewUser Validation Feedback",0);
             if (sys.cfg.newuser_c[0]) ex("D1",sys.cfg.newuser_c);
         }
@@ -660,7 +456,7 @@ void infoform(char fn[8],int once)
 
     if(!exist(s)) {
         pl("Infoform Not Found.");
-        logpr("7! 0Infoform 4%s 0not found",fn);
+        logpr("7! 0Infoform 4%s 0not found",fn);
         return;
     }
 
@@ -694,18 +490,18 @@ void infoform(char fn[8],int once)
         if(s[0]==';') {
             fputs(s,fno);
             fputs("\n",fno);
-        } 
+        }
         else if(strchr(s,'*')) {
             filter(s,'*');
             do {
                 outstr(s);
                 inputl(s1,51);
-            } 
+            }
             while(!s1[0]&&!io.hangup);
             strcat(s,s1);
             strcat(s,"\n");
             fputs(s,fno);
-        } 
+        }
         else if(strchr(s,'@')) {
             filter(s,'@');
             outstr(s);
@@ -713,11 +509,11 @@ void infoform(char fn[8],int once)
             strcat(s,i?"Yes":"No");
             strcat(s,"\n");
             fputs(s,fno);
-        } 
+        }
         else if(strchr(s,'^')) {
             filter(s,'^');
             printfile(s);
-        } 
+        }
         else {
             pl(s);
             strcat(s,"\n");
@@ -744,8 +540,8 @@ void readform(char fn[8],char i[31])
 
     sprintf(s,"%s%s.ser",sys.cfg.gfilesdir,fn);
     if(!exist(s)) {
-        pl("not found"); 
-        return; 
+        pl("not found");
+        return;
     }
 
     fnin=fopen(s,"rt");

@@ -63,10 +63,10 @@ BBS_MODULES = cmd_registry acs menu_nav msgbase disk user userdb menudb timest s
               menued uedit diredit subedit stringed \
               sysoplog sysopf wfc xinit \
               personal misccmd automsg bbslist timebank topten config \
-              lilo error chat nuv newuser
+              lilo error chat nuv newuser newuser_form
 
 # Platform compatibility
-PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge
+PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge screen_form
 
 # JSON I/O (cJSON library + serialization layer)
 JSON_IO = cJSON json_io menu_json
