@@ -229,7 +229,7 @@ static ScreenForm make_sequential_demo(Session* sp)
     ScreenForm form;
     form.id = "seq_demo";
     form.mode = FormMode::Sequential;
-    form.exit = FormExit::None;
+
 
     /* TextField */
     {
@@ -294,7 +294,6 @@ static ScreenForm make_sequential_demo(Session* sp)
     }
 
     form.on_submit = [sp](Terminal& term, SFContext& /*ctx*/, const FormResult& r) {
-        term.newline();
         term.setAttr(0x0B);
         term.puts("=== Sequential Form Results ===");
         term.newline();
@@ -323,7 +322,6 @@ static ScreenForm make_sequential_demo(Session* sp)
     };
 
     form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
-        term.newline();
         term.setAttr(0x0C);
         term.puts("Cancelled.");
         term.newline();
@@ -349,7 +347,7 @@ static ScreenForm make_branching_demo(Session* sp)
     ScreenForm form;
     form.id = "branch_demo";
     form.mode = FormMode::Sequential;
-    form.exit = FormExit::None;
+
 
     /* Search type selector */
     {
@@ -410,7 +408,6 @@ static ScreenForm make_branching_demo(Session* sp)
     }
 
     form.on_submit = [sp](Terminal& term, SFContext& /*ctx*/, const FormResult& r) {
-        term.newline();
         term.setAttr(0x0B);
         term.puts("=== File Search Parameters ===");
         term.newline();
@@ -460,7 +457,6 @@ static ScreenForm make_branching_demo(Session* sp)
     };
 
     form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
-        term.newline();
         term.setAttr(0x0C);
         term.puts("Search cancelled.");
         term.newline();
@@ -488,7 +484,7 @@ static ScreenForm make_login_form(Session* sp)
     ScreenForm form;
     form.id = "login";
     form.mode = FormMode::Sequential;
-    form.exit = FormExit::None;
+
 
     /* Username */
     {
@@ -526,7 +522,6 @@ static ScreenForm make_login_form(Session* sp)
         for (auto& c : upper) c = std::toupper(c);
 
         if (upper == "NEW") {
-            term.newline();
             term.setAttr(0x0E);
             term.puts("Entering new user registration...");
             term.newline();
@@ -539,7 +534,6 @@ static ScreenForm make_login_form(Session* sp)
         std::string password = (pit != r.values.end()) ? pit->second : "";
 
         if (password == "password") {
-            term.newline();
             term.setAttr(0x0A);
             term.printf("Welcome, %s!", username.c_str());
             term.newline();
@@ -552,7 +546,6 @@ static ScreenForm make_login_form(Session* sp)
             done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
             ui_push(*sp, done);
         } else {
-            term.newline();
             term.setAttr(0x0C);
             term.puts("Invalid password!");
             term.newline();
@@ -562,7 +555,6 @@ static ScreenForm make_login_form(Session* sp)
     };
 
     form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
-        term.newline();
         term.setAttr(0x07);
         term.puts("Goodbye.");
         term.newline();

@@ -517,6 +517,14 @@ static void sf_seq_position_cursor(Terminal& term, SFContext& ctx,
 static void sf_seq_focus_field(Terminal& term, SFContext& ctx, ScreenForm& form);
 static void form_exit_action(Terminal& term, FormExit exit);
 
+/* Sequential forms auto-downgrade Clear→Scroll (clearing makes no sense
+ * without a background).  This means the default FormExit::Clear just works
+ * for both modes — screen mode clears, sequential mode scrolls. */
+static FormExit sf_seq_exit(ScreenForm& form)
+{
+    return (form.exit == FormExit::Clear) ? FormExit::Scroll : form.exit;
+}
+
 static void sf_seq_leave_field(Terminal& term, SFContext& ctx, ScreenForm& form)
 {
     ScreenField& f = form.fields[ctx.current_field_index];
@@ -605,7 +613,7 @@ static void sf_seq_leave_field(Terminal& term, SFContext& ctx, ScreenForm& form)
             return;
         }
         ctx.form_state.completed = true;
-        form_exit_action(term, form.exit);
+        form_exit_action(term, sf_seq_exit(form));
         if (form.on_submit)
             form.on_submit(term, ctx, ctx.form_state);
         return;
@@ -623,7 +631,7 @@ static void sf_seq_focus_field(Terminal& term, SFContext& ctx, ScreenForm& form)
     if (idx < 0) {
         /* No visible fields remaining — auto-submit */
         ctx.form_state.completed = true;
-        form_exit_action(term, form.exit);
+        form_exit_action(term, sf_seq_exit(form));
         if (form.on_submit)
             form.on_submit(term, ctx, ctx.form_state);
         return;
@@ -707,7 +715,7 @@ static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
     if (ev.key == Key::Escape) {
         ctx.form_state.completed = false;
         term.newline();
-        form_exit_action(term, form.exit);
+        form_exit_action(term, sf_seq_exit(form));
         if (form.on_cancel) form.on_cancel(term, ctx);
         ctx.cancelled = true;
         return;
