@@ -150,8 +150,8 @@ $(BUILDDIR)/uitest: $(TOOLDIR)/uitest.cpp $(OBJDIR)/ui.o $(OBJDIR)/terminal.o | 
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/terminal.o -lncurses
 
 # Form test — fullscreen positioned forms, ZERO BBS dependencies
-$(BUILDDIR)/formtest: $(TOOLDIR)/formtest.cpp $(OBJDIR)/ui.o $(OBJDIR)/terminal.o | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/terminal.o -lncurses
+$(BUILDDIR)/formtest: $(TOOLDIR)/formtest.cpp $(OBJDIR)/ui.o $(OBJDIR)/screen_form.o $(OBJDIR)/terminal.o | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/screen_form.o $(OBJDIR)/terminal.o -lncurses
 
 # --- Data sync from dist/ into build/ ---
 data: | $(BUILDDIR)

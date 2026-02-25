@@ -1,17 +1,15 @@
 /*
- * screen_form.h — Fullscreen positioned form engine (BBS integration layer)
+ * screen_form.h — Fullscreen positioned form engine
  *
- * Engine types and API extracted from ui.h/ui.cpp for direct BBS use.
+ * Canonical ScreenForm library used by both the BBS and standalone tools.
  * Operates on Terminal& + SFContext& — no BBS globals, no Session singleton.
  *
- * Types are compatible with but separate from ui.h's ScreenForm types.
- * Deduplication is future work.
+ * Two usage patterns:
+ *   - sf_run()  — synchronous: init + dispatch loop (BBS newuser.cpp)
+ *   - sf_init() + sf_dispatch() — event-driven: caller owns the loop (ui.cpp)
  *
- * Key differences from ui.h:
- *   - Callbacks take (Terminal&, SFContext&, ...) not (Session&, ...)
- *   - SelectField stores key char in FormResult (not label)
- *   - SFContext carries hangup/echo pointers for BBS integration
- *   - sf_run() is the entry point (no event loop, no multi-session)
+ * Callbacks take (Terminal&, SFContext&, ...).  Callers that need additional
+ * context (e.g. ui.h Session) capture it in the lambda closure.
  */
 
 #ifndef SCREEN_FORM_H_
@@ -145,5 +143,11 @@ bool     sf_run(Terminal& term, SFContext& ctx, ScreenForm& form);
 
 /* Translate a raw byte (+ lookahead for ESC sequences) to a logical key */
 KeyEvent sf_translate_key(Terminal& term, unsigned char ch);
+
+/* Initialize form: clear screen, send background, focus first field */
+void     sf_init(Terminal& term, SFContext& ctx, ScreenForm& form);
+
+/* Dispatch a single key event to the focused field or command line */
+void     sf_dispatch(Terminal& term, SFContext& ctx, ScreenForm& form, KeyEvent ev);
 
 #endif /* SCREEN_FORM_H_ */

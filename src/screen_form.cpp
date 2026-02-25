@@ -26,10 +26,38 @@
 
 KeyEvent sf_translate_key(Terminal& term, unsigned char ch)
 {
+    /* Local console extended key: ncurses returns 0 as prefix, then a
+     * DOS scancode on the next call (the pendingScancode_ protocol in
+     * Terminal::localGetKeyNB).  Map scancodes to logical keys. */
+    if (ch == 0) {
+        if (term.keyReady()) {
+            unsigned char sc = term.getKeyNB();
+            switch (sc) {
+            case 72: return {Key::Up};
+            case 80: return {Key::Down};
+            case 75: return {Key::Left};
+            case 77: return {Key::Right};
+            case 71: return {Key::Home};
+            case 79: return {Key::End};
+            case 15: return {Key::ShiftTab};
+            default: return {Key::None};
+            }
+        }
+        return {Key::None};
+    }
+
+    /* ESC — check for escape sequence from remote TCP.
+     *
+     * Only check the remote source for sequence continuation.  When
+     * ncurses is active (local console), it handles ESC sequences
+     * internally and delivers arrow keys as KEY_UP etc. via the
+     * scancode protocol above.  A raw 27 from local is always a
+     * standalone ESC.  Using the combined keyReady()/getKeyNB() here
+     * would cross-contaminate sources: remote data would be consumed
+     * as part of a local ESC, eating the ESC and corrupting remote. */
     if (ch == 27) {
-        /* ESC — check for escape sequence (arrow keys etc.) */
         usleep(20000);  /* 20ms for sequence bytes to arrive */
-        if (term.remoteDataReady()) {
+        if (term.remoteConnected() && term.remoteDataReady()) {
             unsigned char ch2 = term.remoteGetKey();
             if (ch2 == '[') {
                 unsigned char ch3 = 0;
@@ -421,8 +449,8 @@ static void form_exit(Terminal& term, FormExit exit)
     }
 }
 
-static void dispatch_screen_form_input(Terminal& term, SFContext& ctx,
-                                       ScreenForm& form, KeyEvent ev)
+void sf_dispatch(Terminal& term, SFContext& ctx,
+                 ScreenForm& form, KeyEvent ev)
 {
     /* Command line mode: past last field */
     if (ctx.current_field_index >= (int)form.fields.size()) {
@@ -607,7 +635,7 @@ static void dispatch_screen_form_input(Terminal& term, SFContext& ctx,
 /*  Init and run                                                       */
 /* ================================================================== */
 
-static void sf_init(Terminal& term, SFContext& ctx, ScreenForm& form)
+void sf_init(Terminal& term, SFContext& ctx, ScreenForm& form)
 {
     ctx.form_state    = FormResult();
     ctx.current_field_index = 0;
@@ -625,21 +653,32 @@ bool sf_run(Terminal& term, SFContext& ctx, ScreenForm& form)
 {
     sf_init(term, ctx, form);
 
+    /* Track whether remote was connected at form start.  If it
+     * disconnects mid-form, we should abort even if local console
+     * is still active (BBS use case: remote user hangs up). */
+    bool had_remote = term.remoteConnected();
+
     while (ctx.hangup == nullptr || !*ctx.hangup) {
-        if (!term.remoteConnected()) {
+        /* Detect disconnect */
+        if (!term.localActive() && !term.remoteConnected()) {
             if (ctx.hangup) *ctx.hangup = 1;
             break;
         }
-        if (!term.remoteDataReady()) {
+        /* Remote dropped mid-session — abort the form */
+        if (had_remote && !term.remoteConnected()) {
+            if (ctx.hangup) *ctx.hangup = 1;
+            break;
+        }
+
+        if (!term.keyReady()) {
             usleep(10000);  /* 10ms poll interval */
             continue;
         }
-        unsigned char ch = term.remoteGetKey();
-        if (ch == 0) continue;
+        unsigned char ch = term.getKeyNB();
 
         KeyEvent ev = sf_translate_key(term, ch);
         if (ev.key != Key::None)
-            dispatch_screen_form_input(term, ctx, form, ev);
+            sf_dispatch(term, ctx, form, ev);
 
         if (ctx.form_state.completed || ctx.cancelled)
             break;

@@ -118,7 +118,7 @@ void input_sex(User& u)
 {
     nl();
     if(withansi) gotop();
-    outstr("0Sex <M>ale,<F>emale,<Y>es,<L>ots?0 ");
+    outstr("\0030Sex <M>ale,<F>emale,<Y>es,<L>ots?\0030 ");
     if(withansi) goin(9,18);
     u.set_sex(onek("MFYL"));
 }
@@ -131,10 +131,10 @@ void input_age(User& u)
 
     do {
         if(withansi) gotop();
-        pl("0Enter your birthdate, in 00/00/00 Form.");
+        pl("\0030Enter your birthdate, in 00/00/00 Form.");
         if(withansi) goin(10,18);
         else
-            outstr("3:0 ");
+            outstr("\0033:\0030 ");
         inputdate(s,0);
         nl();
         m=atoi(s);
@@ -162,9 +162,9 @@ void input_city()
 
     do {
         if(withansi) gotop();
-        pl("0Enter Your Street Address");
+        pl("\0030Enter Your Street Address");
         if(withansi) goin(12,18);
-        else outstr("3:0");
+        else outstr("\0033:\0030");
         inputl(s,35);
     }
     while(!s[0] && !io.hangup);
@@ -198,14 +198,14 @@ void input_comptype()
         numct=numComputerTypes();
         for (i=0; i<numct; i++) {
             if(withansi) go(8+i,57);
-            npr("0%d>2 %s\r\n",i+1,getComputerType(i));
+            npr("\0030%d>\0032 %s\r\n",i+1,getComputerType(i));
         }
         nl();
         if(withansi) gotop();
-        pl("2Enter your computer type");
+        pl("\0032Enter your computer type");
         if(withansi) goin(15,18);
         else
-            outstr("3:0");
+            outstr("\0033:\0030");
         input(c,2);
         ct=atoi(c);
 
@@ -228,8 +228,8 @@ void input_screensize()
 
     do {
         nl();
-        pl("0How wide is your screen (7chars, <CR>=800) ?");
-        outstr("3:0");
+        pl("\0030How wide is your screen (\0037chars, <CR>=80\0030) ?");
+        outstr("\0033:\0030");
         input(s,2);
         x=atoi(s);
         if (s[0]==0)
@@ -244,8 +244,8 @@ void input_screensize()
 
     do {
         nl();
-        pl("0How tall is your screen (7lines, <CR>=250) ?");
-        outstr("3:0");
+        pl("\0030How tall is your screen (\0037lines, <CR>=25\0030) ?");
+        outstr("\0033:\0030");
         input(s,2);
         y=atoi(s);
         if (s[0]==0)
@@ -272,7 +272,7 @@ void newuser()
     char s[255],s1[MAX_PATH_LEN];
     hdrinfo hdr;
 
-    sprintf(s,"7!! 0New User 4%s 0at 5%s0, %s Baud",date(),times(),io.curspeed);
+    sprintf(s,"\0037!! \0030New User \0034%s \0030at \0035%s\0030, %s Baud",date(),times(),io.curspeed);
     sl1(0,"");
     sl1(0,s);
     if (UserDB::instance().user_count()>=(int)sys.cfg.maxusers) {
@@ -387,9 +387,9 @@ void newuser()
 
     if (!io.hangup) {
         if (incom) {
-            if (printfile("system")) sl1(0,"9# 0Aborted System Info Message!");
+            if (printfile("system")) sl1(0,"\0039# \0030Aborted System Info Message!");
             pausescr();
-            if (printfile("newuser")) sl1(0,"9# 0Aborted Newuser Message!");
+            if (printfile("newuser")) sl1(0,"\0039# \0030Aborted Newuser Message!");
             pausescr();
         }
 
@@ -421,17 +421,17 @@ void newuser()
         save_status();
         ok=0;
         topscreen();
-        logpr("9!! 0Added New User 4%s0 to user list",sess.user.display_name(sess.usernum).c_str());
+        logpr("\0039!! \0030Added New User \0034%s\0030 to user list",sess.user.display_name(sess.usernum).c_str());
         nl();
-        npr("0Your user number is 3%d0.\r\n",sess.usernum);
-        npr("0Your password is '3%s0'\r\n",sess.user.password());
+        npr("\0030Your user number is \0033%d\0030.\r\n",sess.usernum);
+        npr("\0030Your password is '\0033%s\0030'\r\n",sess.user.password());
         nl();
         pausescr();
-        sprintf(s,"7! 0Newuser 4%s 0at %s",sess.user.name(),times());
+        sprintf(s,"\0037! \0030Newuser \0034%s \0030at %s",sess.user.name(),times());
         ssm(1,0,s);
         if(incom) {
             infoform(sys.nifty.nuinf,0);
-            if(printfile("feedback")) sl1(0,"9# 0Aborted Feedback Message!");
+            if(printfile("feedback")) sl1(0,"\0039# \0030Aborted Feedback Message!");
             email(1,"NewUser Validation Feedback",0);
             if (sys.cfg.newuser_c[0]) ex("D1",sys.cfg.newuser_c);
         }
@@ -456,7 +456,7 @@ void infoform(char fn[8],int once)
 
     if(!exist(s)) {
         pl("Infoform Not Found.");
-        logpr("7! 0Infoform 4%s 0not found",fn);
+        logpr("\0037! \0030Infoform \0034%s \0030not found",fn);
         return;
     }
 

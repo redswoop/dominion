@@ -5,7 +5,7 @@
  * tab navigation, field-level validation.  Mimics the BBS new-user
  * registration form layout.
  *
- * ZERO BBS DEPENDENCIES — links only ui.o + terminal.o.
+ * ZERO BBS DEPENDENCIES — links only ui.o + screen_form.o + terminal.o.
  *
  * Build:  make build/formtest
  * Run:    build/formtest -P2024
@@ -34,7 +34,7 @@
 
 static std::string g_datadir;  /* path to afiles/ directory */
 
-static ScreenForm make_newuser_form()
+static ScreenForm make_newuser_form(Session* sp)
 {
     ScreenForm form;
     form.id = "newuser";
@@ -178,12 +178,12 @@ static ScreenForm make_newuser_form()
     }
 
     /* --- Submit/Cancel --- */
-    form.on_submit = [](Session& s, const FormResult& r) {
+    form.on_submit = [sp](Terminal& term, SFContext& /*ctx*/, const FormResult& r) {
         /* Screen already cleared by FormExit::Clear */
-        s.term.setAttr(0x0B);
-        s.term.puts("=== New User Registration Complete ===");
-        s.term.newline();
-        s.term.newline();
+        term.setAttr(0x0B);
+        term.puts("=== New User Registration Complete ===");
+        term.newline();
+        term.newline();
 
         const char* labels[] = {
             "Name", "Real Name", "Sex", "Birthdate", "Phone",
@@ -194,39 +194,39 @@ static ScreenForm make_newuser_form()
             "street", "city", "comment", "comptype", "password"
         };
         for (int i = 0; i < 10; i++) {
-            s.term.setAttr(0x03);
-            s.term.printf("%-12s", labels[i]);
-            s.term.setAttr(0x0F);
+            term.setAttr(0x03);
+            term.printf("%-12s", labels[i]);
+            term.setAttr(0x0F);
             auto it = r.values.find(keys[i]);
             if (it != r.values.end())
-                s.term.puts(it->second.c_str());
-            s.term.newline();
+                term.puts(it->second.c_str());
+            term.newline();
         }
 
-        s.term.newline();
-        s.term.setAttr(0x0E);
-        s.term.puts("Press Q to disconnect.");
-        s.term.newline();
+        term.newline();
+        term.setAttr(0x0E);
+        term.puts("Press Q to disconnect.");
+        term.newline();
 
         /* Non-blocking: push a dismiss navigator instead of blocking on getKey() */
         Navigator done;
         done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
-        ui_push(s, done);
+        ui_push(*sp, done);
     };
 
-    form.on_cancel = [](Session& s) {
+    form.on_cancel = [sp](Terminal& term, SFContext& /*ctx*/) {
         /* Screen already cleared by FormExit::Clear */
-        s.term.setAttr(0x0C);
-        s.term.puts("Registration cancelled.");
-        s.term.newline();
-        s.term.newline();
-        s.term.setAttr(0x0E);
-        s.term.puts("Press Q to disconnect.");
-        s.term.newline();
+        term.setAttr(0x0C);
+        term.puts("Registration cancelled.");
+        term.newline();
+        term.newline();
+        term.setAttr(0x0E);
+        term.puts("Press Q to disconnect.");
+        term.newline();
 
         Navigator done;
         done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
-        ui_push(s, done);
+        ui_push(*sp, done);
     };
 
     return form;
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
     config.listen_port = port;
     config.banner = "formtest";
     config.on_connect = [](Session& s) -> ActiveUI {
-        return make_newuser_form();
+        return make_newuser_form(&s);
     };
 
     ui_run(config);

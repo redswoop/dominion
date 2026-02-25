@@ -980,6 +980,7 @@ int Terminal::ncToScancode(int key)
     case KEY_RIGHT: return 77;
     case KEY_HOME:  return 71;
     case KEY_END:   return 79;
+    case KEY_BTAB:  return 15;  /* Shift-Tab */
     default:        return 0;
     }
 }
