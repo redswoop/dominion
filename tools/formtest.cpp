@@ -526,7 +526,15 @@ static ScreenForm make_login_form(Session* sp)
             term.puts("Entering new user registration...");
             term.newline();
             term.newline();
-            ui_push(*sp, make_screen_demo(sp));
+            auto newuser = make_screen_demo(sp);
+            /* Override callbacks: return to login on complete/cancel */
+            newuser.on_submit = [sp](Terminal& /*term*/, SFContext&, const FormResult&) {
+                push_login(sp);
+            };
+            newuser.on_cancel = [sp](Terminal& /*term*/, SFContext&) {
+                push_login(sp);
+            };
+            ui_push(*sp, newuser);
             return;
         }
 
@@ -569,6 +577,8 @@ static ScreenForm make_login_form(Session* sp)
 
 static void push_login(Session* sp)
 {
+    sp->term.clearScreen();
+    sp->term.gotoXY(0, 0);
     sp->term.setAttr(0x0B);
     sp->term.puts("== Dominion BBS v3.1 ==");
     sp->term.newline();
