@@ -11,6 +11,7 @@
 #include "userdb.h"
 #include "system.h"
 #include "error.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -35,11 +36,11 @@ char *disk_string(int whichstring,char *fn)
     int i;
     stringrec astring;
 
-    sprintf(s1,"%s%s",sys.cfg.datadir,fn);
-    i=open(s1,O_RDONLY|O_BINARY);
+    auto path = BbsPath::join(sys.cfg.datadir, fn);
+    i=open(path.c_str(),O_RDONLY|O_BINARY);
 
     if (i<0) {
-        err(1,s1,"In Disk_String");
+        err(1,(char*)path.c_str(),"In Disk_String");
     }
 
     lseek(i,((long)(whichstring-1))*(sizeof(astring)),SEEK_SET);
@@ -113,9 +114,9 @@ char *get_say(int which)
     long l;
     rumourrec arum;
 
-    sprintf(s1,"%srumours.dat",sys.cfg.datadir);
-    if(!exist(s1)) return("Sorry, I have Nothing To Say.  Add a Rumor.");
-    i=open(s1,O_RDWR | O_BINARY);
+    auto rum_path = BbsPath::join(sys.cfg.datadir, "rumours.dat");
+    if(!exist((char*)rum_path.c_str())) return("Sorry, I have Nothing To Say.  Add a Rumor.");
+    i=open(rum_path.c_str(),O_RDWR | O_BINARY);
 
     if(which) {
         nl();
@@ -170,8 +171,8 @@ void addsay(void)
     nl();
     npr("5Anonymous? ");
     astring.an=yn();
-    sprintf(s1,"%srumours.dat",sys.cfg.datadir);
-    i=open(s1,O_RDWR|O_CREAT|O_BINARY, S_IREAD|S_IWRITE);
+    auto rum_path2 = BbsPath::join(sys.cfg.datadir, "rumours.dat");
+    i=open(rum_path2.c_str(),O_RDWR|O_CREAT|O_BINARY, S_IREAD|S_IWRITE);
     lseek(i,0L,SEEK_END);
     write(i,(void *)&astring,sizeof(rumourrec));
     close(i);
@@ -184,19 +185,10 @@ void readstring(int which)
     char s[161],s1[171];
     int f;
 
-    switch(which) {
-    case 0: 
-        sprintf(s,"%sstrings.dat",sys.cfg.datadir); 
-        break;
-    case 1: 
-        sprintf(s,"%ssysstr.dat",sys.cfg.datadir); 
-        break;
-    case 2: 
-        sprintf(s,"%ssdesc.dat",sys.cfg.datadir); 
-        break;
-    }
+    const char *datfile = (which == 1) ? "sysstr.dat" : (which == 2) ? "sdesc.dat" : "strings.dat";
+    auto dat_path = BbsPath::join(sys.cfg.datadir, datfile);
 
-    f=open(s,O_RDWR|O_BINARY|O_CREAT|O_TRUNC);
+    f=open(dat_path.c_str(),O_RDWR|O_BINARY|O_CREAT|O_TRUNC);
 
     switch(which) {
     case 0: 
@@ -244,8 +236,8 @@ void extractstring(int which)
     }
 
     f=fopen(s,"wt");
-    sprintf(s,which?"%ssysstr.dat":"%sstrings.dat",sys.cfg.datadir);
-    i=open(s,O_RDWR|O_BINARY);
+    auto ext_path = BbsPath::join(sys.cfg.datadir, which ? "sysstr.dat" : "strings.dat");
+    i=open(ext_path.c_str(),O_RDWR|O_BINARY);
 
     while(!done) {
         l=read(i,&s,161);
@@ -268,12 +260,9 @@ void liststring(int type,int where)
     rumourrec r;
 
     io.mciok=0;
-    if(type==1)
-        sprintf(s1,"%ssysstr.dat",sys.cfg.datadir);
-    else if(type==2)
-        sprintf(s1,"%ssdesc.dat",sys.cfg.datadir);
-    else sprintf(s1,"%sstrings.dat",sys.cfg.datadir);
-    i=open(s1,O_RDWR | O_BINARY);
+    const char *lstfile = (type == 1) ? "sysstr.dat" : (type == 2) ? "sdesc.dat" : "strings.dat";
+    auto lst_path = BbsPath::join(sys.cfg.datadir, lstfile);
+    i=open(lst_path.c_str(),O_RDWR | O_BINARY);
 
     lseek(i,((long)(where*9))*(sizeof(astring)),SEEK_SET);
     while(read(i,type==3?(void *)&r:(void *)&astring,type==3?sizeof(rumourrec):sizeof(astring))&&num<9)
@@ -333,14 +322,11 @@ void edstring(int type)
         case '7':
         case '8':
         case '9':
-            if(type==1)
-                sprintf(s1,"%ssysstr.dat",sys.cfg.datadir);
-            else if(type==2)
-                sprintf(s1,"%ssdesc.dat",sys.cfg.datadir);
-            else
-                sprintf(s1,"%sstrings.dat",sys.cfg.datadir);
+            {
+            const char *edf = (type == 1) ? "sysstr.dat" : (type == 2) ? "sdesc.dat" : "strings.dat";
+            auto ed_path = BbsPath::join(sys.cfg.datadir, edf);
             ednum=(set*9)+c-'0'-1;
-            i=open(s1,O_RDWR | O_CREAT |O_BINARY | S_IREAD | S_IWRITE );
+            i=open(ed_path.c_str(),O_RDWR | O_CREAT |O_BINARY | S_IREAD | S_IWRITE );
             if(i<0) pl("Unable to open`P");
             lseek(i,((long)(ednum))*(sizeof(astring)),SEEK_SET);
             read(i,(void *)&astring,sizeof(astring));
@@ -363,9 +349,10 @@ void edstring(int type)
                 close(i);
             }
             io.mciok=1;
+            }
             break;
         }
-    } 
+    }
     while(!io.hangup&&!done);
 }
 
@@ -381,8 +368,8 @@ void searchrum(void)
     nl();
     inputdat("Text to Scan For",scan,20,1);
     if(!scan[0]) return;
-    sprintf(s,"%srumours.dat",sys.cfg.datadir);
-    i=open(s,O_RDWR|O_BINARY);
+    auto srum_path = BbsPath::join(sys.cfg.datadir, "rumours.dat");
+    i=open(srum_path.c_str(),O_RDWR|O_BINARY);
     l=filelength(i);
     num=l/sizeof(rumourrec);
     nl();

@@ -19,6 +19,7 @@
 #include "userdb.h"
 #include "system.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 #include <time.h>
@@ -53,9 +54,8 @@ int getrec(char *spec,int *type)
         SETREC(i);
         if(*type==1) {
             read(sess.dlf,&u,sizeof(uploadsrec));
-            strcpy(s,sys.directories[sess.udir[sess.curdir].subnum].dpath);
-            strcat(s,u.filename);
-            if(exist(s))
+            auto path = BbsPath::join(sys.directories[sess.udir[sess.curdir].subnum].dpath, u.filename);
+            if(exist((char*)path.c_str()))
                 i1=0;
             else
                 break;
@@ -93,9 +93,8 @@ void getnextrec(char *spec,int *cp,int type)
         SETREC(*cp);
         if(type==1) {
             read(sess.dlf,&u,sizeof(uploadsrec));
-            strcpy(s,sys.directories[sess.udir[sess.curdir].subnum].dpath);
-            strcat(s,u.filename);
-            if(exist(s))
+            auto path = BbsPath::join(sys.directories[sess.udir[sess.curdir].subnum].dpath, u.filename);
+            if(exist((char*)path.c_str()))
                 i1=0;
             else
                 break;
@@ -323,8 +322,7 @@ int upload_file(char *fn, int dn,int *ato)
     u.mask=0;
     u.points=0;
     u.ats[0]=1;
-    strcpy(ff,d.dpath);
-    strcat(ff,s);
+    strcpy(ff, BbsPath::join(d.dpath, s).c_str());
     f=open(ff,O_RDONLY | O_BINARY);
     l=filelength(f);
     u.numbytes=l;
@@ -370,8 +368,7 @@ int upload_file(char *fn, int dn,int *ato)
         if (strstr(u.filename,".GIF"))
             addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
-        strcpy(ff,d.dpath);
-        strcat(ff,stripfn(u.filename));
+        strcpy(ff, BbsPath::join(d.dpath, stripfn(u.filename)).c_str());
         adddiz(ff,&u);
         u.points=((l+1023)/10240);
         sess.user.set_uk(sess.user.uk() + ((l+1023)/1024));
@@ -412,9 +409,8 @@ int uploadall(int dn, char s[20])
     nl();
     if(!stricmp(s,"????????.???"))
         strcpy(s,"*.*");
-    strcpy(s1,(sys.directories[dn].dpath));
     maxf=sys.directories[dn].maxfiles;
-    strcat(s1,s);
+    strcpy(s1, BbsPath::join(sys.directories[dn].dpath, s).c_str());
     f1=findfirst(s1,&ff,0);
     ok=1;
     while ((f1==0) && (!io.hangup) && (sess.numf<maxf) && (ok)) {
@@ -441,6 +437,7 @@ int uploadall(int dn, char s[20])
         }
         f1=findnext(&ff);
     }
+    if (ff._dir) { closedir(ff._dir); ff._dir = NULL; }
     sess.curdir=ocd;
     closedl();
     if (!ok)
@@ -490,8 +487,7 @@ void removefile(void)
                 else
                     rm=1;
                 if (rm) {
-                    strcpy(s1,(sys.directories[sess.udir[sess.curdir].subnum].dpath));
-                    strcat(s1,u.filename);
+                    strcpy(s1, BbsPath::join(sys.directories[sess.udir[sess.curdir].subnum].dpath, u.filename).c_str());
                     unlink(s1);
                     if ((rdlp) && (u.ownersys==0)) {
                         { auto p = UserDB::instance().get(u.ownerusr); if (p) uu = *p; }
@@ -633,13 +629,13 @@ void editfile()
                 if (s[0]) {
                     align(s);
                     if (strcmp(s,"        .   ")) {
-                        strcpy(s1,sys.directories[sess.udir[sess.curdir].subnum].dpath);
-                        strcpy(s2,s1);
-                        strcat(s1,s);
+                        auto newpath = BbsPath::join(sys.directories[sess.udir[sess.curdir].subnum].dpath, s);
+                        strcpy(s1, newpath.c_str());
                         if (exist(s1))
                             pl("Filename already in use; not changed.");
                         else {
-                            strcat(s2,u.filename);
+                            auto oldpath = BbsPath::join(sys.directories[sess.udir[sess.curdir].subnum].dpath, u.filename);
+                            strcpy(s2, oldpath.c_str());
                             rename(s2,s1);
                             if (exist(s1)) {
                                 ss=read_extended_description(u.filename);
@@ -783,8 +779,7 @@ void create_file()
     u.mask=0;
     u.points=0;
     u.ats[0]=1;
-    strcpy(ff,d.dpath);
-    strcat(ff,s);
+    strcpy(ff, BbsPath::join(d.dpath, s).c_str());
     f=open(ff,O_RDONLY | O_BINARY);
     if(f<0) {
         inputdat("Approx. Size in K",s,15,0);
@@ -820,8 +815,7 @@ void create_file()
         if (strstr(u.filename,".GIF"))
             addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
-        strcpy(ff,d.dpath);
-        strcat(ff,stripfn(u.filename));
+        strcpy(ff, BbsPath::join(d.dpath, stripfn(u.filename)).c_str());
         adddiz(ff,&u);
         u.points=((l+1023)/10240);
         sess.user.set_uk(sess.user.uk() + ((l+1023)/1024));
@@ -894,8 +888,7 @@ void move_file(void)
         if (ch=='Q')
             done=1;
         if (ch=='Y') {
-            strcpy(s1,sys.directories[sess.udir[sess.curdir].subnum].dpath);
-            strcat(s1,u.filename);
+            strcpy(s1, BbsPath::join(sys.directories[sess.udir[sess.curdir].subnum].dpath, u.filename).c_str());
             d1=-1;
             do {
                 nl();
@@ -951,8 +944,7 @@ void move_file(void)
                 delete_extended_description(u.filename);
             closedl();
 
-            strcpy(s2,sys.directories[d1].dpath);
-            strcat(s2,u.filename);
+            strcpy(s2, BbsPath::join(sys.directories[d1].dpath, u.filename).c_str());
             dliscan1(d1);
             for (i=sess.numf; i>=1; i--) {
                 SETREC(i);

@@ -12,6 +12,7 @@
 #include "session.h"
 #include "system.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 
 
 void read_automessage()
@@ -22,7 +23,7 @@ void read_automessage()
     FILE *f;
     char s[161];
 
-    sprintf(s,"%sauto.fmt",sys.cfg.gfilesdir);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, "auto.fmt").c_str());
     f=fopen(s,"rt");
     if (!f) return;
     fgets(s,161,f);
@@ -60,7 +61,7 @@ void write_automessage()
         sys.status.amsganon=0;
         sys.status.amsguser=sess.usernum;
         logtypes(2,"Changed Automessage");
-        sprintf(s,"%sauto.msg",sys.cfg.gfilesdir);
+        strcpy(s, BbsPath::join(sys.cfg.gfilesdir, "auto.msg").c_str());
         unlink(s);
         i=open(s,O_BINARY|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
         write(i,b,len);

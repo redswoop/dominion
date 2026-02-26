@@ -20,6 +20,7 @@
 #include "misccmd.h"
 #include "sysopf.h"
 #include "lilo.h"
+#include "bbs_path.h"
 
 #pragma hdrstop
 
@@ -512,7 +513,8 @@ void getfileformat()
 
     logtypes(2,"Changed File List Format");
     do {
-        sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,c);
+        { char _fn[32]; sprintf(_fn, "file%d.fmt", c);
+        strcpy(s, BbsPath::join(sys.cfg.gfilesdir, _fn).c_str()); }
         f=fopen(s,"rt");
         if(f!=NULL) {
             fgets(s,81,f);
@@ -556,7 +558,8 @@ void getfileformat()
                 outstr("5What color would you like the footer to be? ");
                 input(s2,2);
                 i1=atoi(s2);
-                sprintf(s1,"%sfile%d.fmt",sys.cfg.gfilesdir,c);
+                { char _fn[32]; sprintf(_fn, "file%d.fmt", c);
+                strcpy(s1, BbsPath::join(sys.cfg.gfilesdir, _fn).c_str()); }
                 f=fopen(s1,"wt");
                 fputs(s,f);
                 fputs("\n",f);
@@ -697,7 +700,8 @@ void getmsgformat()
 
     logtypes(2,"Changed Msg List Format");
     do {
-        sprintf(s,"%smsg%d.fmt",sys.cfg.gfilesdir,c);
+        { char _fn[32]; sprintf(_fn, "msg%d.fmt", c);
+        strcpy(s, BbsPath::join(sys.cfg.gfilesdir, _fn).c_str()); }
         f=fopen(s,"rt");
         if(f!=NULL) {
             fgets(s1,81,f);

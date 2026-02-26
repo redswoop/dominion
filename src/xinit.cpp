@@ -19,6 +19,7 @@
 #include "system.h"
 #include "version.h"
 #include "error.h"
+#include "bbs_path.h"
 
 #pragma hdrstop
 
@@ -184,7 +185,7 @@ void init(int show)
             break;
         }
 
-        sprintf(s1,"%snul",s);
+        strcpy(s1, BbsPath::join(s, "nul").c_str());
 
         if (!exist(s1)) {
             printf("\n\nYour %s directory isn't valid!  Now set to: %s\n",s2,s);
@@ -194,7 +195,7 @@ void init(int show)
             if(s[strlen(s)-1]!='\\')
                 strcat(s,"\\");
             printf("%s\n",s);
-            sprintf(s1,"%snul",s);
+            strcpy(s1, BbsPath::join(s, "nul").c_str());
             printf("%s\n",s1);
             if(!exist(s1)) {
                 strcpy(s1,s);
@@ -236,18 +237,25 @@ void init(int show)
     if(!sys.restoring_shrink&&!show)
         dotopinit("Status.dat",20);
 
-    sprintf(s,"%sstatus.json",sys.cfg.datadir);
     {
-        cJSON *st_root = read_json_file(s);
+        auto statuspath = BbsPath::join(sys.cfg.datadir, "status.json");
+        cJSON *st_root = read_json_file(statuspath.c_str());
         if (!st_root) {
             printf("\n\n\n%sstatus.json not found!\n\n",sys.cfg.datadir);
-            err(1,s,"In Init()");
+            err(1,(char*)statuspath.c_str(),"In Init()");
         }
         json_to_statusrec(st_root, &sys.status);
         cJSON_Delete(st_root);
     }
     sys.status.wwiv_version=wwiv_num_version;
     UserDB::instance().init(sys.cfg.datadir, sys.cfg.maxusers);
+
+    /* Ensure nodes directory exists for multi-user node tracking */
+    {
+        auto nodespath = BbsPath::join(sys.cfg.datadir, "nodes");
+        mkdir(nodespath.c_str());
+    }
+
     menudb_init(sys.cfg.menudir);
     sys.status.users = UserDB::instance().user_count();
 
@@ -260,7 +268,7 @@ void init(int show)
     if(!sys.restoring_shrink&&!show)
         dotopinit("config.dat",40);
 
-    sprintf(s,"%ssubs.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "subs.dat").c_str());
     i=open(s,O_RDWR | O_BINARY);
     if (i<0) {
         printf("\n\n%ssubs.dat not found!",sys.cfg.datadir);
@@ -286,7 +294,7 @@ void init(int show)
         dotopinit("Subs.dat",50);
     }
 
-    sprintf(s,"%sdirs.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "dirs.dat").c_str());
     i=open(s,O_RDWR | O_BINARY);
     if (i<0) {
         printf("\n\n%sdirs.dat not found!\n\n",sys.cfg.datadir);
@@ -300,7 +308,7 @@ void init(int show)
     if(!sys.restoring_shrink&&!show)
         dotopinit("Protocol.dat",60);
 
-    sprintf(s,"%sprotocol.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "protocol.dat").c_str());
     i=open(s,O_RDWR | O_BINARY);
     if(i<0) {
         printf("\n\n%sProtocol.dat Not Found\n",sys.cfg.datadir);
@@ -315,7 +323,7 @@ void init(int show)
         dotopinit("Conf.dat",70);
     }
 
-    sprintf(s,"%sconf.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "conf.dat").c_str());
     i=open(s,O_RDWR | O_BINARY);
     if(i<0) {
         printf("\n\n%sConf.dat Not Found!\n\n",sys.cfg.datadir);
@@ -326,7 +334,7 @@ void init(int show)
         sys.conf[0].sl[0]=0;
     close(i);
 
-    sprintf(s,"%sarchive.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "archive.dat").c_str());
     i=open(s,O_BINARY|O_RDWR);
     if(i<0) {
         printf("\n\n%sArchive.dat Not Found\n",sys.cfg.datadir);
@@ -368,7 +376,7 @@ void init(int show)
         strcat(sess.newprompt,ss);
     else
         strcat(sess.newprompt,"$P$G");
-    sprintf(sess.dszlog,"%s/BBSDSZ.LOG",sys.cdir);
+    strcpy(sess.dszlog, BbsPath::join(sys.cdir, "BBSDSZ.LOG").c_str());
     sprintf(s,"DSZLOG=%s",sess.dszlog);
     i=i1=0;
     while (environ[i]!=NULL) {
@@ -437,21 +445,31 @@ void init(int show)
 
 void end_bbs(int lev)
 {
+    auto& sys = System::instance();
+
     sl1(1,"");
     if (ok_modem_stuff) closeport();
     dtr(0);
-    clrscrb();
-    textattr(9);
-    cprintf("\n ");
-    textattr(15);
-    cprintf("%s is outta here!\n\n",wwiv_version);
-    _setcursortype(2);
 
-    /* Restore terminal */
-    term_shutdown();
-    nc_active = 0;
-    io.term_raw_mode = 0;
+    if (!sys.is_child_process) {
+        clrscrb();
+        textattr(9);
+        cprintf("\n ");
+        textattr(15);
+        cprintf("%s is outta here!\n\n",wwiv_version);
+        _setcursortype(2);
 
-    exit(lev);
+        /* Restore terminal */
+        term_shutdown();
+        nc_active = 0;
+        io.term_raw_mode = 0;
+    }
+
+    /* Child processes use _exit() to avoid atexit handlers and
+       stdio buffer flushing that could corrupt shared state. */
+    if (sys.is_child_process)
+        _exit(lev);
+    else
+        exit(lev);
 }
 

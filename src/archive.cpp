@@ -17,6 +17,7 @@
 #include "extrn.h"
 #include "misccmd.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 #define SETREC(i)  lseek(sess.dlf,((long) (i))*((long)sizeof(uploadsrec)),SEEK_SET);
@@ -72,8 +73,7 @@ int list_arc_out(char *fn, char *dir)
     int i,done=0,swapi;
     double p;
 
-    strcpy(s1,dir);
-    strcat(s1,fn);
+    strcpy(s1, BbsPath::join(dir, fn).c_str());
     swapi=get_arc_cmd(s,s1,0,"");
     if (!okfn(fn)) {
         s[0]=0;
@@ -81,7 +81,8 @@ int list_arc_out(char *fn, char *dir)
     if (exist(s1) && (s[0]!=0)) {
         nl();
         npr("5Manipulating Archive 3%s\r\n",fn);
-        sprintf(s1,"%s>%sarctemp",s,sys.cfg.gfilesdir);
+        { auto arctemp_path = BbsPath::join(sys.cfg.gfilesdir, "arctemp");
+        sprintf(s1,"%s>%s",s,arctemp_path.c_str()); }
         savescreen(&sess.screensave);
         system(s1);
         restorescreen(&sess.screensave);
@@ -105,8 +106,7 @@ int list_arc_out(char *fn, char *dir)
                     pl("Bad Filename"); 
                     return 0; 
                 }
-                strcpy(s1,dir);
-                strcat(s1,fn);
+                strcpy(s1, BbsPath::join(dir, fn).c_str());
                 swapi=get_arc_cmd(s,s1,1,s3);
                 if(s[0]) {
                     topscreen();
@@ -119,7 +119,7 @@ int list_arc_out(char *fn, char *dir)
                 else { 
                     npr("Bad Pathname, %s\r\n",s); 
                 }
-                sprintf(s,"%s%s",sys.cfg.tempdir,s3);
+                strcpy(s, BbsPath::join(sys.cfg.tempdir, s3).c_str());
                 if(exist(s)) {
                     s1[0]=sess.topdata; 
                     sess.topdata=0;
@@ -130,9 +130,8 @@ int list_arc_out(char *fn, char *dir)
                     topscreen();
                 }
                 break;
-            case 'M': 
-                strcpy(s1,dir);
-                strcat(s1,fn);
+            case 'M':
+                strcpy(s1, BbsPath::join(dir, fn).c_str());
                 arcex(s1);
                 nl();
                 npr("7Your Files are now in Temp.%s, and have been added to your batch queue.\r\n",sys.xarc[sys.ARC_NUMBER].extension);
@@ -186,7 +185,7 @@ void arcex(char *fn)
     nl();
     sys.ARC_NUMBER=-1;
     for(i=0;i<4;i++) {
-        sprintf(s1,"%sTEMP.%s",sys.cfg.tempdir,sys.xarc[i].extension);
+        strcpy(s1, BbsPath::join(sys.cfg.tempdir, std::string("TEMP.") + sys.xarc[i].extension).c_str());
         if(exist(s1)) sys.ARC_NUMBER=i;
     }
     selectarc();
@@ -214,10 +213,10 @@ void arcex(char *fn)
     cd_to(sys.cdir);
 
 
-    sprintf(s1,"%s%s",sys.cfg.tempdir,s2);
-    sprintf(s2,"%sTEMP",sys.cfg.tempdir);
+    strcpy(s1, BbsPath::join(sys.cfg.tempdir, s2).c_str());
+    strcpy(s2, BbsPath::join(sys.cfg.tempdir, "TEMP").c_str());
     add_arc(s2, s1);
-    sprintf(s2,"%sTEMP.%s",sys.cfg.tempdir,sys.xarc[sys.ARC_NUMBER].extension);
+    strcpy(s2, BbsPath::join(sys.cfg.tempdir, std::string("TEMP.") + sys.xarc[sys.ARC_NUMBER].extension).c_str());
     if(exist(s2)) {
         i=open(s2,O_BINARY|O_RDWR);
         u.numbytes=filelength(i);
@@ -271,8 +270,7 @@ void arc_cl(int type)
                 i1=0;
             } 
             else if(type==3) {
-                strcpy(s1,sys.directories[sess.udir[sess.curdir].subnum].dpath);
-                strcat(s1,stripfn(u.filename));
+                strcpy(s1, BbsPath::join(sys.directories[sess.udir[sess.curdir].subnum].dpath, stripfn(u.filename)).c_str());
                 adddiz(s1,&u);
                 SETREC(i);
                 write(sess.dlf,(void *)&u,sizeof(uploadsrec));
@@ -294,8 +292,7 @@ int testarc(char *fn, char *dir)
     char s[161],s1[MAX_PATH_LEN],s2[2];
     int i=0,swapi;
 
-    strcpy(s1,dir);
-    strcat(s1,fn);
+    strcpy(s1, BbsPath::join(dir, fn).c_str());
     swapi=get_arc_cmd(s,s1,3,s2);
     if (!okfn(fn))
         s[0]=0;
@@ -319,8 +316,7 @@ int comment_arc(char *fn, char *dir,char *cmntfn)
     char s[161],s1[MAX_PATH_LEN];
     int i=0,swapi;
 
-    strcpy(s1,dir);
-    strcat(s1,fn);
+    strcpy(s1, BbsPath::join(dir, fn).c_str());
     swapi=get_arc_cmd(s,s1,4,cmntfn);
     if (!okfn(fn))
         s[0]=0;
@@ -379,7 +375,7 @@ int get_arc_cmd(char *out, char *arcfn, int cmd, char *ofn)
             if (s[0]==0)
                 return 0;
             if(cmd==4)
-                sprintf(s1,"%s%s",sys.cfg.gfilesdir,ofn);
+                strcpy(s1, BbsPath::join(sys.cfg.gfilesdir, ofn).c_str());
             stuff_in(out,s,arcfn,ofn,"","",s1);
             if(sys.xarc[i].attr & xarc_swap)
                 return 1;

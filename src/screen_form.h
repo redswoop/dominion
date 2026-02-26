@@ -140,6 +140,7 @@ struct ScreenForm {
     FormMode mode = FormMode::Auto;
     unsigned char prompt_attr = 0x0E; /* yellow prompt text (sequential) */
     unsigned char input_attr  = 0x0F; /* bright white input (sequential) */
+    std::function<void(Terminal&)> on_enter;  /* called after clear, before first field */
     std::vector<ScreenField> fields;
     std::function<void(Terminal&, SFContext&, const FormResult&)> on_submit;
     std::function<void(Terminal&, SFContext&)>                    on_cancel;

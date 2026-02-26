@@ -27,6 +27,7 @@
 #include "menued.h"
 #include "subedit.h"
 #include "lilo.h"
+#include "node_registry.h"
 
 #pragma hdrstop
 
@@ -505,5 +506,36 @@ void bargraph(int percent)
         cprintf("\b");
     for(x=0;x<percent/2;x++)
         cprintf("%c",219);
+}
+
+
+/*
+ * wfc_poll_accept() — supervisor-mode accept loop.
+ *
+ * Polls the listen socket with select() (1-second timeout).
+ * Returns accepted_fd on connection, -1 if nothing to accept
+ * or if the supervisor should shut down (endday, Q key).
+ */
+int wfc_poll_accept(void)
+{
+    auto& sys = System::instance();
+
+    if (sys.listen_fd < 0)
+        return -1;
+
+    struct timeval tv = {1, 0}; /* 1-second poll */
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(sys.listen_fd, &fds);
+    int r = select(sys.listen_fd + 1, &fds, NULL, NULL, &tv);
+
+    if (r > 0 && FD_ISSET(sys.listen_fd, &fds)) {
+        struct sockaddr_in caddr;
+        socklen_t clen = sizeof(caddr);
+        int accepted_fd = accept(sys.listen_fd, (struct sockaddr *)&caddr, &clen);
+        return accepted_fd;
+    }
+
+    return -1;
 }
 

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "platform.h"
+#include "bbs_path.h"
 
 /* exist() is in disk.c, declared in fcns_user.h */
 int exist(char *s);
@@ -31,12 +32,16 @@ static void bare_key(const char *key, char *out)
 
 static void make_json_path(const char *bare, char *out)
 {
-    sprintf(out, "%s%s.json", db_menudir, bare);
+    auto p = BbsPath::join(db_menudir, std::string(bare) + ".json");
+    strncpy(out, p.c_str(), MAX_PATH_LEN - 1);
+    out[MAX_PATH_LEN - 1] = '\0';
 }
 
 static void make_mnu_path(const char *bare, char *out)
 {
-    sprintf(out, "%s%s.mnu", db_menudir, bare);
+    auto p = BbsPath::join(db_menudir, std::string(bare) + ".mnu");
+    strncpy(out, p.c_str(), MAX_PATH_LEN - 1);
+    out[MAX_PATH_LEN - 1] = '\0';
 }
 
 
@@ -182,7 +187,7 @@ int menudb_list(char names[][20], int max_names)
     int count = 0;
 
     /* List .json menus first */
-    sprintf(pattern, "%s*.json", db_menudir);
+    strcpy(pattern, BbsPath::join(db_menudir, "*.json").c_str());
     if (findfirst(pattern, &f, 0) == 0) {
         do {
             if (count >= max_names) break;
@@ -190,10 +195,11 @@ int menudb_list(char names[][20], int max_names)
             names[count][19] = '\0';
             count++;
         } while (findnext(&f) != -1);
+        if (f._dir) { closedir(f._dir); f._dir = NULL; }
     }
 
     /* Then .mnu menus (skip if JSON version exists) */
-    sprintf(pattern, "%s*.mnu", db_menudir);
+    strcpy(pattern, BbsPath::join(db_menudir, "*.mnu").c_str());
     if (findfirst(pattern, &f, 0) == 0) {
         do {
             char bare[20], json_name[20];
@@ -217,6 +223,7 @@ int menudb_list(char names[][20], int max_names)
                 count++;
             }
         } while (findnext(&f) != -1);
+        if (f._dir) { closedir(f._dir); f._dir = NULL; }
     }
 
     return count;

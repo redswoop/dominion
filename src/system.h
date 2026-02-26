@@ -45,6 +45,7 @@ public:
     int oklevel, noklevel;
     int configfile, statusfile;
     int restoring_shrink, tempio;
+    int is_child_process;  /* Set in forked children, 0 in supervisor */
 
     /* Network */
     int tcp_port, listen_fd;

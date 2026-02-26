@@ -22,6 +22,7 @@
 #include "extrn.h"
 #include "misccmd.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -37,8 +38,8 @@ void batrec(int rw, int bnum)
     int f;
     char s[MAX_PATH_LEN];
 
-    sprintf(s,"%sbatrec.dat",sys.cfg.datadir);
-    f=open(s,O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
+    auto batrec_path = BbsPath::join(sys.cfg.datadir, "batrec.dat");
+    f=open(batrec_path.c_str(),O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
     lseek(f,(bnum)*(long)sizeof(batchrec),SEEK_SET);
     switch (rw) {
     case 0: 
@@ -68,11 +69,11 @@ void delbatch(int i)
             --sess.numbatchdl;
         --sess.numbatch;
         if(sess.batch.dir==-2) {
-            sprintf(s,"%sTemp.%s",sys.cfg.tempdir,sys.xarc[sys.ARC_NUMBER].extension);
+            strcpy(s, BbsPath::join(sys.cfg.tempdir, std::string("Temp.") + sys.xarc[sys.ARC_NUMBER].extension).c_str());
             unlink(s);
         }
-        sprintf(s,"%sbatrec.dat",sys.cfg.datadir);
-        f=open(s,O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
+        auto batrec_path = BbsPath::join(sys.cfg.datadir, "batrec.dat");
+        f=open(batrec_path.c_str(),O_RDWR | O_CREAT | O_BINARY,S_IREAD | S_IWRITE);
         for (i1=i; i1<=sess.numbatch; i1++) {
             lseek(f,(i1+1)*(long)sizeof(batchrec),SEEK_SET);
             read(f,(void *)(&sess.batch),sizeof(batchrec));
@@ -158,7 +159,7 @@ void upload_batch_file(int blind)
     u.ats[0]=0;
     if(sess.batch.extdesc) u.mask |= mask_extended;
 
-    sprintf(s,"%s%s",sys.cfg.batchdir,stripfn(u.filename));
+    strcpy(s, BbsPath::join(sys.cfg.batchdir, stripfn(u.filename)).c_str());
 
     checkhangup();
 
@@ -192,7 +193,7 @@ void upload_batch_file(int blind)
         pl(get_string2(36));
         if(testarc(stripfn(u.filename),sys.cfg.batchdir)!=0) {
             printf("Failed\n");
-            sprintf(s,"%s%s",sys.cfg.batchdir,stripfn(u.filename));
+            strcpy(s, BbsPath::join(sys.cfg.batchdir, stripfn(u.filename)).c_str());
             if(exist(s)) {
                 sess.batchdir=0;
                 sess.batch.dir=0;
@@ -408,7 +409,7 @@ void batchul(int t)
     ultoa(sess.modem_speed,sx3,10);
     sx2[0]='0'+sys.cfg.primaryport;
     sx2[1]=0;
-    sprintf(s2,"%s/BATCH.LST",sys.cdir);
+    strcpy(s2, BbsPath::join(sys.cdir, "BATCH.LST").c_str());
     stuff_in(s,s1,sx1,sx2,"",sx3,s2);
 
     pl(get_string(70));
@@ -463,7 +464,7 @@ void batchdl(int t)
     }
 
 
-    sprintf(s,"%s/BATCH.LST",sys.cdir);
+    strcpy(s, BbsPath::join(sys.cdir, "BATCH.LST").c_str());
     unlink(s);
     f=open(s,O_RDWR | O_BINARY| O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
     if (f<0) {
@@ -476,10 +477,13 @@ void batchdl(int t)
         sess.batch.batchdesc[0]=0;
         batrec(1,i);
         if (sess.batch.sending) {
-            if(sess.batch.dir!=-2)
-                sprintf(s1,"%s%s\r\n",sys.directories[sess.batch.dir].dpath,stripfn(sess.batch.filename));
-            else
-                sprintf(s1,"%s%s\r\n",sys.cfg.tempdir,stripfn(sess.batch.filename));
+            if(sess.batch.dir!=-2) {
+                auto bpath = BbsPath::join(sys.directories[sess.batch.dir].dpath, stripfn(sess.batch.filename));
+                sprintf(s1,"%s\r\n",bpath.c_str());
+            } else {
+                auto bpath = BbsPath::join(sys.cfg.tempdir, stripfn(sess.batch.filename));
+                sprintf(s1,"%s\r\n",bpath.c_str());
+            }
             write(f,s1,strlen(s1));
         }
     }
@@ -491,7 +495,7 @@ void batchdl(int t)
     ultoa(sess.modem_speed,sx3,10);
     sx2[0]='0'+sys.cfg.primaryport;
     sx2[1]=0;
-    sprintf(s2,"%s/BATCH.LST",sys.cdir);
+    strcpy(s2, BbsPath::join(sys.cdir, "BATCH.LST").c_str());
     stuff_in(s,s1,sx1,sx2,"",sx3,s2);
     _chmod(sess.dszlog,1,0);
     pl(get_string(70));

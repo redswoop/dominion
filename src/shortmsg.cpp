@@ -4,6 +4,8 @@
 #include "session.h"
 #include "system.h"
 #include "userdb.h"
+#include "file_lock.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -20,8 +22,9 @@ void ssm(unsigned int un, unsigned int sy, char *s)
     if (sy==0) {
         { auto p = UserDB::instance().get(un); if (p) u = *p; }
         if (!(u.inact() & inact_deleted)) {
-            sprintf(s1,"%ssmw.dat",sys.cfg.datadir);
-            f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
+            auto smw_path = BbsPath::join(sys.cfg.datadir, "smw.dat");
+            FileLock lk(smw_path.c_str());
+            f=open(smw_path.c_str(),O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
             i=(int) (filelength(f) / sizeof(shortmsgrec));
             i1=i-1;
             if (i1>=0) {
@@ -60,8 +63,9 @@ void rsm(int un, User& u)
 
     any=0;
     if (u.sysstatus() & sysstatus_smw) {
-        sprintf(s1,"%ssmw.dat",sys.cfg.datadir);
-        f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
+        auto smw_path = BbsPath::join(sys.cfg.datadir, "smw.dat");
+        FileLock lk(smw_path.c_str());
+        f=open(smw_path.c_str(),O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
         i=(int) (filelength(f) / sizeof(shortmsgrec));
         for (i1=0; i1<i; i1++) {
             lseek(f,((long) (i1)) * sizeof(shortmsgrec),SEEK_SET);

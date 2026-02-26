@@ -105,6 +105,13 @@ void ui_quit(Session& s)
     s.active = false;
 }
 
+void ui_goto(Session& s, ActiveUI ui)
+{
+    s.ui_stack.clear();
+    s.current_ui = std::move(ui);
+    fire_on_enter(s);
+}
+
 /* ================================================================== */
 /*  Sequential Form input handling                                     */
 /* ================================================================== */
@@ -234,7 +241,13 @@ static void dispatch_input(Session& s, unsigned char ch)
                 return;
             }
         }
-        /* Unknown key — ignore */
+        /* Catch-all: '\0' key matches anything */
+        for (auto& action : nav->actions) {
+            if (action.key == '\0') {
+                action.handler(s);
+                return;
+            }
+        }
     } else if (auto* form = std::get_if<Form>(&s.current_ui)) {
         dispatch_form_input(s, *form, ch);
     }

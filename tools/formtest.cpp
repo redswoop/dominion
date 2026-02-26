@@ -478,13 +478,19 @@ static ScreenForm make_branching_demo(Session* sp)
 /* ================================================================== */
 
 static void push_login(Session* sp);
+static Navigator make_main_menu(Session* sp);
 
 static ScreenForm make_login_form(Session* sp)
 {
     ScreenForm form;
     form.id = "login";
     form.mode = FormMode::Sequential;
-
+    form.on_enter = [](Terminal& term) {
+        term.setAttr(0x0B);
+        term.puts("== Dominion BBS v3.1 ==");
+        term.newline();
+        term.newline();
+    };
 
     /* Username */
     {
@@ -527,9 +533,48 @@ static ScreenForm make_login_form(Session* sp)
             term.newline();
             term.newline();
             auto newuser = make_screen_demo(sp);
-            /* Override callbacks: return to login on complete/cancel */
-            newuser.on_submit = [sp](Terminal& /*term*/, SFContext&, const FormResult&) {
-                push_login(sp);
+            /* Override callbacks: new user → logged in as that user */
+            newuser.on_submit = [sp](Terminal& /*term*/, SFContext&, const FormResult& r) {
+                auto nit = r.values.find("name");
+                std::string name = (nit != r.values.end()) ? nit->second : "New User";
+
+                Navigator welcome;
+                welcome.id = "welcome";
+                welcome.on_enter = [r, name](Session& s) {
+                    s.term.setAttr(0x0B);
+                    s.term.puts("=== Account Created ===");
+                    s.term.newline(); s.term.newline();
+
+                    const char* labels[] = {
+                        "Name", "Real Name", "Sex", "Birthdate", "Phone",
+                        "Street", "City", "Comment", "Computer"
+                    };
+                    const char* keys[] = {
+                        "name", "realname", "sex", "birthdate", "phone",
+                        "street", "city", "comment", "comptype"
+                    };
+                    for (int i = 0; i < 9; i++) {
+                        s.term.setAttr(0x03);
+                        s.term.printf("%-12s", labels[i]);
+                        s.term.setAttr(0x0F);
+                        auto it = r.values.find(keys[i]);
+                        if (it != r.values.end())
+                            s.term.puts(it->second.c_str());
+                        s.term.newline();
+                    }
+
+                    s.term.newline();
+                    s.term.setAttr(0x0A);
+                    s.term.printf("Welcome, %s!", name.c_str());
+                    s.term.newline(); s.term.newline();
+                    s.term.setAttr(0x0E);
+                    s.term.puts("Press any key to continue.");
+                    s.term.newline();
+                };
+                welcome.actions = {{'\0', "Continue", [sp](Session& s) {
+                    ui_goto(s, make_main_menu(sp));
+                }}};
+                ui_push(*sp, welcome);
             };
             newuser.on_cancel = [sp](Terminal& /*term*/, SFContext&) {
                 push_login(sp);
@@ -542,17 +587,20 @@ static ScreenForm make_login_form(Session* sp)
         std::string password = (pit != r.values.end()) ? pit->second : "";
 
         if (password == "password") {
-            term.setAttr(0x0A);
-            term.printf("Welcome, %s!", username.c_str());
-            term.newline();
-            term.newline();
-            term.setAttr(0x0E);
-            term.puts("Press Q to disconnect.");
-            term.newline();
-
-            Navigator done;
-            done.actions = {{'Q', "Quit", [](Session& s) { ui_quit(s); }}};
-            ui_push(*sp, done);
+            Navigator welcome;
+            welcome.id = "welcome";
+            welcome.on_enter = [username](Session& s) {
+                s.term.setAttr(0x0A);
+                s.term.printf("Welcome, %s!", username.c_str());
+                s.term.newline(); s.term.newline();
+                s.term.setAttr(0x0E);
+                s.term.puts("Press any key to continue.");
+                s.term.newline();
+            };
+            welcome.actions = {{'\0', "Continue", [sp](Session& s) {
+                ui_goto(s, make_main_menu(sp));
+            }}};
+            ui_push(*sp, welcome);
         } else {
             term.setAttr(0x0C);
             term.puts("Invalid password!");
@@ -577,12 +625,6 @@ static ScreenForm make_login_form(Session* sp)
 
 static void push_login(Session* sp)
 {
-    sp->term.clearScreen();
-    sp->term.gotoXY(0, 0);
-    sp->term.setAttr(0x0B);
-    sp->term.puts("== Dominion BBS v3.1 ==");
-    sp->term.newline();
-    sp->term.newline();
     ui_push(*sp, make_login_form(sp));
 }
 
@@ -641,8 +683,6 @@ static Navigator make_main_menu(Session* sp)
             ui_push(s, make_branching_demo(sp));
         }},
         {'4', "Login", [sp](Session& s) {
-            s.term.clearScreen();
-            s.term.gotoXY(0, 0);
             push_login(sp);
         }},
         {'Q', "Quit", [](Session& s) { ui_quit(s); }},
@@ -687,10 +727,6 @@ int main(int argc, char *argv[])
         };
     } else if (test_name && std::strcmp(test_name, "login") == 0) {
         config.on_connect = [](Session& s) -> ActiveUI {
-            s.term.setAttr(0x0B);
-            s.term.puts("== Dominion BBS v3.1 ==");
-            s.term.newline();
-            s.term.newline();
             return make_login_form(&s);
         };
     } else {

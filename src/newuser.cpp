@@ -24,6 +24,7 @@
 #include "terminal_bridge.h"
 #include "misccmd.h"
 #include "personal.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -70,7 +71,7 @@ int check_name(const char *nn)
     if (!ok)
         return(ok);
 
-    sprintf(s,"%strashcan.lst",sys.cfg.gfilesdir);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, "trashcan.lst").c_str());
     f=open(s,O_RDWR | O_BINARY);
 
     if (f<0)
@@ -452,7 +453,7 @@ void infoform(char fn[8],int once)
     FILE *fnin,*fno;
 
 
-    sprintf(s,"%s%s.inf",sys.cfg.gfilesdir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, std::string(fn) + ".inf").c_str());
 
     if(!exist(s)) {
         pl("Infoform Not Found.");
@@ -476,10 +477,10 @@ void infoform(char fn[8],int once)
         if(found) return;
     }
 
-    sprintf(s,"%s%s.ser",sys.cfg.gfilesdir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, std::string(fn) + ".ser").c_str());
     fno=fopen(s,"a");
 
-    sprintf(s1,"%s%s.inf",sys.cfg.gfilesdir,fn);
+    strcpy(s1, BbsPath::join(sys.cfg.gfilesdir, std::string(fn) + ".inf").c_str());
     fnin=fopen(s1,"rt");
 
     sprintf(s,"~%s\n",sess.user.name());
@@ -538,7 +539,7 @@ void readform(char fn[8],char i[31])
     FILE *fnin;
     User u;
 
-    sprintf(s,"%s%s.ser",sys.cfg.gfilesdir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, std::string(fn) + ".ser").c_str());
     if(!exist(s)) {
         pl("not found");
         return;

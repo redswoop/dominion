@@ -14,6 +14,7 @@
 #include "system.h"
 #include "acs.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -23,7 +24,7 @@ int num_nuv(char *fn)
     char s[MAX_PATH_LEN];
     int nn,i;
 
-    sprintf(s,"%s%s",sys.cfg.datadir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, fn).c_str());
     i=open(s,O_BINARY|O_RDWR);
     nn=filelength(i)/sizeof(nuvdata);
     close(i);
@@ -37,7 +38,7 @@ void read_nuv(unsigned int user, char *fn, nuvdata *newuser)
     char s[MAX_PATH_LEN];
     int i;
 
-    sprintf(s,"%s%s",sys.cfg.datadir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, fn).c_str());
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     lseek(i,sizeof(nuvdata)*user,SEEK_SET);
     read(i,newuser,sizeof(nuvdata));
@@ -54,7 +55,7 @@ void write_nuv(unsigned int user, char *fn, nuvdata *newuser)
 
     n= *newuser;
 
-    sprintf(s,"%s%s",sys.cfg.datadir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, fn).c_str());
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     lseek(i,sizeof(nuvdata)*user,0);
     write(i,&n,sizeof(nuvdata));
@@ -69,10 +70,10 @@ void del_nuv(unsigned int user)
     nuvdata dn;
     int dnc,nnu,i,o;
 
-    sprintf(s,"%snuv.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "nuv.dat").c_str());
     i=open(s,O_BINARY|O_RDWR);
 
-    sprintf(s1,"%snuv.bak",sys.cfg.datadir);
+    strcpy(s1, BbsPath::join(sys.cfg.datadir, "nuv.bak").c_str());
     o=open(s1,O_BINARY|O_RDWR|O_CREAT|O_TRUNC,S_IREAD|S_IWRITE);
 
     nnu=filelength(i)/sizeof(dn);

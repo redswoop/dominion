@@ -12,6 +12,7 @@
 #include "cmd_registry.h"
 #include "sysopf.h"
 #include "file.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 #include "menudb.h"
@@ -37,7 +38,7 @@ char *getfmt(char *fn, int which)
     FILE *f;
     static char s[161];
 
-    sprintf(s,"%s%s.fmt",sys.cfg.menudir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.menudir, std::string(fn) + ".fmt").c_str());
     f=fopen(s,"rt");
     if(f==NULL) return NULL;
     fgets(s,161,f);
@@ -68,7 +69,7 @@ void readmnufmt(mmrec pf)
     FILE *f;
     char s[161];
 
-    sprintf(s,"%s%s.fmt",sys.cfg.menudir,pf.format);
+    strcpy(s, BbsPath::join(sys.cfg.menudir, std::string(pf.format) + ".fmt").c_str());
     mmfmt.fmt[0]=0;
     mmfmt.fill=0;
     f=fopen(s,"rt");
@@ -296,8 +297,8 @@ void drawhead(int top)
     char s[MAX_PATH_LEN];
 
     switch(top) {
-    case 1: 
-        sprintf(s,"%s%s.ans",sys.cfg.gfilesdir,mmfmt.ansifn);
+    case 1:
+        strcpy(s, BbsPath::join(sys.cfg.gfilesdir, std::string(mmfmt.ansifn) + ".ans").c_str());
         if(exist(s)) {
             printfile(mmfmt.ansifn);
         } 
@@ -324,8 +325,8 @@ void drawhead(int top)
         else
             nl();
         break;
-    case 4: 
-        sprintf(s,"%s%s.ans",sys.cfg.gfilesdir,mmfmt.ansiftfn);
+    case 4:
+        strcpy(s, BbsPath::join(sys.cfg.gfilesdir, std::string(mmfmt.ansiftfn) + ".ans").c_str());
         if(sess.pp.format[0])
             pl(getfmt(sess.pp.format,1));
         else
@@ -489,7 +490,7 @@ void menubatch(char fn[12])
     varrec vars[50];
     int numvars=0;
 
-    sprintf(s,"%s%s.mbt",sys.cfg.menudir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.menudir, std::string(fn) + ".mbt").c_str());
     if(!exist(s)) return;
 
     f=fopen(s,"rt");

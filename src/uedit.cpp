@@ -19,6 +19,7 @@
 #include "misccmd.h"
 #include "sysopf.h"
 #include "lilo.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 #include <stdarg.h>
@@ -43,7 +44,7 @@ void deluser(int un)
         u.mark_deleted();
         u.set_waiting(0);
         UserDB::instance().store(un,u);
-        sprintf(fn,"%svoting.dat",sys.cfg.datadir);
+        strcpy(fn, BbsPath::join(sys.cfg.datadir, "voting.dat").c_str());
         f=open(fn,O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
         n=(int) (filelength(f) / sizeof(votingrec)) -1;
         for (i=0; i<20; i++)
@@ -72,7 +73,7 @@ void addtrash(const User& u)
 
     npr("5Add 0%s5 to Trashcan? ",u.name());
     if(!yn()) return;
-    sprintf(s,"%strashcan.lst",sys.cfg.gfilesdir);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, "trashcan.lst").c_str());
     i=open(s,O_RDWR|O_BINARY|O_CREAT,S_IREAD|S_IWRITE);
     lseek(i,0L,SEEK_END);
     sprintf(s,"%s\n",u.name());

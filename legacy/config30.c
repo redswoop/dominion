@@ -161,7 +161,7 @@ void namepath()
 
     do {
         outchr(12);
-        lpr("5þ 0System Info And Paths");
+        lpr("5ï¿½ 0System Info And Paths");
         nl();
         lpr("1. System Name       : %s",syscfg.systemname);
         lpr("2. System Phone      : %s",syscfg.systemphone);
@@ -211,7 +211,7 @@ void flagged()
 
     do {
         outchr(12);
-        lpr("5þ 0Flagged Information");
+        lpr("5ï¿½ 0Flagged Information");
         nl();
         bitset("1. File Ratio",nifty.nifstatus,nif_ratio);
         bitset("2. File Point Ratio",nifty.nifstatus,nif_fpts);
@@ -267,7 +267,7 @@ void varible()
 
     do {
         outchr(12);
-        lpr("5þ 0Variable System Data");
+        lpr("5ï¿½ 0Variable System Data");
         nl();
         lpr("1. Start Out Menu    : %s",nifty.firstmenu);
         lpr("2. New User Menu     : %s",nifty.newusermenu);
@@ -366,7 +366,7 @@ void events()
 
     do {
         outchr(12);
-        lpr("5þ 0Event Manager");
+        lpr("5ï¿½ 0Event Manager");
         nl();
         lpr("1. Logon Event     : %s",syscfg.logon_c);
         lpr("2. Logoff Event    : %s",syscfg.upload_c);
@@ -396,7 +396,7 @@ void modeminfo()
 
     do {
         outchr(12);
-        lpr("5þ 0Modem Information");
+        lpr("5ï¿½ 0Modem Information");
         nl();
         lpr("1. Com Port     : %d",syscfg.primaryport);
         lpr("2. Interrupt    : %d",syscfg.com_ISR[syscfg.primaryport]);
@@ -423,7 +423,7 @@ void autoval()
 
     do {
         outchr(12);
-        pl("5þ 0Security Profiles");
+        pl("5ï¿½ 0Security Profiles");
         nl();
         for(i1=0;i1<10;i1++) {
             for (i=0; i<=15; i++) {
@@ -466,7 +466,7 @@ void archive()
 
     do {
         outchr(12);
-        pl("5þ 0Archive Configuration");
+        pl("5ï¿½ 0Archive Configuration");
         nl();
         lpr("3Number 9%d0",i1);
         nl();
@@ -503,7 +503,7 @@ void secleved()
 
     do {
         outchr(12);
-        pl("5þ 0Security Level Data");
+        pl("5ï¿½ 0Security Level Data");
         nl();
         lpr("3Number 9%d0",i1);
         nl();
@@ -554,7 +554,7 @@ void nued()
 
     do {
         outchr(12);
-        lpr("5þ 0New User Data");
+        lpr("5ï¿½ 0New User Data");
         nl();
         lpr("1. Profile for New User      : %d",nifty.nulevel+1);
         lpr("2. NewUser Infoform          : %s",nifty.nuinf);
@@ -596,7 +596,7 @@ void fidocfg()
 
     do {
         outchr(12);
-        lpr("5þ 0FidoNet Information");
+        lpr("5ï¿½ 0FidoNet Information");
         nl();
         lpr("1. Main Address : %d:%d/%d.%d",fnet.ad.zone,fnet.ad.net,fnet.ad.node,fnet.ad.point);
         lpr("2. NetWork Name : %s",fnet.netname);
@@ -683,14 +683,14 @@ void main(int argc, char *argv[])
 #endif
     do {
         outchr(12);
-        pl("5þ 0Dominion System Configuration");
+        pl("5ï¿½ 0Dominion System Configuration");
         nl();
 #ifdef BBS
         printmenu(19);
 #else
         pl("71.0 Names and Paths                 72.0 Flagged Info");
         pl("73.0 Varible System Data             74.0 Event Manager");
-        pl("75.0 Modem Info                      76.0 AutoVal Data");
+        pl("                                       76.0 AutoVal Data");
         pl("77.0 Archive Configuration           78.0 FullScreen Editors");
         pl("79.0 Security Level Data             70.0 FidoNet Configuration");
  
@@ -703,7 +703,6 @@ void main(int argc, char *argv[])
             case '2': flagged(); break;
             case '3': varible(); break;
             case '4': events(); break;
-            case '5': modeminfo(); break;
             case '6': autoval(); break;
             case '7': archive(); break;
             case '8': nued(); break;

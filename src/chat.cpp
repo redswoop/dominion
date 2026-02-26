@@ -19,6 +19,7 @@
 #include "acs.h"
 #include "ansi_attr.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -581,7 +582,7 @@ void chat1(char *chatline, int two_way)
             if (cf==0) {
                 if (!two_way)
                     outs("-] Chat file opened.\r\n");
-                sprintf(s2,"%sCHAT.TXT",sys.cfg.gfilesdir);
+                strcpy(s2, BbsPath::join(sys.cfg.gfilesdir, "CHAT.TXT").c_str());
                 cf=open(s2,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
                 lseek(cf,0L,SEEK_END);
                 sprintf(s2,"\r\n\r\nChat file opened %s %s\r\n",date(),times());
@@ -760,11 +761,11 @@ void readfilter(char fn[15],char fn2[15])
     auto& sys = System::instance();
     char s[100];
     int i;
-    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, fn).c_str());
     i=open(s,O_RDONLY|O_BINARY);
     read(i,sys.cfilt,255);
     close(i);
-    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn2);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, fn2).c_str());
     i=open(s,O_RDONLY|O_BINARY);
     read(i,sys.scfilt,255);
     close(i);

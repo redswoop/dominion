@@ -14,6 +14,8 @@
 
 #include <math.h>
 #include "json_io.h"
+#include "file_lock.h"
+#include "bbs_path.h"
 
 
 void read_in_file(char *fn, messagerec *m, int maxary)
@@ -28,10 +30,10 @@ void read_in_file(char *fn, messagerec *m, int maxary)
         m[i].storage_type=0;
     }
 
-    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
-    i=open(s,O_RDWR | O_BINARY);
+    auto path = BbsPath::join(sys.cfg.gfilesdir, fn);
+    i=open(path.c_str(),O_RDWR | O_BINARY);
     if (i<0) {
-        err(1,s,"In Read_in_file");
+        err(1,(char*)path.c_str(),"In Read_in_file");
     }
     l=filelength(i);
     buf=(char *) malloc(l);
@@ -81,15 +83,53 @@ double freek(int dr)
 }
 
 
+/* Helper: return the larger of two unsigned values */
+static unsigned long maxul(unsigned long a, unsigned long b) { return a > b ? a : b; }
+static unsigned short maxus(unsigned short a, unsigned short b) { return a > b ? a : b; }
+
 void save_status()
 {
     auto& sys = System::instance();
-    char path[MAX_PATH_LEN];
-    cJSON *root;
 
-    sprintf(path, "%sstatus.json", sys.cfg.datadir);
-    root = statusrec_to_json(&sys.status);
-    write_json_file(path, root);
+    auto spath = BbsPath::join(sys.cfg.datadir, "status.json");
+
+    /* Lock, read fresh from disk, merge monotonic counters, write back. */
+    FileLock lk(spath.c_str());
+
+    cJSON *fresh_json = read_json_file(spath.c_str());
+    if (fresh_json) {
+        statusrec fresh;
+        memset(&fresh, 0, sizeof(fresh));
+        json_to_statusrec(fresh_json, &fresh);
+        cJSON_Delete(fresh_json);
+
+        /* Merge: take max of monotonic counters */
+        sys.status.callernum1 = maxul(sys.status.callernum1, fresh.callernum1);
+        sys.status.callernum = maxus(sys.status.callernum, fresh.callernum);
+        sys.status.callstoday = maxus(sys.status.callstoday, fresh.callstoday);
+        sys.status.msgposttoday = maxus(sys.status.msgposttoday, fresh.msgposttoday);
+        sys.status.emailtoday = maxus(sys.status.emailtoday, fresh.emailtoday);
+        sys.status.fbacktoday = maxus(sys.status.fbacktoday, fresh.fbacktoday);
+        sys.status.uptoday = maxus(sys.status.uptoday, fresh.uptoday);
+        sys.status.activetoday = maxus(sys.status.activetoday, fresh.activetoday);
+        sys.status.users = maxus(sys.status.users, fresh.users);
+        sys.status.qscanptr = maxul(sys.status.qscanptr, fresh.qscanptr);
+    }
+
+    cJSON *root = statusrec_to_json(&sys.status);
+    /* Write directly — we already hold the lock.  Can't call write_json_file()
+       because it takes its own FileLock on the same path, and flock(2) on macOS
+       self-deadlocks when the same process opens two independent fds. */
+    char *str = cJSON_Print(root);
+    if (str) {
+        FILE *f = fopen(spath.c_str(), "w");
+        if (f) {
+            fputs(str, f);
+            fputc('\n', f);
+            fclose(f);
+        }
+        free(str);
+    }
     cJSON_Delete(root);
 }
 
@@ -134,15 +174,14 @@ static int global_ptr;
 void set_global_handle(int i)
 {
     auto& sys = System::instance();
-    char s[MAX_PATH_LEN];
 
     if (io.x_only)
         return;
 
     if (i) {
         if (!io.global_handle) {
-            sprintf(s,"%sGLOBAL.TXT",sys.cfg.gfilesdir);
-            io.global_handle=open(s,O_RDWR | O_APPEND | O_BINARY | O_CREAT,
+            auto gpath = BbsPath::join(sys.cfg.gfilesdir, "GLOBAL.TXT");
+            io.global_handle=open(gpath.c_str(),O_RDWR | O_APPEND | O_BINARY | O_CREAT,
             S_IREAD | S_IWRITE);
             global_ptr=0;
             global_buf=(char *)malloca(GLOBAL_SIZE);
@@ -184,14 +223,7 @@ void global_char(char ch)
 
 int exist(char *s)
 {
-    int i;
-    struct ffblk ff;
-
-    i=findfirst(s,&ff,0);
-    if (i)
-        return(0);
-    else
-        return(1);
+    return BbsPath::exists(s) ? 1 : 0;
 }
 
 
@@ -222,15 +254,16 @@ void filter(char *s,unsigned char c)
 void remove_from_temp(char *fn, char *dir, int po)
 {
     int i,i1,f1,ok;
-    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
+    char s[MAX_PATH_LEN];
     struct ffblk ff;
     uploadsrec u;
 
-    sprintf(s1,"%s%s",dir,stripfn(fn));
-    f1=findfirst(s1,&ff,0);
+    auto s1path = BbsPath::join(dir, stripfn(fn));
+    f1=findfirst((char*)s1path.c_str(),&ff,0);
     ok=1;
     while ((f1==0) && (ok)) {
-        sprintf(s,"%s%s",dir,ff.ff_name);
+        auto fpath = BbsPath::join(dir, ff.ff_name);
+        strcpy(s, fpath.c_str());
         if (po)
             npr("Deleting %s\r\n",ff.ff_name);
         _chmod(s,1,0);
@@ -265,11 +298,11 @@ void printmenu(int which)
     auto& sys = System::instance();
     int i,abort=0;
     long l,l1;
-    char *b,ch,s[MAX_PATH_LEN];
+    char *b,ch;
 
-    sprintf(s,"%smnudata.dat",sys.cfg.gfilesdir);
+    auto mpath = BbsPath::join(sys.cfg.gfilesdir, "mnudata.dat");
 
-    i=open(s,O_BINARY|O_RDWR);
+    i=open(mpath.c_str(),O_BINARY|O_RDWR);
     if(i<0)
         return;
 
@@ -292,9 +325,8 @@ int printfile(char *fn)
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[3],tmp[MAX_PATH_LEN];
     int done=0;
 
-    strcpy(s,sys.cfg.gfilesdir);
-
-    strcat(s,fn);
+    auto base = BbsPath::join(sys.cfg.gfilesdir, fn);
+    strcpy(s, base.c_str());
     if (strchr(s,'.')==NULL) {
         strcpy(tmp,s);
 

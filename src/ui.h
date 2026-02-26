@@ -111,5 +111,6 @@ void ui_run(const UIConfig& config);
 void ui_push(Session& s, ActiveUI ui);
 void ui_pop(Session& s);
 void ui_quit(Session& s);
+void ui_goto(Session& s, ActiveUI ui);
 
 #endif /* UI_H_ */

@@ -21,6 +21,7 @@
 #include "acs.h"
 #include "sysopf.h"
 #include "subedit.h"
+#include "bbs_path.h"
 
 #pragma hdrstop
 
@@ -157,7 +158,7 @@ char *get_date_filename()
 
     getdate(&today);
 
-    sprintf(s,"%stoday.%s",sys.cfg.gfilesdir,dats[today.da_mon-1]);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, std::string("today.") + dats[today.da_mon-1]).c_str());
     return(s);
 }
 
@@ -239,7 +240,7 @@ void dtitle(char msg[MAX_PATH_LEN])
     char msg_stripped[MAX_PATH_LEN];
     int i;
 
-    sprintf(s,"%sbox.fmt",sys.cfg.gfilesdir);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, "box.fmt").c_str());
     f=fopen(s,"rt");
     if (!f) { pl(msg); return; }
     noc(msg_stripped,msg);
@@ -294,7 +295,7 @@ char *getComputerType(int which)
     FILE *f;
     int i=0;
 
-    sprintf(s1,"%sctype.txt",sys.cfg.gfilesdir);
+    strcpy(s1, BbsPath::join(sys.cfg.gfilesdir, "ctype.txt").c_str());
     f=fopen(s1,"rt");
     if (!f) { strcpy(s, "Unknown"); return(s); }
     while(fgets(s,81,f)!=NULL&&i++<which);
@@ -310,7 +311,7 @@ int numComputerTypes(void)
     FILE *f;
     int i=0;
 
-    sprintf(s1,"%sctype.txt",sys.cfg.gfilesdir);
+    strcpy(s1, BbsPath::join(sys.cfg.gfilesdir, "ctype.txt").c_str());
     f=fopen(s1,"rt");
     if (!f) return(0);
     while(fgets(s1,81,f)!=NULL) i++;

@@ -19,6 +19,7 @@
 #include "userdb.h"
 #include "sysopf.h"
 #include "subedit.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -304,9 +305,9 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
     hdrinfo hdr;
 
     findtitle[0]=0;
-    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
+    auto jampath = BbsPath::join(sys.cfg.msgsdir, sys.subboards[sess.usub[sb].subnum].filename);
 
-    JAMOpen(s);
+    JAMOpen((char*)jampath.c_str());
 
     if(!JAMmbFetchLastRead(&sys.JamRec,sess.usernum)) {
         if(sys.JamRec.APImsg==JAMAPIMSG_CANTFINDUSER) {
@@ -475,8 +476,8 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
             else
                 post(sb);
             if(!sys.JamRec.isOpen) {
-                sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
-                JAMOpen(s);
+                auto repath = BbsPath::join(sys.cfg.msgsdir, sys.subboards[sess.usub[sb].subnum].filename);
+                JAMOpen((char*)repath.c_str());
             }
         }
         else if(s[0]=='X') {
@@ -597,8 +598,10 @@ void rscanj(void)
         return;
     }
 
-    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);
-    JAMOpen(s);
+    {
+        auto jampath = BbsPath::join(sys.cfg.msgsdir, sys.subboards[sess.usub[sess.cursub].subnum].filename);
+        JAMOpen((char*)jampath.c_str());
+    }
 
     outstr(get_string2(9));
     input(s,4);
@@ -977,8 +980,10 @@ void SaveJamMsg(hdrinfo *hdr,long len, char *b,int sb)
     char s[MAX_PATH_LEN];
     UINT32 SubFldPos=0;
 
-    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
-    JAMOpen(s);
+    {
+        auto jampath = BbsPath::join(sys.cfg.msgsdir, sys.subboards[sess.usub[sb].subnum].filename);
+        JAMOpen((char*)jampath.c_str());
+    }
 
 
     JamMsgInit(&sys.JamRec);
@@ -1417,9 +1422,10 @@ void nscan(int sb,int *next)
     int num;
     char s[MAX_PATH_LEN];
 
-    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sb].subnum].filename);
-
-    JAMOpen(s);
+    {
+        auto jampath = BbsPath::join(sys.cfg.msgsdir, sys.subboards[sess.usub[sb].subnum].filename);
+        JAMOpen((char*)jampath.c_str());
+    }
 
     if(!JAMmbFetchLastRead(&sys.JamRec,sess.usernum))
         num=1;
@@ -1546,12 +1552,11 @@ int findwaiting(void)
 {
     auto& sys = System::instance();
     auto& sess = Session::instance();
-    char s[MAX_PATH_LEN];
     int i;
 
-    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);
+    auto jampath = BbsPath::join(sys.cfg.msgsdir, sys.subboards[sess.usub[sess.cursub].subnum].filename);
 
-    JAMOpen(s);
+    JAMOpen((char*)jampath.c_str());
     i=findnextwaiting(0,0,sess.user);
     JAMClose();
     return i;
@@ -1561,15 +1566,14 @@ int numwaiting(const User& u)
 {
     auto& sys = System::instance();
     auto& sess = Session::instance();
-    char s[MAX_PATH_LEN];
     int i=0,i1=0;
 
     if(u.inact() & inact_deleted)
         return 0;
 
-    sprintf(s,"%s%s",sys.cfg.msgsdir,sys.subboards[sess.usub[sess.cursub].subnum].filename);
+    auto jampath = BbsPath::join(sys.cfg.msgsdir, sys.subboards[sess.usub[sess.cursub].subnum].filename);
 
-    JAMOpen(s);
+    JAMOpen((char*)jampath.c_str());
 
     i1=findnextwaiting(i1,0,u);
     while(i1) {

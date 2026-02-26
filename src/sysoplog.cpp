@@ -10,6 +10,8 @@
 #include "mm1.h"
 #include "session.h"
 #include "system.h"
+#include "file_lock.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 
@@ -29,6 +31,8 @@ void sl1(int cmd,char *s)
 
     switch(cmd) {
     case 0: /* Write line to sysop's log */
+        {
+        FileLock lk(f);
         if (slf<=0) {
             slf=open(f,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
             if (filelength(slf)) {
@@ -53,6 +57,7 @@ void sl1(int cmd,char *s)
         write(slf,(void *)l,i);
         close(slf);
         slf=-1;
+        }
         break;
     case 1: /* Close sysop's log */
         if (slf>0) {
@@ -65,16 +70,15 @@ void sl1(int cmd,char *s)
             close(slf);
             slf=-1;
         }
-        strcpy(f,sys.cfg.gfilesdir);
-        i=strlen(f);
-        f[i++]=s[6];
-        f[i++]=s[7];
-        f[i++]=s[0];
-        f[i++]=s[1];
-        f[i++]=s[3];
-        f[i++]=s[4];
-        f[i]=0;
-        strcat(f,".log");
+        {
+            char datecode[8];
+            datecode[0]=s[6]; datecode[1]=s[7];
+            datecode[2]=s[0]; datecode[3]=s[1];
+            datecode[4]=s[3]; datecode[5]=s[4];
+            datecode[6]=0;
+            auto logpath = BbsPath::join(sys.cfg.gfilesdir, std::string(datecode) + ".log");
+            strcpy(f, logpath.c_str());
+        }
         break;
     case 3: /* Close sysop's log  + return filename */
         if (slf>0) {
@@ -84,6 +88,8 @@ void sl1(int cmd,char *s)
         strcpy(s,&f[strlen(sys.cfg.gfilesdir)]);
         break;
     case 4:
+        {
+        FileLock lk(f);
         if (slf <= 0) {
             slf = open(f, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
             if (filelength(slf)) {
@@ -107,6 +113,7 @@ void sl1(int cmd,char *s)
             fprintf(stdprn, "%s", l);
         i = strlen(l);
         write(slf, (void *)l, i);
+        }
         break;
     }
 }

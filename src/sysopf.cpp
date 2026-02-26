@@ -20,6 +20,7 @@
 #include "misccmd.h"
 #include "lilo.h"
 #include "personal.h"
+#include "bbs_path.h"
 
 #pragma hdrstop
 
@@ -80,11 +81,10 @@ void reset_files(int show)
 void get_status()
 {
     auto& sys = System::instance();
-    char s[MAX_PATH_LEN];
     cJSON *st_root;
 
-    sprintf(s,"%sstatus.json",sys.cfg.datadir);
-    st_root = read_json_file(s);
+    auto path = BbsPath::join(sys.cfg.datadir, "status.json");
+    st_root = read_json_file(path.c_str());
     if (st_root) {
         json_to_statusrec(st_root, &sys.status);
         cJSON_Delete(st_root);
@@ -133,8 +133,8 @@ void zlog()
     char s[MAX_PATH_LEN];
     int abort,f,i,i1;
 
-    sprintf(s,"%shistory.dat",sys.cfg.datadir);
-    f=open(s,O_RDWR | O_BINARY);
+    auto path = BbsPath::join(sys.cfg.datadir, "history.dat");
+    f=open(path.c_str(),O_RDWR | O_BINARY);
     if (f<0)
         return;
     i=0;
@@ -169,7 +169,6 @@ void beginday()
     double fk;
     int    nus;
 
-
     pl("Updating Logs");
     logpr("");
     logpr("1�1>0Totals for 7%s1<1�",sys.status.date1); 
@@ -188,8 +187,10 @@ void beginday()
     z.fback=sys.status.fbacktoday;
     z.up=sys.status.uptoday;
     z.dl=sys.status.dltoday;
-    sprintf(s,"%shistory.dat",sys.cfg.datadir);
-    f=open(s,O_RDWR|O_BINARY);
+    {
+        auto hist_path = BbsPath::join(sys.cfg.datadir, "history.dat");
+        f=open(hist_path.c_str(),O_RDWR|O_BINARY);
+    }
     lseek(f,(sys.nifty.systemtype-1)*sizeof(zlogrec),SEEK_SET);
     read(f,&z1,sizeof(z1));
     close(f);
@@ -200,8 +201,8 @@ void beginday()
     s[4]=z1.date[3];
     s[5]=z1.date[4];
     s[6]=0;
-    sprintf(s1,"%s%s.log",sys.cfg.gfilesdir,s);
-    unlink(s1);
+    auto log_path = BbsPath::join(sys.cfg.gfilesdir, std::string(s) + ".log");
+    unlink(log_path.c_str());
 
     sys.status.callstoday=0;
     sys.status.msgposttoday=0;
@@ -212,13 +213,13 @@ void beginday()
     sys.status.activetoday=0;
     strcpy(sys.status.date1,date());
     sl1(2,date());
-    sprintf(s,"%suser.log",sys.cfg.gfilesdir);
-    unlink(s);
+    auto userlog_path = BbsPath::join(sys.cfg.gfilesdir, "user.log");
+    unlink(userlog_path.c_str());
     save_status();
-    sprintf(s,"%shistory.dat",sys.cfg.datadir);
-    f=open(s,O_RDWR | O_BINARY);
+    auto hist_path2 = BbsPath::join(sys.cfg.datadir, "history.dat");
+    f=open(hist_path2.c_str(),O_RDWR | O_BINARY);
     if (f<0) {
-        f=open(s,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
+        f=open(hist_path2.c_str(),O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
         z1.date[0]=0;
         z1.active=0;
         z1.calls=0;
@@ -282,7 +283,8 @@ void print_local_file(char ss[MAX_PATH_LEN])
     char s[MAX_PATH_LEN];
 
     if ((sys.cfg.sysconfig & sysconfig_list) &&!incom) {
-        sprintf(s,"LST %s%s",sys.cfg.gfilesdir,ss);
+        auto cmd = "LST " + BbsPath::join(sys.cfg.gfilesdir, ss);
+        strcpy(s, cmd.c_str());
         if(searchpath("LST.EXE")!=NULL) {
             runprog(s,0);
             if(!sys.wfc)
@@ -327,8 +329,8 @@ void viewlog()
         print_local_file(s1);
     } 
     else {
-        sprintf(s1,"%shistory.dat",sys.cfg.datadir);
-        f=open(s1,O_BINARY|O_RDWR);
+        auto hist_path = BbsPath::join(sys.cfg.datadir, "history.dat");
+        f=open(hist_path.c_str(),O_BINARY|O_RDWR);
         i-=1;
         lseek(f,(i*sizeof(zlogrec)),SEEK_SET);
         read(f,&z,sizeof(zlogrec));

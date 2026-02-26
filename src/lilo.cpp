@@ -31,6 +31,8 @@
 #include "terminal_bridge.h"
 #include "menu_nav.h"
 #include "extrn.h"
+#include "file_lock.h"
+#include "bbs_path.h"
 #include "misccmd.h"
 #include "sysopf.h"
 #include "personal.h"
@@ -521,8 +523,8 @@ void logon()
                 menuman();*/
         menubatch("logon");
 
-        sprintf(s2,"%slaston.txt",sys.cfg.gfilesdir);
-        ss=get_file(s2,&len);
+        auto laston_path = BbsPath::join(sys.cfg.gfilesdir, "laston.txt");
+        ss=get_file((char*)laston_path.c_str(),&len);
         pos=0;
 
         if ((sess.actsl!=255) || (outcom)) {
@@ -538,8 +540,8 @@ void logon()
             sl1(0,s);
             sl1(1,"");
 
-            sprintf(s,"%slogon.fmt",sys.cfg.gfilesdir);
-            ff=fopen(s,"rt");
+            auto logon_fmt = BbsPath::join(sys.cfg.gfilesdir, "logon.fmt");
+            ff=fopen(logon_fmt.c_str(),"rt");
             if (ff) { fgets(s1,161,ff); fclose(ff); }
             else s1[0]=0;
 
@@ -552,14 +554,14 @@ void logon()
             stuff_in1(s,s1,s4,io.curspeed,s6,s3,(char*)sess.user.city(),s5,date(),times(),s7,"");
             strcat(s,"\r\n");
 
-            sprintf(s1,"%suser.log",sys.cfg.gfilesdir);
-            f=open(s1,O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
+            auto userlog_path = BbsPath::join(sys.cfg.gfilesdir, "user.log");
+            f=open(userlog_path.c_str(),O_RDWR | O_BINARY | O_CREAT, S_IREAD | S_IWRITE);
             lseek(f,0L,SEEK_END);
             i=strlen(s);
             if (sess.actsl!=255) {
                 write(f,(void *)s,i);
                 close(f);
-                f=open(s2,O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
+                f=open(laston_path.c_str(),O_RDWR | O_BINARY | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
                 pos=0;
                 copy_line(s1,ss,&pos,len);
                 for (i=1; i<8; i++) {
@@ -664,8 +666,9 @@ void logoff()
 
 
     if (sess.mailcheck) {
-        sprintf(s,"%semail.dat",sys.cfg.datadir);
-        f=open(s,O_BINARY | O_RDWR);
+        auto email_path = BbsPath::join(sys.cfg.datadir, "email.dat");
+        FileLock email_lk(email_path.c_str());
+        f=open(email_path.c_str(),O_BINARY | O_RDWR);
         if (f!=-1) {
             t=(int) (filelength(f)/sizeof(mailrec));
             r=0;
@@ -688,8 +691,9 @@ void logoff()
     }
 
     if (sess.smwcheck) {
-        sprintf(s,"%ssmw.dat",sys.cfg.datadir);
-        f=open(s,O_BINARY | O_RDWR);
+        auto smw_path = BbsPath::join(sys.cfg.datadir, "smw.dat");
+        FileLock smw_lk(smw_path.c_str());
+        f=open(smw_path.c_str(),O_BINARY | O_RDWR);
         if (f!=-1) {
             t=(int) (filelength(f)/sizeof(shortmsgrec));
             r=0;
@@ -731,8 +735,8 @@ void scrollfile(void)
     int i,crcnt=0;
     long l,l1;
 
-    sprintf(s,"%soneline.lst",sys.cfg.gfilesdir);
-    i=open(s,O_RDWR|O_BINARY);
+    auto oneline_path = BbsPath::join(sys.cfg.gfilesdir, "oneline.lst");
+    i=open(oneline_path.c_str(),O_RDWR|O_BINARY);
     l=filelength(i);
     b=(char *)malloca(l);
     read(i,b,l);
@@ -741,8 +745,7 @@ void scrollfile(void)
     while(l1++<l)
         if(b[l1]=='\r') crcnt++;
     if(crcnt>20) {
-        sprintf(s,"%soneline.lst",sys.cfg.gfilesdir);
-        i=open(s,O_RDWR|O_BINARY|O_TRUNC);
+        i=open(oneline_path.c_str(),O_RDWR|O_BINARY|O_TRUNC);
         l1=0;
         while(b[l1++]!='\r');
         write(i,&b[l1],l-l1);
@@ -778,9 +781,8 @@ void oneliner()
                 strcpy(s,"OneLiners:");
                 strncat(s,s1,69);
                 sysoplog(s);
-                strcpy(s,sys.cfg.gfilesdir);
-                strcat(s,"oneline.lst");
-                f=open(s,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+                auto oneline_path = BbsPath::join(sys.cfg.gfilesdir, "oneline.lst");
+                f=open(oneline_path.c_str(),O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
                 if (filelength(f)) {
                     lseek(f,-1L,SEEK_END);
                     read(f,((void *)&ch),1);
@@ -806,8 +808,8 @@ void fastscreen(char fn[13])
     int i,row,col;
     unsigned char ch,attr;
 
-    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
-    i=open(s,O_RDWR|O_BINARY);
+    auto fpath = BbsPath::join(sys.cfg.gfilesdir, fn);
+    i=open(fpath.c_str(),O_RDWR|O_BINARY);
     if(i<0) return;
     ss=(char *)malloca(filelength(i));
     /* Skip TheDraw header: non-.bin files always have it;
@@ -829,8 +831,8 @@ void lastfewcall(void)
     long len,pos;
     int abort,i;
 
-    sprintf(s2,"%slaston.txt",sys.cfg.gfilesdir);
-    ss=get_file(s2,&len);
+    auto laston2 = BbsPath::join(sys.cfg.gfilesdir, "laston.txt");
+    ss=get_file((char*)laston2.c_str(),&len);
     pos=0;
     abort=0;
 

@@ -21,6 +21,7 @@
 #include "userdb.h"
 #include "misccmd.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 
 #pragma hdrstop
 
@@ -149,14 +150,14 @@ int printfileinfo(uploadsrec *u, int dn)
     int i,abort=0;
     FILE *f;
 
-    sprintf(s,"%sfstat.fmt",sys.cfg.gfilesdir);
-    f=fopen(s,"rt");
+    auto fstat_path = BbsPath::join(sys.cfg.gfilesdir, "fstat.fmt");
+    f=fopen(fstat_path.c_str(),"rt");
     if(sess.modem_speed)
         t=((double) (((u->numbytes)+127)/128)) * (1620.0)/((double) (sess.modem_speed));
     abort=0;
 
     strcpy(fstatus,"");
-    sprintf(s,"%s%s",sys.directories[dn].dpath,u->filename);
+    strcpy(s, BbsPath::join(sys.directories[dn].dpath, u->filename).c_str());
     if(!exist(s)) strcpy(fstatus,"0(6File is OffLine0) ");
     if(u->ats[0]==0) strcat(fstatus,"0(8Unvalidated0) ");
     if(u->mask & mask_unavail) strcat(fstatus,"1(8Unavailble1)");
@@ -192,8 +193,9 @@ void displayformat()
     char s[161],s1[161],s2[51];
     FILE *f;
 
-    sprintf(s,"%sfile%d.fmt",sys.cfg.gfilesdir,sess.user.flisttype());
-    f=fopen(s,"rt");
+    sprintf(s, "file%d.fmt", sess.user.flisttype());
+    auto fmt_path = BbsPath::join(sys.cfg.gfilesdir, s);
+    f=fopen(fmt_path.c_str(),"rt");
     fgets(s,81,f);
     fclose(f);
     filter(s,'\n');
@@ -497,8 +499,8 @@ int dirlist(char type)
     int i,i1,abort=0;
     if(type);
 
-    sprintf(s,"%sdirlist.fmt",sys.cfg.gfilesdir);
-    f=fopen(s,"rt");
+    auto dirlist_path = BbsPath::join(sys.cfg.gfilesdir, "dirlist.fmt");
+    f=fopen(dirlist_path.c_str(),"rt");
 
     fgets(s,163,f); 
     filter(s,'\n');
@@ -628,7 +630,7 @@ void listgen(void)
     genner("filelist.dom",s,isnew);
     sprintf(s,"filelist.dom");
     add_arc("filelist","filelist.dom");
-    sprintf(s1,"%s/filelist.%s",sys.cdir,sys.xarc[sys.ARC_NUMBER].extension);
+    strcpy(s1, BbsPath::join(sys.cdir, std::string("filelist.") + sys.xarc[sys.ARC_NUMBER].extension).c_str());
     i=open(s1,O_RDONLY|O_BINARY);
     close(i);
     send_file(s1,(int *)&sent,(int *)&abort,s);

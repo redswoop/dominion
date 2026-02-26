@@ -20,6 +20,7 @@
 #include "ansi_attr.h"
 #include "misccmd.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 #include <time.h>
@@ -268,7 +269,7 @@ void addgif(uploadsrec *u, char *path)
     FILE *in;
     char s[MAX_PATH_LEN],*ss,*ss1,fn[MAX_PATH_LEN],s1[MAX_PATH_LEN];
 
-    sprintf(fn,"%s%s",path,stripfn(u->filename));
+    strcpy(fn, BbsPath::join(path, stripfn(u->filename)).c_str());
     in = fopen (fn, "rb");
     for (i = 0; (i < 6); i++) s[i] = getc(in);
     s[6] = '\0';
@@ -438,8 +439,8 @@ void copyupfile(char fn[12],char todir[MAX_PATH_LEN],char fdir[MAX_PATH_LEN])
     char *b,s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
     long l;
 
-    sprintf(s,"%s%s",fdir,fn);
-    sprintf(s1,"%s%s",todir,fn);
+    strcpy(s, BbsPath::join(fdir, fn).c_str());
+    strcpy(s1, BbsPath::join(todir, fn).c_str());
 
 
     if (exist(s)) {
@@ -556,7 +557,7 @@ int upload_file2(char *fn, int dn, char *desc)
     u.filetype=0;
     u.mask=0;
     {
-        sprintf(ff,"%s%s",d.dpath,s);
+        strcpy(ff, BbsPath::join(d.dpath, s).c_str());
         f=open(ff,O_RDONLY | O_BINARY);
         if (f<=0) {
             if (desc && (*desc)) {
@@ -590,8 +591,7 @@ int upload_file2(char *fn, int dn, char *desc)
         if (strstr(u.filename,".GIF"))
             addgif(&u,d.dpath);
         comment_arc(stripfn(u.filename),d.dpath,d.upath);
-        strcpy(ff,d.dpath);
-        strcat(ff,stripfn(u.filename));
+        strcpy(ff, BbsPath::join(d.dpath, stripfn(u.filename)).c_str());
         adddiz(ff,&u);
 
         for (i=sess.numf; i>=1; i--) {

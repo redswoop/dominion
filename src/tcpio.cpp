@@ -151,7 +151,7 @@ void initport(int port_num)
         return;
     }
 
-    if (listen(sys.listen_fd, 1) < 0) {
+    if (listen(sys.listen_fd, 5) < 0) {
         printf("\n\nFailed to listen on port %d: %s\n\n", port, strerror(errno));
         close(sys.listen_fd);
         sys.listen_fd = -1;

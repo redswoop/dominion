@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 
 #include "json_io.h"
+#include "file_lock.h"
 
 /* ================================================================
  * Helpers
@@ -70,6 +71,8 @@ int write_json_file(const char *path, cJSON *root)
     str = cJSON_Print(root);
     if (!str)
         return -1;
+
+    FileLock lk(path);
 
     f = fopen(path, "w");
     if (!f) {

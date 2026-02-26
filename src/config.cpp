@@ -18,6 +18,7 @@
 #include "lilo.h"
 #include "personal.h"
 #include "json_io.h"
+#include "bbs_path.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -713,7 +714,7 @@ void archive()
     char s[MAX_PATH_LEN];
     int i,done=0,i1=0;
 
-    sprintf(s,"%sarchive.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "archive.dat").c_str());
     i=open(s,O_BINARY|O_RDWR);
     read(i,&sys.xarc[0],8*sizeof(sys.xarc[0]));
     close(i);
@@ -784,7 +785,7 @@ void archive()
     } 
     while(!done&&!io.hangup);
 
-    sprintf(s,"%sarchive.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "archive.dat").c_str());
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     write(i,&sys.xarc[0],8*sizeof(sys.xarc[0]));
     close(i);
@@ -978,7 +979,7 @@ void acscfg(void)
     char s[MAX_PATH_LEN];
     acsrec acs;
 
-    sprintf(s,"%sacs.dat",sys.cfg.datadir);
+    strcpy(s, BbsPath::join(sys.cfg.datadir, "acs.dat").c_str());
     i=open(s,O_BINARY|O_RDWR|O_CREAT,S_IREAD|S_IWRITE);
     read(i,&acs,sizeof(acsrec));
     close(i);

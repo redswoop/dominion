@@ -56,7 +56,8 @@ CXXFLAGS = -std=c++17 \
 
 # The BBS core modules (from the original makefile)
 BBS_CORE = bbs ansi_attr bbs_output bbs_input bbs_ui conio bbsutl file file1 \
-           utility extrn mm1 tcpio jam stream_processor mci mci_bbs
+           utility extrn mm1 tcpio jam stream_processor mci mci_bbs \
+           bbs_path bbs_file
 
 BBS_MODULES = cmd_registry acs menu_nav msgbase disk user userdb menudb timest shortmsg \
               file2 file3 archive filesys \
@@ -66,7 +67,7 @@ BBS_MODULES = cmd_registry acs menu_nav msgbase disk user userdb menudb timest s
               lilo error chat nuv newuser newuser_form
 
 # Platform compatibility
-PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge screen_form
+PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge screen_form file_lock node_registry
 
 # JSON I/O (cJSON library + serialization layer)
 JSON_IO = cJSON json_io menu_json
@@ -77,7 +78,7 @@ OBJS    = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(MODULES)))
 TARGET  = $(BUILDDIR)/dominion
 
 # Data directories the BBS needs at runtime (relative to build/)
-DATA_DIRS = afiles data data/users menus msgs scripts batch dls temp
+DATA_DIRS = afiles data data/users data/nodes menus msgs scripts batch dls temp
 
 all: $(TARGET) init
 
@@ -101,10 +102,10 @@ $(OBJDIR):
 
 # --- Tool targets ---
 # termtest and inputtest excluded — need Phase C migration (vars.h → session/system singletons)
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/rawinput $(BUILDDIR)/iotest $(BUILDDIR)/uitest $(BUILDDIR)/formtest
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/rawinput $(BUILDDIR)/iotest $(BUILDDIR)/uitest $(BUILDDIR)/formtest $(BUILDDIR)/test_bbs_path
 
-$(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp | $(BUILDDIR)
-	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp
+$(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp | $(BUILDDIR)
+	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp
 
 $(BUILDDIR)/dosconv: $(TOOLDIR)/dosconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
@@ -115,8 +116,8 @@ $(BUILDDIR)/mnudump: $(TOOLDIR)/mnudump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 $(BUILDDIR)/mnuconv: $(TOOLDIR)/mnuconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
 
-$(BUILDDIR)/mnu2json: $(TOOLDIR)/mnu2json.c $(SRCDIR)/vardec.h $(SRCDIR)/menu_json.cpp $(SRCDIR)/menu_json.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp | $(BUILDDIR)
-	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/menu_json.cpp $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp
+$(BUILDDIR)/mnu2json: $(TOOLDIR)/mnu2json.c $(SRCDIR)/vardec.h $(SRCDIR)/menu_json.cpp $(SRCDIR)/menu_json.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp | $(BUILDDIR)
+	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/menu_json.cpp $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp
 
 $(BUILDDIR)/datadump: $(TOOLDIR)/datadump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
 	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
@@ -152,6 +153,10 @@ $(BUILDDIR)/uitest: $(TOOLDIR)/uitest.cpp $(OBJDIR)/ui.o $(OBJDIR)/terminal.o | 
 # Form test — fullscreen positioned forms, ZERO BBS dependencies
 $(BUILDDIR)/formtest: $(TOOLDIR)/formtest.cpp $(OBJDIR)/ui.o $(OBJDIR)/screen_form.o $(OBJDIR)/terminal.o | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/screen_form.o $(OBJDIR)/terminal.o -lncurses
+
+# BbsPath unit tests — standalone, no BBS dependencies
+$(BUILDDIR)/test_bbs_path: tests/test_bbs_path.cpp $(SRCDIR)/bbs_path.cpp $(SRCDIR)/bbs_path.h | $(BUILDDIR)
+	$(CXX) -std=c++17 -I$(SRCDIR) -o $@ tests/test_bbs_path.cpp $(SRCDIR)/bbs_path.cpp
 
 # --- Data sync from dist/ into build/ ---
 data: | $(BUILDDIR)
@@ -198,6 +203,7 @@ clean:
 	rm -f $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump
 	rm -f $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest
 	rm -f $(BUILDDIR)/iotest $(BUILDDIR)/uitest $(BUILDDIR)/formtest
+	rm -f $(BUILDDIR)/test_bbs_path
 
 # Remove just objects (keep binary + data for quick relink)
 clean-obj:

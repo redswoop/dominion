@@ -11,6 +11,7 @@
 #include "session.h"
 #include "system.h"
 #include "sysopf.h"
+#include "bbs_path.h"
 
 
 void addbbs(char *fn)
@@ -38,7 +39,7 @@ void addbbs(char *fn)
 
     if (strlen(s)==12) {
         ok=1;
-        sprintf(s1,"%s%s",sys.cfg.gfilesdir,fn);
+        strcpy(s1, BbsPath::join(sys.cfg.gfilesdir, fn).c_str());
 
         f=open(s1,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
         if (f>0) {
@@ -83,7 +84,7 @@ void addbbs(char *fn)
             inputdat("Enter BBS type (Dominion)",s3,8,1);
             nl();
 
-            sprintf(form,"%sbbslist.fmt",sys.cfg.gfilesdir);
+            strcpy(form, BbsPath::join(sys.cfg.gfilesdir, "bbslist.fmt").c_str());
             format=fopen(form,"rt");
             fgets(form,41,format);
             fclose(format);
@@ -103,7 +104,7 @@ void addbbs(char *fn)
             if (yn()) {
                 logtypes(2,"Added to BBSlist:0 %s, %s",s,s1);
                 strcat(final,"\r\n");
-                sprintf(s1,"%s%s",sys.cfg.gfilesdir,fn);
+                strcpy(s1, BbsPath::join(sys.cfg.gfilesdir, fn).c_str());
                 f=open(s1,O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
                 if (filelength(f)) {
                     lseek(f,-1L,SEEK_END);
@@ -132,7 +133,7 @@ void searchbbs(char *fn)
     inputdat("Enter Text to Search For",s1,20,0);
     if(!s1[0]) return;
 
-    sprintf(s,"%s%s",sys.cfg.gfilesdir,fn);
+    strcpy(s, BbsPath::join(sys.cfg.gfilesdir, fn).c_str());
     f=fopen(s,"rt");
     while((fgets(s2,150,f))!=NULL) {
         filter(s2,'\n');

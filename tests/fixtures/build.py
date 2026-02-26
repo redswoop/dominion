@@ -44,6 +44,7 @@ def mkconfig_binary():
             str(DOMINION_DIR / "tools" / "mkconfig.c"),
             str(DOMINION_DIR / "src" / "cJSON.cpp"),
             str(DOMINION_DIR / "src" / "json_io.cpp"),
+            str(DOMINION_DIR / "src" / "file_lock.cpp"),
         ],
         capture_output=True,
         text=True,

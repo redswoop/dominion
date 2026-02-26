@@ -14,7 +14,6 @@ void namepath();
 void flagged();
 void varible();
 void events();
-void modeminfo();
 void autoval();
 void archive();
 void secleved();

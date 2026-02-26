@@ -700,7 +700,12 @@ static void sf_seq_init(Terminal& term, SFContext& ctx, ScreenForm& form)
     ctx.cancelled     = false;
     ctx.sequential    = true;
 
-    /* No clear, no background — start at cursor */
+    /* Clean slate — sequential forms can't redraw previous prompts,
+       so re-entry means starting over from a known-good state. */
+    term.clearScreen();
+    term.gotoXY(0, 0);
+    if (form.on_enter) form.on_enter(term);
+
     sf_seq_focus_field(term, ctx, form);
 }
 
@@ -1039,6 +1044,7 @@ void sf_init(Terminal& term, SFContext& ctx, ScreenForm& form)
     term.clearScreen();
     if (!form.background_file.empty())
         term.sendAnsiFile(form.background_file);
+    if (form.on_enter) form.on_enter(term);
 
     sf_focus_field(term, ctx, form);
 }

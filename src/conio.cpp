@@ -25,6 +25,7 @@
 #include "extrn.h"
 #include "misccmd.h"
 #include "lilo.h"
+#include "bbs_path.h"
 
 #pragma hdrstop
 
@@ -312,8 +313,8 @@ int alt_key(unsigned char ch)
     cmd[0]=0;
     ch1=scan_to_char(ch,txt);
     if (ch1) {
-        sprintf(s,"%skbdef.dat",sys.cfg.gfilesdir);
-        f=open(s,O_RDONLY | O_BINARY);
+        auto kbpath = BbsPath::join(sys.cfg.gfilesdir, "kbdef.dat");
+        f=open(kbpath.c_str(),O_RDONLY | O_BINARY);
         if (f>0) {
             l=filelength(f);
             ss=(char *)malloc(l+10);
@@ -410,8 +411,9 @@ void skey(unsigned char ch)
             case 60: /* F2 */
                 if(sess.topdata==0) sess.topdata=1;
                 else {
-                    sprintf(s,"%stops%d.dat",sys.cfg.gfilesdir,sess.topdata+1);
-                    if(exist(s))
+                    char topname[32]; snprintf(topname, sizeof(topname), "tops%d.dat", sess.topdata+1);
+                    auto toppath = BbsPath::join(sys.cfg.gfilesdir, topname);
+                    if(exist((char*)toppath.c_str()))
                         sess.topdata++;
                     else
                         sess.topdata=0;
@@ -602,9 +604,10 @@ void tleft(int dot)
     nsln=nsl();
 
     if (sess.topdata) {
-        sprintf(s,"%stops%d.tl",sys.cfg.gfilesdir,sess.topdata);
+        char tlname[32]; snprintf(tlname, sizeof(tlname), "tops%d.tl", sess.topdata);
+        auto tlpath = BbsPath::join(sys.cfg.gfilesdir, tlname);
 
-        f=fopen(s,"rt");
+        f=fopen(tlpath.c_str(),"rt");
 
         if (f) while(fgets(s,81,f)!=NULL) {
 
@@ -713,9 +716,11 @@ void topscreen(void)
         return;
     }
 
-    sprintf(s,"%stops%d.dat",sys.cfg.gfilesdir,sess.topdata);
-
-    f=fopen(s,"rt");
+    {
+        char datname[32]; snprintf(datname, sizeof(datname), "tops%d.dat", sess.topdata);
+        auto datpath = BbsPath::join(sys.cfg.gfilesdir, datname);
+        f=fopen(datpath.c_str(),"rt");
+    }
     if (!f) { set_protect(0); return; }
 
     fgets(s,81,f);
@@ -738,8 +743,9 @@ void topscreen(void)
 /* asm: int 0x10 */
 
     /* Read topscreen binary into io.scrn buffer and render via Terminal */
-    sprintf(s,"%stops%d.bin",sys.cfg.gfilesdir,sess.topdata);
-    i=open(s,O_RDWR|O_BINARY);
+    char binname[32]; snprintf(binname, sizeof(binname), "tops%d.bin", sess.topdata);
+    auto binpath = BbsPath::join(sys.cfg.gfilesdir, binname);
+    i=open(binpath.c_str(),O_RDWR|O_BINARY);
     if (i >= 0) {
         b=(char *)malloca(160*linelen);
         if (b) {
@@ -755,8 +761,8 @@ void topscreen(void)
         i = -1; /* file not found, skip */
     }
 
-    sprintf(s,"%shistory.dat",sys.cfg.datadir);
-    ff=open(s,O_RDWR|O_BINARY);
+    auto histpath = BbsPath::join(sys.cfg.datadir, "history.dat");
+    ff=open(histpath.c_str(),O_RDWR|O_BINARY);
     lseek(ff,0L,SEEK_SET);
     read(ff,(void *)&z[0],sizeof(zlogrec)*3);
     close(ff);

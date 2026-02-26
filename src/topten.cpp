@@ -11,6 +11,7 @@
 #include "system.h"
 
 #include "mci.h"
+#include "bbs_path.h"
 
 
 char *stl(long l)
@@ -159,7 +160,7 @@ void updtopten(void)
         }
     }
 
-    sprintf(s1,"%stopten.dat",sys.cfg.datadir);
+    strcpy(s1, BbsPath::join(sys.cfg.datadir, "topten.dat").c_str());
     i=open(s1,O_BINARY|O_RDWR|O_TRUNC|O_CREAT,S_IREAD|S_IWRITE);
     write(i,&s[0],5*10*31);
     write(i,&posts_per_user[0],10*sizeof(posts_per_user[0]));
@@ -193,7 +194,7 @@ char *topten(int type)
     timeon_per_user[10];
 
 
-    sprintf(s1,"%stopten.dat",sys.cfg.datadir);
+    strcpy(s1, BbsPath::join(sys.cfg.datadir, "topten.dat").c_str());
     i=open(s1,O_BINARY|O_RDWR);
     if(i<0) {
         updtopten();
