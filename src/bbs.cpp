@@ -24,6 +24,7 @@
 #include "lilo.h"
 #include "node_registry.h"
 #include "terminal_bridge.h"
+#include "console.h"
 
 extern int nc_active;  /* from terminal_bridge.cpp, via io_ncurses.h */
 
@@ -466,9 +467,12 @@ int main(int argc, char *argv[])
      *   -L: already_on=2, gotcaller() path.
      */
     if (ok_modem_stuff && sys.tcp_port > 0) {
-        /* TCP mode — open listen socket, then fork per connection */
+        /* TCP mode — open listen socket */
         initport(0);
-        supervisor_loop();
+        if (sys.ooneuser)
+            supervisor_loop();     /* -P -Q: test mode, unchanged */
+        else
+            console_run();         /* -P: sysop console multiplexer */
     } else {
         /* Local mode — inline session, no fork */
         inline_session_loop(ui, us);

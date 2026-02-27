@@ -67,7 +67,7 @@ BBS_MODULES = cmd_registry acs menu_nav msgbase disk user userdb menudb timest s
               lilo error chat nuv newuser newuser_form
 
 # Platform compatibility
-PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge screen_form file_lock node_registry
+PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge screen_form file_lock node_registry vt100 console
 
 # JSON I/O (cJSON library + serialization layer)
 JSON_IO = cJSON json_io menu_json

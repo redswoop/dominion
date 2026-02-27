@@ -28,6 +28,7 @@ public:
 
     /* -- Remote TCP stream -- */
     void setRemote(int fd);
+    void setRemoteNoIac(int fd);     /* like setRemote but no telnet IAC */
     void closeRemote();
     void detachRemote();            /* reset state without closing fd */
     bool remoteConnected() const;
@@ -129,6 +130,7 @@ private:
         int fd = -1;
         bool active = false;
         bool needs_iac = false;
+        bool is_pty = false;       /* true if fd is a PTY (not a socket) */
     };
     Stream remote_;
 

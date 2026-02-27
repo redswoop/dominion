@@ -19,6 +19,7 @@ void term_shutdown(void);
 
 /* -- Remote TCP stream -- */
 void term_set_remote(int fd);
+void term_set_remote_no_iac(int fd);  /* like setRemote but no telnet IAC */
 void term_close_remote(void);
 void term_detach_remote(void);
 int  term_remote_connected(void);

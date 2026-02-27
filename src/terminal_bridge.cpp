@@ -45,6 +45,7 @@ void term_shutdown(void)
 /* ================================================================== */
 
 void term_set_remote(int fd)        { g_term.setRemote(fd); }
+void term_set_remote_no_iac(int fd) { g_term.setRemoteNoIac(fd); }
 void term_close_remote(void)        { g_term.closeRemote(); }
 void term_detach_remote(void)       { g_term.detachRemote(); }
 int  term_remote_connected(void)    { return g_term.remoteConnected() ? 1 : 0; }

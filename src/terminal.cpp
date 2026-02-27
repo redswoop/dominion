@@ -204,6 +204,15 @@ void Terminal::setRemote(int fd)
     iacState_ = 0;
 }
 
+void Terminal::setRemoteNoIac(int fd)
+{
+    remote_.fd = fd;
+    remote_.active = true;
+    remote_.needs_iac = false;
+    remote_.is_pty = true;
+    iacState_ = 0;
+}
+
 void Terminal::closeRemote()
 {
     if (remote_.fd >= 0) {
@@ -222,6 +231,11 @@ void Terminal::detachRemote()
 bool Terminal::remoteConnected() const
 {
     if (remote_.fd < 0) return false;
+
+    /* PTY fds don't support recv() — check if fd is still valid */
+    if (remote_.is_pty)
+        return fcntl(remote_.fd, F_GETFL) >= 0;
+
     char buf;
     int n = recv(remote_.fd, &buf, 1, MSG_PEEK | MSG_DONTWAIT);
     if (n == 0) return false;
