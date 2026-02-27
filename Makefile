@@ -1,15 +1,21 @@
 # Makefile — Dominion BBS for macOS/Linux
 #
-# Original: Borland C++ 3.1, DOS real-mode
-# Target:   clang/gcc, macOS/Linux, 64-bit
+# Lakos-style packages:
+#   src/terminal/  → libterminal.a  (Terminal I/O, ANSI, VT100, CP437)
+#   src/tui/       → libtui.a       (Declarative UI: ScreenForm, Navigator)
+#   src/jam/       → libjam.a       (JAM message base: format types, POSIX I/O)
+#   src/           → BBS application (everything else)
 #
 # Usage:
-#   make -j4          Build BBS + sync data into build/
-#   make binary       Build BBS binary only (no data sync)
-#   make tools        Build standalone utilities (mkconfig, dosconv)
-#   make init         Generate config.json + seed data (run once after clean)
-#   make clean        Remove everything in build/
-#   make clean-obj    Remove objects only (keep binary + data)
+#   make -j4            Build BBS + sync data into build/
+#   make binary         Build BBS binary only (no data sync)
+#   make tools          Build standalone utilities (mkconfig, dosconv, etc.)
+#   make test-terminal  Build terminal library tests
+#   make test-tui       Build TUI library tests
+#   make test-jam       Build JAM library test
+#   make init           Generate config.json + seed data (run once after clean)
+#   make clean          Remove build artifacts
+#   make clean-obj      Remove objects only (keep binary + data)
 #
 # To run:  cd build && ./dominion -M
 
@@ -19,9 +25,10 @@ DISTDIR  = dist
 BUILDDIR = build
 OBJDIR   = $(BUILDDIR)/obj
 
-CC = cc
+CC  = cc
 CXX = c++
-# C flags — used only for standalone tools (mkconfig, dosconv, etc.)
+
+# C flags — standalone C tools only (mkconfig, dosconv, jamdump, etc.)
 CFLAGS = -std=gnu89 \
          -Wall -Wno-implicit-function-declaration \
          -Wno-return-type -Wno-pointer-sign \
@@ -41,8 +48,9 @@ CFLAGS = -std=gnu89 \
          -Wno-multichar \
          -fsigned-char \
          -g -O0
-# C++ flags — used for ALL BBS source (.c compiled as C++ via -x c++, plus .cpp)
-CXXFLAGS = -std=c++17 \
+
+# C++ flags — all BBS + library source
+CXXFLAGS = -std=c++17 -Isrc -MMD -MP \
            -Wall -Wextra \
            -Wno-unused-parameter -Wno-unused-variable -Wno-unused-value \
            -Wno-return-type -Wno-parentheses -Wno-dangling-else \
@@ -54,8 +62,30 @@ CXXFLAGS = -std=c++17 \
            -Wno-deprecated-declarations \
            -fsigned-char -g -O0
 
-# The BBS core modules (from the original makefile)
-BBS_CORE = bbs ansi_attr bbs_output bbs_input bbs_ui conio bbsutl file file1 \
+# =================================================================
+# Library sources (wildcard discovery)
+# =================================================================
+
+TERMINAL_SRC := $(wildcard $(SRCDIR)/terminal/*.cpp)
+TUI_SRC      := $(wildcard $(SRCDIR)/tui/*.cpp)
+JAM_SRC      := $(wildcard $(SRCDIR)/jam/*.cpp)
+
+# Library objects — prefixed to avoid name collisions in flat obj/
+TERMINAL_OBJS := $(patsubst $(SRCDIR)/terminal/%.cpp,$(OBJDIR)/terminal_%.o,$(TERMINAL_SRC))
+TUI_OBJS      := $(patsubst $(SRCDIR)/tui/%.cpp,$(OBJDIR)/tui_%.o,$(TUI_SRC))
+JAM_OBJS      := $(patsubst $(SRCDIR)/jam/%.cpp,$(OBJDIR)/jam_%.o,$(JAM_SRC))
+
+# Library archives
+LIBTERMINAL := $(BUILDDIR)/libterminal.a
+LIBTUI      := $(BUILDDIR)/libtui.a
+LIBJAM      := $(BUILDDIR)/libjam.a
+LIBS        := $(LIBTERMINAL) $(LIBTUI) $(LIBJAM)
+
+# =================================================================
+# BBS application modules (flat in src/)
+# =================================================================
+
+BBS_CORE = bbs bbs_output bbs_input bbs_ui conio bbsutl file file1 \
            utility extrn mm1 tcpio jam stream_processor mci mci_bbs \
            bbs_path bbs_file
 
@@ -66,99 +96,158 @@ BBS_MODULES = cmd_registry acs menu_nav msgbase disk user userdb menudb timest s
               personal misccmd automsg bbslist timebank topten config \
               lilo error chat nuv newuser newuser_form
 
-# Platform compatibility
-PLATFORM = platform_stubs jam_stubs io_stream session system terminal terminal_bridge screen_form file_lock node_registry vt100 console
+PLATFORM = platform_stubs io_stream session system terminal_bridge \
+           file_lock node_registry console
 
-# JSON I/O (cJSON library + serialization layer)
 JSON_IO = cJSON json_io menu_json
 
-MODULES = version $(BBS_CORE) $(BBS_MODULES) $(PLATFORM) $(JSON_IO)
-OBJS    = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(MODULES)))
+MODULES  = version $(BBS_CORE) $(BBS_MODULES) $(PLATFORM) $(JSON_IO)
+BBS_OBJS = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(MODULES)))
 
-TARGET  = $(BUILDDIR)/dominion
+TARGET = $(BUILDDIR)/dominion
 
 # Data directories the BBS needs at runtime (relative to build/)
 DATA_DIRS = afiles data data/users data/nodes menus msgs scripts batch dls temp
 
+# =================================================================
+# Top-level targets
+# =================================================================
+
 all: $(TARGET) init
 
-# Alias: build just the binary
 binary: $(TARGET)
 
-# Link (CXX needed for terminal.o / terminal_bridge.o)
-$(TARGET): $(OBJS) | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) -lm -lncurses
+# =================================================================
+# Libraries
+# =================================================================
 
-# Compile C++
+$(LIBTERMINAL): $(TERMINAL_OBJS) | $(BUILDDIR)
+	ar rcs $@ $^
+
+$(LIBTUI): $(TUI_OBJS) | $(BUILDDIR)
+	ar rcs $@ $^
+
+$(LIBJAM): $(JAM_OBJS) | $(BUILDDIR)
+	ar rcs $@ $^
+
+# =================================================================
+# BBS binary
+# =================================================================
+
+$(TARGET): $(BBS_OBJS) $(LIBS) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $(BBS_OBJS) $(LIBS) -lm -lncurses
+
+# =================================================================
+# Compile rules — per-directory patterns
+# =================================================================
+
+# Library: src/terminal/*.cpp → build/obj/terminal_*.o
+$(OBJDIR)/terminal_%.o: $(SRCDIR)/terminal/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Library: src/tui/*.cpp → build/obj/tui_*.o
+$(OBJDIR)/tui_%.o: $(SRCDIR)/tui/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Library: src/jam/*.cpp → build/obj/jam_%.o
+$(OBJDIR)/jam_%.o: $(SRCDIR)/jam/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# BBS: src/*.cpp → build/obj/*.o
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Create directories
+# =================================================================
+# Directories
+# =================================================================
+
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
-# --- Tool targets ---
-# termtest and inputtest excluded — need Phase C migration (vars.h → session/system singletons)
-tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump $(BUILDDIR)/rawinput $(BUILDDIR)/iotest $(BUILDDIR)/uitest $(BUILDDIR)/formtest $(BUILDDIR)/test_bbs_path
+# =================================================================
+# Library test targets
+# =================================================================
+
+test-terminal: $(BUILDDIR)/iotest
+
+test-tui: $(BUILDDIR)/uitest $(BUILDDIR)/formtest
+
+test-jam: $(BUILDDIR)/jamdump
+
+# IO test — clean Terminal class, ZERO BBS dependencies
+$(BUILDDIR)/iotest: $(SRCDIR)/terminal/tests/iotest.cpp $(LIBTERMINAL) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBTERMINAL) -lncurses
+
+# UI test — declarative UI harness, ZERO BBS dependencies
+$(BUILDDIR)/uitest: $(SRCDIR)/tui/tests/uitest.cpp $(LIBTUI) $(LIBTERMINAL) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBTUI) $(LIBTERMINAL) -lncurses
+
+# Form test — fullscreen positioned forms, ZERO BBS dependencies
+$(BUILDDIR)/formtest: $(SRCDIR)/tui/tests/formtest.cpp $(LIBTUI) $(LIBTERMINAL) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $< $(LIBTUI) $(LIBTERMINAL) -lncurses
+
+# JAM dump — standalone C, just JAM headers
+$(BUILDDIR)/jamdump: $(SRCDIR)/jam/tests/jamdump.c | $(BUILDDIR)
+	$(CC) $(CFLAGS) -Isrc -o $@ $<
+
+# =================================================================
+# Standalone tools
+# =================================================================
+
+tools: $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump \
+       $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump \
+       $(BUILDDIR)/rawinput $(BUILDDIR)/test_bbs_path
 
 $(BUILDDIR)/mkconfig: $(TOOLDIR)/mkconfig.c $(SRCDIR)/vardec.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp | $(BUILDDIR)
-	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp
+	$(CXX) -std=c++17 -fsigned-char -Isrc -o $@ -x c++ $< $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp
 
 $(BUILDDIR)/dosconv: $(TOOLDIR)/dosconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -Isrc -o $@ $<
 
 $(BUILDDIR)/mnudump: $(TOOLDIR)/mnudump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -Isrc -o $@ $<
 
 $(BUILDDIR)/mnuconv: $(TOOLDIR)/mnuconv.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
+	$(CC) -std=gnu89 -fsigned-char -Isrc -o $@ $<
 
 $(BUILDDIR)/mnu2json: $(TOOLDIR)/mnu2json.c $(SRCDIR)/vardec.h $(SRCDIR)/menu_json.cpp $(SRCDIR)/menu_json.h $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp | $(BUILDDIR)
-	$(CXX) -std=c++17 -fsigned-char -I$(SRCDIR) -o $@ -x c++ $< $(SRCDIR)/menu_json.cpp $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp
+	$(CXX) -std=c++17 -fsigned-char -Isrc -o $@ -x c++ $< $(SRCDIR)/menu_json.cpp $(SRCDIR)/cJSON.cpp $(SRCDIR)/json_io.cpp $(SRCDIR)/file_lock.cpp
 
 $(BUILDDIR)/datadump: $(TOOLDIR)/datadump.c $(SRCDIR)/vardec.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
-
-$(BUILDDIR)/jamdump: $(TOOLDIR)/jamdump.c $(SRCDIR)/jam.h $(SRCDIR)/jamsys.h | $(BUILDDIR)
-	$(CC) -std=gnu89 -fsigned-char -I$(SRCDIR) -o $@ $<
-
-# Terminal test — links against real BBS .o files to test rendering
-TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/session.o $(OBJDIR)/system.o
-$(BUILDDIR)/termtest: $(TOOLDIR)/termtest.c $(TERMTEST_OBJS) | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ -x c++ $< -x none $(TERMTEST_OBJS) -lncurses
+	$(CC) -std=gnu89 -fsigned-char -Isrc -o $@ $<
 
 # Raw input byte inspector — standalone, no BBS dependencies
 $(BUILDDIR)/rawinput: $(TOOLDIR)/rawinput.c | $(BUILDDIR)
 	$(CC) -std=gnu89 -o $@ $<
 
-# Input function test — links against real BBS .o files to test input1/inputdat/getkey
-INPUTTEST_OBJS = $(OBJDIR)/bbs_output.o $(OBJDIR)/bbs_input.o $(OBJDIR)/bbs_ui.o $(OBJDIR)/ansi_attr.o $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o $(OBJDIR)/terminal.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/stream_processor.o
-$(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ -x c++ $< -x none $(INPUTTEST_OBJS) -lncurses
-
-# IO test — clean Terminal class, ZERO BBS dependencies
-$(BUILDDIR)/iotest: $(TOOLDIR)/iotest.cpp $(OBJDIR)/terminal.o | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/terminal.o -lncurses
-
-# UI test — declarative UI harness, ZERO BBS dependencies
-$(OBJDIR)/ui.o: $(SRCDIR)/ui.cpp $(SRCDIR)/ui.h $(SRCDIR)/terminal.h | $(OBJDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -c -o $@ $<
-
-$(BUILDDIR)/uitest: $(TOOLDIR)/uitest.cpp $(OBJDIR)/ui.o $(OBJDIR)/terminal.o | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/terminal.o -lncurses
-
-# Form test — fullscreen positioned forms, ZERO BBS dependencies
-$(BUILDDIR)/formtest: $(TOOLDIR)/formtest.cpp $(OBJDIR)/ui.o $(OBJDIR)/screen_form.o $(OBJDIR)/terminal.o | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -I$(SRCDIR) -o $@ $< $(OBJDIR)/ui.o $(OBJDIR)/screen_form.o $(OBJDIR)/terminal.o -lncurses
-
 # BbsPath unit tests — standalone, no BBS dependencies
 $(BUILDDIR)/test_bbs_path: tests/test_bbs_path.cpp $(SRCDIR)/bbs_path.cpp $(SRCDIR)/bbs_path.h | $(BUILDDIR)
-	$(CXX) -std=c++17 -I$(SRCDIR) -o $@ tests/test_bbs_path.cpp $(SRCDIR)/bbs_path.cpp
+	$(CXX) -std=c++17 -Isrc -o $@ tests/test_bbs_path.cpp $(SRCDIR)/bbs_path.cpp
 
-# --- Data sync from dist/ into build/ ---
+# =================================================================
+# BBS-entangled test tools (need BBS .o files, not library tests)
+# =================================================================
+
+# Terminal rendering test — links BBS .o files + libterminal
+TERMTEST_OBJS = $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o $(OBJDIR)/io_stream.o \
+                $(OBJDIR)/terminal_bridge.o $(OBJDIR)/session.o $(OBJDIR)/system.o
+$(BUILDDIR)/termtest: $(SRCDIR)/terminal/tests/termtest.c $(TERMTEST_OBJS) $(LIBTERMINAL) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ -x c++ $< -x none $(TERMTEST_OBJS) $(LIBTERMINAL) -lncurses
+
+# Input function test — links BBS .o files + libterminal
+INPUTTEST_OBJS = $(OBJDIR)/bbs_output.o $(OBJDIR)/bbs_input.o $(OBJDIR)/bbs_ui.o \
+                 $(OBJDIR)/tcpio.o $(OBJDIR)/conio.o $(OBJDIR)/platform_stubs.o \
+                 $(OBJDIR)/io_stream.o $(OBJDIR)/terminal_bridge.o $(OBJDIR)/stream_processor.o
+$(BUILDDIR)/inputtest: $(TOOLDIR)/inputtest.c $(INPUTTEST_OBJS) $(LIBTERMINAL) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ -x c++ $< -x none $(INPUTTEST_OBJS) $(LIBTERMINAL) -lncurses
+
+# =================================================================
+# Data sync from dist/ into build/
+# =================================================================
+
 data: | $(BUILDDIR)
 	@for d in $(DATA_DIRS); do mkdir -p $(BUILDDIR)/$$d; done
 	@for d in afiles data menus msgs scripts; do \
@@ -170,9 +259,10 @@ data: | $(BUILDDIR)
 		if [ -f $(DISTDIR)/$$f ]; then cp -a $(DISTDIR)/$$f $(BUILDDIR)/$$f; fi; \
 	done
 
-# --- Generate config.json + seed data (first-time setup) ---
-# Order matters: mkconfig first (generates JSON), then dist data on top
-# (overwrites stubs with real content like mnudata.dat).
+# =================================================================
+# Generate config.json + seed data (first-time setup)
+# =================================================================
+
 init: $(BUILDDIR)/mkconfig $(BUILDDIR)/mnu2json
 	@if [ ! -f $(BUILDDIR)/config.json ]; then \
 		echo "Generating config.json and seed data..."; \
@@ -183,7 +273,6 @@ init: $(BUILDDIR)/mkconfig $(BUILDDIR)/mnu2json
 	@$(MAKE) data
 	@$(MAKE) menus-json
 
-# --- Convert binary .mnu files to .json in build/menus/ ---
 menus-json: $(BUILDDIR)/mnu2json
 	@if ls $(BUILDDIR)/menus/*.mnu 1>/dev/null 2>&1; then \
 		echo "Converting .mnu files to .json..."; \
@@ -195,22 +284,32 @@ menus-json: $(BUILDDIR)/mnu2json
 		done; \
 	fi
 
-# Remove binary + objects, preserve data dirs (config, users, messages, etc.)
+# =================================================================
+# Clean targets
+# =================================================================
+
 clean:
 	rm -rf $(OBJDIR)
-	rm -f $(BUILDDIR)/dominion
+	rm -f $(TARGET)
+	rm -f $(LIBTERMINAL) $(LIBTUI) $(LIBJAM)
 	rm -f $(BUILDDIR)/mkconfig $(BUILDDIR)/dosconv $(BUILDDIR)/mnudump
 	rm -f $(BUILDDIR)/mnuconv $(BUILDDIR)/mnu2json $(BUILDDIR)/datadump $(BUILDDIR)/jamdump
 	rm -f $(BUILDDIR)/termtest $(BUILDDIR)/rawinput $(BUILDDIR)/inputtest
 	rm -f $(BUILDDIR)/iotest $(BUILDDIR)/uitest $(BUILDDIR)/formtest
 	rm -f $(BUILDDIR)/test_bbs_path
 
-# Remove just objects (keep binary + data for quick relink)
 clean-obj:
 	rm -rf $(OBJDIR)
 
-# Nuclear: remove entire build directory including all data
 distclean:
 	rm -rf $(BUILDDIR)
 
-.PHONY: all binary clean clean-obj distclean data tools init menus-json
+.PHONY: all binary clean clean-obj distclean data tools init menus-json \
+        test-terminal test-tui test-jam
+
+# =================================================================
+# Auto-dependency tracking (generated by -MMD -MP)
+# =================================================================
+
+DEPS := $(wildcard $(OBJDIR)/*.d)
+-include $(DEPS)

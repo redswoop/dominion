@@ -660,6 +660,8 @@ static void sf_seq_focus_field(Terminal& term, SFContext& ctx, ScreenForm& form)
         ctx.input_buffer.clear();
     }
 
+    bool plain = (ctx.render == SFRender::Plain);
+
     /* Print prompt */
     term.setAttr(form.prompt_attr);
     if (!f.prompt.empty()) {
@@ -667,28 +669,53 @@ static void sf_seq_focus_field(Terminal& term, SFContext& ctx, ScreenForm& form)
         term.putch(' ');
     }
 
-    /* For inline select, show options after prompt */
+    /* For select fields, show options after prompt */
     if (auto* sel = std::get_if<SelectField>(&f.widget)) {
-        term.setAttr(0x03);
-        term.putch('(');
-        for (int i = 0; i < (int)sel->options.size(); i++) {
-            if (i > 0) term.putch('/');
+        if (sel->display == SelectDisplay::Popup) {
+            /* List choices vertically */
+            term.newline();
+            for (int i = 0; i < (int)sel->options.size(); i++) {
+                term.setAttr(form.prompt_attr);
+                term.puts("  ");
+                term.putch(sel->options[i].first);
+                term.setAttr(0x03);
+                term.puts(") ");
+                term.setAttr(0x07);
+                term.puts(sel->options[i].second.c_str());
+                term.newline();
+            }
             term.setAttr(form.prompt_attr);
-            term.putch(sel->options[i].first);
+            term.puts("Choice: ");
+        } else {
+            /* Inline: compact (M/F/Y/L) format */
             term.setAttr(0x03);
+            term.putch('(');
+            for (int i = 0; i < (int)sel->options.size(); i++) {
+                if (i > 0) term.putch('/');
+                term.setAttr(form.prompt_attr);
+                term.putch(sel->options[i].first);
+                term.setAttr(0x03);
+            }
+            term.puts(") ");
         }
-        term.puts(") ");
     }
 
     /* Record cursor position for field input */
-    ctx.inline_start_x = term.cursorX();
-    ctx.inline_start_y = term.cursorY();
+    if (!plain) {
+        ctx.inline_start_x = term.cursorX();
+        ctx.inline_start_y = term.cursorY();
+    }
 
     /* Render existing value if re-entering field */
     term.setAttr(form.input_attr);
     if (!ctx.input_buffer.empty()) {
-        sf_seq_render_value(term, ctx, f, ctx.input_buffer);
-        sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+        if (plain) {
+            std::string display = sf_format_display(f, ctx.input_buffer);
+            term.puts(display.c_str());
+        } else {
+            sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+            sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+        }
     }
 }
 
@@ -698,12 +725,16 @@ static void sf_seq_init(Terminal& term, SFContext& ctx, ScreenForm& form)
     ctx.current_field_index = 0;
     ctx.input_buffer.clear();
     ctx.cancelled     = false;
-    ctx.sequential    = true;
 
     /* Clean slate — sequential forms can't redraw previous prompts,
        so re-entry means starting over from a known-good state. */
-    term.clearScreen();
-    term.gotoXY(0, 0);
+    if (ctx.render == SFRender::Plain) {
+        term.newline();
+        term.newline();
+    } else {
+        term.clearScreen();
+        term.gotoXY(0, 0);
+    }
     if (form.on_enter) form.on_enter(term);
 
     sf_seq_focus_field(term, ctx, form);
@@ -715,6 +746,7 @@ static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
     if (ctx.current_field_index >= (int)form.fields.size()) return;
 
     ScreenField& f = form.fields[ctx.current_field_index];
+    bool plain = (ctx.render == SFRender::Plain);
 
     /* --- Escape: cancel in all widget types --- */
     if (ev.key == Key::Escape) {
@@ -742,8 +774,12 @@ static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
         case Key::Backspace:
             if (!ctx.input_buffer.empty()) {
                 ctx.input_buffer.pop_back();
-                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
-                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                if (plain) {
+                    term.backspace();
+                } else {
+                    sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                    sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                }
             }
             break;
         case Key::Enter:
@@ -760,7 +796,10 @@ static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
             for (auto& opt : sel->options) {
                 if (opt.first == upper) {
                     ctx.input_buffer = std::string(1, upper);
-                    sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                    if (plain)
+                        term.putch(upper);
+                    else
+                        sf_seq_render_value(term, ctx, f, ctx.input_buffer);
                     sf_seq_leave_field(term, ctx, form);
                     return;
                 }
@@ -773,8 +812,12 @@ static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
         if (ev.key == Key::Backspace) {
             if (!ctx.input_buffer.empty()) {
                 ctx.input_buffer.pop_back();
-                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
-                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                if (plain) {
+                    term.backspace();
+                } else {
+                    sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                    sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                }
             }
         } else if (ev.key == Key::Enter) {
             sf_seq_leave_field(term, ctx, form);
@@ -793,8 +836,15 @@ static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
                     ctx.input_buffer += ev.ch;
                 }
 
-                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
-                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                if (plain) {
+                    /* Echo raw digits — no separators */
+                    if (seg_digits.empty() && date_needs_autopad(segs[cur_seg], ev.ch))
+                        term.putch('0');
+                    term.putch((unsigned char)ev.ch);
+                } else {
+                    sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                    sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                }
 
                 if ((int)ctx.input_buffer.size() >= total)
                     sf_seq_leave_field(term, ctx, form);
@@ -807,16 +857,25 @@ static void sf_seq_dispatch(Terminal& term, SFContext& ctx,
         if (ev.key == Key::Backspace) {
             if (!ctx.input_buffer.empty()) {
                 ctx.input_buffer.pop_back();
-                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
-                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                if (plain) {
+                    term.backspace();
+                } else {
+                    sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                    sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                }
             }
         } else if (ev.key == Key::Enter) {
             sf_seq_leave_field(term, ctx, form);
         } else if (ev.key == Key::Char && ev.ch >= '0' && ev.ch <= '9') {
             if ((int)ctx.input_buffer.size() < 10) {
                 ctx.input_buffer += ev.ch;
-                sf_seq_render_value(term, ctx, f, ctx.input_buffer);
-                sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                if (plain) {
+                    term.putch((unsigned char)ev.ch);
+                } else {
+                    sf_seq_render_value(term, ctx, f, ctx.input_buffer);
+                    sf_seq_position_cursor(term, ctx, f, ctx.input_buffer);
+                }
+
                 if ((int)ctx.input_buffer.size() == 10)
                     sf_seq_leave_field(term, ctx, form);
             }
@@ -840,7 +899,7 @@ static void form_exit_action(Terminal& term, FormExit exit)
 void sf_dispatch(Terminal& term, SFContext& ctx,
                  ScreenForm& form, KeyEvent ev)
 {
-    if (ctx.sequential) {
+    if (ctx.render != SFRender::Fullscreen) {
         sf_seq_dispatch(term, ctx, form, ev);
         return;
     }
@@ -1030,8 +1089,14 @@ void sf_dispatch(Terminal& term, SFContext& ctx,
 
 void sf_init(Terminal& term, SFContext& ctx, ScreenForm& form)
 {
-    ctx.sequential = sf_is_sequential(form);
-    if (ctx.sequential) {
+    /* Resolve: what the form wants vs what the session supports.
+     * Enum order: Fullscreen(0) < Sequential(1) < Plain(2).
+     * Higher = more degraded.  effective = max(ideal, max_render). */
+    SFRender ideal = sf_is_sequential(form)
+        ? SFRender::Sequential : SFRender::Fullscreen;
+    ctx.render = (ideal >= ctx.max_render) ? ideal : ctx.max_render;
+
+    if (ctx.render != SFRender::Fullscreen) {
         sf_seq_init(term, ctx, form);
         return;
     }

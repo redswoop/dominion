@@ -10,7 +10,7 @@
  *         build/uitest -P2024     (telnet on port 2024)
  */
 
-#include "ui.h"
+#include "tui/ui.h"
 
 #include <cstdio>
 #include <cstdlib>

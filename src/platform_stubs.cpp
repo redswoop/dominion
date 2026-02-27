@@ -7,7 +7,7 @@
 #include "io_ncurses.h"  /* MUST come before platform.h — see io_ncurses.h */
 #include "platform.h"
 #include "session.h"
-#include "cp437.h"
+#include "terminal/cp437.h"
 #include "terminal_bridge.h"
 
 extern void reset_attr_cache(void);

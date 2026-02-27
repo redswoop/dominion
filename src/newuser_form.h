@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "screen_form.h"
+#include "tui/screen_form.h"
 #include <string>
 
 /* Build the new user registration form.

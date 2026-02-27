@@ -76,6 +76,10 @@ public:
     void lf();
     void bs();
 
+    /* -- ANSI mode -- */
+    void setAnsiEnabled(bool e) { ansiEnabled_ = e; }
+    bool ansiEnabled() const { return ansiEnabled_; }
+
     /* -- Screen state -- */
     int cursorX() const { return cx_; }
     int cursorY() const { return cy_ - *pTopLine_; }
@@ -163,6 +167,7 @@ private:
     int pendingScancode_ = -1;
 
     /* -- Terminal -- */
+    bool ansiEnabled_ = true;
     bool ncActive_ = false;
     bool use16colors_ = false;
     struct termios origTermios_ = {};

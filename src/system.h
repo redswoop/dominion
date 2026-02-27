@@ -16,7 +16,7 @@
 #include "vardec_msgfile.h"
 #include "vardec_ui.h"
 #include "platform.h"
-#include "jammb.h"
+#include "jam/jammb.h"
 
 class System {
 public:

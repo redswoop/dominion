@@ -1,7 +1,7 @@
 #ifndef _JAM_BBS_H_
 #define _JAM_BBS_H_
 
-#include "jammb.h"
+#include "jam/jammb.h"
 #include "vardec_msgfile.h"
 #include "user.h"
 #include "vardec_types.h"

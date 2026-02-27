@@ -4,9 +4,10 @@
  * Canonical ScreenForm library used by both the BBS and standalone tools.
  * Operates on Terminal& + SFContext& — no BBS globals, no Session singleton.
  *
- * Two form modes:
- *   - Screen mode: ANSI background art with positioned fields (newuser reg)
- *   - Sequential mode: prompt-by-prompt inline input (no background needed)
+ * Three rendering tiers (resolved at init from form mode + session caps):
+ *   - Fullscreen: ANSI background art, positioned fields, colors
+ *   - Sequential: inline prompts with colors and cursor positioning
+ *   - Plain: inline prompts, no ANSI (no color, no gotoXY, no clearScreen)
  *
  * Two usage patterns:
  *   - sf_run()  — synchronous: init + dispatch loop (BBS newuser.cpp)
@@ -23,7 +24,7 @@
 #ifndef SCREEN_FORM_H_
 #define SCREEN_FORM_H_
 
-#include "terminal.h"
+#include "terminal/terminal.h"
 #include <string>
 #include <vector>
 #include <functional>
@@ -51,6 +52,14 @@ enum class Key {
 struct KeyEvent {
     Key key = Key::None;
     char ch = 0;
+};
+
+/* --- Resolved rendering tier --- */
+
+enum class SFRender {
+    Fullscreen,   /* positioned fields, background art, colors */
+    Sequential,   /* inline prompts, colors, cursor editing */
+    Plain,        /* inline prompts, no ANSI at all */
 };
 
 /* --- Form exit behavior --- */
@@ -155,7 +164,8 @@ struct SFContext {
     bool cancelled = false;
     std::string input_buffer;
     FormResult  form_state;
-    bool sequential = false;         /* set by sf_run/sf_init based on mode */
+    SFRender max_render = SFRender::Fullscreen;  /* caller sets: session capability */
+    SFRender render = SFRender::Fullscreen;      /* resolved by sf_init */
     int  inline_start_x = 0;        /* cursor X where field input begins (seq) */
     int  inline_start_y = 0;        /* cursor Y where field input begins (seq) */
 };

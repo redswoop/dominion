@@ -18,7 +18,7 @@
 #include "conio.h"
 #include "config.h"
 #include "terminal_bridge.h"
-#include "ansi_attr.h"
+#include "terminal/ansi_attr.h"
 #include "userdb.h"
 
 #pragma hdrstop

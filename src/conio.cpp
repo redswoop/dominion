@@ -29,7 +29,7 @@
 
 #pragma hdrstop
 
-#include "cp437.h"
+#include "terminal/cp437.h"
 
 /* sess.menuat now in vars.h (Phase B0) */
 

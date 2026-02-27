@@ -22,7 +22,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
+#include "platform.h"
 #include "jammb.h"
 
 #include "jamsub.h"

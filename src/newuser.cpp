@@ -1,6 +1,6 @@
 #include "newuser.h"
 #include "newuser_form.h"
-#include "screen_form.h"
+#include "tui/screen_form.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"

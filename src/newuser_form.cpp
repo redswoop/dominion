@@ -15,7 +15,7 @@
  */
 
 #include "newuser_form.h"
-#include "screen_form.h"
+#include "tui/screen_form.h"
 #include "newuser.h"
 #include "misccmd.h"
 #include "timest.h"

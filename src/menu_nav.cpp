@@ -30,7 +30,7 @@
 #include "version.h"
 
 #include "acs.h"
-#include "ansi_attr.h"
+#include "terminal/ansi_attr.h"
 #include "chat.h"
 #include "cmd_registry.h"
 #include "menu_nav.h"

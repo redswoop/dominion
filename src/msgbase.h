@@ -3,7 +3,7 @@
 
 #include "vardec_msgfile.h"
 #include "user.h"
-#include "jammb.h"
+#include "jam/jammb.h"
 
 int external_edit(char *fn1, char *direc, int numlines);
 int okfsed();

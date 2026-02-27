@@ -10,7 +10,7 @@
  *         build/iotest -P2024     (also accept telnet on port 2024)
  */
 
-#include "terminal.h"
+#include "terminal/terminal.h"
 
 #include <cstdio>
 #include <cstdlib>

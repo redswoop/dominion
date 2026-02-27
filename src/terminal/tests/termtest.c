@@ -20,7 +20,7 @@
 #include "fcns.h"
 #include "session.h"
 #include "system.h"
-#include "cp437.h"
+#include "terminal/cp437.h"
 
 #include <termios.h>
 

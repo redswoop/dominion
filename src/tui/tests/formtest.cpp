@@ -14,13 +14,14 @@
  *         build/formtest -dbuild branch   (direct launch branching demo)
  */
 
-#include "ui.h"
+#include "tui/ui.h"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
-static std::string g_datadir;  /* path to afiles/ directory */
+static std::string g_datadir;        /* path to afiles/ directory */
+static SFRender g_render_mode = SFRender::Fullscreen;
 
 /* ================================================================== */
 /*  Demo 1: Screen Form (new user registration)                        */
@@ -638,7 +639,6 @@ static Navigator make_main_menu(Session* sp)
     nav.id = "main";
     nav.on_enter = [](Session& s) {
         s.term.clearScreen();
-        s.term.gotoXY(0, 0);
         s.term.setAttr(0x0B);
         s.term.puts("== ScreenForm Test ==");
         s.term.newline();
@@ -701,10 +701,42 @@ int main(int argc, char *argv[])
     const char* test_name = nullptr;
 
     for (int i = 1; i < argc; i++) {
-        if (argv[i][0] == '-' && argv[i][1] == 'P')
+        if (std::strcmp(argv[i], "--help") == 0 || std::strcmp(argv[i], "-h") == 0) {
+            std::printf(
+                "Usage: formtest [options] [demo]\n"
+                "\n"
+                "Options:\n"
+                "  -P<port>        Listen port (default: 2024)\n"
+                "  -d<path>        Data directory for afiles/ (default: .)\n"
+                "  -m <mode>       Render mode: full (default), seq, plain\n"
+                "  -h, --help      Show this help\n"
+                "\n"
+                "Demos:\n"
+                "  screen           Fullscreen form (new user registration)\n"
+                "  seq              Sequential form (all widget types)\n"
+                "  branch           Conditional branching (file search)\n"
+                "  login            Login flow (sequential + retry)\n"
+                "  (none)           Interactive menu with all demos\n"
+                "\n"
+                "Examples:\n"
+                "  formtest -dbuild login          # login form, fullscreen\n"
+                "  formtest -dbuild -m plain seq   # sequential demo, plain mode\n"
+                "  formtest -dbuild -m seq screen  # screen form downgraded to sequential\n"
+            );
+            return 0;
+        }
+        else if (argv[i][0] == '-' && argv[i][1] == 'P')
             port = std::atoi(&argv[i][2]);
         else if (argv[i][0] == '-' && argv[i][1] == 'd')
             g_datadir = &argv[i][2];
+        else if (std::strcmp(argv[i], "-m") == 0 && i + 1 < argc) {
+            i++;
+            if (std::strcmp(argv[i], "seq") == 0)
+                g_render_mode = SFRender::Sequential;
+            else if (std::strcmp(argv[i], "plain") == 0)
+                g_render_mode = SFRender::Plain;
+            /* else: default Fullscreen */
+        }
         else if (argv[i][0] != '-')
             test_name = argv[i];
     }
@@ -715,23 +747,38 @@ int main(int argc, char *argv[])
 
     if (test_name && std::strcmp(test_name, "screen") == 0) {
         config.on_connect = [](Session& s) -> ActiveUI {
+            s.term.setAnsiEnabled(g_render_mode != SFRender::Plain);
+            s.sf_ctx.max_render = g_render_mode;
+            s.term.gotoXY(0, 0);
             return make_screen_demo(&s);
         };
     } else if (test_name && std::strcmp(test_name, "seq") == 0) {
         config.on_connect = [](Session& s) -> ActiveUI {
+            s.term.setAnsiEnabled(g_render_mode != SFRender::Plain);
+            s.sf_ctx.max_render = g_render_mode;
+            s.term.gotoXY(0, 0);
             return make_sequential_demo(&s);
         };
     } else if (test_name && std::strcmp(test_name, "branch") == 0) {
         config.on_connect = [](Session& s) -> ActiveUI {
+            s.term.setAnsiEnabled(g_render_mode != SFRender::Plain);
+            s.sf_ctx.max_render = g_render_mode;
+            s.term.gotoXY(0, 0);
             return make_branching_demo(&s);
         };
     } else if (test_name && std::strcmp(test_name, "login") == 0) {
         config.on_connect = [](Session& s) -> ActiveUI {
+            s.term.setAnsiEnabled(g_render_mode != SFRender::Plain);
+            s.sf_ctx.max_render = g_render_mode;
+            s.term.gotoXY(0, 0);
             return make_login_form(&s);
         };
     } else {
         /* Interactive menu */
         config.on_connect = [](Session& s) -> ActiveUI {
+            s.term.setAnsiEnabled(g_render_mode != SFRender::Plain);
+            s.sf_ctx.max_render = g_render_mode;
+            s.term.gotoXY(0, 0);
             return make_main_menu(&s);
         };
     }

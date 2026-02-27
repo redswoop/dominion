@@ -12,6 +12,7 @@
 #undef getch    /* ncurses macro conflicts */
 #undef echo     /* ncurses macro conflicts */
 
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -459,7 +460,7 @@ void Terminal::drawStatusLine(int row, const char *text, int attr)
     move(row, 0);
     attrset(ncAttr(attr));
     clrtoeol();
-    if (text) addstr(text);
+    if (text) addnstr(text, COLS);
     refresh();
 }
 
@@ -522,6 +523,7 @@ void Terminal::moveCursor(int x, int y)
 
 void Terminal::gotoXY(int x, int y)
 {
+    if (!ansiEnabled_) return;
     /* Send ANSI cursor position to remote */
     if (remote_.active) {
         int absY = y;
@@ -568,6 +570,7 @@ void Terminal::bs()
 
 void Terminal::clearScreen()
 {
+    if (!ansiEnabled_) { newline(); newline(); return; }
     lastAttr_ = -1;
     scrollUp(*pTopLine_, *pScreenBottom_, 0);
     moveCursor(0, 0);
@@ -579,6 +582,7 @@ void Terminal::clearScreen()
 
 void Terminal::clearToEol()
 {
+    if (!ansiEnabled_) return;
     int ox = cursorX();
     int oy = cursorY();
 
@@ -799,6 +803,7 @@ void Terminal::executeAnsi()
 
 void Terminal::setAttr(unsigned char attr)
 {
+    if (!ansiEnabled_) return;
     if (attr == *pCuratr_) return;
 
     char buf[30];
@@ -865,6 +870,7 @@ void Terminal::releaseLocal(Terminal& to)
 
 void Terminal::sendAnsiFile(const std::string& path)
 {
+    if (!ansiEnabled_) return;
     int fd = open(path.c_str(), O_RDONLY);
     if (fd < 0) return;
 

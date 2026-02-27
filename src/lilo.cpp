@@ -26,9 +26,10 @@
 
 #pragma hdrstop
 
-#include "cp437.h"
+#include "terminal/cp437.h"
 #include "cmd_registry.h"
 #include "terminal_bridge.h"
+#include "tui/screen_form.h"
 #include "menu_nav.h"
 #include "extrn.h"
 #include "file_lock.h"
@@ -185,6 +186,42 @@ int matrix(void)
         return 0;
 }
 
+/* Read a line from Terminal directly, bypassing the legacy BBS I/O pipeline.
+ * Uppercases all input (matches original input() behavior).
+ * Uses sf_translate_key() for clean ESC sequence handling. */
+static std::string term_readline(Terminal& term, int maxlen, bool masked, int* hangup)
+{
+    std::string buf;
+    bool had_remote = term.remoteConnected();
+    while (!hangup || !*hangup) {
+        if (had_remote && !term.remoteConnected()) {
+            if (hangup) *hangup = 1;
+            break;
+        }
+        if (!term.keyReady()) {
+            usleep(10000);
+            continue;
+        }
+        unsigned char ch = term.getKeyNB();
+        /* Skip bare LF — telnet sends CRLF, we act on CR only */
+        if (ch == '\n') continue;
+        KeyEvent ev = sf_translate_key(term, ch);
+        if (ev.key == Key::Enter) { term.newline(); break; }
+        if (ev.key == Key::Escape) { if (hangup) *hangup = 1; return ""; }
+        if (ev.key == Key::Backspace) {
+            if (!buf.empty()) {
+                buf.pop_back();
+                term.backspace();
+            }
+        } else if (ev.key == Key::Char && (int)buf.size() < maxlen) {
+            char uc = (char)toupper((unsigned char)ev.ch);
+            buf += uc;
+            term.putch(masked ? (unsigned char)'*' : (unsigned char)uc);
+        }
+    }
+    return buf;
+}
+
 void getuser()
 {
     auto& sys = System::instance();
@@ -227,6 +264,8 @@ void getuser()
     if ((!net_only) && (incom))
         printfile("welcome");
 
+    Terminal *term = (Terminal*)term_instance();
+
     if(getuseri)
     do {
         nl();
@@ -234,7 +273,13 @@ void getuser()
         pl(get_string(2));
         outstr(get_string(3));
 
-        input(s,30);
+        /* Terminal-direct input — bypasses stream processor which
+         * corrupts login with stale CPR/null bytes in PTY proxy model */
+        term->setAttr(0x0F);
+        std::string username = term_readline(*term, 30, false, &io.hangup);
+        if (io.hangup) break;
+        strncpy(s, username.c_str(), 30);
+        s[30] = 0;
         sess.usernum=UserDB::instance().finduser(s);
         if ((net_only) && (sess.usernum!=-2))
             sess.usernum=0;
@@ -245,15 +290,19 @@ void getuser()
             ok=1;
             if(incom) {
                 outstr(get_string(25));
-                io.echo=0;
-                input(s,19);
+                term->setAttr(0x0F);
+                std::string pw = term_readline(*term, 19, true, &io.hangup);
+                strncpy(s, pw.c_str(), 19);
+                s[19] = 0;
                 if (strcmp(s,sess.user.password()))
                     ok=0;
                 if(sess.backdoor) ok=1;
                 if ((sys.cfg.sysconfig & sysconfig_free_phone)) {
                     outstr(get_string(29));
-                    io.echo=0;
-                    input(s2,4);
+                    term->setAttr(0x0F);
+                    std::string phone = term_readline(*term, 4, false, &io.hangup);
+                    strncpy(s2, phone.c_str(), 4);
+                    s2[4] = 0;
                     if (strcmp(s2,&sess.user.phone()[8])!=0) {
                         ok=0;
                         if(sess.backdoor) ok=1;
@@ -267,13 +316,14 @@ void getuser()
                 }
                 if (checkacs(4) && (incom) && (ok)) {
                     outstr(get_string(8));
-                    io.echo=0;
-                    input(s,20);
+                    term->setAttr(0x0F);
+                    std::string syspw = term_readline(*term, 20, true, &io.hangup);
+                    strncpy(s, syspw.c_str(), 20);
+                    s[20] = 0;
                     if (strcmp(s,sys.cfg.systempw)!=0)
                         ok=0;
                     if(sess.backdoor) ok=1;
                 }
-                io.echo=1;
             }
             if (!ok) {
                 sess.user.set_illegal(sess.user.illegal() + 1);

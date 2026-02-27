@@ -17,7 +17,7 @@
 #include "session.h"
 #include "system.h"
 #include "acs.h"
-#include "ansi_attr.h"
+#include "terminal/ansi_attr.h"
 #include "sysopf.h"
 #include "bbs_path.h"
 #pragma hdrstop

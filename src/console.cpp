@@ -16,8 +16,8 @@
  */
 
 #include "console.h"
-#include "vt100.h"
-#include "terminal.h"
+#include "terminal/vt100.h"
+#include "terminal/terminal.h"
 #include "terminal_bridge.h"
 #include "node_registry.h"
 #include "system.h"
@@ -71,7 +71,7 @@ extern int nc_active;
 
 #define MAX_CONSOLE_SESSIONS 20
 #define POLL_TIMEOUT_MS      200
-#define STATUS_ROW           25   /* row 25 = row index 25, below the 80x25 area */
+/* status_row() defined after g_console_term declaration */
 
 /* Maintenance function IDs for child_maintenance_pty() */
 enum {
@@ -267,9 +267,18 @@ static void child_session_pty(int node_num, bool is_local)
         sys.listen_fd = -1;
     }
 
-    /* Disable ncurses in child (parent owns the terminal) */
+    /* Disable ncurses in child (parent owns the terminal). */
     term_shutdown();
     nc_active = 0;
+
+    /* Re-apply raw mode — term_shutdown() restored the parent's saved
+     * termios (ECHO on) onto our PTY slave fd. */
+    {
+        struct termios raw;
+        tcgetattr(STDIN_FILENO, &raw);
+        cfmakeraw(&raw);
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+    }
 
     frequent_init();
 
@@ -437,8 +446,14 @@ static ConsoleSession *fork_tcp_session(int tcp_fd, const char *addr)
         write(tcp_fd, init, std::strlen(init));
     }
 
+    /* PTY must start in raw mode — no echo, no line buffering.
+     * The console handles telnet echo; child handles ANSI output. */
+    struct termios pty_termios;
+    memset(&pty_termios, 0, sizeof(pty_termios));
+    cfmakeraw(&pty_termios);
+
     int pty_master;
-    pid_t pid = forkpty(&pty_master, nullptr, nullptr, nullptr);
+    pid_t pid = forkpty(&pty_master, nullptr, &pty_termios, nullptr);
     if (pid < 0) {
         close(tcp_fd);
         return nullptr;
@@ -464,8 +479,12 @@ static ConsoleSession *fork_local_session()
     int node_num = node_assign(sys.cfg.datadir, MAX_NODES);
     if (node_num < 0) return nullptr;
 
+    struct termios pty_termios;
+    memset(&pty_termios, 0, sizeof(pty_termios));
+    cfmakeraw(&pty_termios);
+
     int pty_master;
-    pid_t pid = forkpty(&pty_master, nullptr, nullptr, nullptr);
+    pid_t pid = forkpty(&pty_master, nullptr, &pty_termios, nullptr);
     if (pid < 0) return nullptr;
 
     if (pid == 0) {
@@ -479,8 +498,12 @@ static ConsoleSession *fork_local_session()
 
 static ConsoleSession *fork_maintenance(int function_id)
 {
+    struct termios pty_termios;
+    memset(&pty_termios, 0, sizeof(pty_termios));
+    cfmakeraw(&pty_termios);
+
     int pty_master;
-    pid_t pid = forkpty(&pty_master, nullptr, nullptr, nullptr);
+    pid_t pid = forkpty(&pty_master, nullptr, &pty_termios, nullptr);
     if (pid < 0) return nullptr;
 
     if (pid == 0) {
@@ -498,6 +521,13 @@ static ConsoleSession *fork_maintenance(int function_id)
 /* ================================================================== */
 
 static Terminal *g_console_term = nullptr;
+
+/* Last row of the terminal — status bar goes here */
+static int status_row() {
+    if (!g_console_term) return 24;
+    int lines = g_console_term->ncLines();
+    return (lines > 0 ? lines : 25) - 1;
+}
 
 static void render_status_bar()
 {
@@ -524,20 +554,25 @@ static void render_status_bar()
                                  sessions_[i].id, name);
     }
 
-    /* Pad with key hints */
-    int remaining = 79 - pos;
+    /* Pad with key hints — respect actual terminal width */
+    int cols = g_console_term->ncCols();
+    if (cols < 40) cols = 80;  /* fallback if not initialized */
+    int remaining = cols - pos;
     if (remaining > 0) {
-        const char *keys = "  F1=WFC F2/F3=Prev/Next F4=Discon F10=Quit";
-        int klen = (int)std::strlen(keys);
+        const char *keys = "  F1=WFC F2/F3=Next F4=Dis F10=Quit";
+        const char *keys_long = "  F1=WFC F2/F3=Prev/Next F4=Discon F10=Quit";
+        const char *chosen = (remaining >= (int)std::strlen(keys_long))
+                             ? keys_long : keys;
+        int klen = (int)std::strlen(chosen);
         int pad = remaining - klen;
         if (pad > 0) {
             for (int i = 0; i < pad; i++)
                 line[pos++] = ' ';
         }
-        std::snprintf(line + pos, sizeof(line) - pos, "%s", keys);
+        std::snprintf(line + pos, sizeof(line) - pos, "%s", chosen);
     }
 
-    g_console_term->drawStatusLine(STATUS_ROW, line, 0x1F);  /* white on blue */
+    g_console_term->drawStatusLine(status_row(), line, 0x1F);  /* white on blue */
 }
 
 static void render_wfc_view()
@@ -545,8 +580,8 @@ static void render_wfc_view()
     if (!g_console_term) return;
     auto& sys = System::instance();
 
-    /* Clear area */
-    g_console_term->clearArea(0, 25);
+    /* Clear area up to (but not including) the status bar row */
+    g_console_term->clearArea(0, status_row());
 
     /* Title bar */
     time_t now = time(nullptr);
@@ -618,7 +653,7 @@ static void render_wfc_view()
     g_console_term->drawStatusLine(17, " Maintenance:", 0x0B);
     g_console_term->drawStatusLine(18, "  B=Boards  D=Dirs  U=Users  O=Config  #=Menus  C=Conf", 0x07);
     g_console_term->drawStatusLine(19, "  E=Text  S=Strings  X=Protos  M=Mail  W=Post  Z=Zlog  V=Log", 0x07);
-    g_console_term->drawStatusLine(21, "  L=Login  Q=Quit", 0x0A);  /* bright green */
+    g_console_term->drawStatusLine(status_row() - 1, "  L=Login  Q=Quit", 0x0A);  /* bright green */
 }
 
 static void refresh_display()

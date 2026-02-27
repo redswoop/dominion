@@ -20,7 +20,7 @@
 #include "system.h"
 #include "terminal_bridge.h"
 #include "stream_processor.h"
-#include "ansi_attr.h"
+#include "terminal/ansi_attr.h"
 #include "stringed.h"
 #include "misccmd.h"
 

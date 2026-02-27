@@ -13,7 +13,7 @@
  * from Terminal, eliminating the sync.
  */
 
-#include "terminal.h"
+#include "terminal/terminal.h"
 #include "terminal_bridge.h"
 
 static Terminal g_term;

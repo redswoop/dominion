@@ -323,7 +323,8 @@ cJSON* User::to_json() const
     /* Unsigned char scalars */
     cJSON_AddNumberToObject(root, "age", age());
     cJSON_AddNumberToObject(root, "inact", inact());
-    add_flags(root, "inact_flags", inact(), inact_flagdefs, 3);
+    add_flags(root, "inact_flags", inact(), inact_flagdefs,
+              sizeof(inact_flagdefs) / sizeof(inact_flagdefs[0]));
     cJSON_AddNumberToObject(root, "comp_type", comp_type());
     cJSON_AddNumberToObject(root, "defprot", defprot());
     cJSON_AddNumberToObject(root, "defed", defed());
@@ -338,7 +339,8 @@ cJSON* User::to_json() const
     cJSON_AddNumberToObject(root, "sl", sl());
     cJSON_AddNumberToObject(root, "dsl", dsl());
     cJSON_AddNumberToObject(root, "exempt", exempt());
-    add_flags(root, "exempt_flags", exempt(), exempt_flagdefs, 4);
+    add_flags(root, "exempt_flags", exempt(), exempt_flagdefs,
+              sizeof(exempt_flagdefs) / sizeof(exempt_flagdefs[0]));
     add_uchar_array(root, "colors", colors(), 20);
     add_uchar_array(root, "votes", votes(), 20);
     cJSON_AddNumberToObject(root, "illegal", illegal());
@@ -358,7 +360,8 @@ cJSON* User::to_json() const
     cJSON_AddNumberToObject(root, "dar", dar());
     add_ar_flags(root, "dar_flags", dar());
     cJSON_AddNumberToObject(root, "restrict", restrict_flags());
-    add_flags(root, "restrict_flags", restrict_flags(), restrict_flagdefs, 15);
+    add_flags(root, "restrict_flags", restrict_flags(), restrict_flagdefs,
+              sizeof(restrict_flagdefs) / sizeof(restrict_flagdefs[0]));
     cJSON_AddNumberToObject(root, "month", birth_month());
     cJSON_AddNumberToObject(root, "day", birth_day());
     cJSON_AddNumberToObject(root, "year", birth_year());
@@ -380,7 +383,8 @@ cJSON* User::to_json() const
     cJSON_AddNumberToObject(root, "dk", (double)dk());
     cJSON_AddNumberToObject(root, "daten", (double)daten());
     cJSON_AddNumberToObject(root, "sysstatus", (double)sysstatus());
-    add_flags(root, "sysstatus_flags", sysstatus(), sysstatus_flagdefs, 11);
+    add_flags(root, "sysstatus_flags", sysstatus(), sysstatus_flagdefs,
+              sizeof(sysstatus_flagdefs) / sizeof(sysstatus_flagdefs[0]));
     cJSON_AddNumberToObject(root, "lastrate", (double)lastrate());
     cJSON_AddNumberToObject(root, "nuv", (double)nuv_status());
     cJSON_AddNumberToObject(root, "timebank", (double)timebank());

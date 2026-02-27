@@ -15,8 +15,8 @@
 #include <time.h>
 #include <sys/stat.h>
 
-#include "jamsys.h"
-#include "jam.h"
+#include "jam/jamsys.h"
+#include "jam/jam.h"
 
 static long get_filesize(int fd)
 {

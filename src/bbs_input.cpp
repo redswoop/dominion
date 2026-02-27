@@ -21,7 +21,7 @@
 #include "session.h"
 #include "system.h"
 #include "terminal_bridge.h"
-#include "ansi_attr.h"
+#include "terminal/ansi_attr.h"
 #include "cmd_registry.h"
 #include "acs.h"
 #include "disk.h"
