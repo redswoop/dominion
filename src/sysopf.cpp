@@ -409,7 +409,6 @@ void glocolor(void)
             setcolors(u);
             u.set_sysstatus(u.sysstatus() ^ sysstatus_ansi);
             u.set_sysstatus(u.sysstatus() ^ sysstatus_color);
-            u.set_sysstatus(u.sysstatus() ^ sysstatus_avatar);
         }
         if(format) u.set_flisttype(99);
         if(prot) u.set_defprot(99);

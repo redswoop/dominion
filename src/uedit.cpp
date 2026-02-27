@@ -763,9 +763,7 @@ void val_cur_user(int wait)
     clickat(sess.user.inact(),inact_deleted,41,11);
 
     clickat(sess.user.sysstatus(),sysstatus_ansi,22,12);
-    clickat(sess.user.sysstatus(),sysstatus_avatar,34,12);
     clickat(sess.user.sysstatus(),sysstatus_color,45,12);
-    clickat(sess.user.sysstatus(),sysstatus_rip,54,12);
 
     clickat(sess.user.exempt(),exempt_time,22,13);
     clickat(sess.user.exempt(),exempt_ratio,32,13);
@@ -848,13 +846,7 @@ void val_cur_user(int wait)
             { long _tmp = sess.user.sysstatus(); rc=click(&_tmp,sysstatus_ansi,22,12); sess.user.set_sysstatus(_tmp); }
             break;
         case 20:
-            { long _tmp = sess.user.sysstatus(); rc=click(&_tmp,sysstatus_avatar,34,12); sess.user.set_sysstatus(_tmp); }
-            break;
-        case 21:
             { long _tmp = sess.user.sysstatus(); rc=click(&_tmp,sysstatus_color,45,12); sess.user.set_sysstatus(_tmp); }
-            break;
-        case 22:
-            { long _tmp = sess.user.sysstatus(); rc=click(&_tmp,sysstatus_rip,54,12); sess.user.set_sysstatus(_tmp); }
             break;
 
 

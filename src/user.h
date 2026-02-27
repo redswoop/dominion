@@ -176,14 +176,11 @@ typedef struct {
 #define sysstatus_color 0x0002
 #define sysstatus_fullline 0x0004
 #define sysstatus_pause_on_page 0x0008
-#define sysstatus_rip 0x0010
 #define sysstatus_smw 0x0020
 #define sysstatus_full_screen 0x0040
 #define sysstatus_nscan_file_system 0x0080
 #define sysstatus_regular 0x0100
 #define sysstatus_clr_scrn 0x0200
-#define sysstatus_avatar 0x0400
-
 
 #ifdef __cplusplus
 /*============================================================
@@ -533,8 +530,6 @@ public:
 
     bool has_ansi() const { return (data_.sysstatus & sysstatus_ansi) != 0; }
     bool has_color() const { return (data_.sysstatus & sysstatus_color) != 0; }
-    bool has_avatar() const { return (data_.sysstatus & sysstatus_avatar) != 0; }
-    bool has_rip() const { return (data_.sysstatus & sysstatus_rip) != 0; }
     bool has_fullscreen() const { return (data_.sysstatus & sysstatus_full_screen) != 0; }
     bool has_hotkeys() const { return (data_.sysstatus & sysstatus_fullline) == 0; }
 

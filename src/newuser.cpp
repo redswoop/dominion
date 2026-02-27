@@ -380,7 +380,7 @@ void newuser()
     set_autoval(sys.nifty.nulevel);
 
     sess.actsl=sess.user.sl();
-    /* Default to ANSI + color, skip Avatar/RIP questions */
+    /* Default to ANSI + color */
     sess.user.set_sysstatus_flag(sysstatus_ansi, true);
     sess.user.set_sysstatus_flag(sysstatus_color, true);
     setcolors(sess.user);

@@ -197,7 +197,6 @@ void getuser()
     _setcursortype(2);
 
     sess.user.set_sysstatus_flag(sysstatus_ansi, false);
-    sess.user.set_sysstatus_flag(sysstatus_avatar, false);
     sess.curconf=0;
 
     ans=check_ansi();

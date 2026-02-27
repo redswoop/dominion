@@ -4,8 +4,8 @@
 /* Stream processor — interprets markup in the BBS output byte stream.
  *
  * Handles: pipe color (|nn), easy color (char 6), change_color (char 3),
- * change_ecolor (char 14), avatar protocol (chars 5/22/151), MCI expansion
- * (backtick), ANSI escape accumulation/parsing.
+ * change_ecolor (char 14), MCI expansion (backtick), ANSI escape
+ * accumulation/parsing.
  *
  * For markup bytes: consumed internally, calls term_set_attr() etc.
  * For ANSI sequences: raw bytes go to TCP, parsed locally via term_* calls.

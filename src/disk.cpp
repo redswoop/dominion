@@ -330,20 +330,7 @@ int printfile(char *fn)
     if (strchr(s,'.')==NULL) {
         strcpy(tmp,s);
 
-        if(sess.user.sysstatus() & sysstatus_rip) {
-            strcat(s,".rip");
-            if(exist(s))
-                done=1;
-        }
-
-        if(!done&&(sess.user.sysstatus() & sysstatus_avatar)) {
-            strcpy(s,tmp);
-            strcat(s,".avt");
-            if(exist(s))
-                done=1;
-        }
-
-        if(!done&&(sess.user.sysstatus() & sysstatus_color)) {
+        if(sess.user.sysstatus() & sysstatus_color) {
             strcpy(s,tmp);
             strcat(s,".ans");
             if(exist(s))

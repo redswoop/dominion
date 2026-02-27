@@ -45,10 +45,6 @@ static char sp_pipestr[5];
 /* Easy color: char 6 + index */
 static int sp_easycolor = 0;
 
-/* Avatar protocol */
-static unsigned char sp_ac = 0;
-static unsigned char sp_ac2 = 0;
-
 /* MCI expansion */
 static int sp_mci = 0;
 
@@ -230,56 +226,6 @@ void stream_putch(unsigned char c)
         return;
     }
 
-    /* --- Avatar: char 5 = set color (next byte is attr) --- */
-    if (c == 5 && sp_ac == 0) {
-        sp_ac = 10;
-        return;
-    }
-
-    if (sp_ac == 10) {
-        sp_ac = 0;
-        if (io.caps.color != CAP_OFF)
-            term_set_attr(c);
-        return;
-    }
-
-    /* --- Avatar: char 151 = repeat (next two bytes: char, count) --- */
-    if (sp_ac == 101) {
-        sp_ac = 0;
-        for (i = 0; i < c; i++)
-            outchr(sp_ac2);
-        return;
-    }
-
-    if (sp_ac == 100) {
-        sp_ac2 = c;
-        sp_ac = 101;
-        return;
-    }
-
-    /* --- Avatar: char 22 = escape sequence (2 data bytes follow) --- */
-    if (c == 22 && sp_ac == 0) {
-        if (outcom)
-            outcomch(c);
-        sp_ac = 1;
-        return;
-    }
-
-    if (sp_ac == 1) {
-        sp_ac = 2;
-        if (outcom)
-            outcomch(c);
-        return;
-    }
-
-    if (sp_ac == 2) {
-        io.curatr = c;
-        if (outcom)
-            outcomch(c);
-        sp_ac = 0;
-        return;
-    }
-
     /* --- MCI expansion: backtick + letter --- */
     if (sp_mci) {
         sp_mci = 0;
@@ -335,13 +281,6 @@ void stream_putch(unsigned char c)
         }
     }
 
-    if (c == 151) {
-        if (io.mciok) {
-            sp_ac = 100;
-            return;
-        }
-    }
-
     /* --- End-of-line color reset --- */
     if ((c == 10) && io.endofline[0]) {
         outstr(io.endofline);
@@ -383,8 +322,6 @@ void stream_reset(void)
     sp_pipe = 0;
     memset(sp_pipestr, 0, sizeof(sp_pipestr));
     sp_easycolor = 0;
-    sp_ac = 0;
-    sp_ac2 = 0;
     sp_mci = 0;
 
     /* These live in io_session_t (shared with other modules) */

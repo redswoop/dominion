@@ -246,10 +246,9 @@ static void add_flags(cJSON *obj, const char *key,
 static flagdef sysstatus_flagdefs[] = {
     { 0x0001, "ansi" },     { 0x0002, "color" },
     { 0x0004, "fullline" }, { 0x0008, "pause_on_page" },
-    { 0x0010, "rip" },      { 0x0020, "smw" },
+    { 0x0020, "smw" },
     { 0x0040, "full_screen" }, { 0x0080, "nscan_file_system" },
-    { 0x0100, "regular" },  { 0x0200, "clr_scrn" },
-    { 0x0400, "avatar" }
+    { 0x0100, "regular" },  { 0x0200, "clr_scrn" }
 };
 
 static flagdef restrict_flagdefs[] = {

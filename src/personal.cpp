@@ -113,9 +113,7 @@ void print_cur_stat()
     sess.user.screenchars(),
     sess.user.screenlines());
 
-    if(sess.user.sysstatus() & sysstatus_avatar) strcpy(s,"Avatar ");
-    else
-        if(sess.user.sysstatus() & sysstatus_ansi) strcpy(s,"Ansi ");
+    if(sess.user.sysstatus() & sysstatus_ansi) strcpy(s,"Ansi ");
     else strcpy(s,"Ascii");
     if(sess.user.sysstatus() & sysstatus_color) strcat(s,"Colour");
     else strcat(s,"Mono");
@@ -625,8 +623,6 @@ void input_ansistat()
 
     sess.user.set_sysstatus_flag(sysstatus_ansi, false);
     sess.user.set_sysstatus_flag(sysstatus_color, false);
-    sess.user.set_sysstatus_flag(sysstatus_avatar, false);
-    sess.user.set_sysstatus_flag(sysstatus_rip, false);
 
     nl();
 
@@ -647,14 +643,6 @@ void input_ansistat()
         if (ny())
             sess.user.set_sysstatus_flag(sysstatus_color, true);
         ansic(0);
-        nl();
-        outstr("Do you want Avatar? (No if unsure): ");
-        if(yn())
-            sess.user.set_sysstatus_flag(sysstatus_avatar, true);
-        nl();
-        outstr("Do you want RIPscript support? ");
-        if(yn())
-            sess.user.set_sysstatus_flag(sysstatus_rip, true);
     }
     setcolors(sess.user);
 }
