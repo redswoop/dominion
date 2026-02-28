@@ -3,7 +3,7 @@
 
 #include "vardec_types.h"
 #ifdef __cplusplus
-#include "user.h"
+#include "user/user.h"
 #endif
 
 typedef struct {

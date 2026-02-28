@@ -5,7 +5,7 @@
  * to_json()/from_json() own the JSON serialization format.
  */
 
-#include "user.h"
+#include "user/user.h"
 #include "platform.h"
 #include "cJSON.h"
 

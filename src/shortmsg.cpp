@@ -3,7 +3,7 @@
 #include "bbs_output.h"
 #include "session.h"
 #include "system.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "file_lock.h"
 #include "bbs_path.h"
 #pragma hdrstop

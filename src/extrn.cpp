@@ -7,7 +7,7 @@
 #include "conio.h"
 #include "bbsutl.h"
 #include "sysoplog.h"
-#include "file1.h"
+#include "files/file1.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
@@ -16,7 +16,7 @@
 #include "cmd_registry.h"
 #include "acs.h"
 #include "sysopf.h"
-#include "userdb.h"
+#include "user/userdb.h"
 
 #pragma hdrstop
 

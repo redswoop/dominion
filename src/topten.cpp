@@ -7,7 +7,7 @@
 #include "bbs_ui.h"
 #include "utility.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 
 #include "mci.h"

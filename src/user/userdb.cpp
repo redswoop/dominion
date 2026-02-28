@@ -5,7 +5,7 @@
  * with a sorted in-memory name index for fast lookup.
  */
 
-#include "userdb.h"
+#include "user/userdb.h"
 #include "platform.h"
 #include "json_io.h"
 

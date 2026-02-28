@@ -14,9 +14,9 @@
  *   - on_cancel sets *ctx.hangup = 1
  */
 
-#include "newuser_form.h"
+#include "user/newuser_form.h"
 #include "tui/screen_form.h"
-#include "newuser.h"
+#include "user/newuser.h"
 #include "misccmd.h"
 #include "timest.h"
 #include "session.h"

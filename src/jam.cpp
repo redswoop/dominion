@@ -16,7 +16,7 @@
 #include "chat.h"
 #include "cmd_registry.h"
 #include "misccmd.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "sysopf.h"
 #include "subedit.h"
 #include "bbs_path.h"
@@ -152,12 +152,12 @@ void show_message(int *next,int abort,char *buf,UINT32 len)
 
     while ((!done) && (!abort) && (!io.hangup)) {
         ch=buf[l1];
-        if (l1>=len)
+        if ((unsigned long)l1>=len)
             ch=26;
 
         if (ch==26) done=1;
         else if (ch!=10) {
-            if ((ch==13) || (!ch) || ch==141) {
+            if ((ch==13) || (!ch) || ch==(char)141) {
                 printit=1;
             } 
             else if (ch==1)
@@ -523,7 +523,7 @@ void scanj(int msgnum,int *nextsub,int sb, int is_private)
         else if(s[0]=='B')
             boardedit();
         else if(s[0]=='-') {
-            if(msgnum>sys.JamRec.HdrInfo.BaseMsgNum)
+            if((UINT32)msgnum>sys.JamRec.HdrInfo.BaseMsgNum)
                 msgnum--;
             disp=1;
         } 
@@ -733,7 +733,7 @@ char *ninmsg(hdrinfo *hdr1,long *len,int *save,int sb)
                         if (s1[0]==2) {
                             strcpy(s1,&(s1[1]));
                             i5=0;
-                            for(i4=0; i4<strlen(s1); i4++)
+                            for(i4=0; i4<(int)strlen(s1); i4++)
                                 if ((s1[i4]==8) || (s1[i4]==3))
                                     --i5;
                                 else
@@ -1166,7 +1166,7 @@ CHAR8 * GetSubFldStr( JAMSUBFIELD * pSubFld )
     int             BufPos;
 
     for(  pBuf = Buffer, i = BufPos = 0;
-        i < pSubFld->DatLen && BufPos + 5 < sizeof( Buffer );
+        i < pSubFld->DatLen && (size_t)(BufPos + 5) < sizeof( Buffer );
         pBuf++, i++, BufPos++ )
         {
         if( pSubFld->Buffer [( int ) i] < ' ' )
@@ -1612,7 +1612,7 @@ void quote_jam(char *buf,long len,hdrinfo *hdr)
     auto& sess = Session::instance();
     char *nb, word[MAX_PATH_LEN],thisline[MAX_PATH_LEN],from[MAX_PATH_LEN];
     long pos=0,nlen=0;
-    int ret,justwrap=0,added=0,done=0;
+    int ret=0,justwrap=0,added=0,done=0;
 
     if(sess.quote!=NULL)
         free(sess.quote);
@@ -1649,6 +1649,7 @@ void quote_jam(char *buf,long len,hdrinfo *hdr)
         strcat(thisline," ");
     }
 
+    (void)ret;
     addline(nb,thisline,&nlen);
 
     nb[nlen+1]=0;

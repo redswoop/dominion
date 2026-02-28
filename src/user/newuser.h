@@ -1,7 +1,7 @@
 #ifndef _NEWUSER_H_
 #define _NEWUSER_H_
 
-#include "user.h"
+#include "user/user.h"
 
 /* Cursor helpers — also used by cmd_registry.cpp and config.cpp */
 void go(int x, int y);

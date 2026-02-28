@@ -85,7 +85,8 @@ static const char *cp437_to_utf8[256] = {
 };
 
 /* Write a CP437 byte to stdout as UTF-8 */
-static void put_cp437(unsigned char ch)
+static inline void put_cp437(unsigned char ch) __attribute__((unused));
+static inline void put_cp437(unsigned char ch)
 {
     fputs(cp437_to_utf8[ch], stdout);
 }

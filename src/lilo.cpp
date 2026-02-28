@@ -9,19 +9,19 @@
 #include "bbsutl.h"
 #include "sysoplog.h"
 #include "acs.h"
-#include "file1.h"
-#include "file.h"
+#include "files/file1.h"
+#include "files/file.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "config.h"
-#include "newuser.h"
+#include "user/newuser.h"
 #include "shortmsg.h"
 #include "mm1.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 
 #pragma hdrstop
@@ -49,7 +49,7 @@ int badcnt=0,donematrix=0;
 int getmuser()
 {
     auto& sess = Session::instance();
-    char *s;
+    char s[MAX_PATH_LEN];
     int i;
 
     if(sess.usernum)
@@ -524,7 +524,7 @@ void logon()
         getfileformat(); 
         setformat(); 
     }
-    if(!sess.user.mlisttype()==255||sess.user.mlisttype()==0)
+    if(sess.user.mlisttype()==255||sess.user.mlisttype()==0)
         getmsgformat();
     if(!sess.user.street()[0]||!sess.user.city()[0]) input_city();
     if(sess.user.comp_type()==99) input_comptype();
@@ -840,7 +840,7 @@ void oneliner()
                 }
                 s1[79]='\r';
                 s1[80]='\n';
-                s1[MAX_PATH_LEN]=0;
+                s1[81]=0;
                 write(f,(void *)s1,81);
                 close(f);
                 nl();

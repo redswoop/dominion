@@ -5,7 +5,7 @@
 #include "bbs_ui.h"
 #include "conio.h"
 #include "disk.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "session.h"
 #include "system.h"
 #include "stream_processor.h"

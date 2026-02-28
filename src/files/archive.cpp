@@ -1,14 +1,14 @@
-#include "archive.h"
+#include "files/archive.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "conio.h"
-#include "file.h"
-#include "file1.h"
-#include "file2.h"
-#include "file3.h"
-#include "filesys.h"
+#include "files/file.h"
+#include "files/file1.h"
+#include "files/file2.h"
+#include "files/file3.h"
+#include "files/filesys.h"
 #include "bbsutl.h"
 #include "disk.h"
 #include "stringed.h"
@@ -198,7 +198,7 @@ void arcex(char *fn)
     if (strchr(s,'.')==NULL)
         strcat(s,".*");
     strcpy(s2,stripfn(s));
-    for (i=0; i<strlen(s2); i++)
+    for (i=0; i<(int)strlen(s2); i++)
         if ((s2[i]=='|') || (s2[i]=='>') || (s2[i]=='<') || (s2[i]==';') || (s2[i]==' ') ||
             (s2[i]==':') || (s2[i]=='/') || (s2[i]=='\\'))
             return;

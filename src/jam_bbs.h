@@ -3,7 +3,7 @@
 
 #include "jam/jammb.h"
 #include "vardec_msgfile.h"
-#include "user.h"
+#include "user/user.h"
 #include "vardec_types.h"
 
 void errorjam(void);

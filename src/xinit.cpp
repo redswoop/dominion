@@ -15,7 +15,7 @@
 #include "config.h"
 #include "wfc.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "version.h"
 #include "error.h"
@@ -47,7 +47,7 @@ void dotopinit(char fn[40],int per)
 {
     int i;
 
-    if(per);
+    (void)per;
 
     /*      GODOWN(1,3);
               for(i=0;i<48;i++) printf(" ");

@@ -1,14 +1,14 @@
-#include "file2.h"
+#include "files/file2.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "conio.h"
-#include "file.h"
-#include "file1.h"
-#include "file3.h"
-#include "archive.h"
-#include "filesys.h"
+#include "files/file.h"
+#include "files/file1.h"
+#include "files/file3.h"
+#include "files/archive.h"
+#include "files/filesys.h"
 #include "bbsutl.h"
 #include "timest.h"
 #include "disk.h"
@@ -18,7 +18,7 @@
 #include "session.h"
 #include "system.h"
 #include "extrn.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "misccmd.h"
 #include "sysopf.h"
 #include "bbs_path.h"
@@ -321,7 +321,7 @@ int get_batchprotocol(int dl,int *hang)
 
     prot=sess.user.defprot();
     if(!sys.proto[prot].description[0]||prot<0) prot=get_protocol(1);
-    if(dl);
+    (void)dl;
     *hang=0;
 
 top:
@@ -351,11 +351,10 @@ int get_protocol(int is_batch)
 {
     auto& sys = System::instance();
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],oks[MAX_PATH_LEN],s2[MAX_PATH_LEN],ch;
-    int i,i1,i2,maxprot,done;
+    int i,i1,i2,maxprot=0,done;
 
     strcpy(oks,"Q?");
 
-    maxprot=0;
     done=0;
 
     for (i1=0; i1<sys.numextrn; i1++) {
@@ -365,6 +364,7 @@ int get_protocol(int is_batch)
             strcat(oks,s1);
         }
     }
+    (void)maxprot;
 
     strcpy(s,get_string(73));
     strcpy(s1,oks);
@@ -497,7 +497,7 @@ int dirlist(char type)
     directoryrec d;
     char s[163],s1[163],s2[5],s3[25],s4[51],s5[5],s6[161];
     int i,i1,abort=0;
-    if(type);
+    (void)type;
 
     auto dirlist_path = BbsPath::join(sys.cfg.gfilesdir, "dirlist.fmt");
     f=fopen(dirlist_path.c_str(),"rt");
@@ -578,7 +578,7 @@ void genner(char *fn,char *spec, int type)
                 if(!compare(spec,u.filename))
                     continue;
 
-                if(type==1&&u.daten<sess.nscandate)
+                if(type==1&&u.daten<(unsigned long)sess.nscandate)
                     continue;
 
                 if (pty) {

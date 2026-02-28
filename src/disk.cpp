@@ -5,7 +5,7 @@
 #include "bbs_ui.h"
 #include "bbsutl.h"
 #include "jam_bbs.h"
-#include "file3.h"
+#include "files/file3.h"
 #include "session.h"
 #include "system.h"
 #include "error.h"

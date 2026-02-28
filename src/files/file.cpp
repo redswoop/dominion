@@ -1,14 +1,14 @@
-#include "file.h"
+#include "files/file.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "conio.h"
-#include "file1.h"
-#include "file2.h"
-#include "file3.h"
-#include "archive.h"
-#include "filesys.h"
+#include "files/file1.h"
+#include "files/file2.h"
+#include "files/file3.h"
+#include "files/archive.h"
+#include "files/filesys.h"
 #include "bbsutl.h"
 #include "timest.h"
 #include "disk.h"
@@ -23,7 +23,7 @@
 #include "misccmd.h"
 #include "sysopf.h"
 #include "personal.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #pragma hdrstop
 
 #define FDEC
@@ -204,7 +204,7 @@ void align(char *s)
     i1=0;
     if (s[0]=='.')
         i1=1;
-    for (i=0; i<strlen(s); i++)
+    for (i=0; i<(int)strlen(s); i++)
         if ((s[i]=='\\') || (s[i]=='/') || (s[i]==':') || (s[i]=='<') ||
             (s[i]=='>') || (s[i]=='|'))
             i1=1;
@@ -466,19 +466,19 @@ int lfs(char spec[12],char ss[MAX_PATH_LEN],int *abort,long *bytes,int isnew)
         ok=1;
 
         if(isnew)
-            if ((u.daten>=sess.nscandate)||(!u.ats[0]));
+            if ((u.daten>=(unsigned long)sess.nscandate)||(!u.ats[0]));
         else ok=0;
         if(u.ats[1]==100&&isnew) ok=1;
 
         if(ss[0]) {
             strcpy(s,u.description);
-            for (i2=0; i2<strlen(s); i2++)
+            for (i2=0; i2<(int)strlen(s); i2++)
                 s[i2]=toupper(s[i2]);
             s[i2]=0;
             if (strstr(s,ss)==NULL) {
                 if(u.mask & mask_extended) {
                     b=read_extended_description(u.filename);
-                    for (i2=0; i2<strlen(b); i2++)
+                    for (i2=0; i2<(int)strlen(b); i2++)
                         b[i2]=toupper(b[i2]);
                     if (strstr(b,ss)==NULL)
                         ok=0;
@@ -683,7 +683,7 @@ int checkdl(uploadsrec u,int dn)
 {
     auto& sys = System::instance();
     auto& sess = Session::instance();
-    double t;
+    double t=0.0;
     char s[MAX_PATH_LEN];
     User us;
 
@@ -843,7 +843,7 @@ void setformat()
 
     stuff_in1(s,sess.filelistformat,"Dom30   .Zip","\xAE"," 300","   0","  1","Fallen Angel","01/01/92","100","","");
     strcpy(s1,noc2(s));
-    for(i=0;i<strlen(s1);i++) {
+    for(i=0;i<(int)strlen(s1);i++) {
         if(s1[i]==(char)0xAE) INDENTION=i;
     }
     if(INDENTION>39) INDENTION=39;

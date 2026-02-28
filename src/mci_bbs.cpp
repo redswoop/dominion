@@ -15,7 +15,7 @@
 #include "bbsutl.h"
 #include "conio.h"
 #include "tcpio.h"
-#include "file1.h"
+#include "files/file1.h"
 #include "acs.h"
 #include "timest.h"
 #include "utility.h"
@@ -24,7 +24,7 @@
 #include "session.h"
 #include "system.h"
 #include "topten.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "mci.h"
 #include "mci_bbs.h"
 

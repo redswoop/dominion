@@ -6,8 +6,8 @@
 #include "bbsutl.h"
 #include "disk.h"
 #include "utility.h"
-#include "userdb.h"
-#include "file2.h"
+#include "user/userdb.h"
+#include "files/file2.h"
 #include "mm1.h"
 #include "session.h"
 #include "system.h"
@@ -315,7 +315,7 @@ int sublist(char type)
     subboardrec d;
     char s[163],s1[163],s2[5],s3[25],s4[161];
     int i,i1,abort=0;
-    if(type);
+    (void)type;
 
     sprintf(s,"%ssublist.fmt",sys.cfg.gfilesdir);
     f=fopen(s,"rt");
@@ -369,7 +369,7 @@ void get_quote()
             i=1; 
             i2=0; 
             abort=0; 
-            next=0;
+            next=0; (void)next;
             do {
                 npr("0%2d: ",i++);
                 i1=0;
@@ -448,7 +448,7 @@ void get_quote()
 
 char *ini(char name[MAX_PATH_LEN])
 {
-    char o[MAX_PATH_LEN];
+    static char o[MAX_PATH_LEN];
     int i=0,p=0;
 
     memset(o,0,MAX_PATH_LEN);

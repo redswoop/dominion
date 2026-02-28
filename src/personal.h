@@ -1,7 +1,7 @@
 #ifndef _PERSONAL_H_
 #define _PERSONAL_H_
 
-#include "user.h"
+#include "user/user.h"
 
 void change_colors(User& u1);
 void print_cur_stat();

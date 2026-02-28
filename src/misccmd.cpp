@@ -6,7 +6,7 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "bbsutl.h"
-#include "file1.h"
+#include "files/file1.h"
 #include "timest.h"
 #include "lilo.h"
 #include "disk.h"
@@ -14,7 +14,7 @@
 #include "msgbase.h"
 #include "mm1.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "version.h"
 

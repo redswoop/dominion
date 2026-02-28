@@ -7,8 +7,8 @@
 #include "conio.h"
 #include "bbsutl.h"
 #include "sysoplog.h"
-#include "userdb.h"
-#include "file1.h"
+#include "user/userdb.h"
+#include "files/file1.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
@@ -594,7 +594,7 @@ void chat1(char *chatline, int two_way)
                     write(cf,&s2,strlen(s2));
                 }
 
-                s2[0]=196;
+                s2[0]=(char)196;
                 for(i2=0;i2<41;i2++) write(cf,&s2[0],1L);
                 strcpy(s2,"\r\n\r\n");
                 write(cf,(void *)s2,strlen(s2));

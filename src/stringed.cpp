@@ -8,7 +8,7 @@
 #include "disk.h"
 #include "utility.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "error.h"
 #include "bbs_path.h"
@@ -241,7 +241,7 @@ void extractstring(int which)
 
     while(!done) {
         l=read(i,&s,161);
-        if(l<sizeof(stringrec)) done=1;
+        if(l<(long)sizeof(stringrec)) done=1;
         strcat(s,"\n");
         fputs(s,f);
     }
@@ -265,12 +265,13 @@ void liststring(int type,int where)
     i=open(lst_path.c_str(),O_RDWR | O_BINARY);
 
     lseek(i,((long)(where*9))*(sizeof(astring)),SEEK_SET);
-    while(read(i,type==3?(void *)&r:(void *)&astring,type==3?sizeof(rumourrec):sizeof(astring))&&num<9)
+    while(read(i,type==3?(void *)&r:(void *)&astring,type==3?sizeof(rumourrec):sizeof(astring))&&num<9) {
         if(!type)
-            npr("0%2d. 5[3%-17.17s5] 0%s\r\n",(num++)+1,getdesc(where*9+num+1),&astring.thestring);
-    else
-        npr("%2d. %s\r\n",(num++)+1,&astring.thestring);
-    close(i);
+            npr("0%2d. 5[3%-17.17s5] 0%s\r\n",num+1,getdesc(where*9+num+1),&astring.thestring);
+        else
+            npr("%2d. %s\r\n",num+1,&astring.thestring);
+        num++;
+    }
     io.mciok=1;
 }
 

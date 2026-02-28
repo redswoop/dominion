@@ -291,7 +291,7 @@ void menuman(void)
         }
         outchr(12);
     } else if (strstr(s, ",") || strstr(s, " ")) {
-        for (c = 0; c < strlen(s); c++) {
+        for (c = 0; c < (int)strlen(s); c++) {
             if (s[c] == ',' || s[c] == 32)
                 s[c] = 13;
         }

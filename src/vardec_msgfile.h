@@ -192,6 +192,6 @@ typedef struct {
         sy;
 } mmailrec;
 
-#include "nuv.h"
+#include "user/nuv.h"
 
 #endif /* _VARDEC_MSGFILE_H_ */

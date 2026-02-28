@@ -1,14 +1,14 @@
-#include "file3.h"
+#include "files/file3.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "conio.h"
-#include "file.h"
-#include "file1.h"
-#include "file2.h"
-#include "archive.h"
-#include "filesys.h"
+#include "files/file.h"
+#include "files/file1.h"
+#include "files/file2.h"
+#include "files/archive.h"
+#include "files/filesys.h"
 #include "bbsutl.h"
 #include "timest.h"
 #include "disk.h"
@@ -480,14 +480,14 @@ char *stripfn(char *fn)
     char s[MAX_PATH_LEN];
 
     i1=-1;
-    for (i=0; i<strlen(fn); i++)
+    for (i=0; i<(int)strlen(fn); i++)
         if ((fn[i]=='\\') || (fn[i]==':') || (fn[i]=='/'))
             i1=i;
     if (i1!=-1)
         strcpy(s,&(fn[i1+1]));
     else
         strcpy(s,fn);
-    for (i=0; i<strlen(s); i++)
+    for (i=0; i<(int)strlen(s); i++)
         if ((s[i]>='A') && (s[i]<='Z'))
             s[i]=s[i]-'A'+'a';
     i=0;
@@ -508,7 +508,7 @@ void stripfn1(char *fn)
     char s[MAX_PATH_LEN],s1[MAX_PATH_LEN];
 
     i1=0;
-    for (i=0; i<strlen(fn); i++)
+    for (i=0; i<(int)strlen(fn); i++)
         if ((fn[i]=='\\') || (fn[i]==':') || (fn[i]=='/'))
             i1=i;
     strcpy(s1,fn);
@@ -521,7 +521,7 @@ void stripfn1(char *fn)
         s1[0]=0;
     }
 
-    for (i=0; i<strlen(s); i++)
+    for (i=0; i<(int)strlen(s); i++)
         if ((s[i]>='A') && (s[i]<='Z'))
             s[i]=s[i]-'A'+'a';
     i=0;
@@ -576,8 +576,8 @@ int upload_file2(char *fn, int dn, char *desc)
         u.points=((u.numbytes)+1023)/10240;
         npr("3%s: %4ldk :",u.filename,((u.numbytes)+1023)/1024);
         if ((desc) && (*desc)) {
-            strncpy(u.description,desc,39);
-            u.description[39]=0;
+            strncpy(u.description,desc,sizeof(u.description)-1);
+            u.description[sizeof(u.description)-1]=0;
             pl(u.description);
         } 
         else {

@@ -13,11 +13,11 @@
 #include "utility.h"
 #include "jam_bbs.h"
 #include "config.h"
-#include "diredit.h"
-#include "uedit.h"
+#include "files/diredit.h"
+#include "user/uedit.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "version.h"
 #include "cmd_registry.h"
@@ -205,7 +205,7 @@ int getcaller(void)
                 wfcs(); 
                 break;
             case 'Q': 
-                if(!ok_local()) if(!checkpw()); 
+                if(!ok_local()) checkpw();
                 end_bbs(sys.oklevel); 
                 break;
             case 'R':
@@ -378,7 +378,8 @@ void topit2(void)
 char *curt(void)
 {
     struct time t;
-    char s[MAX_PATH_LEN],an[3];
+    static char s[MAX_PATH_LEN];
+    char an[3];
 
     gettime(&t);
     if(t.ti_hour>11) strcpy(an,"pm");

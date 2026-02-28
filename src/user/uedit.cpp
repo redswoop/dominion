@@ -1,21 +1,21 @@
-#include "uedit.h"
+#include "user/uedit.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "conio.h"
-#include "file1.h"
+#include "files/file1.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
 #include "config.h"
-#include "newuser.h"
+#include "user/newuser.h"
 #include "shortmsg.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
-#include "nuv.h"
+#include "user/nuv.h"
 #include "misccmd.h"
 #include "sysopf.h"
 #include "lilo.h"
@@ -201,7 +201,7 @@ int usearch(int un,char val[41])
             if(!(u.ar() & (1 << toupper(s[1])-'A'))) curok=0;
             break;
         case 'B':
-            if(u.lastrate()!=atoi(s+1)) curok=0;
+            if((int)u.lastrate()!=atoi(s+1)) curok=0;
             break;
         case 'D':
             if(u.dsl()<atoi(s+1)) curok=0;

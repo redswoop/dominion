@@ -36,13 +36,13 @@
 #include "jam_bbs.h"
 #include "wfc.h"
 #include "config.h"
-#include "diredit.h"
-#include "uedit.h"
+#include "files/diredit.h"
+#include "user/uedit.h"
 #include "stringed.h"
 #include "menued.h"
 #include "subedit.h"
 #include "sysopf.h"
-#include "userdb.h"
+#include "user/userdb.h"
 
 extern int nc_active;
 
@@ -53,7 +53,11 @@ extern int nc_active;
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <util.h>      /* forkpty() on macOS */
+#if defined(__APPLE__)
+#include <util.h>       /* forkpty() on macOS */
+#elif defined(__linux__)
+#include <pty.h>        /* forkpty() on Linux */
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <time.h>

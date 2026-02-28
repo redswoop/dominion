@@ -20,13 +20,7 @@
  * Helpers
  * ================================================================ */
 
-static long file_size(const char *path)
-{
-    struct stat st;
-    if (stat(path, &st) != 0)
-        return -1;
-    return (long)st.st_size;
-}
+/* file_size() removed — was unused */
 
 cJSON *read_json_file(const char *path)
 {

@@ -13,7 +13,7 @@
 
 /* vardec headers MUST come before io_stream.h — io_stream.h macros
  * (incom, outcom, etc.) would corrupt struct member names */
-#include "user.h"
+#include "user/user.h"
 #include "vardec_ui.h"
 #include "io_stream.h"
 

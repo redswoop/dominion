@@ -6,7 +6,7 @@
 #include "bbsutl.h"
 #include "disk.h"
 #include "utility.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "config.h"
 #include "stringed.h"
 #include "session.h"
@@ -98,7 +98,7 @@ void modify_sub(int n)
         npr("39. Address      : 0%d:%d/%d\r\n",r.add.zone,r.add.net,r.add.node);
         npr("30. Origin Type  : 0%d\r\n",r.origin);
         npr("3E. Netmail Path : 0%s\r\n",r.nmpath);
-        s[0]=196;
+        s[0]=(char)196;
         if(r.attr & mattr_ansi_only) s[1]='G'; 
         else s[1]=(char)196;
         if(r.attr & mattr_autoscan) s[2]='A'; 
@@ -106,9 +106,9 @@ void modify_sub(int n)
         if(r.attr & mattr_fidonet) s[4]='F'; 
         else s[4]=(char)196;
         if(r.attr & mattr_nomci) s[6]='M'; 
-        else s[6]=196;
+        else s[6]=(char)196;
         if(r.attr & mattr_netmail) s[7]='N'; 
-        else s[7]=196;
+        else s[7]=(char)196;
         if(r.attr & mattr_private) s[8]='P';
         else s[8]=(char)196;
 

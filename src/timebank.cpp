@@ -9,7 +9,7 @@
 #include "timest.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "misccmd.h"
 #include "sysopf.h"
@@ -41,7 +41,7 @@ void add_time(int limit)
         pausescr();
         return;
     }
-    if ((minutes + sess.user.timebank()) > limit) {
+    if ((minutes + (int)sess.user.timebank()) > limit) {
         nl();
         npr("7You may only have up to %d minutes in your account at once.\r\n", limit);
         nl();
@@ -85,7 +85,7 @@ void remove_time()
     if (minutes<1) return;
 
     if (io.hangup) return;
-    if (minutes > sess.user.timebank()) {
+    if ((unsigned int)minutes > sess.user.timebank()) {
         nl();
         nl();
         prt(7, "You don't have that much time in the account!");

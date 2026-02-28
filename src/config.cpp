@@ -7,13 +7,13 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "conio.h"
-#include "file1.h"
+#include "files/file1.h"
 #include "timest.h"
 #include "disk.h"
-#include "newuser.h"
+#include "user/newuser.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "lilo.h"
 #include "personal.h"
@@ -123,9 +123,9 @@ void getselect(char *s,int row,int col,int len,int lc)
 
 void getselectt(unsigned short *i,int row,int col,int len)
 {
-    unsigned int i1;
+    int i1;
     char s[41];
-    unsigned int h,m,mcik=io.mciok;
+    int h,m,mcik=io.mciok;
 
     io.mciok=0;
 #ifndef DOS
@@ -167,7 +167,7 @@ int getselectd(int row,int col,int len)
 
 void setbit(int row, int col,char bits[16],int *byte)
 {
-    char s[16],ch;
+    char s[17],ch;
     int i,done=0,i1;
 
     do {
@@ -467,7 +467,8 @@ void varible()
     int done=0,i;
     char *chattype[]={
         "TwoColor","Filtered","Rotating"        }
-    ,*s;
+    ;
+    char s[MAX_PATH_LEN];
 
     do {
         outchr(12);

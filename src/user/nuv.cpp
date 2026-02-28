@@ -1,4 +1,4 @@
-#include "nuv.h"
+#include "user/nuv.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
@@ -6,11 +6,11 @@
 #include "utility.h"
 #include "disk.h"
 #include "config.h"
-#include "newuser.h"
-#include "uedit.h"
+#include "user/newuser.h"
+#include "user/uedit.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "acs.h"
 #include "sysopf.h"
@@ -79,7 +79,7 @@ void del_nuv(unsigned int user)
     nnu=filelength(i)/sizeof(dn);
 
     for (dnc = 0; dnc < nnu; dnc++) {
-        if (dnc != user) {
+        if (dnc != (int)user) {
             read(i,&dn,sizeof(dn));
             write(o,&dn,sizeof(dn));
         }

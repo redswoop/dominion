@@ -7,14 +7,14 @@
 #include "tcpio.h"
 #include "bbsutl.h"
 #include "sysoplog.h"
-#include "file1.h"
-#include "uedit.h"
+#include "files/file1.h"
+#include "user/uedit.h"
 #include "acs.h"
 #include "timest.h"
 #include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "mm1.h"
 #include "stringed.h"
 #include "session.h"
@@ -326,7 +326,7 @@ int alt_key(unsigned char ch)
                 ss1=strtok(ss,"\r\n");
                 while (ss1) {
                     f=1;
-                    for(i=0;i<strlen(ss1)&&f;i++) {
+                    for(i=0;i<(int)strlen(ss1)&&f;i++) {
                         if(ss1[i]!=32&&ss1[i]!=',') {
                             tx[i]=ss1[i];
                             tx[i+1]=0;

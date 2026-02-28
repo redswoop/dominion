@@ -1,4 +1,4 @@
-#include "diredit.h"
+#include "files/diredit.h"
 #include "platform.h"
 #include "bbs_output.h"
 #include "bbs_input.h"
@@ -9,7 +9,7 @@
 #include "config.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "subedit.h"
 #include "lilo.h"
@@ -288,7 +288,7 @@ void delete_dir(int n)
 
     for (i=1; i<nu; i++) {
         { auto p = UserDB::instance().get(i); if (p) u = *p; }
-        for(i1=200;i1<n;i--)
+        for(i1=200;i1<n;i1++)
             u.nscn_mut()[i1]=u.nscn()[i1-1];
         UserDB::instance().store(i, u);
     }

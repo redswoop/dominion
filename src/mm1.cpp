@@ -11,7 +11,7 @@
 #include "acs.h"
 #include "cmd_registry.h"
 #include "sysopf.h"
-#include "file.h"
+#include "files/file.h"
 #include "bbs_path.h"
 #pragma hdrstop
 
@@ -224,7 +224,7 @@ char *aligncmd(char in[MAX_PATH_LEN])
 
     strcpy(s1,noc2(in));
     init=s1[0];
-    while(s1[r]!=bo(init)&&r<strlen(s1))
+    while(s1[r]!=bo(init)&&r<(int)strlen(s1))
         s2[w++]=s1[r++];
     s2[w]=0;
     r++;
@@ -458,7 +458,7 @@ int mslok(char val[MAX_PATH_LEN],char inp[MAX_PATH_LEN],int qyn,varrec *vars,int
             }
         default:
             i=0;
-            while(i<strlen(s)&&s[i]!='=')
+            while(i<(int)strlen(s)&&s[i]!='=')
                 i++;
             strncpy(s2,s,i-1);
             i1=atoi(&sys.sp[i+1]);

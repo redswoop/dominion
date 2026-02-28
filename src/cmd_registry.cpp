@@ -36,16 +36,16 @@
 #include "utility.h"
 #include "jam_bbs.h"
 #include "msgbase.h"
-#include "file.h"
-#include "file1.h"
-#include "file2.h"
-#include "file3.h"
-#include "archive.h"
-#include "filesys.h"
+#include "files/file.h"
+#include "files/file1.h"
+#include "files/file2.h"
+#include "files/file3.h"
+#include "files/archive.h"
+#include "files/filesys.h"
 #include "config.h"
-#include "diredit.h"
-#include "newuser.h"
-#include "uedit.h"
+#include "files/diredit.h"
+#include "user/newuser.h"
+#include "user/uedit.h"
 #include "mm1.h"
 #include "stringed.h"
 #include "session.h"
@@ -451,7 +451,7 @@ void othercmd(char type,char ms[40])
         selfValidationCheck(ms);
         break;
     case ';':
-        for(c=0;c<strlen(ms);c++) {
+        for(c=0;c<(int)strlen(ms);c++) {
             if(ms[c]==';') ms[c]=13;
         }
         ms[strlen(ms)+1]=13;

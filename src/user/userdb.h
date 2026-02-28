@@ -11,7 +11,7 @@
 #ifndef _USERDB_H_
 #define _USERDB_H_
 
-#include "user.h"
+#include "user/user.h"
 #include <string>
 #include <unordered_map>
 #include <optional>

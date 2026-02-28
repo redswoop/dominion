@@ -1,5 +1,5 @@
-#include "newuser.h"
-#include "newuser_form.h"
+#include "user/newuser.h"
+#include "user/newuser_form.h"
 #include "tui/screen_form.h"
 #include "platform.h"
 #include "bbs_output.h"
@@ -8,7 +8,7 @@
 #include "conio.h"
 #include "bbsutl.h"
 #include "sysoplog.h"
-#include "file1.h"
+#include "files/file1.h"
 #include "lilo.h"
 #include "timest.h"
 #include "disk.h"
@@ -17,10 +17,10 @@
 #include "shortmsg.h"
 #include "mm1.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "cmd_registry.h"
-#include "nuv.h"
+#include "user/nuv.h"
 #include "terminal_bridge.h"
 #include "misccmd.h"
 #include "personal.h"
@@ -95,7 +95,7 @@ int check_name(const char *nn)
         p += (long) (i+2);
         if (s[i-1]==1)
             s[i-1]=0;
-        for (i=0; i<strlen(s); i++)
+        for (i=0; i<(int)strlen(s); i++)
             s[i]=toupper(s[i]);
         sprintf(s1," %s ",s);
         if (strstr(s2,s1)!=NULL)

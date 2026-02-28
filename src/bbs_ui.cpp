@@ -19,7 +19,7 @@
 #include "config.h"
 #include "terminal_bridge.h"
 #include "terminal/ansi_attr.h"
-#include "userdb.h"
+#include "user/userdb.h"
 
 #pragma hdrstop
 
@@ -663,7 +663,6 @@ void editline(char *s, int len, int status, int *returncode, char *ss)
                 }
             }
             else {
-                ch=ch;
                 switch(ch) {
                 case 13:
                 case 9:

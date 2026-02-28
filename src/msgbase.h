@@ -2,7 +2,7 @@
 #define _MSGBASE_H_
 
 #include "vardec_msgfile.h"
-#include "user.h"
+#include "user/user.h"
 #include "jam/jammb.h"
 
 int external_edit(char *fn1, char *direc, int numlines);

@@ -1,7 +1,7 @@
 #ifndef _UEDIT_H_
 #define _UEDIT_H_
 
-#include "user.h"
+#include "user/user.h"
 
 void deluser(int un);
 void addtrash(const User& u);

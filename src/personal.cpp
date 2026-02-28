@@ -10,12 +10,12 @@
 #include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
-#include "file2.h"
+#include "files/file2.h"
 #include "config.h"
 #include "shortmsg.h"
 #include "stringed.h"
 #include "session.h"
-#include "userdb.h"
+#include "user/userdb.h"
 #include "system.h"
 #include "misccmd.h"
 #include "sysopf.h"
@@ -29,7 +29,7 @@ void change_colors(User& u1)
 {
     auto& sys = System::instance();
     int i,done,i1,i2;
-    char s[MAX_PATH_LEN],ch,nc,*ss,s1[MAX_PATH_LEN];
+    char s[MAX_PATH_LEN],ch,nc,ss[MAX_PATH_LEN],s1[MAX_PATH_LEN];
 
     done=0;
     do {
@@ -566,7 +566,7 @@ void getfileformat()
                 fputs(s,f);
                 fputs("\n",f);
                 for(ch=0;ch<80;ch++)
-                    s1[ch]=196;
+                    s1[ch]=(char)196;
                 s1[ch]=0;
                 fprintf(f,"%c%s\n",i+1,s1);
                 fprintf(f,"%c%s\n",i1+1,s1);
