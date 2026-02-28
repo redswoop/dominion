@@ -7,7 +7,6 @@
 #include "bbsutl.h"
 #include "sysoplog.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
 #include "files/file2.h"

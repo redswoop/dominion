@@ -4,7 +4,6 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "utility.h"
 #include "user/userdb.h"
 #include "config.h"

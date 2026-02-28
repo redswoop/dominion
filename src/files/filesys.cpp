@@ -9,7 +9,6 @@
 #include "files/file3.h"
 #include "files/archive.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "utility.h"
 #include "timest.h"
 #include "config.h"
@@ -919,7 +918,7 @@ void move_file(void)
                     nl();
                     pl("Too many files in that directory.");
                 }
-                if (freek1(sys.directories[d1].dpath)<((double)(u.numbytes/1024L)+3)) {
+                if (disk_free_kb(sys.directories[d1].dpath)<((double)(u.numbytes/1024L)+3)) {
                     ok=0;
                     nl();
                     pl("Not enough disk space to move it.");

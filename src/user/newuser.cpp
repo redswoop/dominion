@@ -11,7 +11,6 @@
 #include "files/file1.h"
 #include "lilo.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "shortmsg.h"

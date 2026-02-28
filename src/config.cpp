@@ -9,7 +9,6 @@
 #include "conio.h"
 #include "files/file1.h"
 #include "timest.h"
-#include "disk.h"
 #include "user/newuser.h"
 #include "stringed.h"
 #include "session.h"

@@ -23,4 +23,13 @@ void pla(char *s, int *abort);
 void mla(char *s, int *abort);
 void reprint();
 
+/* Display functions (relocated from disk.cpp) */
+void showfile(char *fn);
+void printmenu(int which);
+int printfile(char *fn);
+
+/* Output capture (relocated from disk.cpp) */
+void set_global_handle(int i);
+void global_char(char ch);
+
 #endif /* _BBS_OUTPUT_H_ */

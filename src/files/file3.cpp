@@ -11,7 +11,6 @@
 #include "files/filesys.h"
 #include "bbsutl.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
 #include "stringed.h"

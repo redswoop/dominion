@@ -5,7 +5,6 @@
 #include "bbs_ui.h"
 #include "conio.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
 #include "config.h"
@@ -937,7 +936,7 @@ int okpost(void)
 {
     auto& sys = System::instance();
     auto& sess = Session::instance();
-    if (freek1(sys.cfg.msgsdir)<10.0) {
+    if (disk_free_kb(sys.cfg.msgsdir)<10.0) {
         nl();
         pl("Sorry, not enough disk space left.");
         nl();

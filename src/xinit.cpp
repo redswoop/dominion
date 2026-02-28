@@ -9,7 +9,6 @@
 #include "bbsutl.h"
 #include "sysoplog.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "config.h"
@@ -420,8 +419,8 @@ void init(int show)
     }
     frequent_init();
     if (!sys.restoring_shrink&&!show && !sess.already_on) {
-        remove_from_temp("*.*",sys.cfg.tempdir,0);
-        remove_from_temp("*.*",sys.cfg.batchdir,0);
+        clear_directory(sys.cfg.tempdir);
+        clear_directory(sys.cfg.batchdir);
     }
     if(!sys.restoring_shrink&&!show) sess.menuat[0]=0;
     io.lecho=ok_local();

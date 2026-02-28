@@ -10,7 +10,6 @@
 #include "files/archive.h"
 #include "files/filesys.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "utility.h"
 #include "timest.h"
 #include "user/userdb.h"
@@ -396,7 +395,7 @@ void batchul(int t)
     long l;
     directoryrec d;
 
-    remove_from_temp("*.*",sys.cfg.batchdir,0);
+    clear_directory(sys.cfg.batchdir);
 
     ti=timer();
     strcpy(s1,sys.proto[t].receivebatch);
@@ -670,7 +669,7 @@ void newul(int dn)
 
     closedl();
 
-    l=(long)freek1(sys.cfg.batchdir);
+    l=(long)disk_free_kb(sys.cfg.batchdir);
     sprintf(s,"Upload - %ldk free.",l);
     dtitle(s);
     nl();

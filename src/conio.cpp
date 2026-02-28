@@ -11,7 +11,6 @@
 #include "user/uedit.h"
 #include "acs.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "user/userdb.h"

@@ -6,7 +6,6 @@
 #include "conio.h"
 #include "files/file1.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "config.h"
 #include "user/newuser.h"

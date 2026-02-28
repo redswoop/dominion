@@ -4,7 +4,6 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "utility.h"
 #include "user/userdb.h"
 #include "files/file2.h"
@@ -13,6 +12,7 @@
 #include "system.h"
 #include "extrn.h"
 #include "misccmd.h"
+#include "bbs_path.h"
 
 #pragma hdrstop
 

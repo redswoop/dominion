@@ -14,7 +14,6 @@
 #include "conio.h"
 #include "bbsutl.h"
 #include "sysoplog.h"
-#include "disk.h"
 #include "utility.h"
 #include "session.h"
 #include "system.h"
@@ -396,4 +395,154 @@ void reprint()
 
     strcpy(io.ansistr,ansistr_1);
     io.ansiptr=ansiptr_1;
+}
+
+
+/***********************************************************************
+ * 5. DISPLAY FUNCTIONS (relocated from disk.cpp)
+ ***********************************************************************/
+
+#include "jam_bbs.h"
+#include "bbs_path.h"
+
+void showfile(char *fn)
+{
+    int i,abort=0;
+    long l,l1;
+    char *b;
+
+    i=open(fn,O_BINARY|O_RDWR);
+    if(i<0)
+        return;
+
+    l=filelength(i);
+    b=(char *)malloca(l);
+    read(i,b,l);
+    close(i);
+
+    show_message(&i,abort,b,l);
+
+    free(b);
+}
+
+void printmenu(int which)
+{
+    auto& sys = System::instance();
+    int i,abort=0;
+    long l,l1;
+    char *b,ch;
+
+    auto mpath = BbsPath::join(sys.cfg.gfilesdir, "mnudata.dat");
+
+    i=open(mpath.c_str(),O_BINARY|O_RDWR);
+    if(i<0)
+        return;
+
+    lseek(i,sys.menus[which].storage_type,0);
+    l1=sys.menus[which].stored_as;
+
+    b=(char *)malloca(l1);
+    read(i,b,l1);
+    close(i);
+
+    show_message(&i,abort,b,l1);
+
+    free(b);
+}
+
+int printfile(char *fn)
+{
+    auto& sys = System::instance();
+    auto& sess = Session::instance();
+    char s[MAX_PATH_LEN],s1[MAX_PATH_LEN],s2[3],tmp[MAX_PATH_LEN];
+    int done=0;
+
+    auto base = BbsPath::join(sys.cfg.gfilesdir, fn);
+    strcpy(s, base.c_str());
+    if (strchr(s,'.')==NULL) {
+        strcpy(tmp,s);
+
+        if(sess.user.sysstatus() & sysstatus_color) {
+            strcpy(s,tmp);
+            strcat(s,".ans");
+            if(exist(s))
+                done=1;
+        }
+
+        if(!done&&(sess.user.sysstatus() & sysstatus_ansi)) {
+            strcpy(s,tmp);
+            strcat(s,".b&w");
+            if(exist(s))
+                done=1;
+        }
+
+        if(!done) {
+            strcpy(s,tmp);
+            strcat(s,".msg");
+        }
+    }
+
+    if(!exist(s))
+        return 0;
+    showfile(s);
+    return(1);
+}
+
+
+/***********************************************************************
+ * 6. OUTPUT CAPTURE (relocated from disk.cpp)
+ ***********************************************************************/
+
+#define GLOBAL_SIZE 4096
+static char *global_buf;
+static int global_ptr;
+
+void set_global_handle(int i)
+{
+    auto& sys = System::instance();
+
+    if (io.x_only)
+        return;
+
+    if (i) {
+        if (!io.global_handle) {
+            auto gpath = BbsPath::join(sys.cfg.gfilesdir, "GLOBAL.TXT");
+            io.global_handle=open(gpath.c_str(),O_RDWR | O_APPEND | O_BINARY | O_CREAT,
+            S_IREAD | S_IWRITE);
+            global_ptr=0;
+            global_buf=(char *)malloca(GLOBAL_SIZE);
+            if ((io.global_handle<0) || (!global_buf)) {
+                io.global_handle=0;
+                if (global_buf) {
+                    free(global_buf);
+                    global_buf=NULL;
+                }
+            }
+
+        }
+    }
+    else {
+        if (io.global_handle) {
+            write(io.global_handle,global_buf,global_ptr);
+            close(io.global_handle);
+            io.global_handle=0;
+            if (global_buf) {
+                free(global_buf);
+                global_buf=NULL;
+            }
+        }
+    }
+}
+
+
+void global_char(char ch)
+{
+
+    if (global_buf && io.global_handle) {
+        global_buf[global_ptr++]=ch;
+        if (global_ptr==GLOBAL_SIZE) {
+            write(io.global_handle,global_buf,global_ptr);
+            global_ptr=0;
+        }
+    }
 }

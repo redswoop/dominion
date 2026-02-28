@@ -9,7 +9,6 @@
 #include "sysoplog.h"
 #include "acs.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "config.h"
@@ -20,6 +19,7 @@
 #include "user/userdb.h"
 #include "system.h"
 #include "version.h"
+#include "bbs_path.h"
 #include "cmd_registry.h"
 #include "extrn.h"
 #include "sysopf.h"
@@ -469,7 +469,7 @@ void wfcs(void)
             cprintf("%d",sys.status.dltoday);
             break;
         case 9:
-            l=(long) freek(_getdrive());
+            l=(long) disk_free_kb(".");
             cprintf("%ldk",l);
             break;
         case 10:

@@ -7,7 +7,6 @@
 #include "bbsutl.h"
 #include "sysoplog.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "files/filesys.h"
@@ -252,7 +251,7 @@ void beginday()
         runprog(s,0);
     }
 
-    fk=freek1(sys.cfg.datadir);
+    fk=disk_free_kb(sys.cfg.datadir);
     nus=sys.cfg.maxusers-UserDB::instance().user_count();
 
     if (fk<512.0) {
@@ -261,7 +260,7 @@ void beginday()
         logpr(s);
     }
 
-    fk=freek1(sys.cfg.batchdir);
+    fk=disk_free_kb(sys.cfg.batchdir);
 
     if (fk<2048.0) {
         sprintf(s,"2! 0Only %dk free in batch directory.",(int) fk);

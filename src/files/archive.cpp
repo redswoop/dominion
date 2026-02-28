@@ -10,7 +10,6 @@
 #include "files/file3.h"
 #include "files/filesys.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "stringed.h"
 #include "session.h"
 #include "system.h"
@@ -225,7 +224,7 @@ void arcex(char *fn)
         addtobatch(u,-2,1);
         close(i);
     }
-    remove_from_temp(s1,sys.cfg.tempdir,0);
+    clear_directory(sys.cfg.tempdir, stripfn(s1));
 }
 
 

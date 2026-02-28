@@ -9,7 +9,6 @@
 #include "sysoplog.h"
 #include "files/file1.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "session.h"
 #include "system.h"

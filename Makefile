@@ -161,7 +161,7 @@ BBS_CORE = bbs bbs_output bbs_input bbs_ui conio bbsutl \
            utility extrn mm1 tcpio jam stream_processor mci mci_bbs \
            bbs_path bbs_file
 
-BBS_MODULES = cmd_registry acs menu_nav msgbase disk menudb timest shortmsg \
+BBS_MODULES = cmd_registry acs menu_nav msgbase menudb timest shortmsg \
               menued subedit stringed \
               sysoplog sysopf wfc xinit \
               personal misccmd automsg bbslist timebank topten config \

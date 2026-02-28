@@ -32,7 +32,6 @@
 #include "conio.h"
 #include "bbsutl.h"
 #include "sysoplog.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "msgbase.h"

@@ -73,4 +73,8 @@ private:
     System();
 };
 
+/* System state persistence */
+void save_status();
+void read_in_file(char *fn, messagerec *m, int maxary);
+
 #endif /* _SYSTEM_H_ */

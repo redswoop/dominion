@@ -24,7 +24,6 @@
 #include "terminal/ansi_attr.h"
 #include "cmd_registry.h"
 #include "acs.h"
-#include "disk.h"
 
 #pragma hdrstop
 

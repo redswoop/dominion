@@ -4,7 +4,6 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "conio.h"
-#include "disk.h"
 #include "user/userdb.h"
 #include "session.h"
 #include "system.h"

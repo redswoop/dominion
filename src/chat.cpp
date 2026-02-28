@@ -10,7 +10,6 @@
 #include "user/userdb.h"
 #include "files/file1.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "stringed.h"

@@ -6,6 +6,8 @@
 #include <cstring>
 #include <unistd.h>
 #include <strings.h>
+#include <filesystem>
+#include <fnmatch.h>
 
 std::string BbsPath::join(const char *dir, const char *name) {
     if (!dir) dir = "";
@@ -95,4 +97,35 @@ std::string BbsPath::ensure_slash(const std::string &dir) {
     if (dir.empty()) return "/";
     if (dir.back() == '/') return dir;
     return dir + '/';
+}
+
+void bbs_filter(char *s, unsigned char c)
+{
+    int x = 0;
+    while (s[x++] != c)
+        ;
+    s[x-1] = 0;
+}
+
+double disk_free_kb(const char *path)
+{
+    std::error_code ec;
+    auto si = std::filesystem::space(path, ec);
+    if (ec) return -1.0;
+    return (double)si.available / 1024.0;
+}
+
+void clear_directory(const char *dir, const char *pattern)
+{
+    std::error_code ec;
+    for (auto &entry : std::filesystem::directory_iterator(dir, ec)) {
+        if (!entry.is_regular_file(ec))
+            continue;
+        if (pattern) {
+            auto fname = entry.path().filename().string();
+            if (fnmatch(pattern, fname.c_str(), 0) != 0)
+                continue;
+        }
+        std::filesystem::remove(entry.path(), ec);
+    }
 }

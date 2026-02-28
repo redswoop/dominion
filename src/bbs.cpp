@@ -7,7 +7,6 @@
 #include "tcpio.h"
 #include "conio.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "wfc.h"
 #include "mm1.h"
@@ -15,6 +14,7 @@
 #include "session.h"
 #include "system.h"
 #include "version.h"
+#include "bbs_path.h"
 #include <math.h>
 #include "menudb.h"
 #include "mci_bbs.h"

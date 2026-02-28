@@ -9,7 +9,6 @@
 #include "files/file1.h"
 #include "timest.h"
 #include "lilo.h"
-#include "disk.h"
 #include "utility.h"
 #include "msgbase.h"
 #include "mm1.h"

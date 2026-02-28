@@ -4,13 +4,13 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "config.h"
 #include "mm1.h"
 #include "stringed.h"
 #include "session.h"
 #include "system.h"
 #include "lilo.h"
+#include "bbs_path.h"
 #pragma hdrstop
 
 #include "menudb.h"

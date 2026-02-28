@@ -12,7 +12,6 @@
 #include "files/file1.h"
 #include "files/file.h"
 #include "timest.h"
-#include "disk.h"
 #include "utility.h"
 #include "jam_bbs.h"
 #include "config.h"
@@ -40,6 +39,20 @@
 
 extern char withansi;
 
+/* Read entire file into malloc'd buffer. Caller must free().
+ * Returns NULL on failure, sets *len to bytes read. */
+static char *read_file_alloc(const char *path, long *len)
+{
+    *len = 0;
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) return NULL;
+    long sz = filelength(fd);
+    char *buf = (char *)malloc(sz + 1);
+    if (!buf) { close(fd); return NULL; }
+    *len = read(fd, buf, sz);
+    close(fd);
+    return buf;
+}
 
 void oneliner();
 int findwaiting(void);
@@ -573,7 +586,7 @@ void logon()
         menubatch("logon");
 
         auto laston_path = BbsPath::join(sys.cfg.gfilesdir, "laston.txt");
-        ss=get_file((char*)laston_path.c_str(),&len);
+        ss=read_file_alloc(laston_path.c_str(),&len);
         pos=0;
 
         if ((sess.actsl!=255) || (outcom)) {
@@ -764,8 +777,8 @@ void logoff()
         }
     }
 
-    remove_from_temp("*.*",sys.cfg.tempdir,0);
-    remove_from_temp("*.*",sys.cfg.batchdir,0);
+    clear_directory(sys.cfg.tempdir);
+    clear_directory(sys.cfg.batchdir);
     unlink("chain.txt");
     unlink("door.sys");
     unlink("dorinfo1.def");
@@ -881,7 +894,7 @@ void lastfewcall(void)
     int abort,i;
 
     auto laston2 = BbsPath::join(sys.cfg.gfilesdir, "laston.txt");
-    ss=get_file((char*)laston2.c_str(),&len);
+    ss=read_file_alloc(laston2.c_str(),&len);
     pos=0;
     abort=0;
 

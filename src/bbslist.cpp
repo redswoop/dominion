@@ -6,7 +6,6 @@
 #include "bbs_input.h"
 #include "bbs_ui.h"
 #include "bbsutl.h"
-#include "disk.h"
 #include "mm1.h"
 #include "session.h"
 #include "system.h"

@@ -5,7 +5,6 @@
 #include "bbs_ui.h"
 #include "bbsutl.h"
 #include "acs.h"
-#include "disk.h"
 #include "utility.h"
 #include "session.h"
 #include "user/userdb.h"

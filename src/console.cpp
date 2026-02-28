@@ -27,7 +27,6 @@
 #include "lilo.h"
 #include "xinit.h"
 #include "utility.h"
-#include "disk.h"
 #include "mm1.h"
 #include "menudb.h"
 #include "menu_nav.h"
